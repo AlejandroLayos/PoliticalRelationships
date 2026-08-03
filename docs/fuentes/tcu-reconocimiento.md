@@ -1,12 +1,12 @@
 # Reconocimiento del Tribunal de Cuentas
 
-Generado automáticamente el 2026-08-03T19:59:51.125348+00:00 por `scripts/explorar_tcu.py`.
+Generado automáticamente el 2026-08-03T20:05:09.865785+00:00 por `scripts/explorar_tcu.py`.
 
 **No es documentación de una fuente ya integrada.** Es lo que se ve
 desde fuera, anotado sin interpretar, para decidir si merece la pena
 escribir un conector y de qué tipo.
 
-Resumen: **7 de 7** candidatos respondieron.
+Resumen: **10 de 10** candidatos respondieron.
 
 ## portal_partidos
 
@@ -191,6 +191,167 @@ Resumen: **7 de 7** candidatos respondieron.
       },
       "items": [],
       "itemsPerPage": "int",
+      "page": "int",
+      "startIndex": "int",
+      "type": "str[42]"
+    }
+  }
+  ```
+
+## datosgob_titulo_partidos_con_tilde
+
+- URL: `https://datos.gob.es/apidata/catalog/dataset/title/partidos%20pol%C3%ADticos?_pageSize=25&_page=0`
+- HTTP 200 · `application/json` · 72,525 bytes
+- ¿Menciona «Tribunal de Cuentas»?: **no**
+- Ficheros descargables enlazados: **6**
+  - Por extensión: `pdf`: 47, `json`: 7
+- Formatos declarados: `linked-data-api`
+
+  Primeros enlaces:
+  - `http://datos.gob.es/apidata/catalog/dataset/title/partidos%20pol%C3%ADticos.json`
+  - `https://www.boe.es/boe/dias/2015/03/31/pdfs/BOE-A-2015-3441.pdf`
+  - `https://www.boe.es/buscar/pdf/1976/BOE-A-1976-18818-consolidado.pdf`
+  - `https://www.boe.es/buscar/pdf/1985/BOE-A-1985-11672-consolidado.pdf`
+  - `https://www.boe.es/buscar/pdf/2002/BOE-A-2002-12756-consolidado.pdf`
+  - `https://www.boe.es/buscar/pdf/2003/BOE-A-2003-4923-consolidado.pdf`
+
+  Forma de la respuesta (claves reales, sin contenido):
+
+  ```json
+  {
+    "format": "str[15]",
+    "version": "str[3]",
+    "result": {
+      "_about": "str[101]",
+      "definition": {
+        "_about": "str[80]",
+        "definition": "str[80]",
+        "hasPart": "str[101]",
+        "type": "str[50]"
+      },
+      "extendedMetadataVersion": "str[115]",
+      "first": "str[88]",
+      "isPartOf": "str[80]",
+      "items": [
+        {
+          "_about": "…",
+          "accrualPeriodicity": "…",
+          "description": "…",
+          "distribution": "…",
+          "identifier": "…",
+          "issued": "…",
+          "keyword": "…",
+          "language": "…",
+          "modified": "…",
+          "publisher": "…",
+          "references": "…",
+          "spatial": "…",
+          "theme": "…",
+          "title": "…",
+          "type": "…"
+        },
+        "…(22 elementos)"
+      ],
+      "itemsPerPage": "int",
+      "page": "int",
+      "startIndex": "int",
+      "type": "str[42]"
+    }
+  }
+  ```
+
+## datosgob_keyword_financiacion_con_tilde
+
+- URL: `https://datos.gob.es/apidata/catalog/dataset/keyword/financiaci%C3%B3n?_pageSize=25&_page=0`
+- HTTP 200 · `application/json` · 88,888 bytes
+- ¿Menciona «Tribunal de Cuentas»?: **no**
+- Ficheros descargables enlazados: **1**
+  - Por extensión: `json`: 8
+- Formatos declarados: `linked-data-api`
+
+  Primeros enlaces:
+  - `http://datos.gob.es/apidata/catalog/dataset/keyword/financiaci%C3%B3n.json`
+
+  Forma de la respuesta (claves reales, sin contenido):
+
+  ```json
+  {
+    "format": "str[15]",
+    "version": "str[3]",
+    "result": {
+      "_about": "str[95]",
+      "definition": {
+        "_about": "str[74]",
+        "definition": "str[74]",
+        "hasPart": "str[95]",
+        "type": "str[50]"
+      },
+      "extendedMetadataVersion": "str[109]",
+      "first": "str[82]",
+      "isPartOf": "str[74]",
+      "items": [
+        {
+          "_about": "…",
+          "description": "…",
+          "distribution": "…",
+          "identifier": "…",
+          "issued": "…",
+          "keyword": "…",
+          "language": "…",
+          "modified": "…",
+          "publisher": "…",
+          "spatial": "…",
+          "theme": "…",
+          "title": "…",
+          "type": "…"
+        },
+        "…(25 elementos)"
+      ],
+      "itemsPerPage": "int",
+      "next": "str[82]",
+      "page": "int",
+      "startIndex": "int",
+      "type": "str[42]"
+    }
+  }
+  ```
+
+## datosgob_publicadores
+
+- URL: `https://datos.gob.es/apidata/catalog/publisher?_pageSize=200&_page=0`
+- HTTP 200 · `application/json` · 14,916 bytes
+- ¿Menciona «Tribunal de Cuentas»?: **no**
+- Ficheros descargables enlazados: **2**
+  - Por extensión: `json`: 8
+- Formatos declarados: `linked-data-api`
+
+  Primeros enlaces:
+  - `http://datos.gob.es/apidata/catalog/meta/publisher.json`
+  - `http://datos.gob.es/apidata/catalog/publisher.json`
+
+  Forma de la respuesta (claves reales, sin contenido):
+
+  ```json
+  {
+    "format": "str[15]",
+    "version": "str[3]",
+    "result": {
+      "_about": "str[72]",
+      "definition": "str[55]",
+      "extendedMetadataVersion": "str[86]",
+      "first": "str[58]",
+      "isPartOf": {
+        "_about": "str[50]",
+        "definition": "str[55]",
+        "hasPart": "str[72]",
+        "type": "str[50]"
+      },
+      "items": [
+        "str[66]",
+        "…(200 elementos)"
+      ],
+      "itemsPerPage": "int",
+      "next": "str[58]",
       "page": "int",
       "startIndex": "int",
       "type": "str[42]"
