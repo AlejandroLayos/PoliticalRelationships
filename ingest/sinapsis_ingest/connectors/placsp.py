@@ -320,29 +320,50 @@ class PLACSPConnector:
 
         aristas: list[AristaNormalizada] = []
         vistos: set[str] = set()
-        for adj in adjudicaciones:
+        for orden, adj in enumerate(adjudicaciones):
             nif = adj.get("nif") or ""
             nombre = adj["nombre"]
             clave_adj = f"nif:{nif}" if nif else f"placsp:adjudicatario:{slug(nombre)}"
 
+            # Igual que en BDNS: se conserva el hecho —este órgano adjudicó
+            # este contrato por este importe— y se sustituye la identidad por
+            # una etiqueta. PLACSP, a diferencia de BDNS, no enmascara el NIF
+            # del autónomo, así que aquí el aviso de que hay un particular lo
+            # da el propio formato del identificador.
+            #
+            # Se descubrió mirando la instantánea publicada: 25 personas
+            # físicas con nombre y apellidos en un mapa de influencia
+            # política. Ver spec §12.
+            es_particular = parece_persona_fisica(nif, nombre)
+            if es_particular:
+                clave_adj = f"placsp:particulares:{d['entry_id']}"
+
             if clave_adj not in vistos:
                 vistos.add(clave_adj)
-                if not nif:
-                    esquema = "LegalEntity"
-                elif parece_persona_fisica(nif):
-                    esquema = "Person"
-                else:
-                    esquema = "Company"
-                entidades.append(
-                    EntidadNormalizada(
-                        ftm_schema=esquema,
-                        caption=nombre,
-                        dedupe_key=clave_adj,
-                        nif=nif,
-                        country="es",
-                        properties={"name": nombre},
+                if es_particular:
+                    entidades.append(
+                        EntidadNormalizada(
+                            ftm_schema="LegalEntity",
+                            caption="Personas físicas (adjudicatarias)",
+                            dedupe_key=clave_adj,
+                            country="es",
+                            properties={
+                                "agregado": True,
+                                "motivo": "minimización de datos personales (RGPD)",
+                            },
+                        )
                     )
-                )
+                else:
+                    entidades.append(
+                        EntidadNormalizada(
+                            ftm_schema="LegalEntity" if not nif else "Company",
+                            caption=nombre,
+                            dedupe_key=clave_adj,
+                            nif=nif,
+                            country="es",
+                            properties={"name": nombre},
+                        )
+                    )
 
             importe = adj.get("importe")
             aristas.append(
@@ -352,7 +373,18 @@ class PLACSPConnector:
                     target_key=clave_adj,
                     # Única por (contrato, adjudicatario): un contrato con
                     # varios lotes al mismo proveedor no debe duplicarse.
-                    dedupe_key=f"placsp:adjudicacion:{d['entry_id']}:{clave_adj}",
+                    #
+                    # Salvo con particulares, donde el nodo destino es un
+                    # agregado compartido: dos autónomos adjudicatarios del
+                    # mismo contrato colapsarían en una sola arista y se
+                    # perdería uno de los dos importes. El ordinal dentro del
+                    # documento los mantiene separados sin identificarlos, y
+                    # es estable al reingerir el mismo documento.
+                    dedupe_key=(
+                        f"placsp:adjudicacion:{d['entry_id']}:{clave_adj}:{orden}"
+                        if es_particular
+                        else f"placsp:adjudicacion:{d['entry_id']}:{clave_adj}"
+                    ),
                     amount=importe,
                     currency=adj.get("moneda") or ("EUR" if importe is not None else ""),
                     start_date=d.get("actualizado"),

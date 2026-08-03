@@ -8,6 +8,7 @@ verificada contra datos reales, que es lo que un golden test debe proteger.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -285,3 +286,104 @@ def test_feed_desconocido_falla_pronto(conector):
 def test_los_feeds_conocidos_son_urls_de_placsp():
     for url in FEEDS.values():
         assert url.startswith("https://contrataciondelestado.es/sindicacion/")
+
+
+# --- minimización de datos personales (spec §12) --------------------------
+
+
+def _feed_con_adjudicatarios(*partes: tuple[str, str]) -> bytes:
+    """Construye un feed CODICE mínimo con los adjudicatarios dados."""
+    ns_decl = " ".join(f'xmlns:{pfx}="{uri}"' for pfx, uri in NS.items() if pfx != "atom")
+    ganadores = "".join(
+        "<cac:WinningParty>"
+        f'<cac:PartyIdentification><cbc:ID schemeName="NIF">{nif}</cbc:ID>'
+        "</cac:PartyIdentification>"
+        f"<cac:PartyName><cbc:Name>{nombre}</cbc:Name></cac:PartyName>"
+        "</cac:WinningParty>"
+        for nif, nombre in partes
+    )
+    return (
+        '<?xml version="1.0"?>'
+        f'<feed xmlns="http://www.w3.org/2005/Atom" {ns_decl}>'
+        "<entry><id>https://ejemplo.test/contrato-1</id>"
+        "<cac-place-ext:ContractFolderStatus>"
+        "<cbc:ContractFolderID>EXP-9</cbc:ContractFolderID>"
+        "<cac-place-ext:LocatedContractingParty><cac:Party><cac:PartyName>"
+        "<cbc:Name>Ayuntamiento de Prueba</cbc:Name>"
+        "</cac:PartyName></cac:Party></cac-place-ext:LocatedContractingParty>"
+        f"<cac:TenderResult><cbc:ResultCode>8</cbc:ResultCode>{ganadores}"
+        "<cac:AwardedTenderedProject><cac:LegalMonetaryTotal>"
+        '<cbc:TaxExclusiveAmount currencyID="EUR">1000.00</cbc:TaxExclusiveAmount>'
+        "</cac:LegalMonetaryTotal></cac:AwardedTenderedProject>"
+        "</cac:TenderResult>"
+        "</cac-place-ext:ContractFolderStatus></entry></feed>"
+    ).encode()
+
+
+def _normalizar_feed(conector, contenido: bytes):
+    raw = RawDocument(
+        source_id="placsp",
+        url="https://ejemplo.test",
+        content=contenido,
+        media_type="application/atom+xml",
+    )
+    return conector.normalize(next(iter(conector.parse(raw))))
+
+
+def test_el_adjudicatario_persona_fisica_no_se_publica_con_nombre(conector):
+    """PLACSP publica el nombre del autónomo; nosotros no lo republicamos.
+
+    Se descubrió en la instantánea real: 25 personas físicas con nombre y
+    apellidos en un mapa de influencia política. Mismo criterio que en BDNS —
+    el hecho se conserva, la identidad no.
+    """
+    n = _normalizar_feed(conector, _feed_con_adjudicatarios(("12345678Z", "JUAN PEREZ GOMEZ")))
+    assert n is not None
+
+    plano = json.dumps(
+        [e.__dict__ for e in n.entidades] + [a.__dict__ for a in n.aristas],
+        default=str,
+        ensure_ascii=False,
+    )
+    for prohibido in ("JUAN", "PEREZ", "GOMEZ", "12345678Z"):
+        assert prohibido not in plano, f"se publicó {prohibido}"
+
+    # Pero el dinero y el órgano siguen ahí: es un hueco de identidad, no de hecho.
+    assert n.aristas[0].amount is not None
+    assert any(e.ftm_schema == "PublicBody" for e in n.entidades)
+    agregado = [e for e in n.entidades if e.dedupe_key.startswith("placsp:particulares:")]
+    assert len(agregado) == 1
+    assert agregado[0].properties["agregado"] is True
+
+
+def test_una_sociedad_con_nif_de_aspecto_personal_no_es_persona(conector):
+    """El nombre desmiente al NIF: una S.L. es una S.L.
+
+    En la instantánea real, "NACATUR 2 ESPAÑA, S.L." y "Explorance Inc"
+    salieron clasificadas como Person porque su identificador empezaba por
+    dígito.
+    """
+    n = _normalizar_feed(
+        conector, _feed_con_adjudicatarios(("12345678Z", "NACATUR 2 ESPAÑA, S.L."))
+    )
+    assert n is not None
+    adjudicatario = next(e for e in n.entidades if e.ftm_schema not in ("PublicBody", "Contract"))
+    assert adjudicatario.ftm_schema == "Company"
+    assert adjudicatario.caption == "NACATUR 2 ESPAÑA, S.L."
+
+
+def test_dos_particulares_en_el_mismo_contrato_no_pierden_dinero(conector):
+    """El nodo es un agregado compartido; las aristas no pueden colapsar.
+
+    Si las dos adjudicaciones compartieran clave, una de las dos desaparecería
+    y el importe adjudicado saldría a la mitad.
+    """
+    n = _normalizar_feed(
+        conector,
+        _feed_con_adjudicatarios(("12345678Z", "JUAN PEREZ"), ("87654321X", "ANA LOPEZ")),
+    )
+    assert n is not None
+    claves = {a.dedupe_key for a in n.aristas}
+    assert len(claves) == 2, "una adjudicación se perdió al agregar a los particulares"
+    # Y las dos apuntan al mismo nodo agregado.
+    assert len({a.target_key for a in n.aristas}) == 1
