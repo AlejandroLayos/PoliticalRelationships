@@ -88,6 +88,12 @@ jobs:
           echo "::group::placsp"
           sinapsis-worker --run placsp --desde "$D" --hasta "$H" --max-paginas "$P" || echo "placsp falló"
           echo "::endgroup::"
+          # El TdC ignora el rango de fechas: son cuatro PDF acumulativos que
+          # el organismo reescribe. Se pasan igual porque el worker los exige,
+          # y la idempotencia la da el content_hash.
+          echo "::group::tcu"
+          sinapsis-worker --run tcu --desde "$D" --hasta "$H" || echo "tcu falló"
+          echo "::endgroup::"
 
       - name: proponer fusiones (no las aplica)
         working-directory: ingest

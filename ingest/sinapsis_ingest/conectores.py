@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, placsp
+from sinapsis_ingest.connectors import bdns, placsp, tcu
 
 
 @dataclass(frozen=True)
@@ -42,12 +42,19 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://contrataciondelestado.es",
         license="Reutilización libre (Ley 37/2007)",
     ),
+    "tcu": FichaFuente(
+        id="tcu",
+        name="Tribunal de Cuentas",
+        url="https://www.tcu.es",
+        license="Reutilización libre (Ley 37/2007)",
+    ),
 }
 
 _CONECTORES: dict[str, Any] = {
     "bdns": bdns.crear,
     "bdns-partidos": bdns.crear_partidos,
     "placsp": placsp.crear,
+    "tcu": tcu.crear,
 }
 
 
