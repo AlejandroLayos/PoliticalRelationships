@@ -92,12 +92,32 @@ distinción. Una arista inferida sin `confidence` es un bug.
 
 El núcleo del proyecto. Orden estricto:
 
-1. **Determinista por NIF.** Dos entidades con el mismo NIF normalizado son la
-   misma. Fusión automática, registrada con `method = 'nif_exact'`.
-2. **Matching difuso.** Genera candidatos en `review_queue` con su `score` y
-   las `features` que lo motivaron. **No fusiona.**
+1. **Determinista por NIF.** Lo impone el esquema, no el código: el índice
+   único parcial sobre `nif` hace imposible que dos entidades canónicas lo
+   compartan. Ocurre en el momento del upsert.
+2. **Matching difuso** (`ingest/sinapsis_ingest/resolucion.py`). Genera
+   candidatos en `review_queue` con su `score` y las `features` que lo
+   motivaron. **No fusiona.**
 3. **Revisión humana.** Un humano acepta o rechaza. La decisión va a
    `entity_resolution_decisions`.
+
+El *blocking* va por índice de trigramas sobre `entities.caption_normalizado`,
+una columna generada: comparar todas las entidades contra todas sería O(n²) y
+no terminaría. La puntuación combina similitud de trigramas y distancia de
+edición, y las `features` guardadas explican cada propuesta — una puntuación
+sin explicación no es auditable.
+
+Dos guardas de precisión que no se negocian:
+
+- **Dos NIF distintos son prueba de que NO son la misma entidad**, así que ese
+  par nunca se propone. Proponerlo sería pedirle al revisor que se equivoque.
+- Una `Person` nunca se propone contra una `Company`.
+
+Al fusionar, si la entidad absorbida aportaba el NIF y la conservada no lo
+tenía, el NIF se traslada: perderlo rompería la convergencia determinista
+futura. Al deshacer se devuelve, y el orden importa — hay que quitarlo de la
+conservada **antes** de reactivar la absorbida, o las dos lo tendrían a la vez
+y violarían el índice único.
 
 Toda fusión es reversible: deshacerla rellena `reverted_at` en vez de borrar la
 fila, para que el historial quede intacto.

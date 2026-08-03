@@ -105,6 +105,37 @@ def _ejecutar_conector(args: argparse.Namespace) -> int:
     return 0 if not resultado.errores else 1
 
 
+def _dsn() -> str:
+    return os.environ.get(
+        "SINAPSIS_POSTGRES_DSN",
+        "postgres://sinapsis:sinapsis@postgres:5432/sinapsis",
+    )
+
+
+def _generar_candidatos() -> int:
+    """Propone fusiones. Nunca las aplica: eso lo decide una persona."""
+    from sinapsis_ingest import resolucion
+    from sinapsis_ingest.store import Store
+
+    with Store(_dsn()) as store:
+        n = resolucion.generar_candidatos(store)
+        store.conn.commit()
+    log.info("candidatos encolados para revisión humana", n=n)
+    return 0
+
+
+def _listar_pendientes() -> int:
+    from sinapsis_ingest import resolucion
+    from sinapsis_ingest.store import Store
+
+    with Store(_dsn()) as store:
+        for c in resolucion.pendientes(store):
+            print(f"{c.score:.3f}  {c.id}")
+            print(f"        A: {c.izquierda_caption}")
+            print(f"        B: {c.derecha_caption}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Arranca el worker. Devuelve el código de salida del proceso."""
     parser = argparse.ArgumentParser(prog="sinapsis-worker")
@@ -134,6 +165,16 @@ def main(argv: list[str] | None = None) -> int:
         help="fecha final para --run",
     )
     parser.add_argument(
+        "--candidatos",
+        action="store_true",
+        help="genera candidatos de fusión en review_queue y sale (no fusiona nada)",
+    )
+    parser.add_argument(
+        "--pendientes",
+        action="store_true",
+        help="lista los candidatos pendientes de revisión y sale",
+    )
+    parser.add_argument(
         "--max-paginas",
         type=int,
         default=None,
@@ -155,6 +196,12 @@ def main(argv: list[str] | None = None) -> int:
         for source_id in registry.available():
             print(source_id)
         return 0
+
+    if args.candidatos:
+        return _generar_candidatos()
+
+    if args.pendientes:
+        return _listar_pendientes()
 
     if args.run:
         return _ejecutar_conector(args)
