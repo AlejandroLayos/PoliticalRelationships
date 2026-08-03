@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import GrafoRed from './components/GrafoRed.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
-import { buscar, entidad as pedirEntidad, estado, estadoServidor, vecinos } from './api.js'
+import { buscar, cargarInstantanea, entidad as pedirEntidad, estado, estadoServidor, vecinos } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
 
@@ -18,6 +18,7 @@ const error = ref('')
 const esDemo = ref(false)
 const baseVacia = ref(false)
 const arrancando = ref(true)
+const instantanea = ref(null)
 
 let temporizador = null
 watch(consulta, (q) => {
@@ -71,15 +72,25 @@ watch(profundidad, () => {
 })
 
 onMounted(async () => {
-  // Tres situaciones que se ven igual si no preguntas: no hay API, la hay pero
-  // la base está vacía, o hay datos. Distinguirlas evita que "no se ve nada"
-  // signifique tres cosas distintas.
+  // Cuatro situaciones que se ven igual si no preguntas: API con datos, API
+  // con la base vacía, instantánea estática, o nada. Distinguirlas evita que
+  // "no se ve nada" signifique cuatro cosas distintas.
   const srv = await estadoServidor()
+  if (srv.conectada && !srv.vacia) {
+    arrancando.value = false
+    return // hay API viva: se espera una búsqueda
+  }
+  baseVacia.value = srv.conectada && srv.vacia
+
+  const estatico = await cargarInstantanea()
   arrancando.value = false
 
-  if (srv.conectada && !srv.vacia) return  // hay datos: se espera una búsqueda
-  baseVacia.value = srv.conectada && srv.vacia
-  await abrir(ENTIDAD_INICIAL)  // cae a la demostración y lo anuncia
+  if (estatico) {
+    instantanea.value = estado.instantanea
+    await abrir(estatico.entidadDestacada())
+  } else {
+    await abrir(ENTIDAD_INICIAL) // demostración, y se anuncia como tal
+  }
 })
 </script>
 
@@ -91,7 +102,16 @@ onMounted(async () => {
       público con datos inventados sin decirlo sería lo contrario de lo que
       este proyecto pretende.
     -->
-    <div v-if="esDemo" class="banda-demo">
+    <div v-if="instantanea && !esDemo" class="banda-info">
+      <strong>Instantánea del {{ new Date(instantanea.generado).toLocaleDateString('es-ES') }}.</strong>
+      Datos reales de {{ instantanea.fuentes.map((f) => f.name).join(', ') }}, generados por la
+      ingesta automática. No es una consulta en vivo.
+      <span v-if="instantanea.truncado">
+        Se muestran las {{ datos.nodes.length ? instantanea.total : 0 }} entidades más conectadas.
+      </span>
+    </div>
+
+    <div v-else-if="esDemo" class="banda-demo">
       <strong>Datos de demostración.</strong>
       Ninguna entidad mostrada es real: los nombres son ficticios y las cifras
       inventadas.
@@ -185,6 +205,12 @@ onMounted(async () => {
   border-bottom: 1px solid var(--aviso-borde);
 }
 .banda-demo a { color: inherit; margin-left: 0.4rem; }
+
+.banda-info {
+  background: #16232e; color: #a9cbe4;
+  padding: 0.5rem 1rem; font-size: 0.8rem; line-height: 1.4;
+  border-bottom: 1px solid #23384a;
+}
 
 .cabecera {
   display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;

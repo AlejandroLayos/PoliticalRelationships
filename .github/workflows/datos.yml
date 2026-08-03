@@ -1,0 +1,126 @@
+name: Instantánea de datos
+
+# Publica datos REALES sin necesidad de base de datos alojada ni de ninguna
+# cuenta: ingiere contra un Postgres efímero, exporta el grafo a JSON y lo
+# commitea. Vercel lo sirve como un activo más.
+#
+# Es una instantánea, no una consulta viva. Cuando el volumen lo pida, el
+# camino es conectar Neon y usar la API (ver DESPLIEGUE.md); esto no estorba.
+on:
+  schedule:
+    - cron: "40 4 * * *"
+  workflow_dispatch:
+    inputs:
+      desde:
+        description: "Fecha inicial (AAAA-MM-DD)"
+        default: "2025-01-01"
+      hasta:
+        description: "Fecha final (AAAA-MM-DD)"
+        default: "2025-12-31"
+      max_paginas:
+        description: "Páginas por conector"
+        default: "2"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instantanea
+  cancel-in-progress: false
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: sinapsis
+          POSTGRES_PASSWORD: sinapsis
+          POSTGRES_DB: sinapsis
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U sinapsis -d sinapsis"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SINAPSIS_POSTGRES_DSN: postgres://sinapsis:sinapsis@localhost:5432/sinapsis
+      PGHOST: localhost
+      PGUSER: sinapsis
+      PGPASSWORD: sinapsis
+      PGDATABASE: sinapsis
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libicu-dev postgresql-client
+
+      - name: instalar
+        working-directory: ingest
+        run: pip install -e .
+
+      - name: esquema
+        run: |
+          for f in $(ls backend/migrations/*.up.sql | sort); do
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      # Si una fuente pública falla, se registra el hueco y se sigue con las
+      # demás: un conector caído no debe dejar la web sin actualizar.
+      - name: ingerir
+        working-directory: ingest
+        continue-on-error: true
+        run: |
+          D="${{ inputs.desde || '2025-01-01' }}"
+          H="${{ inputs.hasta || '2025-12-31' }}"
+          P="${{ inputs.max_paginas || '2' }}"
+          for c in bdns bdns-partidos; do
+            echo "::group::$c"
+            sinapsis-worker --run "$c" --desde "$D" --hasta "$H" --max-paginas "$P" || echo "$c falló"
+            echo "::endgroup::"
+          done
+          echo "::group::placsp"
+          sinapsis-worker --run placsp --desde "$D" --hasta "$H" --max-paginas "$P" || echo "placsp falló"
+          echo "::endgroup::"
+
+      - name: proponer fusiones (no las aplica)
+        working-directory: ingest
+        continue-on-error: true
+        run: sinapsis-worker --candidatos
+
+      - name: exportar instantánea
+        working-directory: ingest
+        run: sinapsis-worker --exportar ../frontend/public/datos/grafo.json
+
+      - name: resumen
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d = json.load(open('frontend/public/datos/grafo.json'))
+          print('### Instantánea generada')
+          print()
+          print(f"- generada: `{d['generado']}`")
+          print(f"- nodos: **{len(d['nodes'])}**, aristas: **{len(d['edges'])}**")
+          print(f"- entidades en base: {d['total_entidades_en_base']}")
+          print(f"- recortada: {'sí' if d['truncado'] else 'no'}")
+          print(f"- fuentes: {', '.join(f['id'] for f in d['fuentes']) or 'ninguna'}")
+          PY
+
+      - name: commitear si cambió
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # El fichero está en .gitignore para que nadie suba un volcado de
+          # pruebas a mano; la CI sí debe poder subirlo.
+          git add -f frontend/public/datos/grafo.json
+          if git diff --cached --quiet; then
+            echo "sin cambios en los datos"
+            exit 0
+          fi
+          git commit -m "datos: instantánea automática del grafo (no editar a mano)"
+          git push

@@ -30,3 +30,7 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+# La instantánea la genera el workflow de datos, no se edita a mano.
+# (se commitea desde CI; ignorada en local para no subir volcados de pruebas)
+/frontend/public/datos/grafo.json
