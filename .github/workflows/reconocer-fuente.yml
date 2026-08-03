@@ -1,0 +1,51 @@
+name: Reconocer fuente
+
+# Paso previo a escribir un conector: mirar qué publica de verdad un organismo
+# y en qué formato, y anotarlo. El entorno de desarrollo no alcanza los sitios
+# públicos españoles; el runner sí.
+#
+# Existe por una lección concreta: en BDNS deduje el nombre de un campo del
+# enumerado de parámetros de búsqueda, lo di por bueno y estaba mal. Suponer el
+# formato de un PDF sería el mismo error a mayor escala.
+on:
+  workflow_dispatch:
+    inputs:
+      fuente:
+        description: "Fuente a reconocer"
+        type: choice
+        options: [tcu]
+        default: tcu
+
+permissions:
+  contents: write
+
+jobs:
+  reconocer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar httpx
+        run: pip install httpx
+
+      - name: explorar
+        run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py
+
+      - name: mostrar el informe en el resumen
+        run: cat docs/fuentes/*-reconocimiento.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: commitear el informe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/fuentes/
+          if git diff --cached --quiet; then
+            echo "sin cambios"
+            exit 0
+          fi
+          git commit -m "docs: reconocimiento de ${{ inputs.fuente || 'tcu' }}"
+          git push

@@ -18,8 +18,8 @@ on:
         description: "Fecha final (AAAA-MM-DD)"
         default: "2025-12-31"
       max_paginas:
-        description: "Páginas por conector"
-        default: "2"
+        description: "Páginas por conector (1000 concesiones cada una)"
+        default: "12"
 
 permissions:
   contents: write
@@ -75,10 +75,11 @@ jobs:
       - name: ingerir
         working-directory: ingest
         continue-on-error: true
+        timeout-minutes: 45
         run: |
           D="${{ inputs.desde || '2025-01-01' }}"
           H="${{ inputs.hasta || '2025-12-31' }}"
-          P="${{ inputs.max_paginas || '2' }}"
+          P="${{ inputs.max_paginas || '12' }}"
           for c in bdns bdns-partidos; do
             echo "::group::$c"
             sinapsis-worker --run "$c" --desde "$D" --hasta "$H" --max-paginas "$P" || echo "$c falló"
