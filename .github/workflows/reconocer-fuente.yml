@@ -35,10 +35,15 @@ jobs:
       - name: explorar
         run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py
 
+      # `always()`: si el reconocimiento se cae a medias, el informe parcial
+      # sigue valiendo. Perderlo obliga a repetir la exploración contra un
+      # servicio público, que es justo lo que no conviene hacer en bucle.
       - name: mostrar el informe en el resumen
-        run: cat docs/fuentes/*-reconocimiento.md >> "$GITHUB_STEP_SUMMARY"
+        if: always()
+        run: cat docs/fuentes/*-reconocimiento.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: commitear el informe
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
