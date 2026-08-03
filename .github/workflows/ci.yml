@@ -114,11 +114,20 @@ jobs:
       - name: cliente de postgres
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
-      # up -> down -> up prueba que la migración es reversible y reaplicable.
-      # Una migración que sólo se ha probado hacia adelante no es reversible,
-      # es sólo una que aún no ha fallado.
-      - name: aplicar 0001 up
-        run: psql -v ON_ERROR_STOP=1 -q -f backend/migrations/0001_init.up.sql
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: backend/go.sum
+
+      # up -> down -> up prueba que las migraciones son reversibles y
+      # reaplicables. Una migración que sólo se ha probado hacia adelante no es
+      # reversible, es sólo una que aún no ha fallado.
+      - name: aplicar migraciones (up, en orden)
+        run: |
+          for f in $(ls backend/migrations/*.up.sql | sort); do
+            echo "-> $f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
 
       - name: el esquema tiene las tablas esperadas
         run: |
@@ -132,11 +141,26 @@ jobs:
             exit 1
           fi
 
-      - name: revertir 0001 down
-        run: psql -v ON_ERROR_STOP=1 -q -f backend/migrations/0001_init.down.sql
+      - name: revertir migraciones (down, en orden inverso)
+        run: |
+          for f in $(ls backend/migrations/*.down.sql | sort -r); do
+            echo "-> $f"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
 
-      - name: reaplicar 0001 up
-        run: psql -v ON_ERROR_STOP=1 -q -f backend/migrations/0001_init.up.sql
+      - name: reaplicar migraciones
+        run: |
+          for f in $(ls backend/migrations/*.up.sql | sort); do
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      # Los tests de la capa store necesitan una BD real: verifican que la
+      # idempotencia y la procedencia funcionan de verdad, no en un mock.
+      - name: tests de integración de store
+        working-directory: backend
+        env:
+          SINAPSIS_TEST_POSTGRES_DSN: postgres://sinapsis:sinapsis@localhost:5432/sinapsis?sslmode=disable
+        run: go test -race -v ./internal/store/
 
   compose:
     name: docker compose
