@@ -1,6 +1,6 @@
 # Anatomía de los PDF del Tribunal de Cuentas
 
-Generado automáticamente el 2026-08-03T20:13:00.857509+00:00 por `scripts/anatomia_pdf_tcu.py`.
+Generado automáticamente el 2026-08-03T20:18:42.723841+00:00 por `scripts/anatomia_pdf_tcu.py`.
 
 Responde a la pregunta que decide el coste del conector: si estos PDF
 tienen capa de texto o son escaneos, y si `pdfplumber` reconoce sus
