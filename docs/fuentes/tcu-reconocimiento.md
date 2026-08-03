@@ -1,20 +1,48 @@
 # Reconocimiento del Tribunal de Cuentas
 
-Generado automáticamente el 2026-08-03T19:43:27.329221+00:00 por `scripts/explorar_tcu.py`.
+Generado automáticamente el 2026-08-03T19:59:51.125348+00:00 por `scripts/explorar_tcu.py`.
 
 **No es documentación de una fuente ya integrada.** Es lo que se ve
 desde fuera, anotado sin interpretar, para decidir si merece la pena
 escribir un conector y de qué tipo.
 
+Resumen: **7 de 7** candidatos respondieron.
+
 ## portal_partidos
 
 - URL: `https://www.tcu.es/es/partidos-politicos/`
-- **No accesible:** `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1016)`
+- HTTP 200 · `text/html;charset=UTF-8` · 64,549 bytes
+- ⚠️ el servidor no envía el certificado intermedio; se recuperó por AIA como hace un navegador
+- Tablas HTML en la página: **0**
+- Ficheros descargables enlazados: **2**
+  - Por extensión: `pdf`: 2
+
+  Primeros enlaces:
+  - `https://www.tcu.es/.galleries/Informacion-legal/Certificado_ENS_Medio.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Transparencia/Normativa/Resoluciones-Oficiales/Plan-Estrategico-Tribunal-de-Cuentas-2024-2027.pdf`
+
+  Rutas que podrían servir datos:
+  - `/es/informacion-legal/politica-de-seguridad-y-proteccion-de-datos/`
 
 ## sanciones
 
 - URL: `https://www.tcu.es/es/fiscalizacion/sanciones-a-partidos/`
-- **No accesible:** `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1016)`
+- HTTP 200 · `text/html;charset=UTF-8` · 63,032 bytes
+- ⚠️ el servidor no envía el certificado intermedio; se recuperó por AIA como hace un navegador
+- Tablas HTML en la página: **0**
+- Ficheros descargables enlazados: **6**
+  - Por extensión: `pdf`: 10
+
+  Primeros enlaces:
+  - `https://www.tcu.es/.galleries/Informacion-legal/Certificado_ENS_Medio.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-electoral-2015.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-electoral-2019.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-electoral-2023.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-ordinaria.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Transparencia/Normativa/Resoluciones-Oficiales/Plan-Estrategico-Tribunal-de-Cuentas-2024-2027.pdf`
+
+  Rutas que podrían servir datos:
+  - `/es/informacion-legal/politica-de-seguridad-y-proteccion-de-datos/`
 
 ## sede_rendicion
 
@@ -22,6 +50,7 @@ escribir un conector y de qué tipo.
 - HTTP 200 · `text/html;charset=UTF-8` · 37,664 bytes
 - Tablas HTML en la página: **0**
 - Ficheros descargables enlazados: **4**
+  - Por extensión: `pdf`: 5
 
   Primeros enlaces:
   - `http://www.tcu.es/.galleries/pdf/PLAN_CONTABILIDAD_PARTIDOS_POLITICOS.pdf`
@@ -36,7 +65,138 @@ escribir un conector y de qué tipo.
 ## buscador
 
 - URL: `https://www.tcu.es/searcher/document/DocumentSearch.action?docCheckFis=true&docCheckFisSelect=FIS:+PARTIDOS+POL%C3%8DTICOS&submitSearch=true`
-- **No accesible:** `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1016)`
+- HTTP 200 · `text/html;charset=UTF-8` · 63,937 bytes
+- ⚠️ el servidor no envía el certificado intermedio; se recuperó por AIA como hace un navegador
+- Redirige a: `https://www.tcu.es/es/buscador?busqueda=%22DocumentSearch.action%22`
+- Tablas HTML en la página: **0**
+- Ficheros descargables enlazados: **2**
+  - Por extensión: `pdf`: 2
+
+  Primeros enlaces:
+  - `https://www.tcu.es/.galleries/Informacion-legal/Certificado_ENS_Medio.pdf`
+  - `https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Transparencia/Normativa/Resoluciones-Oficiales/Plan-Estrategico-Tribunal-de-Cuentas-2024-2027.pdf`
+
+  Rutas que podrían servir datos:
+  - `/es/informacion-legal/politica-de-seguridad-y-proteccion-de-datos/`
+  - `/system/modules/com.saga.listado/resources/json/cargando.json`
+  - `/system/modules/com.saga.listado/resources/json/cargandoElemento.json`
+  - `/system/modules/com.saga.listado/resources/json/cargandoSlider.json`
+  - `/system/modules/com.saga.listado/resources/json/noresults.json`
+
+## datosgob_titulo_partidos
+
+- URL: `https://datos.gob.es/apidata/catalog/dataset/title/partidos%20politicos?_pageSize=25&_page=0`
+- HTTP 200 · `application/json` · 1,008 bytes
+- ¿Menciona «Tribunal de Cuentas»?: **no**
+- Ficheros descargables enlazados: **1**
+  - Por extensión: `json`: 7
+- Formatos declarados: `linked-data-api`
+
+  Primeros enlaces:
+  - `http://datos.gob.es/apidata/catalog/dataset/title/partidos%20politicos.json`
+
+  Forma de la respuesta (claves reales, sin contenido):
+
+  ```json
+  {
+    "format": "str[15]",
+    "version": "str[3]",
+    "result": {
+      "_about": "str[96]",
+      "definition": {
+        "_about": "str[75]",
+        "definition": "str[75]",
+        "hasPart": "str[96]",
+        "type": "str[50]"
+      },
+      "extendedMetadataVersion": "str[110]",
+      "first": "str[83]",
+      "isPartOf": "str[75]",
+      "items": [],
+      "itemsPerPage": "int",
+      "page": "int",
+      "startIndex": "int",
+      "type": "str[42]"
+    }
+  }
+  ```
+
+## datosgob_titulo_tribunal_cuentas
+
+- URL: `https://datos.gob.es/apidata/catalog/dataset/title/tribunal%20de%20cuentas?_pageSize=25&_page=0`
+- HTTP 200 · `application/json` · 1,029 bytes
+- ¿Menciona «Tribunal de Cuentas»?: **no**
+- Ficheros descargables enlazados: **1**
+  - Por extensión: `json`: 7
+- Formatos declarados: `linked-data-api`
+
+  Primeros enlaces:
+  - `http://datos.gob.es/apidata/catalog/dataset/title/tribunal%20de%20cuentas.json`
+
+  Forma de la respuesta (claves reales, sin contenido):
+
+  ```json
+  {
+    "format": "str[15]",
+    "version": "str[3]",
+    "result": {
+      "_about": "str[99]",
+      "definition": {
+        "_about": "str[78]",
+        "definition": "str[78]",
+        "hasPart": "str[99]",
+        "type": "str[50]"
+      },
+      "extendedMetadataVersion": "str[113]",
+      "first": "str[86]",
+      "isPartOf": "str[78]",
+      "items": [],
+      "itemsPerPage": "int",
+      "page": "int",
+      "startIndex": "int",
+      "type": "str[42]"
+    }
+  }
+  ```
+
+## datosgob_keyword_financiacion
+
+- URL: `https://datos.gob.es/apidata/catalog/dataset/keyword/financiacion?_pageSize=25&_page=0`
+- HTTP 200 · `application/json` · 966 bytes
+- ¿Menciona «Tribunal de Cuentas»?: **no**
+- Ficheros descargables enlazados: **2**
+  - Por extensión: `json`: 7
+- Formatos declarados: `linked-data-api`
+
+  Primeros enlaces:
+  - `http://datos.gob.es/apidata/catalog/dataset/keyword/financiacion.json`
+  - `http://datos.gob.es/apidata/catalog/meta/dataset/keyword/_varKey.json`
+
+  Forma de la respuesta (claves reales, sin contenido):
+
+  ```json
+  {
+    "format": "str[15]",
+    "version": "str[3]",
+    "result": {
+      "_about": "str[90]",
+      "definition": "str[69]",
+      "extendedMetadataVersion": "str[104]",
+      "first": "str[77]",
+      "isPartOf": {
+        "_about": "str[69]",
+        "definition": "str[69]",
+        "hasPart": "str[90]",
+        "type": "str[50]"
+      },
+      "items": [],
+      "itemsPerPage": "int",
+      "page": "int",
+      "startIndex": "int",
+      "type": "str[42]"
+    }
+  }
+  ```
 
 ---
 
