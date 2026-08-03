@@ -15,7 +15,7 @@ from types import FrameType
 
 import structlog
 
-from sinapsis_ingest import registry
+from sinapsis_ingest import conectores, registry
 
 log = structlog.get_logger()
 
@@ -58,6 +58,59 @@ def comprobar_dependencias() -> dict[str, str]:
     return resultados
 
 
+def _ejecutar_conector(args: argparse.Namespace) -> int:
+    """Ejecuta un conector una vez, de principio a fin."""
+    from datetime import date
+
+    from sinapsis_ingest import pipeline
+    from sinapsis_ingest.store import Source, Store
+
+    try:
+        conector = registry.get(args.run)
+    except KeyError as exc:
+        log.error("conector desconocido", detalle=str(exc))
+        return 2
+
+    if not args.desde or not args.hasta:
+        log.error("--run necesita --desde y --hasta")
+        return 2
+    try:
+        desde = date.fromisoformat(args.desde)
+        hasta = date.fromisoformat(args.hasta)
+    except ValueError as exc:
+        log.error("fecha inválida", detalle=str(exc))
+        return 2
+
+    dsn = os.environ.get(
+        "SINAPSIS_POSTGRES_DSN",
+        "postgres://sinapsis:sinapsis@postgres:5432/sinapsis",
+    )
+
+    with Store(dsn) as store:
+        # La fuente debe existir antes que sus documentos: hay una FK.
+        store.upsert_source(
+            Source(
+                id="bdns",
+                name="Base de Datos Nacional de Subvenciones",
+                url="https://www.infosubvenciones.es",
+                license="Reutilización libre (Ley 37/2007)",
+            )
+        )
+        store.conn.commit()
+
+        resultado = pipeline.ejecutar(
+            store,
+            conector,
+            fecha_desde=desde,
+            fecha_hasta=hasta,
+            max_paginas=args.max_paginas,
+        )
+        store.conn.commit()
+
+    log.info("ingesta completada", **resultado.resumen())
+    return 0 if not resultado.errores else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     """Arranca el worker. Devuelve el código de salida del proceso."""
     parser = argparse.ArgumentParser(prog="sinapsis-worker")
@@ -71,6 +124,27 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="lista los conectores registrados y sale",
     )
+    parser.add_argument(
+        "--run",
+        metavar="CONECTOR",
+        help="ejecuta un conector una vez y sale (p. ej. --run bdns)",
+    )
+    parser.add_argument(
+        "--desde",
+        metavar="AAAA-MM-DD",
+        help="fecha inicial para --run",
+    )
+    parser.add_argument(
+        "--hasta",
+        metavar="AAAA-MM-DD",
+        help="fecha final para --run",
+    )
+    parser.add_argument(
+        "--max-paginas",
+        type=int,
+        default=None,
+        help="corta la paginación tras N páginas. Útil para probar",
+    )
     args = parser.parse_args(argv)
 
     structlog.configure(
@@ -81,10 +155,15 @@ def main(argv: list[str] | None = None) -> int:
         ]
     )
 
+    conectores.registrar_todos()
+
     if args.list_connectors:
         for source_id in registry.available():
             print(source_id)
         return 0
+
+    if args.run:
+        return _ejecutar_conector(args)
 
     if args.check:
         resultados = comprobar_dependencias()

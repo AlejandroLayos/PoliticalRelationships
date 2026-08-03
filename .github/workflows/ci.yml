@@ -60,6 +60,25 @@ jobs:
     defaults:
       run:
         working-directory: ingest
+    # Los tests del pipeline necesitan una BD real: comprueban que la ingesta
+    # es idempotente y que ninguna arista queda sin procedencia. Sin base de
+    # datos se saltarían en silencio, que es la peor forma de no probar algo.
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: sinapsis
+          POSTGRES_PASSWORD: sinapsis
+          POSTGRES_DB: sinapsis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sinapsis -d sinapsis"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      SINAPSIS_TEST_POSTGRES_DSN: postgres://sinapsis:sinapsis@localhost:5432/sinapsis
     steps:
       - uses: actions/checkout@v4
 
@@ -84,6 +103,21 @@ jobs:
 
       - name: pytest
         run: pytest --cov=sinapsis_ingest
+
+      # Si los tests de integración se saltasen por falta de BD, el job pasaría
+      # sin haberlos ejecutado. Esto lo convierte en un fallo ruidoso.
+      - name: los tests de integración se ejecutaron de verdad
+        run: |
+          if pytest tests/test_pipeline.py --collect-only -q 2>&1 | grep -q "no tests ran"; then
+            echo "los tests del pipeline no se recogieron"
+            exit 1
+          fi
+          salida=$(pytest tests/test_pipeline.py -q 2>&1 | tail -2)
+          echo "$salida"
+          if echo "$salida" | grep -q "skipped"; then
+            echo "los tests del pipeline se saltaron: falta la base de datos"
+            exit 1
+          fi
 
   migrations:
     name: migraciones (PostGIS)

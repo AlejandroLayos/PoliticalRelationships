@@ -1,0 +1,68 @@
+{
+  "_aviso": "MUESTRA SINTÉTICA. No es una respuesta capturada de BDNS. Los nombres de campo son los que declara la API (verificados en bdns-fetch); los valores son inventados y no corresponden a ninguna subvención real. Ver README.md de este directorio.",
+  "content": [
+    {
+      "codConcesion": 1001,
+      "numeroConvocatoria": "778899",
+      "convocatoria": "Ayudas a la rehabilitación energética de edificios 2025",
+      "nivel1": "ADMINISTRACIÓN DEL ESTADO",
+      "nivel2": "MINISTERIO DE EJEMPLO",
+      "nivel3": "DIRECCIÓN GENERAL DE PRUEBAS",
+      "instrumento": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN",
+      "urlBR": "https://www.infosubvenciones.es/bdnstrans/GE/es/convocatoria/778899",
+      "fechaConcesion": "2025-03-14",
+      "beneficiario": "CONSTRUCCIONES EJEMPLO SL",
+      "nifCif": "B-12345678",
+      "importe": 50000.5,
+      "ayudaEquivalente": 50000.5,
+      "tieneProyecto": false
+    },
+    {
+      "codConcesion": 1002,
+      "numeroConvocatoria": "778899",
+      "convocatoria": "Ayudas a la rehabilitación energética de edificios 2025",
+      "nivel1": "ADMINISTRACIÓN DEL ESTADO",
+      "nivel2": "MINISTERIO DE EJEMPLO",
+      "nivel3": "",
+      "instrumento": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN",
+      "fechaConcesion": "14/03/2025",
+      "beneficiario": "NOMBRE APELLIDO APELLIDO",
+      "nifCif": "12345678Z",
+      "importe": "1234567890123.45",
+      "ayudaEquivalente": null,
+      "tieneProyecto": false
+    },
+    {
+      "codConcesion": 1003,
+      "numeroConvocatoria": "112233",
+      "convocatoria": "Subvenciones a entidades sin ánimo de lucro",
+      "nivel1": "COMUNIDAD AUTÓNOMA DE EJEMPLO",
+      "nivel2": "CONSEJERÍA DE PRUEBAS",
+      "instrumento": "SUBVENCIÓN",
+      "fechaConcesion": "2025-06-01",
+      "beneficiario": "ASOCIACIÓN DE EJEMPLO",
+      "nifCif": null,
+      "importe": 7500,
+      "tieneProyecto": true
+    },
+    {
+      "codConcesion": 1004,
+      "convocatoria": "Concesión sin beneficiario declarado",
+      "nivel1": "ADMINISTRACIÓN DEL ESTADO",
+      "beneficiario": "",
+      "nifCif": "",
+      "importe": null,
+      "fechaConcesion": null
+    },
+    {
+      "numeroConvocatoria": "999999",
+      "beneficiario": "SIN CÓDIGO DE CONCESIÓN SL",
+      "nifCif": "B87654321",
+      "importe": 100
+    }
+  ],
+  "totalPages": 1,
+  "number": 0,
+  "size": 1000,
+  "totalElements": 5
+}

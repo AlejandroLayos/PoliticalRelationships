@@ -24,19 +24,41 @@ pipeline entero.
 - Documentación Swagger: <https://www.infosubvenciones.es/bdnstrans/doc/swagger>
 - Base de la API: `https://www.infosubvenciones.es/bdnstrans/api/`
 
-**Endpoint de ejemplo** (convocatorias por rango de fechas):
+**Endpoint que usamos** — concesiones, no convocatorias. La *convocatoria* es
+la llamada a solicitudes; la *concesión* es el dinero efectivamente otorgado, y
+es lo que produce una arista.
 
 ```
-GET /bdnstrans/api/convocatorias/busqueda
-    ?fechaDesde=01/01/2025&fechaHasta=31/12/2025&pageSize=50&page=0
+GET /bdnstrans/api/concesiones/busqueda
+    ?fechaDesde=01/01/2025&fechaHasta=31/01/2025&pageSize=1000&page=0
 ```
 
-**Límites:**
+Las fechas van en `dd/mm/aaaa`. La respuesta es una página estilo Spring:
 
-- `pageSize` máximo **10.000 registros por consulta**. Hay que paginar, y para
-  rangos grandes conviene trocear por fechas además de por página.
-- Sin límite de tasa documentado. Se aplica *backoff* por prudencia y para no
-  cargar un servicio público.
+```json
+{ "content": [ ... ], "totalPages": 12, "number": 0, "totalElements": 11543 }
+```
+
+**Campos de cada concesión** (verificados en el enumerado de campos ordenables
+de la API): `codConcesion`, `numeroConvocatoria`, `convocatoria`, `nivel1`,
+`nivel2`, `nivel3`, `instrumento`, `urlBR`, `fechaConcesion`, `beneficiario`,
+`nifCif`, `importe`, `ayudaEquivalente`, `tieneProyecto`.
+
+`nivel1..3` es la jerarquía administrativa del órgano concedente; usamos el
+nivel más específico que venga relleno.
+
+**Límites reales:**
+
+- `pageSize` máximo **10.000**. Usamos 1.000: páginas mayores producen
+  documentos crudos enormes y difíciles de reprocesar.
+- **10 peticiones GET por segundo y por IP.** Vamos a 4/s a propósito: es un
+  servicio público y no hay prisa.
+- Para rangos grandes conviene trocear por fechas además de por página.
+
+**Otros endpoints con valor para el proyecto**, todavía sin conector:
+`/partidospoliticos/busqueda` (subvenciones a partidos políticos — directamente
+el objeto de Sinapsis), `/grandesbeneficiarios/busqueda`, `/sanciones/busqueda`,
+`/ayudasestado/busqueda` y `/minimis/busqueda`.
 
 **Referencia de implementación:** [`bdns-fetch`](https://github.com/cruzlorite/bdns-fetch)
 (Python, GPLv3) implementa las rutas oficiales. Se usa como **referencia de
@@ -46,11 +68,22 @@ con nuestra AGPL-3.0, pero portamos la lógica.
 **Mapeo a FollowTheMoney:**
 
 ```
-organismo convocante (PublicBody) --Payment--> beneficiario (Company | Person)
+organismo concedente (PublicBody) --Payment--> beneficiario (Company | Person)
 ```
 
-Con `amount`, `currency = 'EUR'`, `start_date` de la concesión, y
-`dedupe_key` derivada del identificador de concesión de BDNS.
+Con `amount`, `currency = 'EUR'`, `start_date` = `fechaConcesion` y
+`dedupe_key = bdns:concesion:<codConcesion>`.
+
+El tipo del beneficiario se decide por el NIF: los que empiezan por dígito o
+por K, L, M, X, Y, Z son personas físicas (`Person`); el resto, `Company`. Sin
+NIF no se afirma el tipo — va como `LegalEntity` y la arista baja a
+`confidence = 0.7`, porque sin identificador fiscal no podemos garantizar de
+quién hablamos.
+
+**Estado de verificación:** ⚠️ el conector **no está probado contra una
+respuesta real de la API**. Los golden tests existen pero se saltan hasta que
+alguien capture la muestra con `scripts/capturar_muestra_bdns.py` desde una
+máquina con salida a internet. Ver `ingest/tests/golden/README.md`.
 
 **Base legal:** información de publicidad activa obligatoria (Ley 38/2003 General
 de Subvenciones, art. 20). Los beneficiarios personas físicas se tratan según
