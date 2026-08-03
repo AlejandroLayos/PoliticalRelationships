@@ -34,6 +34,7 @@ log = structlog.get_logger()
 SOURCE_ID = "bdns"
 BASE_URL = "https://www.infosubvenciones.es/bdnstrans/api"
 ENDPOINT_CONCESIONES = f"{BASE_URL}/concesiones/busqueda"
+ENDPOINT_PARTIDOS = f"{BASE_URL}/partidospoliticos/busqueda"
 
 # Súbelo sólo con un motivo: al cambiar, todo lo derivado se recomputa desde el
 # crudo ya guardado. Formato "<fuente>/<n>".
@@ -98,10 +99,17 @@ def _parece_persona_fisica(nif: str) -> bool:
 
 
 class BDNSConnector:
-    """Conector de concesiones de BDNS."""
+    """Conector de concesiones de BDNS.
+
+    Es también la base de los demás conjuntos de BDNS: todos comparten
+    endpoint con la misma forma (paginación Spring, fechas dd/mm/aaaa) y los
+    mismos campos por registro. Las subclases sólo cambian el endpoint y
+    cómo se clasifica al beneficiario.
+    """
 
     source_id = SOURCE_ID
     extractor_version = EXTRACTOR_VERSION
+    endpoint = ENDPOINT_CONCESIONES
 
     def __init__(
         self,
@@ -157,7 +165,7 @@ class BDNSConnector:
                 self._esperar_turno()
 
                 try:
-                    resp = cliente.get(ENDPOINT_CONCESIONES, params=params)
+                    resp = cliente.get(self.endpoint, params=params)
                     resp.raise_for_status()
                 except httpx.HTTPError as exc:
                     # No inventamos datos: se registra el hueco y se sigue.
@@ -258,6 +266,19 @@ class BDNSConnector:
 
     # --- normalize --------------------------------------------------------
 
+    def clasificar_beneficiario(self, nif: str) -> tuple[str, dict[str, Any]]:
+        """Decide el esquema FtM del beneficiario y propiedades extra.
+
+        Las subclases lo redefinen cuando el conjunto de datos ya dice qué es
+        el beneficiario (p. ej. el de partidos políticos).
+        """
+        if not nif:
+            # Sin identificador fiscal no afirmamos si es empresa o persona.
+            return "LegalEntity", {}
+        if _parece_persona_fisica(nif):
+            return "Person", {}
+        return "Company", {}
+
     def normalize(self, record: ParsedRecord) -> dict[str, Any] | None:
         """Traduce una concesión al vocabulario FollowTheMoney.
 
@@ -276,12 +297,9 @@ class BDNSConnector:
         # Sin NIF no podemos afirmar que dos "Construcciones García SL" sean la
         # misma: la clave queda acotada a esta fuente y la fusión, si procede,
         # la decidirá la resolución de entidades. Precisión sobre exhaustividad.
-        if nif:
-            clave_beneficiario = f"nif:{nif}"
-            esquema = "Person" if _parece_persona_fisica(nif) else "Company"
-        else:
-            clave_beneficiario = f"bdns:beneficiario:{_slug(beneficiario)}"
-            esquema = "LegalEntity"
+        clave_beneficiario = f"nif:{nif}" if nif else f"bdns:beneficiario:{_slug(beneficiario)}"
+
+        esquema, props_beneficiario = self.clasificar_beneficiario(nif)
 
         entidad_origen = {
             "ftm_schema": "PublicBody",
@@ -296,7 +314,7 @@ class BDNSConnector:
             "dedupe_key": clave_beneficiario,
             "nif": nif,
             "country": "es",
-            "properties": {"name": beneficiario},
+            "properties": {"name": beneficiario, **props_beneficiario},
         }
 
         propiedades: dict[str, Any] = {}
@@ -341,6 +359,35 @@ def _slug(texto: str) -> str:
     return f"{base}-{digest}"
 
 
+class BDNSPartidosConnector(BDNSConnector):
+    """Subvenciones a **partidos políticos**.
+
+    Mismo universo de concesiones que el conector general, pero servido por un
+    endpoint que ya viene filtrado a partidos. Eso aporta una cosa que el
+    conjunto general no dice: que el beneficiario **es un partido político**.
+
+    Comparte `source_id` y clave de arista con las concesiones generales a
+    propósito. Si una misma concesión aparece en los dos conjuntos, debe
+    quedar como **una sola arista**: duplicarla inflaría el dinero contabilizado,
+    que es el peor error posible en un proyecto que va justamente de seguir el
+    dinero. Los documentos crudos sí se guardan por separado —son URLs y bytes
+    distintos— así que cada endpoint conserva su procedencia.
+    """
+
+    endpoint = ENDPOINT_PARTIDOS
+
+    def clasificar_beneficiario(self, nif: str) -> tuple[str, dict[str, Any]]:
+        # El conjunto de datos ya afirma que es un partido: no lo inferimos.
+        # La propiedad se fusiona en el JSONB, así que la marca sobrevive
+        # aunque el conector general procese antes la misma entidad.
+        return "Organization", {"partido_politico": True}
+
+
 def crear() -> BDNSConnector:
-    """Fábrica para el registro de conectores."""
+    """Fábrica del conector de concesiones generales."""
     return BDNSConnector()
+
+
+def crear_partidos() -> BDNSPartidosConnector:
+    """Fábrica del conector de subvenciones a partidos políticos."""
+    return BDNSPartidosConnector()

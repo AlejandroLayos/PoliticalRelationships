@@ -88,14 +88,8 @@ def _ejecutar_conector(args: argparse.Namespace) -> int:
 
     with Store(dsn) as store:
         # La fuente debe existir antes que sus documentos: hay una FK.
-        store.upsert_source(
-            Source(
-                id="bdns",
-                name="Base de Datos Nacional de Subvenciones",
-                url="https://www.infosubvenciones.es",
-                license="Reutilización libre (Ley 37/2007)",
-            )
-        )
+        f = conectores.ficha(conector.source_id)
+        store.upsert_source(Source(id=f.id, name=f.name, url=f.url, license=f.license))
         store.conn.commit()
 
         resultado = pipeline.ejecutar(

@@ -138,6 +138,19 @@ posterior, nunca `DO UPDATE`: el trigger de inmutabilidad rechaza cualquier
 `UPDATE`, incluido el no-op que se usaría para recuperar el `RETURNING`. El
 crudo es inmutable, y eso incluye al upsert.
 
+**La identidad del crudo es el contenido, no la URL.** Dos endpoints distintos
+de la misma fuente que devolvieran bytes idénticos se guardarían como un solo
+documento, y la URL conservada sería la del primero. Es deliberado —lo que se
+audita es el contenido— pero conviene tenerlo presente al escribir conectores
+que consultan varias vistas del mismo conjunto de datos.
+
+**Varios conectores pueden compartir `source_id`.** El nombre con el que se
+registra un conector (`bdns-partidos`) y la fuente de la que saca los datos
+(`bdns`) son cosas distintas. Cuando dos conectores describen el mismo hecho
+—la misma concesión vista desde dos endpoints— deben producir la **misma**
+`dedupe_key` de arista. Si no, el hecho se duplica y el dinero contabilizado se
+infla, que es el peor error posible aquí.
+
 Al reinsertar una entidad, las `properties` se **fusionan** (`||`) en vez de
 sustituirse: dos fuentes aportan campos distintos de la misma empresa y la
 segunda ingesta no debe borrar lo que trajo la primera.
