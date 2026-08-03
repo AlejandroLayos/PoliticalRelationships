@@ -34,3 +34,8 @@ dist/
 # La instantánea la genera el workflow de datos, no se edita a mano.
 # (se commitea desde CI; ignorada en local para no subir volcados de pruebas)
 /frontend/public/datos/grafo.json
+
+# Texto extraído de los PDF del Tribunal de Cuentas. Nombra a personas: se
+# sube como artefacto del workflow para poder escribir el parser, y no entra
+# en git. Ver spec §12 y scripts/anatomia_pdf_tcu.py.
+/detalle-pdf/

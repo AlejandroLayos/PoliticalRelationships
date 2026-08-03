@@ -115,6 +115,35 @@ CANDIDATOS: list[dict[str, str]] = [
         ),
         "tipo": "json",
     },
+    # Con tilde. La primera tanda preguntó sin acentos y devolvió `items: []`
+    # con envoltorio válido, o sea que la API contestó bien y no encontró
+    # nada. Eso no prueba que no haya: prueba que esa cadena no casa. Los
+    # títulos oficiales llevan tilde, así que se pregunta de las dos formas
+    # antes de concluir nada sobre el catálogo.
+    {
+        "nombre": "datosgob_titulo_partidos_con_tilde",
+        "url": (
+            "https://datos.gob.es/apidata/catalog/dataset/title/"
+            "partidos%20pol%C3%ADticos?_pageSize=25&_page=0"
+        ),
+        "tipo": "json",
+    },
+    {
+        "nombre": "datosgob_keyword_financiacion_con_tilde",
+        "url": (
+            "https://datos.gob.es/apidata/catalog/dataset/keyword/"
+            "financiaci%C3%B3n?_pageSize=25&_page=0"
+        ),
+        "tipo": "json",
+    },
+    # Listado de organismos publicadores: si el TdC publica algo en el
+    # catálogo, aparece aquí con su identificador, y con él se puede
+    # preguntar por sus conjuntos sin adivinar títulos.
+    {
+        "nombre": "datosgob_publicadores",
+        "url": "https://datos.gob.es/apidata/catalog/publisher?_pageSize=200&_page=0",
+        "tipo": "json",
+    },
 ]
 
 CABECERAS_HTML = {

@@ -29,24 +29,47 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar httpx
-        run: pip install httpx certifi cryptography
+      - name: instalar dependencias
+        run: pip install httpx certifi cryptography pdfplumber
 
       - name: explorar
         run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py
+
+      # Segunda fase: el reconocimiento dice QUÉ publica el organismo; esto
+      # dice si se puede leer. Sólo hay script de anatomía para las fuentes
+      # que resultaron ser PDF.
+      - name: anatomía de los PDF
+        if: (inputs.fuente || 'tcu') == 'tcu'
+        run: |
+          python scripts/anatomia_pdf_tcu.py \
+            --salida docs/fuentes/tcu-anatomia-pdf.md \
+            --detalle detalle-pdf/
+
+      # El texto extraído nombra a personas: se sube como artefacto privado
+      # del repositorio para poder escribir el parser mirando datos reales,
+      # y NO se commitea. El informe que sí se commitea lleva sólo estructura.
+      - name: guardar el detalle como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detalle-pdf-tcu
+          path: detalle-pdf/
+          retention-days: 7
+          if-no-files-found: ignore
 
       # `always()`: si el reconocimiento se cae a medias, el informe parcial
       # sigue valiendo. Perderlo obliga a repetir la exploración contra un
       # servicio público, que es justo lo que no conviene hacer en bucle.
       - name: mostrar el informe en el resumen
         if: always()
-        run: cat docs/fuentes/*-reconocimiento.md >> "$GITHUB_STEP_SUMMARY" || true
+        run: cat docs/fuentes/*-reconocimiento.md docs/fuentes/*-anatomia-pdf.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: commitear el informe
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # detalle-pdf/ nunca: lleva texto con nombres de personas.
           git add docs/fuentes/
           if git diff --cached --quiet; then
             echo "sin cambios"
