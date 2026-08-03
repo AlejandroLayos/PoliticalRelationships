@@ -1,0 +1,32 @@
+/* Paleta oscura: el grafo de fuerzas se lee mucho mejor sobre fondo oscuro,
+   y es lo que hace que la red parezca lo que es, una maraña de conexiones. */
+:root {
+  --fondo: #12141a;
+  --fondo-panel: #181b23;
+  --fondo-grafo: #0e1015;
+  --fondo-boton: #1f2330;
+  --borde: #2b3040;
+  --borde-suave: #232733;
+  --texto: #e6e8ef;
+  --texto-tenue: #949bb0;
+  --acento: #5aa9e6;
+  --aviso: #e0a33a;
+  --aviso-fondo: #3a2e12;
+  --aviso-texto: #f0d49a;
+  --aviso-borde: #5c4a1e;
+  --aviso-suave: #22262f;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app { height: 100%; margin: 0; }
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; }
+a { color: var(--acento); }
