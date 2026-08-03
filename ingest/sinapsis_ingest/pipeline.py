@@ -14,6 +14,7 @@ from typing import Any
 import structlog
 
 from sinapsis_ingest.connectors.base import RawDocument
+from sinapsis_ingest.normalizado import Normalizado
 from sinapsis_ingest.store import Entity, Relationship, Store
 
 log = structlog.get_logger()
@@ -64,66 +65,80 @@ def ingerir_documento(
 
     for registro in conector.parse(raw):
         normalizado = conector.normalize(registro)
-        if normalizado is None:
+        if normalizado is None or not normalizado.aristas:
             # El registro no traía lo imprescindible. No se rellena el hueco.
             resultado.registros_descartados += 1
             continue
 
         try:
+            normalizado.validar()
             _persistir(store, doc_id, conector.extractor_version, normalizado, resultado)
         except Exception as exc:
-            msg = f"registro {registro.data.get('cod_concesion', '?')}: {exc}"
-            log.warning("no se pudo persistir un registro", error=str(exc))
-            resultado.errores.append(msg)
+            ref = registro.data.get("id_registro", "?")
+            log.warning("no se pudo persistir un registro", ref=ref, error=str(exc))
+            resultado.errores.append(f"registro {ref}: {exc}")
 
 
 def _persistir(
     store: Store,
     doc_id: str,
     extractor_version: str,
-    normalizado: dict[str, Any],
+    n: Normalizado,
     resultado: Resultado,
 ) -> None:
-    """Escribe entidades, arista y procedencias en una sola transacción."""
-    origen = normalizado["source_entity"]
-    destino = normalizado["target_entity"]
-    arista = normalizado["relationship"]
-
+    """Escribe entidades, aristas y procedencias en una sola transacción."""
     with store.transaction():
-        origen_id = store.upsert_entity(Entity(**origen))
-        destino_id = store.upsert_entity(Entity(**destino))
-
-        rel_id = store.upsert_relationship(
-            Relationship(
-                ftm_schema=arista["ftm_schema"],
-                source_entity_id=origen_id,
-                target_entity_id=destino_id,
-                dedupe_key=arista["dedupe_key"],
-                confidence=arista["confidence"],
-                status=arista.get("status", "asserted"),
-                amount=arista.get("amount"),
-                currency=arista.get("currency", ""),
-                start_date=arista.get("start_date"),
-                end_date=arista.get("end_date"),
-                properties=arista.get("properties", {}),
+        # Las aristas referencian entidades por dedupe_key; aquí se traduce a
+        # los ids que asigna la base de datos.
+        ids: dict[str, str] = {}
+        for e in n.entidades:
+            ids[e.dedupe_key] = store.upsert_entity(
+                Entity(
+                    ftm_schema=e.ftm_schema,
+                    caption=e.caption,
+                    dedupe_key=e.dedupe_key,
+                    nif=e.nif,
+                    country=e.country,
+                    properties=e.properties,
+                )
             )
-        )
+
+        rel_ids: list[str] = []
+        for a in n.aristas:
+            rel_ids.append(
+                store.upsert_relationship(
+                    Relationship(
+                        ftm_schema=a.ftm_schema,
+                        source_entity_id=ids[a.source_key],
+                        target_entity_id=ids[a.target_key],
+                        dedupe_key=a.dedupe_key,
+                        confidence=a.confidence,
+                        status=a.status,
+                        amount=a.amount,
+                        currency=a.currency,
+                        start_date=a.start_date,
+                        end_date=a.end_date,
+                        properties=a.properties,
+                    )
+                )
+            )
 
         # Invariante 1: la procedencia va en la misma transacción que el hecho.
-        for entidad_id in (origen_id, destino_id):
+        for entidad_id in ids.values():
             store.add_provenance(
                 raw_document_id=doc_id,
                 entity_id=entidad_id,
                 extractor_version=extractor_version,
             )
-        store.add_provenance(
-            raw_document_id=doc_id,
-            relationship_id=rel_id,
-            extractor_version=extractor_version,
-        )
+        for rel_id in rel_ids:
+            store.add_provenance(
+                raw_document_id=doc_id,
+                relationship_id=rel_id,
+                extractor_version=extractor_version,
+            )
 
-    resultado.entidades += 2
-    resultado.aristas += 1
+    resultado.entidades += len(ids)
+    resultado.aristas += len(rel_ids)
 
 
 def ejecutar(store: Store, conector: Any, **params: Any) -> Resultado:

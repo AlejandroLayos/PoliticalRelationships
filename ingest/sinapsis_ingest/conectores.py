@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns
+from sinapsis_ingest.connectors import bdns, placsp
 
 
 @dataclass(frozen=True)
@@ -36,11 +36,18 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://www.infosubvenciones.es",
         license="Reutilización libre (Ley 37/2007)",
     ),
+    "placsp": FichaFuente(
+        id="placsp",
+        name="Plataforma de Contratación del Sector Público",
+        url="https://contrataciondelestado.es",
+        license="Reutilización libre (Ley 37/2007)",
+    ),
 }
 
 _CONECTORES: dict[str, Any] = {
     "bdns": bdns.crear,
     "bdns-partidos": bdns.crear_partidos,
+    "placsp": placsp.crear,
 }
 
 

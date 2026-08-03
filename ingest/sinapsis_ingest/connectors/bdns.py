@@ -28,6 +28,11 @@ import httpx
 import structlog
 
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
+from sinapsis_ingest.normalizado import (
+    AristaNormalizada,
+    EntidadNormalizada,
+    Normalizado,
+)
 
 log = structlog.get_logger()
 
@@ -238,6 +243,7 @@ class BDNSConnector:
                 extractor_version=EXTRACTOR_VERSION,
                 data={
                     "cod_concesion": str(cod),
+                    "id_registro": f"bdns:{cod}",
                     "numero_convocatoria": item.get("numeroConvocatoria"),
                     "convocatoria": item.get("convocatoria"),
                     "organo": self._nombre_organo(item),
@@ -279,11 +285,11 @@ class BDNSConnector:
             return "Person", {}
         return "Company", {}
 
-    def normalize(self, record: ParsedRecord) -> dict[str, Any] | None:
+    def normalize(self, record: ParsedRecord) -> Normalizado | None:
         """Traduce una concesión al vocabulario FollowTheMoney.
 
-        Devuelve un dict con la entidad origen, la destino y la arista, o None
-        si al registro le falta lo imprescindible. **No rellena huecos.**
+        Devuelve None si al registro le falta lo imprescindible. **No rellena
+        huecos.**
         """
         d = record.data
 
@@ -298,24 +304,9 @@ class BDNSConnector:
         # misma: la clave queda acotada a esta fuente y la fusión, si procede,
         # la decidirá la resolución de entidades. Precisión sobre exhaustividad.
         clave_beneficiario = f"nif:{nif}" if nif else f"bdns:beneficiario:{_slug(beneficiario)}"
+        clave_organo = f"bdns:organo:{_slug(organo)}"
 
         esquema, props_beneficiario = self.clasificar_beneficiario(nif)
-
-        entidad_origen = {
-            "ftm_schema": "PublicBody",
-            "caption": organo,
-            "dedupe_key": f"bdns:organo:{_slug(organo)}",
-            "country": "es",
-            "properties": {"name": organo},
-        }
-        entidad_destino = {
-            "ftm_schema": esquema,
-            "caption": beneficiario,
-            "dedupe_key": clave_beneficiario,
-            "nif": nif,
-            "country": "es",
-            "properties": {"name": beneficiario, **props_beneficiario},
-        }
 
         propiedades: dict[str, Any] = {}
         for clave in (
@@ -328,23 +319,41 @@ class BDNSConnector:
                 propiedades[clave] = d[clave]
 
         importe = d.get("importe")
-        arista = {
-            "ftm_schema": "Payment",
-            "dedupe_key": f"bdns:concesion:{d['cod_concesion']}",
-            "amount": importe,
-            "currency": "EUR" if importe is not None else "",
-            "start_date": d.get("fecha_concesion"),
-            # La fuente lo afirma; no lo inferimos nosotros.
-            "status": "asserted",
-            "confidence": 1.0 if nif else 0.7,
-            "properties": propiedades,
-        }
 
-        return {
-            "source_entity": entidad_origen,
-            "target_entity": entidad_destino,
-            "relationship": arista,
-        }
+        return Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    ftm_schema="PublicBody",
+                    caption=organo,
+                    dedupe_key=clave_organo,
+                    country="es",
+                    properties={"name": organo},
+                ),
+                EntidadNormalizada(
+                    ftm_schema=esquema,
+                    caption=beneficiario,
+                    dedupe_key=clave_beneficiario,
+                    nif=nif,
+                    country="es",
+                    properties={"name": beneficiario, **props_beneficiario},
+                ),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    ftm_schema="Payment",
+                    source_key=clave_organo,
+                    target_key=clave_beneficiario,
+                    dedupe_key=f"bdns:concesion:{d['cod_concesion']}",
+                    amount=importe,
+                    currency="EUR" if importe is not None else "",
+                    start_date=d.get("fecha_concesion"),
+                    # La fuente lo afirma; no lo inferimos nosotros.
+                    status="asserted",
+                    confidence=1.0 if nif else 0.7,
+                    properties=propiedades,
+                )
+            ],
+        )
 
 
 def _slug(texto: str) -> str:

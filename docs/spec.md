@@ -111,10 +111,21 @@ No son errores simétricos y el sistema no los trata como tales.
 Definida en `ingest/sinapsis_ingest/connectors/base.py`. Tres etapas:
 
 ```
-fetch     -> Iterator[RawDocument]     descarga bytes, no interpreta
-parse     -> Iterator[ParsedRecord]    bytes -> registros estructurados
-normalize -> entidades + aristas FtM   registros -> vocabulario FtM
+fetch     -> Iterator[RawDocument]   descarga bytes, no interpreta
+parse     -> Iterator[ParsedRecord]  bytes -> registros estructurados
+normalize -> Normalizado | None      registros -> vocabulario FtM
 ```
+
+`normalize` devuelve **listas** de entidades y aristas, no una tripleta: un
+contrato público tiene un órgano, un expediente y N adjudicatarios si va por
+lotes o lo gana una UTE. Forzar una sola arista por registro obligaría a
+inventar filas o a perder adjudicatarios, y las dos cosas están prohibidas.
+
+Las aristas referencian entidades por `dedupe_key`, no por id: el conector no
+conoce los ids, que los asigna la base de datos. `Normalizado.validar()`
+comprueba antes de escribir que toda arista apunta a una entidad que se va a
+crear, para que el fallo salga con el nombre de la clave y no como un error
+opaco de integridad referencial.
 
 La separación no es decorativa: es lo que permite arreglar un parser y
 recomputar todo lo derivado desde el crudo ya guardado, sin volver a golpear la
@@ -238,7 +249,7 @@ siguiente.
 | **0** | Andamiaje: compose, CI, API con `/healthz` | La pila levanta; `/healthz` da `{"status":"ok"}`; CI verde |
 | **1** | Esquema + capa `store` con upserts idempotentes | Se inserta crudo, se deriva entidad y arista con procedencia, se recupera; reinsertar el mismo crudo no duplica |
 | **2** | Conector BDNS end-to-end | El worker puebla entidades y aristas `Payment`; cada arista enlaza a su `raw_document`; reejecución idempotente; golden tests pasan ⚠️ *pendiente: golden test contra respuesta real* |
-| **3** | Conector PLACSP (ATOM/CODICE) | Contratos y adjudicaciones ingeridos con procedencia |
+| **3** | Conector PLACSP (ATOM/CODICE) | Contratos y adjudicaciones ingeridos con procedencia ⚠️ *pendiente: descarga de ZIP históricos* |
 | **4** | Resolución de entidades + sync a Neo4j + API de grafo | `review_queue` poblada; fusiones reversibles; `/entity/{id}/neighbors` responde |
 | **5** | Frontend Vue + Sigma.js | Ego-red navegable con procedencia y confianza visibles |
 | **6** | Más fuentes: Tribunal de Cuentas, BORME, lobbies, medios | Cada una con su golden test |
