@@ -224,7 +224,7 @@ siguiente.
 |---|---|---|
 | **0** | Andamiaje: compose, CI, API con `/healthz` | La pila levanta; `/healthz` da `{"status":"ok"}`; CI verde |
 | **1** | Esquema + capa `store` con upserts idempotentes | Se inserta crudo, se deriva entidad y arista con procedencia, se recupera; reinsertar el mismo crudo no duplica |
-| **2** | Conector BDNS end-to-end | El worker puebla entidades y aristas `Payment`; cada arista enlaza a su `raw_document`; reejecución idempotente; golden tests pasan |
+| **2** | Conector BDNS end-to-end | El worker puebla entidades y aristas `Payment`; cada arista enlaza a su `raw_document`; reejecución idempotente; golden tests pasan ⚠️ *pendiente: golden test contra respuesta real* |
 | **3** | Conector PLACSP (ATOM/CODICE) | Contratos y adjudicaciones ingeridos con procedencia |
 | **4** | Resolución de entidades + sync a Neo4j + API de grafo | `review_queue` poblada; fusiones reversibles; `/entity/{id}/neighbors` responde |
 | **5** | Frontend Vue + Sigma.js | Ego-red navegable con procedencia y confianza visibles |
