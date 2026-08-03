@@ -20,9 +20,13 @@ COPY sinapsis_ingest ./sinapsis_ingest
 RUN pip install --no-cache-dir .
 
 FROM python:3.11-slim
-# libicu se necesita también en runtime: en build sólo compilamos contra ella.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libicu74 \
+# PyICU enlaza dinámicamente, así que libicu hace falta también en runtime.
+# El número de versión del paquete (libicu72, libicu74...) depende de la
+# release de Debian de la imagen base, y cambia sin avisar al actualizarla:
+# lo resolvemos en tiempo de build en vez de fijarlo y que reviente luego.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        "$(apt-cache search --names-only '^libicu[0-9]+$' | cut -d' ' -f1 | sort -V | tail -1)" \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 sinapsis
 
