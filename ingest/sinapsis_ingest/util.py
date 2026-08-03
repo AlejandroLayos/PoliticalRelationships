@@ -38,13 +38,51 @@ def normalizar_nif(valor: str | None) -> str:
     return limpio if _FORMATO_NIF.match(limpio) else ""
 
 
-def parece_persona_fisica(nif: str) -> bool:
-    """True si el NIF corresponde a una persona física.
+# Formas societarias que descartan que el adjudicatario sea una persona
+# física, por mucho que su identificador lo parezca. Salió de datos reales:
+# en la instantánea de PLACSP, "NACATUR 2 ESPAÑA, S.L." y "Explorance Inc"
+# aparecían clasificados como `Person` porque su identificador empezaba por
+# dígito. El nombre lo desmentía y nadie le estaba preguntando.
+_FORMAS_SOCIETARIAS = re.compile(
+    r"(?:^|[\s,.(])(?:"
+    r"s\.?\s?l\.?(?:\s?u\.?)?|s\.?\s?a\.?(?:\s?u\.?)?|s\.?\s?c\.?|s\.?\s?coop\.?"
+    r"|sociedad|asociaci[oó]n|fundaci[oó]n|federaci[oó]n|colegio|consorcio"
+    r"|cooperativa|comunidad|ayuntamiento|universidad|instituto|agrupaci[oó]n"
+    r"|inc|ltd|llc|gmbh|b\.?v\.?|s\.?p\.?a\.?|plc|corp|company|limited"
+    r"|u\.?t\.?e\.?|a\.?i\.?e\.?|c\.?b\.?"
+    r")(?:[\s,.)]|$)",
+    re.IGNORECASE,
+)
+
+
+def parece_forma_societaria(nombre: str | None) -> bool:
+    """True si el nombre delata una persona jurídica.
+
+    Se usa para no llamar `Person` a una empresa. Es una comprobación de
+    seguridad, no de exhaustividad: reconocer de más aquí sólo evita tratar
+    a una empresa como si fuera un particular, que es el error inocuo. El
+    error caro es el contrario.
+    """
+    if not nombre:
+        return False
+    return bool(_FORMAS_SOCIETARIAS.search(nombre))
+
+
+def parece_persona_fisica(nif: str, nombre: str | None = None) -> bool:
+    """True si el registro corresponde a una persona física.
 
     Sirve para elegir entre `Person` y `Company`, y por tanto para saber
     cuándo estamos tocando datos personales (spec §12).
+
+    El NIF manda, pero el nombre puede desmentirlo: una S.L. con un
+    identificador que empieza por dígito sigue siendo una S.L. Cuando los dos
+    indicios se contradicen gana el nombre, porque la forma societaria es una
+    afirmación explícita de la fuente y la inicial del NIF es una inferencia
+    nuestra.
     """
     if not nif:
+        return False
+    if parece_forma_societaria(nombre):
         return False
     return nif[0].isdigit() or nif[0] in _INICIALES_PERSONA_FISICA
 
