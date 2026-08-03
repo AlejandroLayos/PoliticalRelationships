@@ -12,10 +12,14 @@ import signal
 import sys
 import time
 from types import FrameType
+from typing import TYPE_CHECKING
 
 import structlog
 
 from sinapsis_ingest import conectores, registry
+
+if TYPE_CHECKING:
+    from sinapsis_ingest import pipeline
 
 log = structlog.get_logger()
 
@@ -102,7 +106,64 @@ def _ejecutar_conector(args: argparse.Namespace) -> int:
         store.conn.commit()
 
     log.info("ingesta completada", **resultado.resumen())
-    return 0 if not resultado.errores else 1
+    return _codigo_salida(resultado)
+
+
+# Por encima de esta proporción de registros con error, lo que falla no es un
+# registro suelto: es que la fuente cambió de formato y el parser dejó de
+# entenderla. Eso sí tiene que romper.
+UMBRAL_ERRORES = 0.10
+
+
+def _codigo_salida(resultado: pipeline.Resultado) -> int:
+    """Distingue un hueco de un fallo.
+
+    Antes bastaba UN registro con error para devolver 1 y tirar la ejecución
+    entera. Con 2 páginas por conector no se notaba; al subir a 12 —unos
+    12.000 registros— toparse con un registro raro pasó de improbable a casi
+    seguro, y una instantánea buena se perdía por una fila mala.
+
+    Eso contradice la regla del proyecto: si una fuente falla o cambió de
+    formato, se registra el problema, se tolera el hueco y se sigue. Un hueco
+    es un hueco; lo que no puede pasar desapercibido es que la fuente entera
+    haya dejado de entenderse.
+
+    Así que se rompe en dos casos, y sólo en dos:
+      - no se ingirió nada, o
+      - la proporción de registros con error supera el umbral, que es la
+        firma de un cambio de formato y no de un dato suelto malo.
+    """
+    procesados = resultado.entidades + resultado.aristas + resultado.registros_descartados
+    n_errores = len(resultado.errores)
+
+    if procesados == 0:
+        log.error("la ingesta no produjo nada", errores=n_errores)
+        return 1
+
+    if n_errores == 0:
+        return 0
+
+    proporcion = n_errores / max(procesados, 1)
+    # Las primeras razones bastan para diagnosticar; volcarlas todas llenaría
+    # el log de ruido idéntico.
+    muestra = resultado.errores[:5]
+    if proporcion > UMBRAL_ERRORES:
+        log.error(
+            "demasiados registros con error: ¿cambió el formato de la fuente?",
+            errores=n_errores,
+            procesados=procesados,
+            proporcion=round(proporcion, 4),
+            muestra=muestra,
+        )
+        return 1
+
+    log.warning(
+        "se toleraron huecos y se siguió",
+        errores=n_errores,
+        procesados=procesados,
+        muestra=muestra,
+    )
+    return 0
 
 
 def _dsn() -> str:
