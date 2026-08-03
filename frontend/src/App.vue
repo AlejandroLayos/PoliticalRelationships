@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import GrafoRed from './components/GrafoRed.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
-import { buscar, entidad as pedirEntidad, estado, hayApiConfigurada, vecinos } from './api.js'
+import { buscar, entidad as pedirEntidad, estado, estadoServidor, vecinos } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
 
@@ -15,7 +15,9 @@ const seleccionId = ref('')
 const profundidad = ref(2)
 const cargando = ref(false)
 const error = ref('')
-const esDemo = ref(!hayApiConfigurada)
+const esDemo = ref(false)
+const baseVacia = ref(false)
+const arrancando = ref(true)
 
 let temporizador = null
 watch(consulta, (q) => {
@@ -68,10 +70,16 @@ watch(profundidad, () => {
   if (seleccionId.value) abrir(seleccionId.value)
 })
 
-onMounted(() => {
-  // Sin API configurada arrancamos en una entidad de la demostración para que
-  // se vea algo en lugar de una pantalla vacía.
-  if (!hayApiConfigurada) abrir(ENTIDAD_INICIAL)
+onMounted(async () => {
+  // Tres situaciones que se ven igual si no preguntas: no hay API, la hay pero
+  // la base está vacía, o hay datos. Distinguirlas evita que "no se ve nada"
+  // signifique tres cosas distintas.
+  const srv = await estadoServidor()
+  arrancando.value = false
+
+  if (srv.conectada && !srv.vacia) return  // hay datos: se espera una búsqueda
+  baseVacia.value = srv.conectada && srv.vacia
+  await abrir(ENTIDAD_INICIAL)  // cae a la demostración y lo anuncia
 })
 </script>
 
@@ -87,8 +95,11 @@ onMounted(() => {
       <strong>Datos de demostración.</strong>
       Ninguna entidad mostrada es real: los nombres son ficticios y las cifras
       inventadas.
-      <span v-if="estado.motivo === 'sin-api'">No hay ninguna API conectada todavía.</span>
-      <span v-else>La API no responde.</span>
+      <span v-if="baseVacia">
+        La base de datos está conectada pero todavía vacía: falta la primera
+        ingesta.
+      </span>
+      <span v-else>Aún no hay ninguna base de datos conectada.</span>
       <a href="https://github.com/AlejandroLayos/PoliticalRelationships" target="_blank" rel="noopener">
         Cómo conectar datos reales
       </a>
@@ -140,7 +151,7 @@ onMounted(() => {
           @expandir="abrir"
         />
 
-        <p v-if="cargando" class="estado-flotante">Cargando…</p>
+        <p v-if="arrancando || cargando" class="estado-flotante">Cargando…</p>
         <p v-else-if="error" class="estado-flotante error">{{ error }}</p>
         <p v-else-if="!datos.nodes.length" class="estado-flotante">
           Busca una entidad para empezar.

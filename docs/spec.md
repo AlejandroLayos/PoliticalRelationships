@@ -272,11 +272,20 @@ Reglas:
 
 ## 14. Despliegue
 
-Docker Compose, local-first. El mismo fichero sirve en un VPS.
+Dos caminos, los dos válidos. Ver [ADR 0004](adr/0004-despliegue-vercel.md).
 
-El frontend puede ir en Vercel (build estático). **El resto no**: Postgres,
-Neo4j y Redis son servicios con estado, y el worker de ingesta corre durante
-horas, muy por encima del límite de las funciones serverless.
+**Vercel + Neon + GitHub Actions**, sin servidor propio:
+
+- Frontend estático y API de lectura (`api/`) en Vercel.
+- Postgres en Neon, que soporta PostGIS y `pg_trgm`.
+- Ingesta programada en GitHub Actions, ejecutando el paquete Python real.
+
+**Docker Compose en un VPS**, con el binario Go y el worker. Es lo que hay en
+`docker-compose.yml` y lo único que además levanta Neo4j.
+
+Lo que **no** cabe en funciones serverless es la ingesta: no por el límite de
+tiempo, que se trocearía, sino porque reimplementar los conectores en otro
+lenguaje daría dos parsers de la misma fuente divergiendo en silencio.
 
 ## 15. Fases
 
