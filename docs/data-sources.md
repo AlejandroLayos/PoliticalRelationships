@@ -55,9 +55,26 @@ nivel más específico que venga relleno.
   servicio público y no hay prisa.
 - Para rangos grandes conviene trocear por fechas además de por página.
 
+### 1.1 Subvenciones a partidos políticos
+
+Conector `bdns-partidos`, endpoint `/partidospoliticos/busqueda`. Misma forma
+de petición y respuesta que las concesiones generales.
+
+Lo que aporta sobre el conjunto general es una afirmación que el otro no hace:
+**el beneficiario es un partido político**. Por eso la entidad destino va como
+`Organization` con `properties.partido_politico = true`, en vez de deducir
+`Company`/`Person` a partir del NIF.
+
+Comparte `source_id` (`bdns`) y clave de arista (`bdns:concesion:<cod>`) con el
+conector general **a propósito**: es un subconjunto del mismo universo de
+concesiones, y si una concesión aparece en los dos conjuntos tiene que quedar
+como una sola arista. Duplicarla inflaría el dinero contabilizado. Hay un test
+de integración (`test_ingerir_los_dos_conjuntos_no_duplica_aristas`) que ingiere
+ambos conjuntos y comprueba que ni el número de aristas ni la suma de importes
+crecen.
+
 **Otros endpoints con valor para el proyecto**, todavía sin conector:
-`/partidospoliticos/busqueda` (subvenciones a partidos políticos — directamente
-el objeto de Sinapsis), `/grandesbeneficiarios/busqueda`, `/sanciones/busqueda`,
+`/grandesbeneficiarios/busqueda`, `/sanciones/busqueda`,
 `/ayudasestado/busqueda` y `/minimis/busqueda`.
 
 **Referencia de implementación:** [`bdns-fetch`](https://github.com/cruzlorite/bdns-fetch)
