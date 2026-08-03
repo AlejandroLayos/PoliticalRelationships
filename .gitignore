@@ -1,0 +1,32 @@
+# Entorno
+.env
+.env.local
+
+# Go
+/backend/bin/
+*.out
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node (frontend, fase 5)
+node_modules/
+dist/
+.vite/
+
+# Datos locales: el crudo descargado no va al repo, se recupera de la fuente
+/data/
+*.sqlite
+
+# Editores
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,120 @@
+# Entorno de desarrollo local de Sinapsis.
+#
+# Levanta la pila completa: verdad canónica (Postgres+PostGIS), proyección de
+# grafo (Neo4j), cola (Redis), API (Go) y worker de ingesta (Python).
+#
+# Para producción ver docs/despliegue.md: el mismo fichero más un override.
+
+name: sinapsis
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sinapsis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sinapsis}
+      POSTGRES_DB: ${POSTGRES_DB:-sinapsis}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # -U y -d explícitos: sin ellos pg_isready usa el usuario del sistema
+      # (root) y da un falso negativo.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sinapsis} -d ${POSTGRES_DB:-sinapsis}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  neo4j:
+    image: neo4j:5.26-community
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-sinapsis-dev}
+      NEO4J_server_memory_heap_max__size: ${NEO4J_HEAP:-1G}
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "${NEO4J_HTTP_PORT:-7474}:7474"
+      - "${NEO4J_BOLT_PORT:-7687}:7687"
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Aplica las migraciones y termina. La API espera a que salga con éxito, de
+  # forma que nunca arranca contra un esquema viejo.
+  migrate:
+    image: migrate/migrate:v4.18.1
+    volumes:
+      - ./backend/migrations:/migrations:ro
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${POSTGRES_USER:-sinapsis}:${POSTGRES_PASSWORD:-sinapsis}@postgres:5432/${POSTGRES_DB:-sinapsis}?sslmode=disable"
+      - "up"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      SINAPSIS_HTTP_ADDR: ":8080"
+      SINAPSIS_POSTGRES_DSN: "postgres://${POSTGRES_USER:-sinapsis}:${POSTGRES_PASSWORD:-sinapsis}@postgres:5432/${POSTGRES_DB:-sinapsis}?sslmode=disable"
+      SINAPSIS_REDIS_ADDR: "redis:6379"
+      SINAPSIS_NEO4J_URI: "bolt://neo4j:7687"
+      SINAPSIS_NEO4J_USER: ${NEO4J_USER:-neo4j}
+      SINAPSIS_NEO4J_PASSWORD: ${NEO4J_PASSWORD:-sinapsis-dev}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./ingest
+    environment:
+      SINAPSIS_POSTGRES_DSN: "postgres://${POSTGRES_USER:-sinapsis}:${POSTGRES_PASSWORD:-sinapsis}@postgres:5432/${POSTGRES_DB:-sinapsis}"
+      SINAPSIS_REDIS_URL: "redis://redis:6379/0"
+      SINAPSIS_NEO4J_URI: "bolt://neo4j:7687"
+      SINAPSIS_NEO4J_USER: ${NEO4J_USER:-neo4j}
+      SINAPSIS_NEO4J_PASSWORD: ${NEO4J_PASSWORD:-sinapsis-dev}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  neo4j-data:
+  neo4j-logs:
+  redis-data:
