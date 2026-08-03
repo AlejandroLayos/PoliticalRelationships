@@ -85,8 +85,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # detalle-pdf/ nunca: lleva texto con nombres de personas.
+          # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
+          # nombres de personas y está en .gitignore, pero la barrera que de
+          # verdad importa es no pedir nunca que se añada todo.
           git add docs/fuentes/
+          git add ingest/tests/golden/tcu_*.pdf 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "sin cambios"
             exit 0
