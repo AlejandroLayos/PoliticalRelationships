@@ -226,6 +226,17 @@ jobs:
       - name: el build produce lo que vercel.json espera
         run: test -f dist/index.html
 
+      # Las funciones de Vercel no las compila nadie: un error de sintaxis
+      # sólo aparecería al desplegar.
+      - name: las funciones de la API se pueden importar
+        working-directory: api
+        run: |
+          npm install --no-audit --no-fund
+          for f in _lib.js search.js estado.js 'entity/[id].js' 'entity/[id]/neighbors.js'; do
+            echo "-> $f"
+            node --input-type=module -e "import('./$f').then(()=>{}).catch(e=>{console.error(e.message);process.exit(1)})"
+          done
+
   compose:
     name: docker compose
     runs-on: ubuntu-latest

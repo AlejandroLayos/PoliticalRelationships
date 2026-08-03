@@ -1,0 +1,113 @@
+name: Ingesta
+
+# La ingesta NO corre en Vercel. Una función serverless tiene minutos y aquí
+# hacen falta horas, y sobre todo: reimplementar los conectores en JavaScript
+# significaría dos parsers de la misma fuente divergiendo en silencio. Aquí
+# corre el código Python real, el mismo que cubren los golden tests.
+on:
+  schedule:
+    # 04:15 UTC. Fuera de horas para no cargar servicios públicos.
+    - cron: "15 4 * * *"
+  workflow_dispatch:
+    inputs:
+      conector:
+        description: "Conector a ejecutar"
+        type: choice
+        options: [bdns, bdns-partidos, placsp]
+        default: bdns
+      desde:
+        description: "Fecha inicial (AAAA-MM-DD)"
+        default: "2025-01-01"
+      hasta:
+        description: "Fecha final (AAAA-MM-DD)"
+        default: "2025-12-31"
+      max_paginas:
+        description: "Máximo de páginas (vacío = todas)"
+        default: "3"
+
+permissions:
+  contents: read
+
+concurrency:
+  # Dos ingestas a la vez sobre la misma base compiten por las mismas claves.
+  # Son idempotentes, pero no hay motivo para pelearse.
+  group: ingesta
+  cancel-in-progress: false
+
+jobs:
+  ingerir:
+    name: ingerir a Neon
+    runs-on: ubuntu-latest
+    # Sin el secreto configurado el job no tiene nada que hacer.
+    if: github.repository_owner != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: comprobar que hay base de datos
+        run: |
+          if [ -z "${{ secrets.NEON_DATABASE_URL }}" ]; then
+            echo "::error::falta el secreto NEON_DATABASE_URL."
+            echo "Créalo en Settings → Secrets and variables → Actions con la"
+            echo "cadena de conexión de Neon (la que Vercel deja en DATABASE_URL)."
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: dependencias del sistema
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libicu-dev postgresql-client
+
+      - name: instalar
+        working-directory: ingest
+        run: pip install -e .
+
+      - name: aplicar migraciones
+        env:
+          PGSSLMODE: require
+        run: |
+          for f in $(ls backend/migrations/*.up.sql | sort); do
+            echo "-> $(basename "$f")"
+            psql "${{ secrets.NEON_DATABASE_URL }}" -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      - name: ejecutar conector
+        env:
+          SINAPSIS_POSTGRES_DSN: ${{ secrets.NEON_DATABASE_URL }}
+        working-directory: ingest
+        run: |
+          CONECTOR="${{ inputs.conector || 'bdns' }}"
+          DESDE="${{ inputs.desde || '2025-01-01' }}"
+          HASTA="${{ inputs.hasta || '2025-12-31' }}"
+          PAGS="${{ inputs.max_paginas || '3' }}"
+          ARGS="--run $CONECTOR --desde $DESDE --hasta $HASTA"
+          [ -n "$PAGS" ] && ARGS="$ARGS --max-paginas $PAGS"
+          echo "sinapsis-worker $ARGS"
+          # Si la fuente pública falla, se registra el hueco y NO se inventa
+          # nada; el worker sale distinto de 0 y aquí queda constancia.
+          sinapsis-worker $ARGS
+
+      - name: proponer fusiones para revisión humana
+        env:
+          SINAPSIS_POSTGRES_DSN: ${{ secrets.NEON_DATABASE_URL }}
+        working-directory: ingest
+        # Sólo encola candidatos; no fusiona nada. La decisión es de una persona.
+        run: sinapsis-worker --candidatos
+
+      - name: resumen
+        env:
+          PGSSLMODE: require
+        run: |
+          {
+            echo "### Estado de la base tras la ingesta"
+            echo
+            echo '```'
+            psql "${{ secrets.NEON_DATABASE_URL }}" -c "
+              SELECT 'entidades' AS tabla, count(*) FROM entities
+              UNION ALL SELECT 'aristas', count(*) FROM relationships
+              UNION ALL SELECT 'documentos crudos', count(*) FROM raw_documents
+              UNION ALL SELECT 'procedencias', count(*) FROM provenance
+              UNION ALL SELECT 'candidatos pendientes', count(*) FROM review_queue WHERE status='pending';"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
