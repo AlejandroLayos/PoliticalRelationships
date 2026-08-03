@@ -52,6 +52,7 @@ func run(logger *slog.Logger) error {
 		Handler: httpapi.New(httpapi.Options{
 			Logger:       logger,
 			ReadyTimeout: cfg.ReadyTimeout,
+			Graph:        pg,
 			Checkers: []httpapi.Checker{
 				httpapi.CheckerFunc{DepName: "postgres", Fn: pg.Ping},
 			},

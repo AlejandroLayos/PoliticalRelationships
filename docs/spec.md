@@ -202,9 +202,28 @@ Rutas actuales:
 - `GET /readyz` — readiness. Consulta las dependencias y devuelve 503 si alguna
   falla, para que el balanceador la saque del pool sin reiniciarla.
 
-Previstas (fase 4): búsqueda de entidades, `GET /entity/{id}`, y
-`GET /entity/{id}/neighbors?depth=n`. La API sirve **vecindarios**, no el grafo
-entero: ver §11.
+- `GET /v1/search?q=` — busca entidades por nombre, ignorando acentos y
+  mayúsculas. Es la puerta de entrada: se busca y desde ahí se expande.
+  No devuelve entidades absorbidas en una fusión.
+- `GET /v1/entity/{id}` — detalle con sus `properties` y **su procedencia**:
+  de cada hecho se puede volver a la URL y al hash del documento original. Si
+  la entidad fue absorbida, se dice con `merged_into`.
+- `GET /v1/entity/{id}/neighbors?depth=n&limit=m` — ego-red. `depth` va de 1 a
+  3; pedir más es un 400. Si se alcanza el límite de nodos, la respuesta trae
+  `truncated: true` y se descartan las aristas con un extremo fuera, que si no
+  colgarían en el vacío al dibujarlas.
+
+La API sirve **vecindarios, no el grafo entero**: ver §11. Pedir el volcado
+completo no es una opción que exista.
+
+`confidence` y `status` **nunca se omiten** en el JSON de una arista, ni
+siquiera cuando valen lo esperable. Es la invariante 5 impuesta en la capa API
+y no sólo en la interfaz: quien consuma la API en crudo tiene que poder
+distinguir lo afirmado de lo inferido. Las aristas con `status = 'retracted'`
+no se sirven: se conservan por trazabilidad, no para seguir publicándolas.
+
+Si la entidad pedida fue absorbida en una fusión, el vecindario se sirve el de
+su canónica: una entidad absorbida no tiene grafo propio.
 
 ## 10. Fuentes
 

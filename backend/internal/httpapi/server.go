@@ -17,6 +17,7 @@ type Server struct {
 	logger       *slog.Logger
 	checkers     []Checker
 	readyTimeout time.Duration
+	graph        Graph
 	mux          *http.ServeMux
 }
 
@@ -27,6 +28,9 @@ type Options struct {
 	Checkers []Checker
 	// ReadyTimeout acota la duración total de /readyz.
 	ReadyTimeout time.Duration
+	// Graph da acceso al grafo. Si es nil, las rutas de entidades responden
+	// 503: la API arranca igual y /healthz sigue sirviendo.
+	Graph Graph
 }
 
 // New construye el servidor y registra las rutas.
@@ -42,6 +46,7 @@ func New(opts Options) *Server {
 		logger:       opts.Logger,
 		checkers:     opts.Checkers,
 		readyTimeout: opts.ReadyTimeout,
+		graph:        opts.Graph,
 		mux:          http.NewServeMux(),
 	}
 	s.routes()
@@ -51,6 +56,22 @@ func New(opts Options) *Server {
 func (s *Server) routes() {
 	s.mux.HandleFunc("GET /healthz", s.healthz)
 	s.mux.HandleFunc("GET /readyz", s.readyz)
+
+	s.mux.HandleFunc("GET /v1/search", s.conGrafo(s.buscar))
+	s.mux.HandleFunc("GET /v1/entity/{id}", s.conGrafo(s.entidad))
+	s.mux.HandleFunc("GET /v1/entity/{id}/neighbors", s.conGrafo(s.vecinos))
+}
+
+// conGrafo rechaza la petición con 503 si el servidor se construyó sin acceso
+// al grafo, en vez de reventar con un nil pointer.
+func (s *Server) conGrafo(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if s.graph == nil {
+			writeError(w, http.StatusServiceUnavailable, "el grafo no está disponible")
+			return
+		}
+		h(w, r)
+	}
 }
 
 // ServeHTTP hace de Server un http.Handler, con logging de acceso alrededor.
