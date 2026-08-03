@@ -51,12 +51,13 @@ try:
 except ImportError:  # pragma: no cover
     sys.exit("falta httpx: pip install httpx")
 
-try:
-    import pdfplumber
-except ImportError:  # pragma: no cover
-    sys.exit("falta pdfplumber: pip install pdfplumber")
-
 from explorar_tcu import CABECERAS_HTML, TIMEOUT, _completar_cadena
+
+# pdfplumber se importa dentro de `analizar`, no aquí. El motivo no es
+# estético: las funciones de enmascarado deciden qué se publica sobre
+# personas, así que las prueba la CI, y la CI no instala pdfplumber. Un
+# import de más arriba dejaría ese test sin ejecutarse justo donde más
+# importa que se ejecute.
 
 # Sacados del reconocimiento del 2026-08-03, no inventados: son los enlaces
 # que la propia página de sanciones a partidos publica.
@@ -101,9 +102,82 @@ def _tablas_por_texto(pagina) -> list:
         return []
 
 
+def enmascarar(celda: str | None) -> str:
+    """Sustituye cada letra por A y cada dígito por 9.
+
+    Deja ver el *formato* sin publicar el contenido: `A99999999` dice que ahí
+    va un NIF de empresa sin decir cuál, y `99/99/9999` dice que ahí va una
+    fecha. Con eso se escribe un parser; con el valor real no se escribiría
+    mejor y en cambio se estaría publicando lo que no toca.
+
+    Los símbolos se conservan porque son los separadores que dan la pista.
+    """
+    if not celda:
+        return ""
+    salida = []
+    for c in celda.strip()[:40]:
+        if c.isdigit():
+            salida.append("9")
+        elif c.isalpha():
+            salida.append("A")
+        else:
+            salida.append(c)
+    return "".join(salida)
+
+
+def _es_cabecera(fila: list) -> bool:
+    """Una fila es cabecera si al enmascararla no cambia nada.
+
+    Las etiquetas de columna no llevan cifras ni identificadores, así que
+    sobreviven al enmascarado. Una fila de datos no: sale deformada. Es un
+    filtro conservador y esa es la gracia — ante la duda, no se publica.
+    """
+    texto = " ".join(str(c or "") for c in fila).strip()
+    if not texto:
+        return False
+    return not any(c.isdigit() for c in texto)
+
+
+def perfilar_columnas(tabla: list) -> dict:
+    """Describe una tabla sin publicar sus datos.
+
+    Devuelve la cabecera (sólo si de verdad lo parece) y, por columna, el
+    patrón enmascarado más frecuente. Suficiente para escribir el parser.
+    """
+    if not tabla:
+        return {}
+    perfil: dict = {"filas": len(tabla), "columnas": len(tabla[0])}
+    if _es_cabecera(tabla[0]):
+        perfil["cabecera"] = [str(c or "").strip()[:40] for c in tabla[0]]
+        cuerpo = tabla[1:]
+    else:
+        cuerpo = tabla
+
+    from collections import Counter
+
+    patrones = []
+    for i in range(len(tabla[0])):
+        cuenta: Counter[str] = Counter()
+        for fila in cuerpo:
+            if i < len(fila):
+                m = enmascarar(str(fila[i]) if fila[i] is not None else "")
+                if m:
+                    cuenta[m] += 1
+        # Sólo el patrón dominante: basta para saber qué hay y no reconstruye
+        # ninguna fila concreta.
+        patrones.append(cuenta.most_common(1)[0][0] if cuenta else "")
+    perfil["patrones"] = patrones
+    return perfil
+
+
 def analizar(datos: bytes, destino_detalle: Path | None) -> dict:
     """Mide el PDF. Devuelve sólo estructura; el texto va al detalle."""
     import io
+
+    try:
+        import pdfplumber
+    except ImportError:  # pragma: no cover
+        sys.exit("falta pdfplumber: pip install pdfplumber")
 
     info: dict = {"bytes": len(datos)}
     textos: list[str] = []
@@ -117,6 +191,7 @@ def analizar(datos: bytes, destino_detalle: Path | None) -> dict:
             muestra = pdf.pages[:15]
             info["paginas_analizadas"] = len(muestra)
             formas_texto: list[tuple[int, int]] = []
+            mayor: list = []
             for pagina in muestra:
                 texto = pagina.extract_text() or ""
                 caracteres.append(len(texto))
@@ -128,6 +203,12 @@ def analizar(datos: bytes, destino_detalle: Path | None) -> dict:
                 for tabla in pagina.extract_tables() or []:
                     if tabla:
                         formas.append((len(tabla), len(tabla[0])))
+                        # La tabla grande es la de datos; las de 2x1 y 3x1
+                        # son cajas de encabezado y pie.
+                        if len(tabla) * len(tabla[0]) > len(mayor) * (
+                            len(mayor[0]) if mayor else 0
+                        ):
+                            mayor = tabla
                 for tabla in _tablas_por_texto(pagina):
                     if tabla:
                         formas_texto.append((len(tabla), len(tabla[0])))
@@ -138,6 +219,7 @@ def analizar(datos: bytes, destino_detalle: Path | None) -> dict:
             info["formas_tablas"] = formas[:20]
             info["n_tablas_texto"] = len(formas_texto)
             info["formas_tablas_texto"] = formas_texto[:20]
+            info["perfil"] = perfilar_columnas(mayor)
     except Exception as exc:
         info["error"] = f"{type(exc).__name__}: {exc}"
         return info
@@ -190,6 +272,28 @@ def formatear(resultados: list[dict]) -> str:
         if r.get("formas_tablas_texto"):
             formas = ", ".join(f"{f}x{c}" for f, c in r["formas_tablas_texto"])
             lineas.append(f"  - Formas (filas x columnas): {formas}")
+
+        p = r.get("perfil") or {}
+        if p:
+            lineas.append("")
+            lineas.append(
+                f"  **Tabla mayor** ({p['filas']}x{p['columnas']}). Cabecera y patrón por"
+            )
+            lineas.append("  columna. El patrón sustituye letras por `A` y cifras por `9`:")
+            lineas.append("  dice el formato sin publicar el dato.")
+            lineas.append("")
+            lineas.append("  | # | Cabecera | Patrón dominante |")
+            lineas.append("  |---|----------|------------------|")
+            cabecera = p.get("cabecera") or []
+            for i, patron in enumerate(p.get("patrones", [])):
+                etiqueta = cabecera[i] if i < len(cabecera) else "—"
+                # Las barras romperían la tabla Markdown.
+                etiqueta = str(etiqueta).replace("|", "/").replace("\n", " ")
+                lineas.append(f"  | {i} | {etiqueta} | `{patron.replace('|', '/')}` |")
+            if not cabecera:
+                lineas.append("")
+                lineas.append("  (La primera fila llevaba cifras, así que no se da por cabecera")
+                lineas.append("  ni se publica: ante la duda, no se publica.)")
         lineas.append("")
 
     con_texto = [r for r in resultados if r.get("capa_texto")]
