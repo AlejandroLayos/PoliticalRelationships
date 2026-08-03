@@ -46,6 +46,10 @@ Campos propios sobre FtM:
   determinista. Único entre entidades canónicas.
 - `canonical_id` — si no es NULL, esta fila fue absorbida por otra. Nunca se
   borra una entidad fusionada: se marca, para poder deshacerlo.
+- `dedupe_key` — clave estable que hace idempotente la ingesta. Con NIF
+  conocido debe ser `nif:<NIF>`, de forma que dos fuentes que ven el mismo NIF
+  converjan en la misma fila; sin NIF, un identificador estable dentro de la
+  fuente (`bdns:organo:1234`).
 - `geom` — punto geográfico opcional (PostGIS).
 
 ### Relaciones (`relationships`)
@@ -126,8 +130,17 @@ Dos niveles:
 - **Documento:** `UNIQUE (source_id, content_hash)`. Va por fuente y no sólo
   por hash porque dos fuentes pueden servir bytes idénticos legítimamente, y
   colapsarlos perdería la procedencia de una.
-- **Arista:** `UNIQUE (dedupe_key)`, derivada de los identificadores de la
-  fuente.
+- **Entidad y arista:** `UNIQUE (dedupe_key)`, derivada de los identificadores
+  de la fuente.
+
+El upsert de `raw_documents` usa `ON CONFLICT DO NOTHING` y una consulta
+posterior, nunca `DO UPDATE`: el trigger de inmutabilidad rechaza cualquier
+`UPDATE`, incluido el no-op que se usaría para recuperar el `RETURNING`. El
+crudo es inmutable, y eso incluye al upsert.
+
+Al reinsertar una entidad, las `properties` se **fusionan** (`||`) en vez de
+sustituirse: dos fuentes aportan campos distintos de la misma empresa y la
+segunda ingesta no debe borrar lo que trajo la primera.
 
 ## 8. Sincronización a Neo4j
 
