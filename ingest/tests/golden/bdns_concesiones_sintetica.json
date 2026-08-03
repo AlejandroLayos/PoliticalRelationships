@@ -1,5 +1,5 @@
 {
-  "_aviso": "MUESTRA SINTÉTICA. No es una respuesta capturada de BDNS. Los nombres de campo son los que declara la API (verificados en bdns-fetch); los valores son inventados y no corresponden a ninguna subvención real. Ver README.md de este directorio.",
+  "_aviso": "MUESTRA SINTÉTICA. No es una respuesta capturada de BDNS, pero su FORMA sí está corregida contra la salida real de la API (ejecución del 3/8/2026): el NIF viene concatenado dentro de 'beneficiario', no en un campo aparte, y los NIF de personas físicas llegan enmascarados con asteriscos. Los valores son inventados. Ver README.md de este directorio.",
   "content": [
     {
       "codConcesion": 1001,
@@ -11,8 +11,7 @@
       "instrumento": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN",
       "urlBR": "https://www.infosubvenciones.es/bdnstrans/GE/es/convocatoria/778899",
       "fechaConcesion": "2025-03-14",
-      "beneficiario": "CONSTRUCCIONES EJEMPLO SL",
-      "nifCif": "B-12345678",
+      "beneficiario": "B12345678 CONSTRUCCIONES EJEMPLO SL",
       "importe": 50000.5,
       "ayudaEquivalente": 50000.5,
       "tieneProyecto": false
@@ -26,8 +25,7 @@
       "nivel3": "",
       "instrumento": "SUBVENCIÓN Y ENTREGA DINERARIA SIN CONTRAPRESTACIÓN",
       "fechaConcesion": "14/03/2025",
-      "beneficiario": "NOMBRE APELLIDO APELLIDO",
-      "nifCif": "12345678Z",
+      "beneficiario": "***5678** NOMBRE APELLIDO APELLIDO",
       "importe": "1234567890123.45",
       "ayudaEquivalente": null,
       "tieneProyecto": false
@@ -41,7 +39,6 @@
       "instrumento": "SUBVENCIÓN",
       "fechaConcesion": "2025-06-01",
       "beneficiario": "ASOCIACIÓN DE EJEMPLO",
-      "nifCif": null,
       "importe": 7500,
       "tieneProyecto": true
     },
@@ -50,14 +47,12 @@
       "convocatoria": "Concesión sin beneficiario declarado",
       "nivel1": "ADMINISTRACIÓN DEL ESTADO",
       "beneficiario": "",
-      "nifCif": "",
       "importe": null,
       "fechaConcesion": null
     },
     {
       "numeroConvocatoria": "999999",
-      "beneficiario": "SIN CÓDIGO DE CONCESIÓN SL",
-      "nifCif": "B87654321",
+      "beneficiario": "B87654321 SIN CÓDIGO DE CONCESIÓN SL",
       "importe": 100
     }
   ],

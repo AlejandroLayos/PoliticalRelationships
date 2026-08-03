@@ -12,6 +12,15 @@ from typing import Any
 # jurídicas empiezan por otra letra.
 _INICIALES_PERSONA_FISICA = "KLMXYZ"
 
+# Formato de NIF/CIF español: DNI (8 dígitos + letra), NIE (X/Y/Z + 7 dígitos +
+# letra) y CIF (letra + 7 dígitos + dígito o letra) encajan todos aquí.
+#
+# Comprobar sólo la longitud NO basta: "ASOCIACION" también tiene 9 caracteres
+# y se colaría como identificador fiscal, creando una entidad con la clave
+# `nif:ASOCIACION` con la que después convergerían cosas que no tienen nada
+# que ver.
+_FORMATO_NIF = re.compile(r"^[A-Z0-9][0-9]{7}[A-Z0-9]$")
+
 
 def normalizar_nif(valor: str | None) -> str:
     """Deja el NIF/CIF en mayúsculas y sin separadores.
@@ -26,7 +35,7 @@ def normalizar_nif(valor: str | None) -> str:
     if not valor:
         return ""
     limpio = re.sub(r"[^0-9A-Za-z]", "", valor).upper()
-    return limpio if len(limpio) == 9 else ""
+    return limpio if _FORMATO_NIF.match(limpio) else ""
 
 
 def parece_persona_fisica(nif: str) -> bool:

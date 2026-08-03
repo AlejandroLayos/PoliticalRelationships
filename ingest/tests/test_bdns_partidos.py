@@ -82,14 +82,21 @@ def test_usa_el_endpoint_de_partidos():
 
 def test_el_beneficiario_es_organization(crudo):
     conector = BDNSPartidosConnector(peticiones_por_segundo=0)
+    vistos = 0
     for registro in conector.parse(crudo):
         n = conector.normalize(registro)
         if n is None:
+            continue
+        # Los beneficiarios anonimizados por minimización (spec §12) no pasan
+        # por clasificar_beneficiario: son un agregado, no un partido.
+        if n.aristas[0].properties.get("beneficiario_anonimizado"):
             continue
         # El conjunto de datos ya afirma que es un partido: nada de deducir
         # Company/Person por el NIF.
         assert n.entidades[1].ftm_schema == "Organization"
         assert n.entidades[1].properties["partido_politico"] is True
+        vistos += 1
+    assert vistos > 0, "ningún registro llegó a clasificarse como partido"
 
 
 def test_la_clave_de_arista_es_la_misma_que_en_concesiones(crudo):

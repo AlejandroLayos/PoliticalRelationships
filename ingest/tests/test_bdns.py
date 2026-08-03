@@ -109,6 +109,16 @@ def test_parse_acepta_las_dos_formas_de_fecha(conector, crudo):
     assert registros["1002"]["fecha_concesion"] == date(2025, 3, 14)  # dd/mm/aaaa
 
 
+def test_parse_extrae_el_nif_del_campo_beneficiario(conector, crudo):
+    """El NIF viene dentro de `beneficiario`; no hay campo `nifCif`."""
+    registros = {r.data["cod_concesion"]: r.data for r in conector.parse(crudo)}
+    assert registros["1001"]["nif_beneficiario"] == "B12345678"
+    assert registros["1001"]["beneficiario"] == "CONSTRUCCIONES EJEMPLO SL"
+    # NIF enmascarado -> persona física, y sin NIF utilizable.
+    assert registros["1002"]["es_persona_fisica"] is True
+    assert registros["1002"]["nif_beneficiario"] == ""
+
+
 def test_parse_conserva_los_decimales_del_importe(conector, crudo):
     registros = {r.data["cod_concesion"]: r.data for r in conector.parse(crudo)}
     assert registros["1001"]["importe"] == Decimal("50000.5")
@@ -156,11 +166,12 @@ def test_normalize_produce_arista_payment(conector, crudo):
     assert n.entidades[1].ftm_schema == "Company"
 
 
-def test_normalize_distingue_persona_fisica(conector, crudo):
-    # NIF que empieza por dígito -> persona física -> Person, no Company.
+def test_la_persona_fisica_de_bdns_llega_anonimizada(conector, crudo):
+    """BDNS enmascara el NIF del particular; nosotros no republicamos su nombre."""
     n = _normalizados(conector, crudo)["1002"]
-    assert n.entidades[1].ftm_schema == "Person"
-    assert n.entidades[1].nif == "12345678Z"
+    assert n.aristas[0].properties["beneficiario_anonimizado"] is True
+    textos = [e.caption for e in n.entidades]
+    assert not any("APELLIDO" in t.upper() for t in textos)
 
 
 def test_normalize_sin_nif_usa_legal_entity_y_baja_la_confianza(conector, crudo):
@@ -295,3 +306,96 @@ def test_el_crudo_guardado_son_los_bytes_literales():
 
     # El crudo es la prueba: debe poder reparsearse tal cual.
     assert json.loads(docs[0].content) == cuerpo
+
+
+# --- NIF dentro del campo beneficiario + minimización (spec §12) -----------
+
+
+@pytest.mark.parametrize(
+    ("crudo", "nif", "fisica", "nombre"),
+    [
+        # BDNS concatena el NIF delante del nombre; no hay campo aparte.
+        ("A10984433 BRITISH ROBERTSON, S.A.", "A10984433", False, "BRITISH ROBERTSON, S.A."),
+        ("B91604595 CONSTRUCCIONES SL", "B91604595", False, "CONSTRUCCIONES SL"),
+        # NIF enmascarado: la propia fuente dice que es una persona física.
+        ("***9282** DARIO SANCHEZ ESTORNELL", "", True, "DARIO SANCHEZ ESTORNELL"),
+        # Sin NIF reconocible, el campo entero es el nombre.
+        ("ASOCIACION DE EJEMPLO", "", False, "ASOCIACION DE EJEMPLO"),
+        ("", "", False, ""),
+    ],
+)
+def test_partir_beneficiario(crudo, nif, fisica, nombre):
+    r = BDNSConnector._partir_beneficiario({"beneficiario": crudo})
+    assert r["nif_beneficiario"] == nif
+    assert r["es_persona_fisica"] is fisica
+    assert r["beneficiario"] == nombre
+
+
+def _registro(conector, **campos):
+    from sinapsis_ingest.connectors.base import ParsedRecord
+
+    base = {
+        "cod_concesion": "999",
+        "organo": "MINISTERIO DE PRUEBA",
+        "beneficiario": "",
+        "nif_beneficiario": "",
+        "es_persona_fisica": False,
+        "importe": Decimal("1000.00"),
+        "numero_convocatoria": "112233",
+    }
+    return ParsedRecord(
+        raw_content_hash="x" * 64, extractor_version="bdns/1", data={**base, **campos}
+    )
+
+
+def test_la_persona_fisica_no_se_publica_por_nombre(conector):
+    """Spec §12: republicar el nombre de un particular sería desproporcionado."""
+    n = conector.normalize(
+        _registro(conector, beneficiario="DARIO SANCHEZ ESTORNELL", es_persona_fisica=True)
+    )
+    assert n is not None
+
+    textos = [e.caption for e in n.entidades] + [
+        str(v) for e in n.entidades for v in e.properties.values()
+    ]
+    assert not any("DARIO" in t.upper() for t in textos), (
+        "el nombre del particular sobrevivió en el grafo"
+    )
+
+
+def test_el_pago_al_particular_sigue_constando(conector):
+    """Se pierde la identidad, no el hecho: el dinero público sigue trazado."""
+    n = conector.normalize(
+        _registro(conector, beneficiario="NOMBRE APELLIDO", es_persona_fisica=True)
+    )
+    assert n is not None
+    assert len(n.aristas) == 1
+    a = n.aristas[0]
+    assert a.ftm_schema == "Payment"
+    assert a.amount == Decimal("1000.00")
+    assert a.properties["beneficiario_anonimizado"] is True
+    # La clave de la arista no cambia: sigue siendo idempotente por concesión.
+    assert a.dedupe_key == "bdns:concesion:999"
+
+
+def test_los_particulares_se_agrupan_por_convocatoria(conector):
+    """Sin agrupar, cada pago crearía un nodo suelto y el mapa sería ilegible."""
+    a = conector.normalize(_registro(conector, beneficiario="UNO", es_persona_fisica=True))
+    b = conector.normalize(
+        _registro(conector, cod_concesion="1000", beneficiario="OTRO", es_persona_fisica=True)
+    )
+    assert a is not None and b is not None
+    assert a.entidades[1].dedupe_key == b.entidades[1].dedupe_key
+    assert "112233" in a.entidades[1].dedupe_key
+
+
+def test_una_persona_fisica_con_nif_visible_si_se_identifica(conector):
+    # Si BDNS publica el NIF completo, no lo está anonimizando: se respeta.
+    n = conector.normalize(
+        _registro(
+            conector, beneficiario="ALGUIEN", nif_beneficiario="12345678Z", es_persona_fisica=True
+        )
+    )
+    assert n is not None
+    assert n.entidades[1].ftm_schema == "Person"
+    assert n.entidades[1].nif == "12345678Z"
