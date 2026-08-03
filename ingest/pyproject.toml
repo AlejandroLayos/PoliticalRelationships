@@ -1,0 +1,42 @@
+[project]
+name = "sinapsis-ingest"
+version = "0.1.0"
+description = "Workers de ingesta de Sinapsis: conectores a fuentes públicas españolas"
+requires-python = ">=3.11"
+license = { text = "AGPL-3.0-or-later" }
+dependencies = [
+    "httpx>=0.27",
+    "psycopg[binary]>=3.2",
+    "redis>=5.0",
+    "followthemoney>=4.10,<5",
+    "structlog>=24.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "respx>=0.21",
+]
+
+[project.scripts]
+sinapsis-worker = "sinapsis_ingest.worker:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["sinapsis_ingest*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
