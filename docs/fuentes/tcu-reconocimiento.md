@@ -1,6 +1,6 @@
 # Reconocimiento del Tribunal de Cuentas
 
-Generado automáticamente el 2026-08-03T20:18:30.347481+00:00 por `scripts/explorar_tcu.py`.
+Generado automáticamente el 2026-08-03T20:25:10.748426+00:00 por `scripts/explorar_tcu.py`.
 
 **No es documentación de una fuente ya integrada.** Es lo que se ve
 desde fuera, anotado sin interpretar, para decidir si merece la pena
