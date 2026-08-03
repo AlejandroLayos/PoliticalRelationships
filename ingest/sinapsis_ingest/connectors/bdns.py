@@ -15,13 +15,10 @@ Límite real de la API: **10 peticiones GET por segundo y por IP**, y
 
 from __future__ import annotations
 
-import hashlib
 import json
-import re
 import time
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
-from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import httpx
@@ -32,6 +29,13 @@ from sinapsis_ingest.normalizado import (
     AristaNormalizada,
     EntidadNormalizada,
     Normalizado,
+)
+from sinapsis_ingest.util import (
+    a_decimal,
+    a_fecha,
+    normalizar_nif,
+    parece_persona_fisica,
+    slug,
 )
 
 log = structlog.get_logger()
@@ -52,55 +56,6 @@ PAGE_SIZE = 1000
 # 10 GET/s por IP es el límite de la API. Vamos deliberadamente por debajo: es
 # un servicio público y no hay ninguna prisa.
 PETICIONES_POR_SEGUNDO = 4.0
-
-
-def normalizar_nif(valor: str | None) -> str:
-    """Deja el NIF/CIF en mayúsculas y sin separadores.
-
-    Sin esto, "B-12345678" y "b12345678" serían dos entidades distintas y toda
-    la resolución determinista se vendría abajo.
-    """
-    if not valor:
-        return ""
-    limpio = re.sub(r"[^0-9A-Za-z]", "", valor).upper()
-    # Un NIF/CIF español tiene 9 caracteres. Si no encaja, preferimos no
-    # afirmar nada: devolvemos vacío y la entidad se identificará por otra vía.
-    return limpio if len(limpio) == 9 else ""
-
-
-def _a_decimal(valor: Any) -> Decimal | None:
-    """Convierte un importe a Decimal. Nunca pasa por float."""
-    if valor is None or valor == "":
-        return None
-    try:
-        return Decimal(str(valor))
-    except (InvalidOperation, ValueError):
-        return None
-
-
-def _a_fecha(valor: Any) -> date | None:
-    """Acepta los formatos que ha usado BDNS: ISO y dd/mm/aaaa."""
-    if not valor:
-        return None
-    texto = str(valor).strip()
-    for formato in ("%Y-%m-%d", "%d/%m/%Y", "%Y-%m-%dT%H:%M:%S"):
-        try:
-            return datetime.strptime(texto[: len(formato) + 2], formato).date()
-        except ValueError:
-            continue
-    return None
-
-
-def _parece_persona_fisica(nif: str) -> bool:
-    """Un NIF de persona física empieza por dígito, K, L, M, X, Y o Z.
-
-    Los CIF de personas jurídicas empiezan por otra letra. Sirve para elegir
-    entre `Person` y `Company`, y por tanto para saber cuándo estamos tocando
-    datos personales (spec §12).
-    """
-    if not nif:
-        return False
-    return nif[0].isdigit() or nif[0] in "KLMXYZ"
 
 
 class BDNSConnector:
@@ -247,15 +202,51 @@ class BDNSConnector:
                     "numero_convocatoria": item.get("numeroConvocatoria"),
                     "convocatoria": item.get("convocatoria"),
                     "organo": self._nombre_organo(item),
-                    "beneficiario": item.get("beneficiario"),
-                    "nif_beneficiario": normalizar_nif(item.get("nifCif")),
-                    "importe": _a_decimal(item.get("importe")),
-                    "ayuda_equivalente": _a_decimal(item.get("ayudaEquivalente")),
-                    "fecha_concesion": _a_fecha(item.get("fechaConcesion")),
+                    **self._partir_beneficiario(item),
+                    "importe": a_decimal(item.get("importe")),
+                    "ayuda_equivalente": a_decimal(item.get("ayudaEquivalente")),
+                    "fecha_concesion": a_fecha(item.get("fechaConcesion")),
                     "instrumento": item.get("instrumento"),
                     "url_bases_reguladoras": item.get("urlBR"),
                 },
             )
+
+    @staticmethod
+    def _partir_beneficiario(item: dict[str, Any]) -> dict[str, Any]:
+        """Separa el NIF del nombre dentro del campo `beneficiario`.
+
+        BDNS **no** devuelve el NIF en un campo aparte —`nifCif` sólo existe
+        como parámetro de búsqueda—. Lo concatena delante del nombre:
+
+            "A10984433 BRITISH ROBERTSON, S.A."
+            "***9282** DARIO SANCHEZ ESTORNELL"
+
+        Y ahí está lo importante: **los NIF de personas físicas van
+        enmascarados** con asteriscos, mientras que los de personas jurídicas
+        van completos. Ese enmascarado es la propia fuente diciendo que ese
+        beneficiario es un particular, y lo tratamos como tal (spec §12).
+        """
+        crudo = (item.get("beneficiario") or "").strip()
+        if not crudo:
+            return {"beneficiario": "", "nif_beneficiario": "", "es_persona_fisica": False}
+
+        primero, _, resto = crudo.partition(" ")
+        nombre = resto.strip() or crudo
+
+        # NIF enmascarado: la fuente lo anonimiza porque es una persona física.
+        if "*" in primero and len(primero) >= 6:
+            return {"beneficiario": nombre, "nif_beneficiario": "", "es_persona_fisica": True}
+
+        nif = normalizar_nif(primero)
+        if nif:
+            return {
+                "beneficiario": nombre,
+                "nif_beneficiario": nif,
+                "es_persona_fisica": parece_persona_fisica(nif),
+            }
+
+        # Sin NIF reconocible: el campo entero es el nombre.
+        return {"beneficiario": crudo, "nif_beneficiario": "", "es_persona_fisica": False}
 
     @staticmethod
     def _nombre_organo(item: dict[str, Any]) -> str:
@@ -272,6 +263,55 @@ class BDNSConnector:
 
     # --- normalize --------------------------------------------------------
 
+    def _beneficiario_anonimo(self, d: dict[str, Any], organo: str) -> Normalizado:
+        """Conserva el pago pero no la identidad del particular.
+
+        Se agrupa por convocatoria: así el mapa sigue mostrando cuánto reparte
+        cada organismo y a través de qué convocatoria, sin nombrar a nadie.
+        """
+        convocatoria = str(d.get("numero_convocatoria") or "sin-convocatoria")
+        clave_organo = f"bdns:organo:{slug(organo)}"
+        clave_grupo = f"bdns:particulares:{convocatoria}"
+        importe = d.get("importe")
+
+        return Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    ftm_schema="PublicBody",
+                    caption=organo,
+                    dedupe_key=clave_organo,
+                    country="es",
+                    properties={"name": organo},
+                ),
+                EntidadNormalizada(
+                    ftm_schema="LegalEntity",
+                    caption=f"Personas físicas (convocatoria {convocatoria})",
+                    dedupe_key=clave_grupo,
+                    country="es",
+                    properties={
+                        "agregado": True,
+                        "motivo": "minimización de datos personales (RGPD)",
+                        "convocatoria": d.get("convocatoria") or "",
+                    },
+                ),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    ftm_schema="Payment",
+                    source_key=clave_organo,
+                    target_key=clave_grupo,
+                    dedupe_key=f"bdns:concesion:{d['cod_concesion']}",
+                    amount=importe,
+                    currency="EUR" if importe is not None else "",
+                    start_date=d.get("fecha_concesion"),
+                    status="asserted",
+                    # El pago consta; la identidad del receptor, no.
+                    confidence=1.0,
+                    properties={"beneficiario_anonimizado": True},
+                )
+            ],
+        )
+
     def clasificar_beneficiario(self, nif: str) -> tuple[str, dict[str, Any]]:
         """Decide el esquema FtM del beneficiario y propiedades extra.
 
@@ -281,7 +321,7 @@ class BDNSConnector:
         if not nif:
             # Sin identificador fiscal no afirmamos si es empresa o persona.
             return "LegalEntity", {}
-        if _parece_persona_fisica(nif):
+        if parece_persona_fisica(nif):
             return "Person", {}
         return "Company", {}
 
@@ -300,11 +340,23 @@ class BDNSConnector:
 
         nif = d.get("nif_beneficiario") or ""
 
+        # Minimización de datos personales (spec §12). BDNS enmascara el NIF de
+        # las personas físicas pero publica su nombre completo. Republicar el
+        # nombre de un particular que cobró una ayuda agraria en un mapa de
+        # influencia política es una exposición desproporcionada: la fuente es
+        # pública, pero el uso no sería el mismo.
+        #
+        # Se conserva el hecho —el organismo pagó esa cantidad— y se sustituye
+        # la identidad por una etiqueta genérica. Ni siquiera se guarda el
+        # nombre en properties: lo que no se persiste no se puede filtrar.
+        if d.get("es_persona_fisica") and not nif:
+            return self._beneficiario_anonimo(d, organo)
+
         # Sin NIF no podemos afirmar que dos "Construcciones García SL" sean la
         # misma: la clave queda acotada a esta fuente y la fusión, si procede,
         # la decidirá la resolución de entidades. Precisión sobre exhaustividad.
-        clave_beneficiario = f"nif:{nif}" if nif else f"bdns:beneficiario:{_slug(beneficiario)}"
-        clave_organo = f"bdns:organo:{_slug(organo)}"
+        clave_beneficiario = f"nif:{nif}" if nif else f"bdns:beneficiario:{slug(beneficiario)}"
+        clave_organo = f"bdns:organo:{slug(organo)}"
 
         esquema, props_beneficiario = self.clasificar_beneficiario(nif)
 
@@ -354,18 +406,6 @@ class BDNSConnector:
                 )
             ],
         )
-
-
-def _slug(texto: str) -> str:
-    """Clave estable y legible a partir de un nombre.
-
-    Se usa sólo cuando no hay NIF. Va con hash corto detrás porque dos
-    organismos pueden normalizar al mismo slug y colapsarlos sería inventar una
-    identidad que la fuente no afirma.
-    """
-    base = re.sub(r"[^a-z0-9]+", "-", texto.lower()).strip("-")[:60]
-    digest = hashlib.sha256(texto.encode("utf-8")).hexdigest()[:8]
-    return f"{base}-{digest}"
 
 
 class BDNSPartidosConnector(BDNSConnector):

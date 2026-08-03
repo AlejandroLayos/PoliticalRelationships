@@ -39,10 +39,27 @@ Las fechas van en `dd/mm/aaaa`. La respuesta es una página estilo Spring:
 { "content": [ ... ], "totalPages": 12, "number": 0, "totalElements": 11543 }
 ```
 
-**Campos de cada concesión** (verificados en el enumerado de campos ordenables
-de la API): `codConcesion`, `numeroConvocatoria`, `convocatoria`, `nivel1`,
-`nivel2`, `nivel3`, `instrumento`, `urlBR`, `fechaConcesion`, `beneficiario`,
-`nifCif`, `importe`, `ayudaEquivalente`, `tieneProyecto`.
+**Campos de cada concesión**: `codConcesion`, `numeroConvocatoria`,
+`convocatoria`, `nivel1`, `nivel2`, `nivel3`, `instrumento`, `urlBR`,
+`fechaConcesion`, `beneficiario`, `importe`, `ayudaEquivalente`,
+`tieneProyecto`.
+
+⚠️ **`nifCif` NO existe en la respuesta.** Sólo es un parámetro de búsqueda. El
+NIF viene **concatenado dentro de `beneficiario`**:
+
+```
+"A10984433 BRITISH ROBERTSON, S.A."
+"***9282** DARIO SANCHEZ ESTORNELL"
+```
+
+Lo aprendimos ejecutando contra la API real: dedujimos `nifCif` del enumerado
+de campos ordenables y era una suposición equivocada, así que durante la
+primera ingesta el 79 % de las aristas salió sin identificador fiscal.
+
+**Y los NIF de personas físicas llegan enmascarados** con asteriscos, mientras
+que los de personas jurídicas llegan completos. Ese enmascarado es la propia
+fuente señalando que el beneficiario es un particular, y lo tratamos como tal:
+ver la nota de minimización más abajo.
 
 `nivel1..3` es la jerarquía administrativa del órgano concedente; usamos el
 nivel más específico que venga relleno.
@@ -103,8 +120,19 @@ alguien capture la muestra con `scripts/capturar_muestra_bdns.py` desde una
 máquina con salida a internet. Ver `ingest/tests/golden/README.md`.
 
 **Base legal:** información de publicidad activa obligatoria (Ley 38/2003 General
-de Subvenciones, art. 20). Los beneficiarios personas físicas se tratan según
-§12 de la spec.
+de Subvenciones, art. 20).
+
+**Minimización de datos personales.** BDNS enmascara el NIF de los particulares
+pero **publica su nombre completo**. Republicar ese nombre dentro de un mapa de
+influencia política sería una exposición desproporcionada: la fuente es pública,
+pero el uso no es el mismo, y la propia BDNS ya señala con el enmascarado que
+considera a ese beneficiario un particular.
+
+Por eso el conector **no persiste el nombre** de las personas físicas sin NIF
+visible. Conserva el hecho —qué organismo pagó cuánto y por qué convocatoria— y
+sustituye la identidad por un nodo agregado por convocatoria. El dinero público
+sigue trazado; el vecino que cobró una ayuda agraria no aparece con nombre y
+apellidos. Ver [spec §12](spec.md).
 
 **Retención:** se captura y conserva el crudo. La BDNS despublica registros
 pasado su plazo legal, así que el crudo es la única prueba duradera.

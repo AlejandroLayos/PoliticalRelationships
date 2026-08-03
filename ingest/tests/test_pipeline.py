@@ -156,13 +156,21 @@ def test_el_importe_grande_no_pierde_precision(store, conector):
     assert fila["amount"] == Decimal("1234567890123.45")
 
 
-def test_persona_fisica_se_guarda_como_person(store, conector):
+def test_ninguna_persona_fisica_se_persiste_por_nombre(store, conector):
+    """Spec §12: el pago consta, la identidad del particular no."""
     pipeline.ejecutar(store, conector, fecha_desde=date(2025, 1, 1), fecha_hasta=date(2025, 1, 31))
     store.conn.commit()
 
-    fila = store.conn.execute("SELECT ftm_schema FROM entities WHERE nif = '12345678Z'").fetchone()
-    assert fila is not None
-    assert fila["ftm_schema"] == "Person"
+    fila = store.conn.execute(
+        "SELECT count(*) AS n FROM entities WHERE upper(caption) LIKE '%APELLIDO%'"
+    ).fetchone()
+    assert fila is not None and fila["n"] == 0
+
+    # Pero el pago agregado sí está.
+    fila = store.conn.execute(
+        "SELECT count(*) AS n FROM relationships WHERE properties ? 'beneficiario_anonimizado'"
+    ).fetchone()
+    assert fila is not None and fila["n"] >= 1
 
 
 def test_beneficiario_sin_nif_baja_la_confianza(store, conector):
