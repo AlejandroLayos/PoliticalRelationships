@@ -30,7 +30,7 @@ jobs:
           python-version: "3.11"
 
       - name: instalar httpx
-        run: pip install httpx
+        run: pip install httpx certifi cryptography
 
       - name: explorar
         run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py

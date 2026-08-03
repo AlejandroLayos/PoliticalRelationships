@@ -33,6 +33,12 @@ try:
 except ImportError:  # pragma: no cover
     sys.exit("falta httpx: pip install httpx")
 
+try:
+    from cryptography import x509
+    from cryptography.hazmat.primitives.serialization import Encoding
+except ImportError:  # pragma: no cover
+    sys.exit("falta cryptography: pip install cryptography")
+
 # Puntos de entrada conocidos, sacados de la navegación pública del organismo.
 CANDIDATOS = {
     "portal_partidos": "https://www.tcu.es/es/partidos-politicos/",
@@ -43,6 +49,75 @@ CANDIDATOS = {
         "?docCheckFis=true&docCheckFisSelect=FIS:+PARTIDOS+POL%C3%8DTICOS&submitSearch=true"
     ),
 }
+
+def _completar_cadena(host: str, puerto: int = 443) -> str | None:
+    """Descarga el certificado intermedio que el servidor omite.
+
+    Varios servidores de la administración española envían sólo su certificado
+    hoja, sin el intermedio que lo enlaza con una raíz de confianza. Los
+    navegadores lo disimulan porque siguen la extensión AIA del certificado y
+    se descargan el intermedio ellos solos; Python no.
+
+    Esto hace lo mismo. **No se desactiva la verificación**: se le suministra a
+    OpenSSL el certificado que el servidor debería haber mandado, y la cadena
+    se sigue validando contra las raíces del sistema. Bajar a `verify=False`
+    sería aceptar un intermediario, y en un proyecto cuyo valor es la
+    procedencia del dato eso no es negociable.
+
+    Devuelve la ruta de un bundle PEM ampliado, o None si no se pudo.
+    """
+    import ssl
+    import tempfile
+
+    import certifi
+
+    # Contexto sin verificar SÓLO para leer el certificado que sirve el host.
+    # No se envía nada ni se confía en él: se inspecciona su extensión AIA.
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    try:
+        import socket
+
+        with socket.create_connection((host, puerto), timeout=20) as cruda:
+            with ctx.wrap_socket(cruda, server_hostname=host) as tls:
+                der = tls.getpeercert(binary_form=True)
+        hoja = x509.load_der_x509_certificate(der)
+        aia = hoja.extensions.get_extension_for_class(
+            x509.AuthorityInformationAccess
+        ).value
+        urls = [
+            d.access_location.value
+            for d in aia
+            if d.access_method == x509.oid.AuthorityInformationAccessOID.CA_ISSUERS
+        ]
+    except Exception as exc:
+        print(f"  no pude leer la cadena de {host}: {exc}", file=sys.stderr)
+        return None
+
+    for url in urls:
+        try:
+            r = httpx.get(url, timeout=20)
+            r.raise_for_status()
+            inter = x509.load_der_x509_certificate(r.content)
+        except Exception:
+            continue
+
+        bundle = tempfile.NamedTemporaryFile(
+            "wb", suffix=".pem", delete=False
+        )
+        bundle.write(pathlib_read_bytes(certifi.where()))
+        bundle.write(b"\n")
+        bundle.write(inter.public_bytes(Encoding.PEM))
+        bundle.close()
+        print(f"  intermedio recuperado de {url}", file=sys.stderr)
+        return bundle.name
+    return None
+
+
+def pathlib_read_bytes(ruta: str) -> bytes:
+    return Path(ruta).read_bytes()
+
 
 CABECERAS = {
     # Identificarse es lo correcto al raspar un servicio público.
@@ -110,6 +185,8 @@ def formatear(resultados: list[dict]) -> str:
             lineas.append("")
             continue
         lineas.append(f"- HTTP {r['status']} · `{r['content_type']}` · {r['bytes']:,} bytes")
+        if r.get("nota"):
+            lineas.append(f"- ⚠️ {r['nota']}")
         if r.get("url_final") != r["url"]:
             lineas.append(f"- Redirige a: `{r['url_final']}`")
         lineas.append(f"- Tablas HTML en la página: **{r.get('tablas_html', 0)}**")
@@ -154,11 +231,34 @@ def main() -> int:
     )
     args = p.parse_args()
 
+    resultados = []
     with httpx.Client(timeout=45.0, follow_redirects=True, headers=CABECERAS) as cliente:
-        resultados = []
         for nombre, url in CANDIDATOS.items():
             print(f"explorando {nombre}…", file=sys.stderr)
             resultados.append(explorar(cliente, nombre, url))
+
+    # Los que fallaron por cadena SSL incompleta merecen un segundo intento con
+    # el intermedio recuperado: el problema es del servidor, no del dato.
+    fallos_ssl = [r for r in resultados if "CERTIFICATE_VERIFY_FAILED" in str(r.get("error", ""))]
+    if fallos_ssl:
+        hosts = {httpx.URL(r["url"]).host for r in fallos_ssl}
+        for host in hosts:
+            print(f"reintentando {host} con la cadena completada…", file=sys.stderr)
+            bundle = _completar_cadena(host)
+            if not bundle:
+                continue
+            with httpx.Client(
+                timeout=45.0, follow_redirects=True, headers=CABECERAS, verify=bundle
+            ) as cliente:
+                for i, r in enumerate(resultados):
+                    if httpx.URL(r["url"]).host != host or "error" not in r:
+                        continue
+                    nuevo = explorar(cliente, r["nombre"], r["url"])
+                    nuevo["nota"] = (
+                        "el servidor no envía el certificado intermedio; "
+                        "se recuperó por AIA como hace un navegador"
+                    )
+                    resultados[i] = nuevo
 
     args.salida.parent.mkdir(parents=True, exist_ok=True)
     args.salida.write_text(formatear(resultados), encoding="utf-8")
