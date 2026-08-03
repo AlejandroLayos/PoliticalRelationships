@@ -42,3 +42,28 @@ la salida del parser contra una entrada auténtica.
 
 **Hasta entonces, el conector de BDNS no está verificado contra la fuente
 real.** Está en `docs/data-sources.md §1`.
+
+---
+
+## PLACSP
+
+| Fichero | Origen | Golden test |
+|---|---|---|
+| `placsp_agregadas_muestra.atom` | Real, **espejo de terceros** | ✅ sí, con reservas |
+
+`placsp_agregadas_muestra.atom` es una respuesta **real** del feed
+`PlataformasAgregadasSinMenores` de PLACSP (4 de enero de 2022), pero **no la
+capturamos nosotros**: viene del repositorio
+[`nextprocurement/sproc`](https://github.com/nextprocurement/sproc)
+(`samples/PlataformasAgregadasSinMenores_20220104_030016_1_single.atom`), porque
+el entorno de desarrollo no tiene salida hacia `contrataciondelestado.es`.
+
+**Está modificada.** Quien la publicó añadió un segundo adjudicatario de prueba
+(`A28526275 II` / `... ACISA) II`) que no existe en el original. Lo dejamos a
+propósito: ejercita el caso de varios `WinningParty` por contrato, que es real
+—lotes y UTEs— y que un parser ingenuo se comería.
+
+Consecuencia: la estructura CODICE y los nombres de elemento **sí** están
+verificados contra datos auténticos; los valores concretos no son citables como
+hecho. Cuando haya salida a internet conviene capturar una muestra de primera
+mano y sustituirla.

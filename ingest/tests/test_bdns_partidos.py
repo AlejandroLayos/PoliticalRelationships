@@ -55,8 +55,9 @@ def test_ambos_conectores_estan_registrados():
 def test_registrar_todos_es_idempotente():
     registry._reset_for_tests()
     conectores.registrar_todos()
-    conectores.registrar_todos()  # no debe reventar
-    assert len(registry.available()) == 2
+    tras_una = registry.available()
+    conectores.registrar_todos()  # no debe reventar ni añadir duplicados
+    assert registry.available() == tras_una
     registry._reset_for_tests()
 
 
@@ -87,8 +88,8 @@ def test_el_beneficiario_es_organization(crudo):
             continue
         # El conjunto de datos ya afirma que es un partido: nada de deducir
         # Company/Person por el NIF.
-        assert n["target_entity"]["ftm_schema"] == "Organization"
-        assert n["target_entity"]["properties"]["partido_politico"] is True
+        assert n.entidades[1].ftm_schema == "Organization"
+        assert n.entidades[1].properties["partido_politico"] is True
 
 
 def test_la_clave_de_arista_es_la_misma_que_en_concesiones(crudo):
@@ -97,12 +98,12 @@ def test_la_clave_de_arista_es_la_misma_que_en_concesiones(crudo):
     partidos = BDNSPartidosConnector(peticiones_por_segundo=0)
 
     claves_g = {
-        n["relationship"]["dedupe_key"]
+        n.aristas[0].dedupe_key
         for r in general.parse(crudo)
         if (n := general.normalize(r)) is not None
     }
     claves_p = {
-        n["relationship"]["dedupe_key"]
+        n.aristas[0].dedupe_key
         for r in partidos.parse(crudo)
         if (n := partidos.normalize(r)) is not None
     }
@@ -115,9 +116,7 @@ def test_la_clave_de_entidad_por_nif_tambien_converge(crudo):
 
     def claves(c):
         return {
-            n["target_entity"]["dedupe_key"]
-            for r in c.parse(crudo)
-            if (n := c.normalize(r)) is not None
+            n.entidades[1].dedupe_key for r in c.parse(crudo) if (n := c.normalize(r)) is not None
         }
 
     assert claves(general) == claves(partidos)

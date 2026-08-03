@@ -80,11 +80,11 @@ def test_normalize_produce_aristas_validas_desde_la_muestra_real(crudo):
     assert normalizados, "ninguna concesión real llegó a producir una arista"
 
     for n in normalizados:
-        rel = n["relationship"]
-        assert rel["ftm_schema"] == "Payment"
-        assert 0.0 <= rel["confidence"] <= 1.0
-        assert rel["status"] == "asserted"
+        rel = n.aristas[0]
+        assert rel.ftm_schema == "Payment"
+        assert 0.0 <= rel.confidence <= 1.0
+        assert rel.status == "asserted"
         # El esquema rechaza importes sin moneda.
-        if rel["amount"] is not None:
-            assert rel["currency"] == "EUR"
-        assert n["source_entity"]["ftm_schema"] == "PublicBody"
+        if rel.amount is not None:
+            assert rel.currency == "EUR"
+        assert n.entidades[0].ftm_schema == "PublicBody"

@@ -175,3 +175,117 @@ def test_beneficiario_sin_nif_baja_la_confianza(store, conector):
     assert fila is not None
     assert float(fila["confidence"]) == 0.7
     assert fila["status"] == "asserted"
+
+
+# --- PLACSP: varias aristas por registro ----------------------------------
+
+
+def test_placsp_persiste_contrato_y_todas_sus_adjudicaciones(store):
+    """Un contrato con dos adjudicatarios debe dar dos ContractAward."""
+    from sinapsis_ingest.connectors.placsp import PLACSPConnector
+    from sinapsis_ingest.store import Source
+
+    store.upsert_source(Source(id="placsp", name="PLACSP", url="https://ejemplo.test"))
+    store.conn.commit()
+
+    muestra = (Path(__file__).parent / "golden" / "placsp_agregadas_muestra.atom").read_bytes()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, content=muestra, headers={"content-type": "application/atom+xml"}
+        )
+
+    conector = PLACSPConnector(
+        cliente=httpx.Client(transport=httpx.MockTransport(handler)),
+        peticiones_por_segundo=0,
+    )
+    resultado = pipeline.ejecutar(store, conector, max_paginas=1)
+    store.conn.commit()
+
+    assert not resultado.errores
+    assert resultado.aristas == 2, "se perdió un adjudicatario"
+
+    # El expediente es una entidad Contract, no una arista.
+    fila = store.conn.execute(
+        "SELECT count(*) AS n FROM entities WHERE ftm_schema = 'Contract'"
+    ).fetchone()
+    assert fila is not None and fila["n"] == 1
+
+    fila = store.conn.execute(
+        "SELECT count(*) AS n FROM relationships WHERE ftm_schema = 'ContractAward'"
+    ).fetchone()
+    assert fila is not None and fila["n"] == 2
+
+    # Ninguna arista sin procedencia.
+    fila = store.conn.execute(
+        """SELECT count(*) AS n FROM relationships r
+           WHERE NOT EXISTS (SELECT 1 FROM provenance p WHERE p.relationship_id = r.id)"""
+    ).fetchone()
+    assert fila is not None and fila["n"] == 0
+
+
+def test_placsp_reejecutado_no_duplica(store):
+    from sinapsis_ingest.connectors.placsp import PLACSPConnector
+    from sinapsis_ingest.store import Source
+
+    store.upsert_source(Source(id="placsp", name="PLACSP", url="https://ejemplo.test"))
+    store.conn.commit()
+
+    muestra = (Path(__file__).parent / "golden" / "placsp_agregadas_muestra.atom").read_bytes()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=muestra)
+
+    def ingerir():
+        c = PLACSPConnector(
+            cliente=httpx.Client(transport=httpx.MockTransport(handler)),
+            peticiones_por_segundo=0,
+        )
+        pipeline.ejecutar(store, c, max_paginas=1)
+        store.conn.commit()
+
+    ingerir()
+    antes = {t: _contar(store, t) for t in ("entities", "relationships", "provenance")}
+    ingerir()
+    for tabla, esperado in antes.items():
+        assert _contar(store, tabla) == esperado, f"{tabla} creció al reejecutar"
+
+
+def test_un_adjudicatario_con_nif_converge_con_bdns(store):
+    """El pago de BDNS y el contrato de PLACSP acaban en la MISMA entidad.
+
+    Es el objetivo del proyecto: ver que la empresa que recibe subvenciones es
+    la misma que gana contratos.
+    """
+    from sinapsis_ingest.connectors.placsp import PLACSPConnector
+    from sinapsis_ingest.store import Entity, Source
+
+    store.upsert_source(Source(id="placsp", name="PLACSP", url="https://ejemplo.test"))
+    # Simulamos que BDNS ya vio a esta empresa.
+    id_desde_bdns = store.upsert_entity(
+        Entity(
+            ftm_schema="Company",
+            caption="AERONAVAL DE CONSTRUCCIONES E INSTALACIONES SA",
+            dedupe_key="nif:A28526275",
+            nif="A28526275",
+        )
+    )
+    store.conn.commit()
+
+    muestra = (Path(__file__).parent / "golden" / "placsp_agregadas_muestra.atom").read_bytes()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=muestra)
+
+    conector = PLACSPConnector(
+        cliente=httpx.Client(transport=httpx.MockTransport(handler)),
+        peticiones_por_segundo=0,
+    )
+    pipeline.ejecutar(store, conector, max_paginas=1)
+    store.conn.commit()
+
+    fila = store.conn.execute(
+        "SELECT id FROM entities WHERE dedupe_key = 'nif:A28526275'"
+    ).fetchone()
+    assert fila is not None
+    assert str(fila["id"]) == id_desde_bdns, "PLACSP creó una entidad nueva en vez de converger"

@@ -151,32 +151,32 @@ def _normalizados(conector, crudo) -> dict[str, dict]:
 
 def test_normalize_produce_arista_payment(conector, crudo):
     n = _normalizados(conector, crudo)["1001"]
-    assert n["source_entity"]["ftm_schema"] == "PublicBody"
-    assert n["relationship"]["ftm_schema"] == "Payment"
-    assert n["target_entity"]["ftm_schema"] == "Company"
+    assert n.entidades[0].ftm_schema == "PublicBody"
+    assert n.aristas[0].ftm_schema == "Payment"
+    assert n.entidades[1].ftm_schema == "Company"
 
 
 def test_normalize_distingue_persona_fisica(conector, crudo):
     # NIF que empieza por dígito -> persona física -> Person, no Company.
     n = _normalizados(conector, crudo)["1002"]
-    assert n["target_entity"]["ftm_schema"] == "Person"
-    assert n["target_entity"]["nif"] == "12345678Z"
+    assert n.entidades[1].ftm_schema == "Person"
+    assert n.entidades[1].nif == "12345678Z"
 
 
 def test_normalize_sin_nif_usa_legal_entity_y_baja_la_confianza(conector, crudo):
     # Sin NIF no podemos afirmar de qué tipo de entidad se trata ni fusionarla
     # con seguridad: se refleja en el esquema y en la confianza.
     n = _normalizados(conector, crudo)["1003"]
-    assert n["target_entity"]["ftm_schema"] == "LegalEntity"
-    assert n["target_entity"]["nif"] == ""
-    assert n["relationship"]["confidence"] == 0.7
-    assert not n["target_entity"]["dedupe_key"].startswith("nif:")
+    assert n.entidades[1].ftm_schema == "LegalEntity"
+    assert n.entidades[1].nif == ""
+    assert n.aristas[0].confidence == 0.7
+    assert not n.entidades[1].dedupe_key.startswith("nif:")
 
 
 def test_normalize_con_nif_da_confianza_maxima(conector, crudo):
     n = _normalizados(conector, crudo)["1001"]
-    assert n["relationship"]["confidence"] == 1.0
-    assert n["target_entity"]["dedupe_key"] == "nif:B12345678"
+    assert n.aristas[0].confidence == 1.0
+    assert n.entidades[1].dedupe_key == "nif:B12345678"
 
 
 def test_normalize_descarta_registro_sin_beneficiario(conector, crudo):
@@ -187,27 +187,27 @@ def test_normalize_descarta_registro_sin_beneficiario(conector, crudo):
 def test_normalize_marca_status_asserted(conector, crudo):
     # Lo afirma la fuente; no lo inferimos nosotros.
     for n in _normalizados(conector, crudo).values():
-        assert n["relationship"]["status"] == "asserted"
+        assert n.aristas[0].status == "asserted"
 
 
 def test_normalize_dedupe_key_de_arista_es_la_concesion(conector, crudo):
     n = _normalizados(conector, crudo)["1001"]
-    assert n["relationship"]["dedupe_key"] == "bdns:concesion:1001"
+    assert n.aristas[0].dedupe_key == "bdns:concesion:1001"
 
 
 def test_normalize_importe_sin_moneda_no_ocurre(conector, crudo):
     # El esquema rechaza un importe sin moneda; el conector no debe producirlo.
     for n in _normalizados(conector, crudo).values():
-        rel = n["relationship"]
-        if rel["amount"] is not None:
-            assert rel["currency"] == "EUR"
+        rel = n.aristas[0]
+        if rel.amount is not None:
+            assert rel.currency == "EUR"
 
 
 def test_normalize_el_mismo_organo_da_la_misma_clave(conector, crudo):
     n = _normalizados(conector, crudo)
     # 1001 y 1002 son del mismo ministerio pero con nivel3 distinto, así que
     # sus claves de órgano deben diferir (son órganos distintos).
-    assert n["1001"]["source_entity"]["dedupe_key"] != n["1002"]["source_entity"]["dedupe_key"]
+    assert n["1001"].entidades[0].dedupe_key != n["1002"].entidades[0].dedupe_key
 
 
 # --- fetch (con transporte simulado) --------------------------------------

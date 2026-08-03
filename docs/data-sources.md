@@ -137,15 +137,52 @@ agregadas, encargos a medios propios y consultas preliminares de mercado.
 recorrer la cadena de ATOM y parsear XML UBL. Es trabajo de fase 3, no de
 arranque.
 
+**Rutas CODICE verificadas contra una respuesta real** (namespaces
+`urn:dgpe:names:draft:codice…`, estables entre versiones):
+
+| Dato | Ruta dentro de `cac-place-ext:ContractFolderStatus` |
+|---|---|
+| Expediente | `cbc:ContractFolderID` |
+| Estado | `cbc-place-ext:ContractFolderStatusCode` |
+| Órgano | `cac-place-ext:LocatedContractingParty/cac:Party/cac:PartyName/cbc:Name` |
+| Presupuesto | `cac:ProcurementProject/cac:BudgetAmount/cbc:TaxExclusiveAmount` |
+| CPV | `cac:ProcurementProject/cac:RequiredCommodityClassification/cbc:ItemClassificationCode` |
+| NUTS | `cac:ProcurementProject/cac:RealizedLocation/cbc:CountrySubentityCode` |
+| Adjudicatario | `cac:TenderResult/cac:WinningParty/cac:PartyName/cbc:Name` |
+| NIF adjudicatario | `cac:TenderResult/cac:WinningParty/cac:PartyIdentification/cbc:ID` |
+| Importe adjudicado | `cac:TenderResult/cac:AwardedTenderedProject/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount` |
+
+**Tres trampas que muerden:**
+
+1. **`ContractFolderID` no es único.** Es el número de expediente interno del
+   órgano ("C. 2-2021"); dos ayuntamientos pueden tener el mismo. La clave
+   estable es el `<id>` del entry ATOM, que sí es una URI global.
+2. **Un contrato puede tener varios `cac:WinningParty`** — lotes o UTEs.
+   Quedarse con el primero pierde adjudicatarios y, con ellos, dinero.
+3. **Los `href` de `rel="next"` son relativos** al fichero que los contiene, y
+   apuntan hacia atrás en el tiempo, no hacia adelante.
+
 **Mapeo a FollowTheMoney:**
 
 ```
-Contract (el expediente) --ContractAward--> adjudicatario (Company)
-órgano de contratación (PublicBody) relacionado con el Contract
+Contract (el expediente) --ContractAward--> adjudicatario (Company | Person)
 ```
+
+El órgano de contratación va como entidad `PublicBody` y se enlaza al contrato
+mediante la propiedad `authority`, **no con una arista**: en FollowTheMoney no
+existe esquema de arista órgano→contrato, la autoridad es una propiedad del
+contrato. La proyección a Neo4j (fase 4) es donde esa propiedad se materializa
+como enlace navegable.
 
 **Base legal:** publicidad obligatoria (Ley 9/2017 de Contratos del Sector
 Público).
+
+**Estado de verificación:** las rutas CODICE están verificadas contra una
+respuesta real, pero **espejada de terceros**, no capturada por nosotros (el
+entorno de desarrollo no alcanza `contrataciondelestado.es`). Ver
+`ingest/tests/golden/README.md`. Falta además el camino de **descarga de los
+ZIP mensuales**: el conector actual sigue el encadenado ATOM en vivo, que sirve
+para lo reciente pero no para cargar el histórico.
 
 ---
 
