@@ -1,3 +1,5 @@
+import { crearGrafoLocal } from './grafoLocal.js'
+
 /**
  * Conjunto de DEMOSTRACIÓN. Datos inventados.
  *
@@ -107,62 +109,17 @@ const PROCEDENCIA_FALSA = [
   },
 ]
 
-const porId = new Map(ENTIDADES.map((e) => [e.id, e]))
+const _grafo = crearGrafoLocal({
+  nodes: ENTIDADES.map((e) => ({
+    ...e,
+    properties: AUTORIDAD[e.id] ? { authority: AUTORIDAD[e.id] } : {},
+  })),
+  edges: ARISTAS,
+  provenance: Object.fromEntries(ENTIDADES.map((e) => [e.id, PROCEDENCIA_FALSA])),
+})
 
-function normaliza(t) {
-  return t
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-}
-
-export function buscarDemo(q, limite = 25) {
-  const aguja = normaliza(q)
-  const results = ENTIDADES.filter((e) => normaliza(e.caption).includes(aguja))
-    .sort((a, b) => a.caption.length - b.caption.length)
-    .slice(0, limite)
-    .map((e) => ({ ...e, depth: 0 }))
-  return { results }
-}
-
-export function entidadDemo(id) {
-  const e = porId.get(id)
-  if (!e) throw new Error('entidad no encontrada')
-  const properties = {}
-  if (AUTORIDAD[id]) properties.authority = AUTORIDAD[id]
-  return { ...e, properties, provenance: PROCEDENCIA_FALSA }
-}
-
-/** Expansión de ego-red, igual que hace la API: nivel a nivel. */
-export function vecinosDemo(id, profundidad = 1) {
-  if (!porId.has(id)) throw new Error('entidad no encontrada')
-
-  const visitados = new Map([[id, 0]])
-  const aristas = new Map()
-  let frontera = [id]
-
-  for (let nivel = 1; nivel <= Math.min(profundidad, 3) && frontera.length; nivel++) {
-    const siguiente = []
-    for (const a of ARISTAS) {
-      if (a.status === 'retracted') continue
-      const tocaFrontera = frontera.includes(a.source) || frontera.includes(a.target)
-      if (!tocaFrontera) continue
-      aristas.set(a.id, a)
-      for (const extremo of [a.source, a.target]) {
-        if (!visitados.has(extremo)) {
-          visitados.set(extremo, nivel)
-          siguiente.push(extremo)
-        }
-      }
-    }
-    frontera = siguiente
-  }
-
-  const nodes = [...visitados.entries()].map(([nid, depth]) => ({
-    ...porId.get(nid),
-    depth,
-  }))
-  return { root: id, depth: profundidad, nodes, edges: [...aristas.values()], truncated: false }
-}
+export const buscarDemo = (q, limite) => _grafo.buscar(q, limite)
+export const entidadDemo = (id) => _grafo.entidad(id)
+export const vecinosDemo = (id, profundidad) => _grafo.vecinos(id, profundidad)
 
 export const ENTIDAD_INICIAL = 'emp-constructora'

@@ -112,6 +112,22 @@ def _dsn() -> str:
     )
 
 
+def _exportar(ruta: str) -> int:
+    """Vuelca el grafo a JSON para publicarlo sin base de datos."""
+    from pathlib import Path
+
+    from sinapsis_ingest.exportar import exportar
+    from sinapsis_ingest.store import Store
+
+    with Store(_dsn()) as store:
+        resumen = exportar(store, Path(ruta))
+    # Un volcado vacío no es un éxito: significa que la ingesta no trajo nada.
+    if resumen["entidades"] == 0:
+        log.error("el grafo exportado está vacío")
+        return 1
+    return 0
+
+
 def _generar_candidatos() -> int:
     """Propone fusiones. Nunca las aplica: eso lo decide una persona."""
     from sinapsis_ingest import resolucion
@@ -175,6 +191,11 @@ def main(argv: list[str] | None = None) -> int:
         help="lista los candidatos pendientes de revisión y sale",
     )
     parser.add_argument(
+        "--exportar",
+        metavar="RUTA",
+        help="vuelca el grafo a un JSON estático y sale",
+    )
+    parser.add_argument(
         "--max-paginas",
         type=int,
         default=None,
@@ -196,6 +217,9 @@ def main(argv: list[str] | None = None) -> int:
         for source_id in registry.available():
             print(source_id)
         return 0
+
+    if args.exportar:
+        return _exportar(args.exportar)
 
     if args.candidatos:
         return _generar_candidatos()

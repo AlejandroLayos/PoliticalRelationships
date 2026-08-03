@@ -9,6 +9,7 @@
  */
 
 import { buscarDemo, entidadDemo, vecinosDemo } from './demo.js'
+import { crearGrafoLocal } from './grafoLocal.js'
 
 // Por defecto se habla con la API del mismo dominio (`/api/...`), que es lo
 // que despliegan las funciones de Vercel. `VITE_API_URL` sirve para apuntar a
@@ -20,7 +21,50 @@ const BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
 export const hayApiConfigurada = true
 
 /** Estado compartido: true en cuanto una llamada cae a la demostración. */
-export const estado = { esDemo: false, motivo: '' }
+export const estado = { esDemo: false, motivo: '', instantanea: null }
+
+/**
+ * Instantánea estática publicada por GitHub Actions.
+ *
+ * Son datos REALES con su procedencia, sólo que congelados en el momento de
+ * generarlos en vez de consultados en vivo. Por eso no llevan la banda de
+ * demostración: llevan su fecha.
+ */
+let _grafoEstatico = null
+
+export async function cargarInstantanea() {
+  if (_grafoEstatico !== null) return _grafoEstatico
+  try {
+    const r = await fetch('/datos/grafo.json', { headers: { Accept: 'application/json' } })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const datos = await r.json()
+    if (!datos.nodes?.length) throw new Error('instantánea vacía')
+    _grafoEstatico = crearGrafoLocal(datos)
+    estado.instantanea = {
+      generado: datos.generado,
+      truncado: Boolean(datos.truncado),
+      total: datos.total_entidades_en_base ?? datos.nodes.length,
+      fuentes: datos.fuentes ?? [],
+    }
+    return _grafoEstatico
+  } catch {
+    _grafoEstatico = false
+    return false
+  }
+}
+
+/** Alternativa: primero la instantánea real, y sólo si no hay, la demostración. */
+function alternativa(fnEstatico, fnDemo) {
+  return () => {
+    if (_grafoEstatico) {
+      estado.esDemo = false
+      estado.motivo = 'instantanea'
+      return fnEstatico(_grafoEstatico)
+    }
+    estado.esDemo = true
+    return fnDemo()
+  }
+}
 
 // El backend Go sirve bajo /v1; las funciones de Vercel, en la raíz de /api.
 const RUTA = BASE.endsWith('/api') ? '' : '/v1'
@@ -39,7 +83,6 @@ async function pedir(ruta, opciones = {}) {
 
 /** Ejecuta `llamada` contra la API; si falla, cae a `alternativa` y lo marca. */
 async function conRespaldo(llamada, alternativa, motivo) {
-  if (!hayApiConfigurada) return alternativa()
   try {
     const resultado = await llamada()
     estado.esDemo = false
@@ -56,7 +99,7 @@ async function conRespaldo(llamada, alternativa, motivo) {
 export function buscar(q, limite = 25) {
   return conRespaldo(
     () => pedir(`${RUTA}/search?q=${encodeURIComponent(q)}&limit=${limite}`),
-    () => buscarDemo(q, limite),
+    alternativa((g) => g.buscar(q, limite), () => buscarDemo(q, limite)),
     'api-caida',
   )
 }
@@ -64,7 +107,7 @@ export function buscar(q, limite = 25) {
 export function entidad(id) {
   return conRespaldo(
     () => pedir(`${RUTA}/entity/${encodeURIComponent(id)}`),
-    () => entidadDemo(id),
+    alternativa((g) => g.entidad(id), () => entidadDemo(id)),
     'api-caida',
   )
 }
@@ -72,7 +115,7 @@ export function entidad(id) {
 export function vecinos(id, profundidad = 1, limite = 300) {
   return conRespaldo(
     () => pedir(`${RUTA}/entity/${encodeURIComponent(id)}/neighbors?depth=${profundidad}&limit=${limite}`),
-    () => vecinosDemo(id, profundidad),
+    alternativa((g) => g.vecinos(id, profundidad, limite), () => vecinosDemo(id, profundidad)),
     'api-caida',
   )
 }
