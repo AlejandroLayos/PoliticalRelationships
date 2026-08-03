@@ -45,6 +45,22 @@ jobs:
             --salida docs/fuentes/tcu-anatomia-pdf.md \
             --detalle detalle-pdf/
 
+      # El conector de TdC necesita un golden test, y un golden test necesita
+      # una muestra real guardada (CLAUDE.md: obligatorio en parsers de
+      # fuentes). El entorno de desarrollo no alcanza www.tcu.es, así que la
+      # muestra se captura aquí y se commitea.
+      #
+      # Se elige el PDF de 2019 por ser el más pequeño (305 KB, 3 páginas) y
+      # traer las mismas columnas que los demás. Es un documento oficial
+      # público sobre partidos políticos —personas jurídicas—, no sobre
+      # particulares: el perfil de columnas ya confirmó que la fila lleva NIF
+      # de formación política, no de persona física.
+      - name: capturar muestra golden
+        if: (inputs.fuente || 'tcu') == 'tcu'
+        run: |
+          python scripts/capturar_muestra_tcu.py \
+            --destino ingest/tests/golden/tcu_sancionadores_2019.pdf
+
       # El texto extraído nombra a personas: se sube como artefacto privado
       # del repositorio para poder escribir el parser mirando datos reales,
       # y NO se commitea. El informe que sí se commitea lleva sólo estructura.
