@@ -1,0 +1,121 @@
+name: Retirar datos personales del historial
+
+# NO se ejecuta solo. Reescribe el historial del repositorio y fuerza el
+# empuje: cambian todos los SHA a partir del commit más antiguo afectado y
+# cualquiera que tenga un clon tendrá que rehacerlo.
+#
+# Existe porque el borrado hay que poder hacerlo sin una terminal. Por defecto
+# hace un ENSAYO que no toca nada; sólo reescribe si se escribe la palabra
+# exacta en el formulario.
+#
+# Qué borra y por qué: ver `scripts/redactar_particulares_del_historico.py` y
+# la §12 de `docs/spec.md`.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacion:
+        description: "Escribe REESCRIBIR para reescribir de verdad. Cualquier otra cosa hace un ensayo."
+        default: "ensayo"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reescritura-historial
+  cancel-in-progress: false
+
+jobs:
+  redactar:
+    runs-on: ubuntu-latest
+    steps:
+      # Todo el historial y todas las ramas: filter-repo reescribe lo que
+      # alcanza, y con un checkout superficial reescribiría media historia.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: traerse todas las ramas
+        run: |
+          set -euo pipefail
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+          # filter-repo reescribe refs locales, así que cada rama remota
+          # necesita la suya. La que ya está sacada se salta sola.
+          for r in $(git for-each-ref --format='%(refname:short)' refs/remotes/origin \
+                     | sed 's|^origin/||' | grep -v '^HEAD$'); do
+            git show-ref --verify --quiet "refs/heads/$r" || git branch "$r" "origin/$r"
+          done
+          echo "ramas que se van a reescribir:"
+          git for-each-ref --format='  %(refname:short)' refs/heads/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: instalar git-filter-repo
+        run: pip install git-filter-repo
+
+      # Siempre, incluso en el ensayo: es el informe de qué hay que borrar.
+      - name: qué datos personales quedan
+        id: comprobar
+        continue-on-error: true
+        run: python3 scripts/redactar_particulares_del_historico.py --comprobar
+
+      - name: reescribir y empujar
+        if: ${{ inputs.confirmacion == 'REESCRIBIR' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          python3 scripts/redactar_particulares_del_historico.py --reescribir --si
+
+          # El guion ya comprueba por su cuenta y sale con error si queda algo,
+          # pero esto es lo último antes de un empujón irreversible: se vuelve
+          # a mirar aquí, fuera del guion, por si el guion es el que falla.
+          if python3 scripts/redactar_particulares_del_historico.py --comprobar; then
+            echo "comprobación final: limpio"
+          else
+            echo "::error::siguen quedando datos personales; NO se empuja"
+            exit 1
+          fi
+
+          # UN SOLO empujón atómico con todas las ramas.
+          #
+          # Rama por rama, si una falla —una protección de rama, por ejemplo—
+          # las anteriores ya se habrían reescrito y las siguientes no: el
+          # repositorio se quedaría con los datos personales fuera de una rama
+          # y dentro de otra, que es el peor sitio donde pararse. Con
+          # `--atomic` el servidor las acepta todas o ninguna.
+          REMOTO="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          REFSPECS=""
+          for r in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+            REFSPECS="$REFSPECS refs/heads/$r:refs/heads/$r"
+            echo "  se empujará: $r"
+          done
+          # shellcheck disable=SC2086
+          git push --force --atomic "$REMOTO" $REFSPECS
+
+      - name: lo que falta después
+        if: always()
+        run: |
+          {
+            echo "## Esto NO termina con el push --force"
+            echo
+            echo "**GitHub no borra las refs de los pull request.**"
+            echo "\`refs/pull/1/head\` apunta a un commit cuyos antepasados llevan los"
+            echo "datos personales, y forzar el empuje de las ramas no la toca: los"
+            echo "nombres y los DNI se siguen pudiendo descargar desde ahí."
+            echo
+            echo "Tampoco desaparecen los commits sueltos, que GitHub sigue sirviendo"
+            echo "por su SHA en la web y en la API aunque ninguna rama los alcance."
+            echo
+            echo "Las dos cosas sólo las arregla el soporte de GitHub:"
+            echo "<https://support.github.com/> — pedir que purguen las refs de pull"
+            echo "request y las cachés del repositorio, citando los SHA, y decir que"
+            echo "son datos personales bajo RGPD."
+            echo
+            echo "Sin ese paso el borrado está a medias, y es la mitad que importa."
+          } >> "$GITHUB_STEP_SUMMARY"
