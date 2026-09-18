@@ -13,7 +13,7 @@ on:
       conector:
         description: "Conector a ejecutar"
         type: choice
-        options: [bdns, bdns-partidos, placsp]
+        options: [bdns, bdns-partidos, placsp, tcu]
         default: bdns
       desde:
         description: "Fecha inicial (AAAA-MM-DD)"
@@ -35,11 +35,45 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Esta ruta es OPCIONAL: sólo aplica si hay una base alojada conectada. La
+  # publicación diaria no depende de ella —de eso se encarga la instantánea de
+  # `datos.yml`, que no necesita ninguna cuenta—.
+  #
+  # Antes el job fallaba en seco cuando faltaba el secreto, así que la CI
+  # salía en rojo todos los días durante semanas por algo que no estaba roto.
+  # Eso es peor que inútil: una CI que siempre está roja enseña a no mirarla, y
+  # el día que se rompa algo de verdad no se distingue del ruido de fondo.
+  #
+  # El secreto no se puede consultar en un `if:` de job —el contexto `secrets`
+  # no está disponible ahí—, de ahí este job previo que lo traduce a una salida.
+  comprobar:
+    name: ¿hay base de datos conectada?
+    runs-on: ubuntu-latest
+    outputs:
+      hay_base: ${{ steps.mirar.outputs.hay_base }}
+    steps:
+      - id: mirar
+        env:
+          DSN: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          if [ -n "$DSN" ]; then
+            echo "hay_base=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "hay_base=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Ingesta a Neon omitida::No hay NEON_DATABASE_URL configurado, así que no hay base alojada a la que ingerir. La web se sigue publicando con la instantánea de «Instantánea de datos», que no necesita ninguna cuenta. Para activar esta ruta, crea el secreto en Settings → Secrets and variables → Actions."
+          fi
+
   ingerir:
     name: ingerir a Neon
     runs-on: ubuntu-latest
-    # Sin el secreto configurado el job no tiene nada que hacer.
-    if: github.repository_owner != ''
+    needs: comprobar
+    # En el cron se omite en silencio si no hay base: no es un fallo, es que
+    # esa ruta no está activada. Lanzado a mano sí se ejecuta y falla con un
+    # mensaje claro, porque entonces alguien lo ha pedido expresamente y
+    # merece saber por qué no puede ser.
+    if: >-
+      needs.comprobar.outputs.hay_base == 'true'
+      || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 

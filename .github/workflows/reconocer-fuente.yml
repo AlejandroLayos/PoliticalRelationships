@@ -29,20 +29,67 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: instalar httpx
-        run: pip install httpx certifi cryptography
+      - name: instalar dependencias
+        run: pip install httpx certifi cryptography pdfplumber
 
       - name: explorar
         run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py
 
+      # Segunda fase: el reconocimiento dice QUÉ publica el organismo; esto
+      # dice si se puede leer. Sólo hay script de anatomía para las fuentes
+      # que resultaron ser PDF.
+      - name: anatomía de los PDF
+        if: (inputs.fuente || 'tcu') == 'tcu'
+        run: |
+          python scripts/anatomia_pdf_tcu.py \
+            --salida docs/fuentes/tcu-anatomia-pdf.md \
+            --detalle detalle-pdf/
+
+      # El conector de TdC necesita un golden test, y un golden test necesita
+      # una muestra real guardada (CLAUDE.md: obligatorio en parsers de
+      # fuentes). El entorno de desarrollo no alcanza www.tcu.es, así que la
+      # muestra se captura aquí y se commitea.
+      #
+      # Se elige el PDF de 2019 por ser el más pequeño (305 KB, 3 páginas) y
+      # traer las mismas columnas que los demás. Es un documento oficial
+      # público sobre partidos políticos —personas jurídicas—, no sobre
+      # particulares: el perfil de columnas ya confirmó que la fila lleva NIF
+      # de formación política, no de persona física.
+      - name: capturar muestra golden
+        if: (inputs.fuente || 'tcu') == 'tcu'
+        run: |
+          python scripts/capturar_muestra_tcu.py \
+            --destino ingest/tests/golden/tcu_sancionadores_2019.pdf
+
+      # El texto extraído nombra a personas: se sube como artefacto privado
+      # del repositorio para poder escribir el parser mirando datos reales,
+      # y NO se commitea. El informe que sí se commitea lleva sólo estructura.
+      - name: guardar el detalle como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detalle-pdf-tcu
+          path: detalle-pdf/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      # `always()`: si el reconocimiento se cae a medias, el informe parcial
+      # sigue valiendo. Perderlo obliga a repetir la exploración contra un
+      # servicio público, que es justo lo que no conviene hacer en bucle.
       - name: mostrar el informe en el resumen
-        run: cat docs/fuentes/*-reconocimiento.md >> "$GITHUB_STEP_SUMMARY"
+        if: always()
+        run: cat docs/fuentes/*-reconocimiento.md docs/fuentes/*-anatomia-pdf.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: commitear el informe
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
+          # nombres de personas y está en .gitignore, pero la barrera que de
+          # verdad importa es no pedir nunca que se añada todo.
           git add docs/fuentes/
+          git add ingest/tests/golden/tcu_*.pdf 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "sin cambios"
             exit 0
