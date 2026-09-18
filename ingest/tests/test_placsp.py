@@ -177,13 +177,34 @@ def test_el_adjudicatario_con_nif_converge_con_otras_fuentes(conector, crudo):
     assert "nif:A28526275" in claves
 
 
-def test_el_adjudicatario_sin_nif_baja_la_confianza(conector, crudo):
-    n = _normalizado(conector, crudo)
+def test_el_adjudicatario_sin_nif_baja_la_confianza(conector):
+    # Sobre un registro propio y no sobre la muestra: los dos adjudicatarios de
+    # la muestra van en el MISMO TenderResult —es una UTE— y comparten importe,
+    # así que la regla del importe compartido les baja la confianza a los dos y
+    # tapaba lo que este test quiere mirar, que es el efecto del NIF.
+    registro = ParsedRecord(
+        raw_content_hash="z" * 64,
+        extractor_version="test",
+        data={
+            "id_registro": "urn:nif:1",
+            "entry_id": "urn:nif:1",
+            "titulo": "Obra menor",
+            "actualizado": date(2026, 3, 1),
+            "organo": "Ayuntamiento de Ejemplo",
+            "presupuesto": Decimal("200000"),
+            "adjudicaciones": [
+                {"nombre": "CON NIF SA", "nif": "A28526275", "importe": Decimal("120000"),
+                 "moneda": "EUR", "codigo_resultado": "8"},
+                {"nombre": "SIN NIF SL", "nif": "", "importe": Decimal("55000"),
+                 "moneda": "EUR", "codigo_resultado": "8"},
+            ],
+        },
+    )
+    n = conector.normalize(registro)
+    assert n is not None
     adjudicaciones = [a for a in n.aristas if a.ftm_schema == "ContractAward"]
-    con_nif = [a for a in adjudicaciones if a.confidence == 1.0]
-    sin_nif = [a for a in adjudicaciones if a.confidence == 0.7]
-    assert len(con_nif) == 1
-    assert len(sin_nif) == 1
+    assert len([a for a in adjudicaciones if a.confidence == 1.0]) == 1
+    assert len([a for a in adjudicaciones if a.confidence == 0.7]) == 1
 
 
 def test_el_contrato_referencia_a_su_organo(conector, crudo):
@@ -490,3 +511,92 @@ def test_un_presupuesto_a_cero_no_dispara_la_regla(conector):
     # importes a todos los contratos que publican el presupuesto como 0.
     adj = _adjudicacion(conector, "50000", "0")
     assert adj.amount == Decimal("50000")
+
+
+# --- el importe del acuerdo marco no es el de cada adjudicatario -----------
+
+
+def _registro_marco(importes: list[str | None]) -> ParsedRecord:
+    return ParsedRecord(
+        raw_content_hash="y" * 64,
+        extractor_version="test",
+        data={
+            "id_registro": "urn:marco:1",
+            "entry_id": "urn:marco:1",
+            "titulo": "Acuerdo marco de servicios de desarrollo de sistemas",
+            "actualizado": date(2026, 3, 1),
+            "organo": "Dirección General de Sistemas",
+            "presupuesto": Decimal("900000000"),
+            "adjudicaciones": [
+                {
+                    "nombre": f"EMPRESA {i} SA",
+                    "nif": f"A0000000{i}",
+                    "importe": Decimal(imp) if imp is not None else None,
+                    "moneda": "EUR",
+                    "codigo_resultado": "8",
+                }
+                for i, imp in enumerate(importes)
+            ],
+        },
+    )
+
+
+def _adjudicaciones(conector, importes):
+    n = conector.normalize(_registro_marco(importes))
+    assert n is not None
+    return [a for a in n.aristas if a.ftm_schema == "ContractAward"]
+
+
+def test_el_valor_del_marco_no_se_atribuye_a_cada_adjudicatario(conector):
+    # 20 adjudicatarios a 900 millones cada uno sumaban 18.000 millones: el
+    # 85 % del dinero del mapa entero, y la web decía «INDRA recibió 908
+    # millones de este organismo». Es falso: ese importe es el techo del
+    # acuerdo, dentro del cual las 20 compiten por pedidos concretos.
+    aristas = _adjudicaciones(conector, ["900000000"] * 20)
+    assert len(aristas) == 20
+    assert all(a.amount is None for a in aristas)
+    for a in aristas:
+        assert a.properties["importeCompartido"] == "900000000"
+        assert a.properties["adjudicatariosQueComparten"] == 20
+        assert "acuerdo marco" in a.properties["motivoImporteDudoso"]
+        assert a.confidence <= 0.5
+
+
+def test_la_adjudicacion_se_conserva_aunque_se_calle_la_cifra(conector):
+    # Lo que se descarta es la atribución del importe, no el hecho: esas
+    # empresas entraron en el marco y eso es un dato.
+    aristas = _adjudicaciones(conector, ["900000000"] * 3)
+    assert {a.target_key for a in aristas} == {
+        "nif:A00000000",
+        "nif:A00000001",
+        "nif:A00000002",
+    }
+
+
+def test_con_importes_distintos_cada_uno_conserva_el_suyo(conector):
+    # Lotes de valor distinto: aquí el importe sí es de cada adjudicatario.
+    aristas = _adjudicaciones(conector, ["100000", "250000", "70000"])
+    assert sorted(str(a.amount) for a in aristas) == ["100000", "250000", "70000"]
+    assert all("importeCompartido" not in a.properties for a in aristas)
+
+
+def test_solo_se_calla_el_importe_que_se_repite(conector):
+    # Un contrato puede tener lotes repetidos y lotes únicos a la vez.
+    aristas = _adjudicaciones(conector, ["500000", "500000", "31000"])
+    porque = {str(a.target_key): a for a in aristas}
+    assert porque["nif:A00000002"].amount == Decimal("31000")
+    assert porque["nif:A00000000"].amount is None
+    assert porque["nif:A00000001"].amount is None
+
+
+def test_un_unico_adjudicatario_no_comparte_nada(conector):
+    aristas = _adjudicaciones(conector, ["900000000"])
+    assert aristas[0].amount == Decimal("900000000")
+
+
+def test_varias_adjudicaciones_sin_importe_no_se_consideran_repetidas(conector):
+    # `None` no es un importe compartido: es la ausencia de uno, y tratarla
+    # como repetición añadiría un motivo falso a aristas que ya no tenían cifra.
+    aristas = _adjudicaciones(conector, [None, None])
+    assert all(a.amount is None for a in aristas)
+    assert all("importeCompartido" not in a.properties for a in aristas)

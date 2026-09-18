@@ -102,6 +102,12 @@ export function colapsarNodosDePaso(datos, esquema = 'Contract') {
           confidence: Math.min(dentro.confidence ?? 1, fuera.confidence ?? 1),
           status:
             dentro.status === 'inferred' || fuera.status === 'inferred' ? 'inferred' : 'asserted',
+          // Las propiedades del tramo que lleva el dinero viajan con él. Ahí
+          // va el motivo por el que una cifra no se publica —un importe
+          // compartido entre los adjudicatarios de un acuerdo marco, por
+          // ejemplo—, y sin arrastrarlo el puente deja un hueco sin explicar,
+          // que es justo lo que se lee como un cero.
+          ...(fuera.properties ? { properties: fuera.properties } : {}),
           viaDePaso: paso,
         })
       }

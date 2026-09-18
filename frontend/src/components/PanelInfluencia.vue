@@ -92,22 +92,50 @@ const sinDatos = computed(
         Presentarlo como «influencia extranjera» a secas sería afirmar algo
         que las fuentes no dicen.
       -->
-      <section v-if="area.extranjero.contrapartes.length" class="bloque extranjero">
+      <section
+        v-if="area.extranjero.contrapartes.length || area.extranjero.indicios.length"
+        class="bloque extranjero"
+      >
         <h3>Capital extranjero alrededor</h3>
-        <p class="grande">
-          {{ dineroCorto(area.extranjero.total) }}
-          <span class="pct">{{ area.extranjero.porcentaje.toFixed(1) }} % de lo que mueve</span>
-        </p>
-        <ul class="lista compacta">
-          <li v-for="c in area.extranjero.contrapartes" :key="c.id">
-            <button @click="emit('seleccionar', c.id)">{{ c.caption }}</button>
-            <span class="importe">{{ dineroCorto(c.total) }}</span>
-          </li>
-        </ul>
-        <p class="matiz">
-          Son entidades con NIF de no residente (letras N y W) o NIE. Dice dónde
-          tributan, no quién las controla.
-        </p>
+
+        <template v-if="area.extranjero.contrapartes.length">
+          <p class="grande">
+            {{ dineroCorto(area.extranjero.total) }}
+            <span class="pct">{{ area.extranjero.porcentaje.toFixed(1) }} % de lo que mueve</span>
+          </p>
+          <ul class="lista compacta">
+            <li v-for="c in area.extranjero.contrapartes" :key="c.id">
+              <button @click="emit('seleccionar', c.id)">{{ c.caption }}</button>
+              <span class="importe">{{ dineroCorto(c.total) }}</span>
+            </li>
+          </ul>
+          <p class="matiz">
+            Lo afirma la letra del NIF: N para entidad extranjera, W para
+            establecimiento permanente de no residente. Dice dónde tributan, no
+            quién las controla.
+          </p>
+        </template>
+
+        <!--
+          Los indicios van debajo, con otro encabezado y sin sumar al
+          porcentaje. Juntarlos convertiría una sospecha razonable en una
+          afirmación, y la diferencia entre «lo dice su NIF» y «lo parece por
+          el nombre» es justamente lo que aquí no se puede perder.
+        -->
+        <div v-if="area.extranjero.indicios.length" class="indicios">
+          <h4>Probablemente extranjeras, sin confirmar</h4>
+          <ul class="lista compacta">
+            <li v-for="c in area.extranjero.indicios" :key="c.id">
+              <button @click="emit('seleccionar', c.id)">{{ c.caption }}</button>
+              <span class="importe">{{ dineroCorto(c.total) }}</span>
+            </li>
+          </ul>
+          <p class="matiz">
+            No constan con NIF español y su nombre termina en una forma
+            societaria extranjera. Es un indicio, no un dato de la Agencia
+            Tributaria, y por eso no cuenta en el porcentaje de arriba.
+          </p>
+        </div>
       </section>
 
       <!-- De quién recibe ---------------------------------------------- -->
@@ -280,6 +308,11 @@ h3 {
 }
 .bloque.extranjero .grande { font-size: 1.05rem; font-weight: 700; color: #cbb0f0; margin: 0 0 0.5rem; }
 .bloque.extranjero .pct { font-size: 0.72rem; font-weight: 400; color: var(--texto-tenue); margin-left: 0.4rem; }
+.indicios { margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px dashed #3c3155; }
+.indicios h4 {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--texto-tenue); margin: 0 0 0.35rem; font-weight: 600;
+}
 
 .lista { list-style: none; margin: 0; padding: 0; }
 .lista button {

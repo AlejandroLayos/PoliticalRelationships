@@ -64,6 +64,29 @@ _FORMAS_SOCIETARIAS = re.compile(
 # Y las de NIE —X, Y, Z— son personas físicas extranjeras. Se listan aparte
 # porque una persona física recibe el trato de minimización (spec §12) tenga la
 # nacionalidad que tenga: lo que interesa del extranjero es el capital, no quién.
+# Formas societarias que sólo existen fuera de España, exigidas AL FINAL del
+# nombre. Es la parte del nombre que designa el tipo de sociedad, y por tanto
+# el ordenamiento bajo el que está constituida.
+#
+# Al final y no en cualquier posición: "AB MEDICA GROUP" es española y empieza
+# por AB; "Reed Exhibitions Ltd." termina en Ltd. La posición es lo que
+# distingue el tipo societario de una palabra suelta del nombre comercial.
+#
+# Quedan fuera a propósito formas ambiguas en castellano o catalán —SA, SL,
+# SC— y siglas que colisionan con organismos españoles.
+_FORMAS_EXTRANJERAS = re.compile(
+    r"(?:^|[\s,.(])(?:"
+    r"gmbh(?:\s?&\s?co\.?\s?kg)?|mbh|ltd|limited|llc|l\.?l\.?c\.?|inc|plc"
+    r"|b\.?\s?v\.?|n\.?\s?v\.?|a\/s|aps|oy|oyj|kft|s\.?p\.?a\.?|s\.?r\.?l\.?"
+    # Se cayó la turca «A.Ş.»: un test la pilló marcando como extranjera a
+    # "ASOC PROV DE FAMILIAS Y AMIGOS DE PERSONAS SORDAS A.S.P.A.S.", que es
+    # una asociación española — el nombre termina en ".A.S.". Dos letras no
+    # bastan para afirmar bajo qué ordenamiento está constituida una entidad.
+    r"|sp\.?\s?z\s?o\.?\s?o\.?|pte\.?\s?ltd"
+    r")[\s,.)]*$",
+    re.IGNORECASE,
+)
+
 _INICIALES_ENTIDAD_EXTRANJERA = "NW"
 _INICIALES_NIE = "XYZ"
 
@@ -95,16 +118,58 @@ def motivo_extranjera(nif: str | None) -> str:
     return ""
 
 
-def propiedades_extranjera(nif: str | None) -> dict[str, object]:
+def parece_extranjera_por_forma(nif: str | None, nombre: str | None) -> bool:
+    """Indicio —no prueba— de que la entidad está constituida fuera de España.
+
+    El criterio del NIF es el bueno y no se toca: lo afirma la Agencia
+    Tributaria. Pero en los datos reales hay adjudicatarios **sin NIF
+    ninguno**, y no por casualidad: son justamente los proveedores extranjeros,
+    que no tienen por qué tener uno. En la instantánea del 18/9/2026 eran siete
+    —META PLATFORMS IRELAND LIMITED, VOESTALPINE RAIL TECHNOLOGY GMBH,
+    NOVOGENE UK COMPANY LIMITED y cuatro más— cobrando de administraciones
+    españolas y sin aparecer en el filtro de capital extranjero.
+
+    Las dos condiciones son necesarias y ninguna basta sola:
+
+    - **Sin NIF.** Con NIF manda el NIF, sea español o no. Deducir por el
+      nombre teniendo el dato oficial delante sería sustituir una fuente por
+      una corazonada.
+    - **Forma societaria extranjera al final del nombre.** Al final, porque es
+      ahí donde va el tipo de sociedad. "AB MEDICA GROUP" es española y empieza
+      por AB.
+
+    Aun así es un indicio, y se publica como tal: en propiedad aparte, con su
+    motivo, y la interfaz no puede presentarlo como lo que afirma un NIF.
+    """
+    if nif:
+        return False
+    if not nombre:
+        return False
+    return bool(_FORMAS_EXTRANJERAS.search(nombre.strip()))
+
+
+def propiedades_extranjera(nif: str | None, nombre: str | None = None) -> dict[str, object]:
     """Propiedades que marcan capital no residente, con su motivo.
 
     Devuelve {} si no lo es: así se puede mezclar en cualquier diccionario de
     propiedades sin ensuciar a las entidades españolas con una clave a False
     que luego habría que interpretar.
+
+    Lo probado por el NIF y lo deducido por el nombre van en claves distintas.
+    Mezclarlos haría que un indicio se leyera igual que un hecho, que es
+    exactamente lo que la invariante 5 prohíbe para las aristas y no hay razón
+    para permitir en las entidades.
     """
-    if not es_entidad_extranjera(nif):
-        return {}
-    return {"entidad_extranjera": True, "motivo_extranjera": motivo_extranjera(nif)}
+    if es_entidad_extranjera(nif):
+        return {"entidad_extranjera": True, "motivo_extranjera": motivo_extranjera(nif)}
+    if parece_extranjera_por_forma(nif, nombre):
+        return {
+            "entidad_extranjera_indicio": True,
+            "motivo_extranjera_indicio": (
+                "sin NIF español y con forma societaria extranjera en el nombre"
+            ),
+        }
+    return {}
 
 
 def parece_forma_societaria(nombre: str | None) -> bool:

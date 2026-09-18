@@ -120,6 +120,39 @@ def _atributo(nodo: ET.Element | None, ruta: str, attr: str) -> str:
 VECES_PRESUPUESTO_INVEROSIMIL = 10
 
 
+def _importes_compartidos(adjudicaciones: list[dict[str, Any]]) -> dict[Any, int]:
+    """Importes que se repiten entre adjudicatarios del MISMO contrato.
+
+    En un acuerdo marco o un sistema dinámico de adquisición, PLACSP publica el
+    valor del acuerdo —o del lote— en el resultado de CADA adjudicatario
+    admitido. No es lo que va a cobrar cada uno: es el techo de gasto del
+    marco, dentro del cual después compiten por los pedidos concretos.
+
+    Sumarlo por adjudicatario multiplica el dinero por el número de empresas
+    admitidas. En la instantánea del 18/9/2026 un solo acuerdo marco de
+    servicios informáticos, con 20 adjudicatarios a 900.000.000 € cada uno,
+    aportaba 18.000 millones: el 85 % del dinero de todo el mapa. Y la lectura
+    que salía en la web era «INDRA recibió 908 millones de euros de este
+    organismo», que es falsa.
+
+    En total, el 90,5 % del dinero de las adjudicaciones venía de importes
+    repetidos así.
+
+    Basta con que se repita DOS veces. Podría ser la coincidencia de dos lotes
+    de idéntico valor adjudicados a empresas distintas, pero desde fuera no hay
+    manera de distinguir ese caso del acuerdo marco, y exigir tres o cinco
+    repeticiones sólo rescata un 0,3 % del dinero. No merece la pena comprar
+    ese 0,3 % al precio de publicar cifras falsas.
+    """
+    cuenta: dict[Any, int] = {}
+    for adj in adjudicaciones:
+        importe = adj.get("importe")
+        if importe is None:
+            continue
+        cuenta[importe] = cuenta.get(importe, 0) + 1
+    return {imp: n for imp, n in cuenta.items() if n > 1}
+
+
 def _importe_inverosimil(importe: Any, presupuesto: Any) -> bool:
     """¿El importe adjudicado es imposible frente al presupuesto del contrato?"""
     if importe is None or presupuesto is None:
@@ -323,6 +356,8 @@ class PLACSPConnector:
         if not organo or not adjudicaciones:
             return None
 
+        compartidos = _importes_compartidos(adjudicaciones)
+
         clave_organo = f"placsp:organo:{slug(organo)}"
         clave_contrato = f"placsp:contrato:{d['entry_id']}"
 
@@ -424,7 +459,7 @@ class PLACSPConnector:
                             dedupe_key=clave_adj,
                             nif=nif,
                             country="es",
-                            properties={"name": nombre, **propiedades_extranjera(nif)},
+                            properties={"name": nombre, **propiedades_extranjera(nif, nombre)},
                         )
                     )
 
@@ -439,6 +474,21 @@ class PLACSPConnector:
                 if v
             }
             confianza = 1.0 if nif else 0.7
+
+            veces = compartidos.get(importe, 0)
+            if veces > 1:
+                # No se descarta la adjudicación —el adjudicatario entró en el
+                # marco, y eso es el dato— sino la atribución de la cifra a él.
+                props_adj["importeCompartido"] = str(importe)
+                props_adj["adjudicatariosQueComparten"] = veces
+                props_adj["motivoImporteDudoso"] = (
+                    f"el mismo importe figura en {veces} adjudicaciones de este contrato:"
+                    " es el valor del acuerdo marco o del lote, no lo que recibe cada"
+                    " adjudicatario"
+                )
+                importe = None
+                confianza = min(confianza, 0.5)
+
             if _importe_inverosimil(importe, d.get("presupuesto")):
                 log.warning(
                     "placsp: importe inverosímil frente al presupuesto; no se publica la cifra",

@@ -45,14 +45,27 @@ function vacio(entidad = null) {
     totalRecibido: 0,
     totalPagado: 0,
     totalSancionado: 0,
-    extranjero: { contrapartes: [], total: 0, porcentaje: 0 },
+    extranjero: { contrapartes: [], total: 0, porcentaje: 0, indicios: [], totalIndicios: 0 },
     comparten: [],
     red: { nodes: [], edges: [] },
   }
 }
 
+/**
+ * Extranjera **probada**: lo afirma la letra del NIF, no nosotros.
+ */
 function esExtranjera(n) {
   return Boolean(n?.properties?.entidad_extranjera)
+}
+
+/**
+ * Extranjera **por indicio**: sin NIF español y con forma societaria
+ * extranjera al final del nombre. Va aparte de lo anterior en todo el camino
+ * —aquí, en la ficha y en el dibujo— porque presentarlos juntos convertiría
+ * una sospecha razonable en una afirmación.
+ */
+function indicioExtranjera(n) {
+  return Boolean(n?.properties?.entidad_extranjera_indicio)
 }
 
 /**
@@ -82,6 +95,7 @@ export function areaDeInfluencia(datos, id) {
         caption: otro.caption,
         schema: otro.schema,
         extranjera: esExtranjera(otro),
+        extranjeraIndicio: indicioExtranjera(otro),
         total: 0,
         n: 0,
         // La confianza mínima de las relaciones que lo sostienen: si una
@@ -157,6 +171,11 @@ export function areaDeInfluencia(datos, id) {
   // paga, y nada más.
   const contrapartes = [...recibeDe, ...pagaA].filter((x) => x.extranjera)
   const totalExtranjero = contrapartes.reduce((s, x) => s + x.total, 0)
+  // Los indicios se cuentan aparte y NO entran en el porcentaje de exposición:
+  // ese número se lee como un hecho y sólo puede salir de hechos.
+  const contrapartesIndicio = [...recibeDe, ...pagaA].filter(
+    (x) => x.extranjeraIndicio && !x.extranjera,
+  )
   const totalMovido = totalRecibido + totalPagado
 
   // Quién más cobra de sus mismos pagadores. Es lo que enseña el "ámbito de
@@ -174,6 +193,7 @@ export function areaDeInfluencia(datos, id) {
         caption: otro.caption,
         schema: otro.schema,
         extranjera: esExtranjera(otro),
+        extranjeraIndicio: indicioExtranjera(otro),
         total: 0,
         pagadores: new Set(),
       })
@@ -200,6 +220,8 @@ export function areaDeInfluencia(datos, id) {
       contrapartes,
       total: totalExtranjero,
       porcentaje: totalMovido > 0 ? (totalExtranjero / totalMovido) * 100 : 0,
+      indicios: contrapartesIndicio,
+      totalIndicios: contrapartesIndicio.reduce((s, x) => s + x.total, 0),
     },
     comparten: compartenLista,
     red: redDeFlujo(datos, id, recibeDe, pagaA),

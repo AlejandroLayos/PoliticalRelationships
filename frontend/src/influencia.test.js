@@ -200,3 +200,44 @@ describe('cifras que no se publican', () => {
     expect(m.motivosSinCifra).toEqual([])
   })
 })
+
+describe('indicio de capital extranjero', () => {
+  function conIndicio() {
+    const datos = grafoDeUnPartido()
+    datos.nodes.push({
+      id: 'sinnif',
+      caption: 'META PLATFORMS IRELAND LIMITED',
+      schema: 'Company',
+      properties: {
+        entidad_extranjera_indicio: true,
+        motivo_extranjera_indicio: 'sin NIF español y con forma societaria extranjera en el nombre',
+      },
+    })
+    datos.edges.push({
+      id: 'p20', source: 'partido', target: 'sinnif', amount: '20000',
+      schema: 'Payment', confidence: 1, status: 'asserted',
+    })
+    return areaDeInfluencia(datos, 'partido')
+  }
+
+  it('recoge las contrapartes sin NIF con forma extranjera', () => {
+    const a = conIndicio()
+    expect(a.extranjero.indicios.map((x) => x.caption)).toEqual(['META PLATFORMS IRELAND LIMITED'])
+    expect(a.extranjero.totalIndicios).toBe(20000)
+  })
+
+  it('un indicio NO entra en el porcentaje de exposición probada', () => {
+    // Ese porcentaje se lee como un hecho, así que sólo puede salir de hechos.
+    // Con el indicio dentro pasaría de 80.000 a 100.000 sobre lo movido, y la
+    // diferencia entre «lo dice su NIF» y «lo parece por el nombre» se habría
+    // perdido por el camino.
+    const a = conIndicio()
+    expect(a.extranjero.total).toBe(80000)
+    expect(a.extranjero.contrapartes.map((x) => x.caption)).toEqual(['FOREIGN MEDIA BV'])
+  })
+
+  it('una entidad probada por NIF no se duplica como indicio', () => {
+    const a = conIndicio()
+    expect(a.extranjero.indicios.map((x) => x.caption)).not.toContain('FOREIGN MEDIA BV')
+  })
+})

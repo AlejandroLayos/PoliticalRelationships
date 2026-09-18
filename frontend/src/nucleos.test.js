@@ -297,3 +297,33 @@ describe('colapsarNodosDePaso', () => {
     expect(grafo.size).toBe(1)
   })
 })
+
+describe('el puente conserva el porqué de un hueco', () => {
+  it('arrastra las propiedades del tramo con el dinero', () => {
+    // Si el motivo se queda en el tramo original, la relación puenteada
+    // aparece sin importe y sin explicación, y un hueco sin explicar se lee
+    // como un cero.
+    const datos = {
+      nodes: [
+        { id: 'org', caption: 'ÓRGANO', schema: 'PublicBody', properties: {} },
+        { id: 'exp', caption: 'ACUERDO MARCO', schema: 'Contract', properties: {} },
+        { id: 'emp', caption: 'EMPRESA SA', schema: 'Company', properties: {} },
+      ],
+      edges: [
+        { id: 'u', source: 'org', target: 'exp', schema: 'UnknownLink', confidence: 1, status: 'asserted' },
+        {
+          id: 'a', source: 'exp', target: 'emp', schema: 'ContractAward',
+          confidence: 0.5, status: 'asserted',
+          properties: {
+            importeCompartido: '900000000',
+            motivoImporteDudoso: 'es el valor del acuerdo marco, no lo que recibe cada adjudicatario',
+          },
+        },
+      ],
+    }
+    const g = colapsarNodosDePaso(datos)
+    const puente = g.edges.find((e) => e.source === 'org' && e.target === 'emp')
+    expect(puente.properties.importeCompartido).toBe('900000000')
+    expect(puente.properties.motivoImporteDudoso).toContain('acuerdo marco')
+  })
+})
