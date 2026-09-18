@@ -167,3 +167,36 @@ describe('resumenEnPalabras', () => {
     expect(resumenEnPalabras(areaDeInfluencia(datos, 'x'))).toContain('Sin movimientos')
   })
 })
+
+describe('cifras que no se publican', () => {
+  it('cuenta las relaciones sin importe y dice por qué cuando se sabe', () => {
+    // El caso real: PLACSP publicó un contrato de 22.000 € con un importe
+    // adjudicado de 1.954 millones, y la ingesta no publica esa cifra. Si la
+    // ficha se limita a no sumarla, el hueco no se distingue de «la fuente no
+    // dio importe» — y la ausencia de dato pasa por dato.
+    const datos = grafoDeUnPartido()
+    datos.edges.push({
+      id: 'p9', source: 'partido', target: 'consultora', schema: 'Payment',
+      confidence: 0.5, status: 'asserted',
+      properties: { motivoImporteDudoso: 'supera en más de 10 veces el presupuesto (22000)' },
+    })
+    const a = areaDeInfluencia(datos, 'partido')
+    const c = a.pagaA.find((x) => x.caption === 'CONSULTORA SL')
+    expect(c.sinCifra).toBe(1)
+    expect(c.motivosSinCifra[0]).toContain('22000')
+    // Y no inventa un importe para rellenar el hueco.
+    expect(c.total).toBe(45000)
+  })
+
+  it('una relación sin importe y sin motivo no finge tenerlo', () => {
+    const datos = grafoDeUnPartido()
+    datos.edges.push({
+      id: 'p10', source: 'interior', target: 'partido', schema: 'Payment',
+      confidence: 1, status: 'asserted',
+    })
+    const a = areaDeInfluencia(datos, 'partido')
+    const m = a.recibeDe.find((x) => x.caption === 'MINISTERIO DEL INTERIOR')
+    expect(m.sinCifra).toBe(1)
+    expect(m.motivosSinCifra).toEqual([])
+  })
+})

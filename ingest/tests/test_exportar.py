@@ -323,3 +323,48 @@ def test_el_volcado_dice_que_fuente_no_aporto_nada(store, tmp_path):
     assert por_id["caida"]["entidades"] == 0, "la fuente sin aporte no se distingue"
     # Y la que sí aportó no puede salir a cero.
     assert "entidades" in por_id["test"]
+
+
+def test_una_arista_sin_cifra_explica_por_que(store, tmp_path):
+    """Sin importe no significa lo mismo que con el importe descartado.
+
+    Una arista puede no llevar cifra porque la fuente no publicó ninguna, o
+    porque la ingesta no se creyó la que publicó —el caso de PLACSP: un
+    contrato de 22.000 € con un importe adjudicado de 1.954 millones—. En la
+    web se ven igual si el volcado no lleva el motivo, y entonces la ausencia
+    de dato parece un dato.
+    """
+    a = _entidad(store, "ÓRGANO", "PublicBody")
+    b = _entidad(store, "EMPRESA")
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, amount, currency,
+             confidence, status, dedupe_key, properties)
+        VALUES ('Payment', %s, %s, NULL, '', 0.5, 'asserted', %s,
+                '{"importeSinInterpretar": "1954023643.40",
+                  "motivoImporteDudoso": "supera en más de 10 veces el presupuesto"}'::jsonb)
+        """,
+        (a, b, f"test:{uuid.uuid4()}"),
+    )
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    arista = next(x for x in g["edges"] if x["source"] == a)
+    assert "amount" not in arista
+    assert arista["properties"]["importeSinInterpretar"] == "1954023643.40"
+    assert "presupuesto" in arista["properties"]["motivoImporteDudoso"]
+
+
+def test_una_arista_sin_propiedades_no_engorda_el_volcado(store, tmp_path):
+    # La inmensa mayoría no tiene propiedades; escribir `"properties": {}` en
+    # cada una de miles de aristas es peso muerto en un fichero que se descarga
+    # entero en cada visita.
+    a = _entidad(store, "ÓRGANO", "PublicBody")
+    b = _entidad(store, "EMPRESA")
+    _arista(store, a, b, "1000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    arista = next(x for x in g["edges"] if x["source"] == a)
+    assert "properties" not in arista

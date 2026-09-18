@@ -129,6 +129,19 @@ const sinDatos = computed(
               </template>
               <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
               <span v-if="c.extranjera" class="extranjera">· extranjera</span>
+              <!--
+                Un hueco sin explicar se lee como un cero. Aquí se dice que la
+                cifra existe y que no se publica, y por qué.
+              -->
+              <span
+                v-if="c.sinCifra"
+                class="sin-cifra"
+                :title="c.motivosSinCifra.join(' · ')"
+              >
+                · {{ c.sinCifra }}
+                {{ c.sinCifra === 1 ? 'operación sin cifra publicada' : 'operaciones sin cifra publicada' }}
+                <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
+              </span>
             </span>
           </li>
         </ul>
@@ -156,6 +169,19 @@ const sinDatos = computed(
               </template>
               <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
               <span v-if="c.extranjera" class="extranjera">· extranjera</span>
+              <!--
+                Un hueco sin explicar se lee como un cero. Aquí se dice que la
+                cifra existe y que no se publica, y por qué.
+              -->
+              <span
+                v-if="c.sinCifra"
+                class="sin-cifra"
+                :title="c.motivosSinCifra.join(' · ')"
+              >
+                · {{ c.sinCifra }}
+                {{ c.sinCifra === 1 ? 'operación sin cifra publicada' : 'operaciones sin cifra publicada' }}
+                <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
+              </span>
             </span>
           </li>
         </ul>
@@ -273,6 +299,7 @@ h3 {
 .meta { font-size: 0.7rem; color: var(--texto-tenue); }
 .meta .inferido { color: var(--aviso); }
 .meta .extranjera { color: #b08cd9; }
+.meta .sin-cifra { color: var(--aviso); }
 
 .compacta li {
   display: flex; align-items: baseline; gap: 0.5rem; justify-content: space-between;

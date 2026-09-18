@@ -76,7 +76,7 @@ def exportar(
         """
         SELECT r.id, r.ftm_schema, r.source_entity_id, r.target_entity_id,
                r.amount, r.currency, r.confidence, r.status,
-               r.start_date, r.end_date
+               r.start_date, r.end_date, r.properties
         FROM relationships r
         JOIN entities es ON es.id = r.source_entity_id AND es.canonical_id IS NULL
         JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
@@ -180,6 +180,12 @@ def exportar(
             "status": a["status"],
             **({"start_date": a["start_date"].isoformat()} if a["start_date"] else {}),
             **({"end_date": a["end_date"].isoformat()} if a["end_date"] else {}),
+            # Una arista sin importe puede serlo por dos motivos muy distintos:
+            # porque la fuente no publicó cifra, o porque la ingesta no se creyó
+            # la que publicó. La web tiene que poder decir cuál de los dos, y
+            # para eso necesita las propiedades — ahí van `importeSinInterpretar`
+            # y su motivo. Se omiten si están vacías para no engordar el volcado.
+            **({"properties": a["properties"]} if a["properties"] else {}),
         }
         for a in elegidas
     ]

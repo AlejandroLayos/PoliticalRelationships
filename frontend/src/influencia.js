@@ -88,6 +88,12 @@ export function areaDeInfluencia(datos, id) {
         // contraparte está ahí por una inferencia floja, hay que poder verlo.
         confianza: 1,
         inferido: false,
+        // Relaciones cuya cifra no se publica. No es lo mismo que la fuente
+        // no diera importe que que la ingesta no se creyera el que dio, y las
+        // dos cosas acaban aquí como un hueco: sin decirlo, la ausencia de
+        // dato parece un dato.
+        sinCifra: 0,
+        motivosSinCifra: [],
         // Los expedientes por los que pasa la relación. Al colapsar el
         // contrato para poder contestar «¿a qué empresas paga?» en vez de «¿a
         // qué expedientes?», el papel que lo justifica desaparece del grafo.
@@ -102,6 +108,11 @@ export function areaDeInfluencia(datos, id) {
     if (arista.status === 'inferred') acc.inferido = true
     if (arista.viaDePaso && !acc.expedientes.includes(arista.viaDePaso)) {
       acc.expedientes.push(arista.viaDePaso)
+    }
+    if (arista.amount === undefined || arista.amount === null || arista.amount === '') {
+      acc.sinCifra += 1
+      const motivo = arista.properties?.motivoImporteDudoso
+      if (motivo && !acc.motivosSinCifra.includes(motivo)) acc.motivosSinCifra.push(motivo)
     }
   }
 
