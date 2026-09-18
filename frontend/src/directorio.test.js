@@ -98,3 +98,22 @@ describe('construirDirectorio', () => {
     expect(vacio.totales.dineroTotal).toBe(0)
   })
 })
+
+describe('las operaciones sin cifra se cuentan, no se esconden', () => {
+  it('cuenta las que constan sin importe utilizable', () => {
+    // Tras suprimir el importe de los acuerdos marco, el total baja mucho. Si
+    // no se dice cuántas operaciones quedaron sin cifra, ese dinero parece no
+    // haber existido nunca.
+    const g = grafo()
+    g.edges.push({
+      id: '8', source: 'sas', target: 'grande', schema: 'ContractAward',
+      properties: { motivoImporteDudoso: 'es el valor del acuerdo marco' },
+    })
+    const d = construirDirectorio(g)
+    expect(d.totales.nSinCifra).toBe(1)
+    // Y sigue contando como operación: ocurrió.
+    expect(d.totales.nOperaciones).toBe(6)
+    // Pero no inventa dinero.
+    expect(d.totales.dineroTotal).toBe(9_406_000)
+  })
+})

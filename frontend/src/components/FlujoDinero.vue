@@ -46,11 +46,25 @@ const disposicion = computed(() =>
 /**
  * Los nombres oficiales son interminables. Se recortan al ancho de la ficha y
  * el nombre entero queda en el `title` y en el panel.
+ *
+ * `reservado` es el sitio que ocupa otra cosa en la misma línea. En las fichas
+ * bajas el nombre y la cifra comparten renglón, y sin reservarlo se pisaban:
+ * "CONSEJERÍA DE DESREGULACIÓN, FAMILIA Y…" con "11 mil €" encima.
  */
-function recortar(texto, w) {
-  const cabe = Math.max(6, Math.floor((w - 16) / 6.4))
+function recortar(texto, w, reservado = 0) {
+  const cabe = Math.max(4, Math.floor((w - 18 - reservado) / 6.4))
   if (!texto) return ''
   return texto.length <= cabe ? texto : `${texto.slice(0, cabe - 1).trimEnd()}…`
+}
+
+/** Ancho aproximado de la cifra, para no escribir el nombre debajo. */
+function anchoCifra(total) {
+  return dineroCorto(total).length * 6.6 + 20
+}
+
+/** Dos renglones si la ficha da de sí; si no, nombre y cifra en el mismo. */
+function esAlta(c) {
+  return c.h > 34
 }
 
 function colorDe(c) {
@@ -148,10 +162,10 @@ const sinFlujo = computed(
         <title>{{ c.caption }} · {{ dineroCorto(c.total) }} · {{ c.n }} {{ c.n === 1 ? 'relación' : 'relaciones' }}</title>
         <rect :x="c.x" :y="c.y" :width="c.w" :height="c.h" rx="6" class="caja-ficha" />
         <rect :x="c.lado === 'izquierda' ? c.x + c.w - 3 : c.x" :y="c.y" width="3" :height="c.h" :fill="colorDe(c)" />
-        <text :x="c.x + 9" :y="c.y + (c.h > 34 ? 17 : c.h / 2 + 4)" class="nombre">
-          {{ recortar(c.caption, c.w) }}
+        <text :x="c.x + 9" :y="c.y + (esAlta(c) ? 17 : c.h / 2 + 4)" class="nombre">
+          {{ recortar(c.caption, c.w, esAlta(c) ? 0 : anchoCifra(c.total)) }}
         </text>
-        <text v-if="c.h > 34" :x="c.x + 9" :y="c.y + 33" class="cifra" :fill="colorDe(c)">
+        <text v-if="esAlta(c)" :x="c.x + 9" :y="c.y + 33" class="cifra" :fill="colorDe(c)">
           {{ dineroCorto(c.total) }}
           <tspan v-if="c.extranjera" class="marca">· extranjera</tspan>
           <tspan v-if="c.inferido" class="marca inferida">· inferido</tspan>
@@ -188,10 +202,16 @@ const sinFlujo = computed(
         >
           <div class="cuerpo-centro">
             <p class="titulo">{{ area.entidad.caption }}</p>
-            <p v-if="area.totalSancionado > 0" class="sancion">
+            <!--
+              Un expediente sin cuantía sigue siendo un expediente. Condicionar
+              esto al importe escondía sanciones sólo porque el Tribunal de
+              Cuentas publicó la cifra de un modo que no se pudo interpretar.
+            -->
+            <p v-if="area.sanciones.length" class="sancion">
               {{ area.sanciones.length }}
               {{ area.sanciones.length === 1 ? 'expediente sancionador' : 'expedientes sancionadores' }}
-              · {{ dineroCorto(area.totalSancionado) }}
+              <template v-if="area.totalSancionado > 0">· {{ dineroCorto(area.totalSancionado) }}</template>
+              <template v-else>· sin cuantía interpretable</template>
             </p>
           </div>
         </foreignObject>

@@ -71,6 +71,12 @@ export function construirDirectorio(datos, { limite = 25 } = {}) {
   let dineroTotal = 0
   let totalSancionado = 0
   let nOperaciones = 0
+  // Operaciones reales cuya cifra no se puede publicar: el importe de un
+  // acuerdo marco repartido entre sus adjudicatarios, o un importe imposible
+  // frente al presupuesto. Se cuentan porque son el hueco que explica por qué
+  // el total de abajo es menor de lo que uno esperaría, y callarlo dejaría
+  // pensar que ese dinero no existe.
+  let nSinCifra = 0
 
   function toca(mapa, id, otroId, importe) {
     const n = porId.get(id)
@@ -102,6 +108,7 @@ export function construirDirectorio(datos, { limite = 25 } = {}) {
     toca(cobra, a.target, a.source, importe)
     dineroTotal += importe
     nOperaciones += 1
+    if (a.amount === undefined || a.amount === null || a.amount === '') nSinCifra += 1
   }
 
   // Transversales: cobran de MUCHAS administraciones distintas, que no es lo
@@ -147,6 +154,7 @@ export function construirDirectorio(datos, { limite = 25 } = {}) {
       nExtranjeras: nodos.filter((n) => n.properties?.entidad_extranjera).length,
       nSancionados: sancion.size,
       totalSancionado,
+      nSinCifra,
     },
   }
 }

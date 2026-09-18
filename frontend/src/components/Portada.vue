@@ -197,6 +197,13 @@ function color(schema) {
       Las listas se calculan sobre la instantánea publicada, que es una parte
       del total: lo que falta por ingerir no aparece, y la ausencia de una
       entidad aquí no dice nada sobre ella.
+      <template v-if="dir.totales.nSinCifra">
+        Otras <b>{{ dir.totales.nSinCifra.toLocaleString('es-ES') }}</b>
+        operaciones constan pero sin cifra utilizable, así que no suman en
+        ningún total: casi siempre porque el importe publicado es el del
+        acuerdo marco entero y figura repetido en cada adjudicatario, que no es
+        lo que cobra cada uno.
+      </template>
     </p>
   </div>
 </template>
