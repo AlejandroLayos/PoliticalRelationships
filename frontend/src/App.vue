@@ -8,7 +8,7 @@ import PanelInfluencia from './components/PanelInfluencia.vue'
 import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
 import {
-  buscar,
+  buscarTodo,
   cargarInstantanea,
   entidad as pedirEntidad,
   estado,
@@ -25,6 +25,11 @@ import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
 const consulta = ref('')
 const resultados = ref([])
 const buscando = ref(false)
+// Cuántos resultados vienen sólo del índice: existen en la base pero no
+// caben en el mapa publicado, así que de ellos sólo hay cifras.
+const soloIndice = ref(0)
+/** La fila del índice cuando lo seleccionado no está en el grafo publicado. */
+const fueraDelMapa = ref(null)
 const datos = ref({ nodes: [], edges: [], truncated: false })
 const seleccionado = ref(null)
 const seleccionId = ref('')
@@ -121,7 +126,9 @@ watch(consulta, (q) => {
   temporizador = setTimeout(async () => {
     buscando.value = true
     try {
-      resultados.value = (await buscar(q.trim())).results ?? []
+      const r = await buscarTodo(q.trim())
+      resultados.value = r.results ?? []
+      soloIndice.value = r.soloIndice ?? 0
     } finally {
       buscando.value = false
       esDemo.value = estado.esDemo
@@ -156,14 +163,24 @@ async function abrir(id) {
  * una ego-red de expedientes con la que no se puede contestar eso.
  */
 function elegir(id) {
+  const fila = resultados.value.find((r) => r.id === id)
   resultados.value = []
   consulta.value = ''
+  // Una entidad que sólo está en el índice no tiene red que dibujar. Se abre
+  // su ficha igual, con lo que sí se sabe de ella, y diciéndolo.
+  fueraDelMapa.value = fila?.soloIndice ? fila : null
+  if (fila?.soloIndice) {
+    seleccionId.value = id
+    vista.value = 'ficha'
+    return Promise.resolve()
+  }
   return hayMapa.value ? enfocar(id) : abrir(id)
 }
 
 /** Selección sin recargar el grafo: sólo cambia el foco y la ficha. */
 async function enfocar(id) {
   seleccionId.value = id
+  fueraDelMapa.value = null
   // Con el mapa cargado, pulsar una entidad abre su ficha de influencia: es la
   // pregunta que trae a la gente («¿quién financia esto?»), y contestarla con
   // otra maraña de nodos era justo lo que no se entendía.
@@ -188,6 +205,7 @@ function volverAlMapa() {
   vista.value = 'portada'
   seleccionId.value = ''
   seleccionado.value = null
+  fueraDelMapa.value = null
 }
 
 /** De la ficha al vecindario crudo: conexiones una a una y procedencia. */
@@ -279,12 +297,25 @@ onMounted(async () => {
             <button @click="elegir(r.id)">
               <span class="punto" :style="{ background: COLOR_POR_ESQUEMA[r.schema] ?? '#8b93a7' }" />
               <span class="nombre">{{ r.caption }}</span>
+              <span v-if="r.soloIndice" class="fuera" title="Consta en la base pero no cabe en el mapa publicado: sólo hay cifras">
+                sin red
+              </span>
               <span class="tipo">{{ NOMBRE_ESQUEMA[r.schema] ?? r.schema }}</span>
             </button>
           </li>
+          <!--
+            El índice cubre toda la base; el mapa, sólo lo que cabe. Quien
+            busca su ayuntamiento y lo encuentra marcado «sin red» tiene que
+            entender por qué, o pensará que la web está rota.
+          -->
+          <li v-if="soloIndice" class="pie-sugerencias">
+            {{ soloIndice }} {{ soloIndice === 1 ? 'consta' : 'constan' }} en la base
+            pero fuera del mapa publicado: de
+            {{ soloIndice === 1 ? 'ese' : 'esos' }} sólo hay cifras, no red.
+          </li>
         </ul>
-        <p v-else-if="consulta.trim().length >= 3 && !buscando" class="sin-resultados">
-          Sin resultados.
+        <p v-if="consulta.trim().length >= 3 && !buscando && !resultados.length" class="sin-resultados">
+          Sin resultados en lo ingerido hasta hoy.
         </p>
       </div>
 
@@ -362,6 +393,7 @@ onMounted(async () => {
           v-if="vista === 'ficha'"
           class="encima"
           :area="area"
+          :fuera-del-mapa="fueraDelMapa"
           :nota="notaDeHueco"
           @seleccionar="enfocar"
         />
@@ -420,6 +452,7 @@ onMounted(async () => {
         :area="area"
         :crudo="grafoEntero"
         :medios="medios"
+        :fuera-del-mapa="fueraDelMapa"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
       />
@@ -508,6 +541,15 @@ onMounted(async () => {
 .nombre { flex: 1; font-size: 0.86rem; }
 .tipo { font-size: 0.7rem; color: var(--texto-tenue); white-space: nowrap; }
 .sin-resultados { position: absolute; top: calc(100% + 6px); font-size: 0.8rem; color: var(--texto-tenue); }
+.pie-sugerencias {
+  font-size: 0.7rem; color: var(--texto-tenue); line-height: 1.35;
+  padding: 0.4rem 0.5rem; border-top: 1px solid var(--borde-suave); margin-top: 0.2rem;
+}
+.fuera {
+  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--aviso); border: 1px solid var(--aviso-borde); border-radius: 4px;
+  padding: 0.05rem 0.28rem; white-space: nowrap;
+}
 
 .profundidad { font-size: 0.78rem; color: var(--texto-tenue); display: flex; align-items: center; gap: 0.4rem; }
 .profundidad select {

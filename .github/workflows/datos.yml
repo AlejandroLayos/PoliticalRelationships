@@ -235,10 +235,16 @@ jobs:
         run: |
           set -euo pipefail
           ARCHIVO=frontend/public/datos/grafo.json
+          # El índice va con el grafo: lleva TODAS las entidades de la base,
+          # sin aristas, para que la búsqueda no esté acotada por el tope del
+          # mapa. Publicar uno sin el otro deja la web incoherente.
+          INDICE=frontend/public/datos/indice.json
           ESTADO=docs/fuentes/estado-ingesta.md
           GUARDADO=$(mktemp)
+          GUARDADO_INDICE=$(mktemp)
           GUARDADO_ESTADO=$(mktemp)
           cp "$ARCHIVO" "$GUARDADO"
+          cp "$INDICE" "$GUARDADO_INDICE" 2>/dev/null || : > "$GUARDADO_INDICE"
           cp "$ESTADO" "$GUARDADO_ESTADO" 2>/dev/null || : > "$GUARDADO_ESTADO"
 
           git config user.name "github-actions[bot]"
@@ -249,10 +255,16 @@ jobs:
             git reset --quiet --hard "origin/$GITHUB_REF_NAME"
             mkdir -p "$(dirname "$ARCHIVO")" "$(dirname "$ESTADO")"
             cp "$GUARDADO" "$ARCHIVO"
-            [ -s "$GUARDADO_ESTADO" ] && cp "$GUARDADO_ESTADO" "$ESTADO"
-            # El fichero está en .gitignore para que nadie suba un volcado de
-            # pruebas a mano; la CI sí debe poder subirlo.
+            # El `|| true` no es adorno: con `set -e`, un `[ -s x ] && cp`
+            # cuyo test falla devuelve 1 y mata el paso entero. Que falte el
+            # índice o el estado es un hueco tolerable; que no se publique la
+            # instantánea por eso, no.
+            [ -s "$GUARDADO_INDICE" ] && cp "$GUARDADO_INDICE" "$INDICE" || true
+            [ -s "$GUARDADO_ESTADO" ] && cp "$GUARDADO_ESTADO" "$ESTADO" || true
+            # Los dos ficheros de datos están en .gitignore para que nadie suba
+            # un volcado de pruebas a mano; la CI sí debe poder subirlos.
             git add -f "$ARCHIVO"
+            [ -s "$GUARDADO_INDICE" ] && git add -f "$INDICE" || true
             git add "$ESTADO" 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios en los datos"

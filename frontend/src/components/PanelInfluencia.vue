@@ -18,6 +18,14 @@ const props = defineProps({
   crudo: { type: Object, default: null },
   /** Los contratos de publicidad y medios de todo el grafo, ya calculados. */
   medios: { type: Object, default: null },
+  /**
+   * La fila del índice cuando la entidad NO está en el grafo publicado.
+   *
+   * Existe en la base y se sabe cuánto mueve, pero no con quién: el mapa está
+   * acotado y no cupo. Enseñar una ficha vacía diría que no tiene relaciones,
+   * que es falso.
+   */
+  fueraDelMapa: { type: Object, default: null },
 })
 const emit = defineEmits(['seleccionar', 'volver', 'expandir'])
 
@@ -72,7 +80,51 @@ const sinDatos = computed(
 
 <template>
   <aside class="panel">
-    <p v-if="!area?.entidad" class="vacio">Pulsa una entidad del mapa.</p>
+    <!-- Sólo en el índice: las cifras que hay, y por qué no hay más. -->
+    <template v-if="fueraDelMapa">
+      <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+      <header>
+        <span class="punto" :style="{ background: color(fueraDelMapa.schema) }" />
+        <span class="tipo">{{ etiquetaEsquema(fueraDelMapa.schema) }}</span>
+      </header>
+      <h2>{{ fueraDelMapa.caption }}</h2>
+      <p v-if="fueraDelMapa.nif" class="nif">NIF {{ fueraDelMapa.nif }}</p>
+
+      <div class="cifras">
+        <div class="cifra entra" :class="{ nada: !fueraDelMapa.recibido }">
+          <span class="valor">
+            {{ fueraDelMapa.recibido ? dineroCorto(fueraDelMapa.recibido) : 'No consta' }}
+          </span>
+          <span class="que">
+            {{ fueraDelMapa.pagadores
+              ? `recibe de ${fueraDelMapa.pagadores} ${fueraDelMapa.pagadores === 1 ? 'pagador' : 'pagadores'}`
+              : 'que reciba dinero' }}
+          </span>
+        </div>
+        <div class="cifra sale" :class="{ nada: !fueraDelMapa.pagado }">
+          <span class="valor">
+            {{ fueraDelMapa.pagado ? dineroCorto(fueraDelMapa.pagado) : 'No consta' }}
+          </span>
+          <span class="que">
+            {{ fueraDelMapa.receptores
+              ? `reparte entre ${fueraDelMapa.receptores} ${fueraDelMapa.receptores === 1 ? 'receptor' : 'receptores'}`
+              : 'que pague a nadie' }}
+          </span>
+        </div>
+      </div>
+
+      <section class="bloque">
+        <h3>Por qué no se ve su red</h3>
+        <p class="matiz">
+          Esta entidad está en la base con su procedencia, pero el mapa
+          publicado se recorta a las relaciones con más dinero y ésta no entró.
+          Las cifras de arriba salen del índice, que sí cubre todo lo ingerido;
+          el detalle de con quién se relaciona no está en esta instantánea.
+        </p>
+      </section>
+    </template>
+
+    <p v-else-if="!area?.entidad" class="vacio">Pulsa una entidad del mapa.</p>
 
     <template v-else>
       <button class="volver" @click="emit('volver')">← Volver a la portada</button>

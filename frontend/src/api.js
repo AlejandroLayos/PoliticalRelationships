@@ -9,7 +9,7 @@
  */
 
 import { buscarDemo, entidadDemo, vecinosDemo } from './demo.js'
-import { crearGrafoLocal } from './grafoLocal.js'
+import { crearGrafoLocal, normaliza } from './grafoLocal.js'
 import { sanearImportes } from './saneado.js'
 
 // Por defecto se habla con la API del mismo dominio (`/api/...`), que es lo
@@ -62,6 +62,44 @@ export async function cargarInstantanea() {
     _grafoEstatico = false
     return false
   }
+}
+
+/**
+ * Índice de TODAS las entidades ingeridas, sin aristas.
+ *
+ * El mapa está acotado a propósito —por encima de unos miles de nodos el
+ * navegador sufre— pero ese tope acotaba también la búsqueda, y ahí el efecto
+ * era otro: quien buscaba el ayuntamiento de su pueblo y no estaba entre los
+ * nodos publicados leía «Sin resultados», que es indistinguible de «esa
+ * entidad no existe en ninguna fuente». Existe; no cupo.
+ *
+ * Se carga perezosamente, en la primera búsqueda: el que sólo mira el mapa no
+ * lo descarga.
+ */
+let _indice = null
+let _cargandoIndice = null
+
+export async function cargarIndice() {
+  if (_indice !== null) return _indice
+  if (_cargandoIndice) return _cargandoIndice
+  _cargandoIndice = (async () => {
+    try {
+      const r = await fetch('/datos/indice.json', { headers: { Accept: 'application/json' } })
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      const d = await r.json()
+      _indice = Array.isArray(d.entidades) ? d : { total: 0, entidades: [] }
+    } catch {
+      // Sin índice la búsqueda sigue funcionando sobre el mapa. Es un hueco,
+      // no un fallo.
+      _indice = { total: 0, entidades: [] }
+    }
+    return _indice
+  })()
+  return _cargandoIndice
+}
+
+export function indiceCargado() {
+  return _indice
 }
 
 /**
@@ -123,6 +161,34 @@ export function buscar(q, limite = 25) {
     alternativa((g) => g.buscar(q, limite), () => buscarDemo(q, limite)),
     'api-caida',
   )
+}
+
+/**
+ * Busca en el mapa Y en el índice, en ese orden.
+ *
+ * Primero lo que está publicado en el grafo, porque de eso se puede enseñar la
+ * red entera; después lo que sólo consta en el índice, marcado, porque de eso
+ * sólo hay cifras. Nunca al revés: sería enviar a la gente a la ficha más
+ * pobre teniendo la buena.
+ */
+export async function buscarTodo(q, limite = 25) {
+  const enMapa = await buscar(q, limite)
+  const resultados = enMapa.results ?? []
+  if (estado.esDemo) return { results: resultados, soloIndice: 0 }
+
+  const idx = await cargarIndice()
+  if (!idx.entidades.length) return { results: resultados, soloIndice: 0 }
+
+  const aguja = normaliza(q)
+  const yaEstan = new Set(resultados.map((r) => r.id))
+  const extra = []
+  for (const e of idx.entidades) {
+    if (extra.length >= limite) break
+    if (yaEstan.has(e.id)) continue
+    if (!normaliza(e.caption).includes(aguja)) continue
+    extra.push({ ...e, soloIndice: true })
+  }
+  return { results: [...resultados, ...extra], soloIndice: extra.length, totalIndice: idx.total }
 }
 
 export function entidad(id) {

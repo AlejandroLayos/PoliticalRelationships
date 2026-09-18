@@ -347,12 +347,100 @@ def exportar(
         encoding="utf-8",
     )
 
+    indice = _exportar_indice(store, destino, {str(n["id"]) for n in nodos})
+
     resumen = {
         "entidades": len(nodos),
         "aristas": len(aristas),
         "con_procedencia": len(procedencia),
         "truncado": documento["truncado"],
         "bytes": destino.stat().st_size,
+        **indice,
     }
     log.info("grafo exportado", destino=str(destino), **resumen)
     return resumen
+
+
+def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str, Any]:
+    """Escribe, junto al grafo, un índice de TODAS las entidades.
+
+    El mapa está acotado a propósito: por encima de unos miles de nodos el
+    navegador sufre y la vista deja de servir. Pero ese tope acotaba también la
+    **búsqueda**, y ahí el efecto era otro: quien buscaba el ayuntamiento de su
+    pueblo y no estaba entre los nodos publicados leía «Sin resultados», que es
+    indistinguible de «esa entidad no existe en ninguna fuente». Lo que pasaba
+    de verdad es que sí existe y no cupo.
+
+    El índice no lleva aristas ni procedencia —que es lo que pesa—, sólo la
+    entidad y cuánto mueve, así que cabe entero aunque la base crezca mucho. La
+    web lo carga sólo cuando hace falta.
+
+    `en_mapa` marca las que además están en el grafo publicado: de ésas se
+    puede enseñar la red; del resto, sólo las cifras, y diciéndolo.
+    """
+    filas = store.conn.execute(
+        """
+        WITH mov AS (
+            SELECT e.id,
+                   sum(CASE WHEN r.target_entity_id = e.id
+                             AND r.ftm_schema IN ('Payment','ContractAward')
+                            THEN r.amount ELSE 0 END) AS recibido,
+                   sum(CASE WHEN r.source_entity_id = e.id
+                             AND r.ftm_schema IN ('Payment','ContractAward')
+                            THEN r.amount ELSE 0 END) AS pagado,
+                   count(DISTINCT CASE WHEN r.target_entity_id = e.id
+                                       THEN r.source_entity_id END) AS pagadores,
+                   count(DISTINCT CASE WHEN r.source_entity_id = e.id
+                                       THEN r.target_entity_id END) AS receptores
+            FROM entities e
+            LEFT JOIN relationships r
+                   ON (r.source_entity_id = e.id OR r.target_entity_id = e.id)
+                  AND r.status <> 'retracted'
+            WHERE e.canonical_id IS NULL AND e.ftm_schema <> %s
+            GROUP BY e.id
+        )
+        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif,
+               e.properties, mov.recibido, mov.pagado, mov.pagadores, mov.receptores
+        FROM mov JOIN entities e ON e.id = mov.id
+        ORDER BY mov.recibido + mov.pagado DESC NULLS LAST, e.caption
+        """,
+        (PERSONALES,),
+    ).fetchall()
+
+    entradas = []
+    for f in filas:
+        props = f["properties"] or {}
+        entradas.append(
+            {
+                "id": str(f["id"]),
+                "schema": f["ftm_schema"],
+                "caption": f["caption"],
+                **({"nif": f["nif"]} if f["nif"] else {}),
+                # Sólo se escriben si no son cero: multiplicado por decenas de
+                # miles de entradas, un `0` de más es peso muerto en un fichero
+                # que se descarga entero.
+                **({"recibido": str(f["recibido"])} if f["recibido"] else {}),
+                **({"pagado": str(f["pagado"])} if f["pagado"] else {}),
+                **({"pagadores": int(f["pagadores"])} if f["pagadores"] else {}),
+                **({"receptores": int(f["receptores"])} if f["receptores"] else {}),
+                **({"partido": True} if props.get("partido_politico") else {}),
+                **({"extranjera": True} if props.get("entidad_extranjera") else {}),
+                **({"enMapa": True} if str(f["id"]) in en_mapa else {}),
+            }
+        )
+
+    ruta = destino.with_name("indice.json")
+    ruta.write_text(
+        json.dumps(
+            {
+                "generado": datetime.now(UTC).isoformat(),
+                "total": len(entradas),
+                "en_mapa": len(en_mapa),
+                "entidades": entradas,
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+    return {"indice_entidades": len(entradas), "indice_bytes": ruta.stat().st_size}

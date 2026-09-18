@@ -17,6 +17,8 @@ const props = defineProps({
   area: { type: Object, default: null },
   /** Aviso de por qué puede faltar dinero: una fuente caída, por ejemplo. */
   nota: { type: String, default: '' },
+  /** Fila del índice cuando la entidad no está en el grafo publicado. */
+  fueraDelMapa: { type: Object, default: null },
 })
 const emit = defineEmits(['seleccionar'])
 
@@ -105,7 +107,7 @@ const sinFlujo = computed(
 
 <template>
   <div ref="caja" class="lienzo">
-    <svg v-if="disposicion.centro" :width="ancho" :height="alto" class="flujo">
+    <svg v-if="disposicion.centro && !fueraDelMapa" :width="ancho" :height="alto" class="flujo">
       <!--
         Las cintas se degradan hacia la entidad. Planas y translúcidas salían
         marrones —naranja al 30 % sobre fondo oscuro— y las de un lado y otro
@@ -257,6 +259,12 @@ const sinFlujo = computed(
         +{{ disposicion.recortado.derecha }} receptores más, en la lista del panel
       </text>
     </svg>
+
+    <p v-if="fueraDelMapa" class="vacio">
+      De <strong>{{ fueraDelMapa.caption }}</strong> consta cuánto mueve, pero
+      no con quién: el mapa publicado se recorta a las relaciones con más
+      dinero y ésta no entró. Las cifras están en el panel.
+    </p>
 
     <p v-else-if="area?.entidad" class="vacio">
       De <strong>{{ area.entidad.caption }}</strong> no consta ningún movimiento

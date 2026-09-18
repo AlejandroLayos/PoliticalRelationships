@@ -455,3 +455,121 @@ def test_el_agregado_anonimo_de_particulares_si_se_publica(store, tmp_path):
     g = _exportado(store, tmp_path)
     captions = {n["caption"] for n in g["nodes"]}
     assert "Personas físicas (convocatoria 123)" in captions
+
+
+# --- el índice: todo lo que hay, no sólo lo que cabe en el mapa ------------
+#
+# El mapa está acotado a propósito. Ese tope acotaba también la BÚSQUEDA, y
+# ahí el efecto era otro: quien buscaba el ayuntamiento de su pueblo y no
+# estaba entre los nodos publicados leía «Sin resultados», indistinguible de
+# «esa entidad no existe en ninguna fuente».
+
+
+def _indice(store: Store, tmp_path: Path, **kw) -> dict:
+    exportar(store, tmp_path / "g.json", **kw)
+    return json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+
+
+def test_el_indice_recoge_tambien_lo_que_no_cupo_en_el_mapa(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO GRANDE", "PublicBody")
+    grande = _entidad(store, "EMPRESA GRANDE")
+    pequena = _entidad(store, "EMPRESA PEQUEÑA DE UN PUEBLO")
+    _arista(store, organo, grande, "9000000")
+    _arista(store, organo, pequena, "500")
+    store.conn.commit()
+
+    # Un mapa tan apretado que sólo caben dos entidades.
+    g = _exportado(store, tmp_path, max_entidades=2)
+    idx = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+
+    en_mapa = {n["caption"] for n in g["nodes"]}
+    assert "EMPRESA PEQUEÑA DE UN PUEBLO" not in en_mapa
+
+    captions = {e["caption"] for e in idx["entidades"]}
+    assert "EMPRESA PEQUEÑA DE UN PUEBLO" in captions
+    assert idx["total"] == 3
+
+
+def test_el_indice_marca_cual_esta_en_el_mapa(store, tmp_path):
+    # De las que están se puede enseñar la red; de las demás, sólo las cifras,
+    # y hay que poder decirlo.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    dentro = _entidad(store, "DENTRO SL")
+    fuera = _entidad(store, "FUERA SL")
+    _arista(store, organo, dentro, "9000000")
+    _arista(store, organo, fuera, "1")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path, max_entidades=2)
+    idx = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+    publicados = {n["id"] for n in g["nodes"]}
+    for e in idx["entidades"]:
+        assert e.get("enMapa", False) == (e["id"] in publicados)
+
+
+def test_el_indice_lleva_los_totales_de_cada_entidad(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    otra = _entidad(store, "OTRA SL")
+    _arista(store, organo, empresa, "1000")
+    _arista(store, organo, otra, "3000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    por_caption = {e["caption"]: e for e in idx["entidades"]}
+    # Con dos decimales, igual que los importes del grafo: es el mismo tipo
+    # `numeric` de Postgres y la web lo lee con el mismo conversor.
+    assert por_caption["EMPRESA SL"]["recibido"] == "1000.00"
+    assert por_caption["EMPRESA SL"]["pagadores"] == 1
+    assert por_caption["AYUNTAMIENTO"]["pagado"] == "4000.00"
+    assert por_caption["AYUNTAMIENTO"]["receptores"] == 2
+
+
+def test_el_indice_no_escribe_ceros(store, tmp_path):
+    # Multiplicado por decenas de miles de entradas, un `0` de más es peso
+    # muerto en un fichero que se descarga entero.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, empresa, "1000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    empresa_idx = next(e for e in idx["entidades"] if e["caption"] == "EMPRESA SL")
+    assert "pagado" not in empresa_idx
+    assert "receptores" not in empresa_idx
+
+
+def test_ninguna_persona_fisica_entra_en_el_indice(store, tmp_path):
+    # El índice es otra puerta de publicación: la regla vale igual.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    persona = _entidad(store, "NOMBRE APELLIDO APELLIDO", "Person")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, persona, "3000")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    texto = json.dumps(idx, ensure_ascii=False)
+    assert "NOMBRE APELLIDO APELLIDO" not in texto
+    assert "Person" not in {e["schema"] for e in idx["entidades"]}
+
+
+def test_el_indice_marca_partidos_y_extranjeras(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    partido = _entidad(store, "PARTIDO EJEMPLO", "Organization")
+    store.conn.execute(
+        "UPDATE entities SET properties = '{\"partido_politico\": true}'::jsonb WHERE id = %s",
+        (partido,),
+    )
+    _arista(store, organo, partido, "1000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    fila = next(e for e in idx["entidades"] if e["caption"] == "PARTIDO EJEMPLO")
+    assert fila["partido"] is True
+
+
+def test_el_indice_no_revienta_con_la_base_vacia(store, tmp_path):
+    idx = _indice(store, tmp_path)
+    assert idx["total"] == 0
+    assert idx["entidades"] == []
