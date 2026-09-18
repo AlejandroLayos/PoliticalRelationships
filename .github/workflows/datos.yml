@@ -80,6 +80,15 @@ jobs:
       # PLACSP —sin subvenciones ni partidos— y el único rastro era una línea
       # perdida entre miles en el log. Ahora cada conector deja su resultado en
       # el resumen del job, que es donde se mira.
+      # Si una fuente pública falla, se registra el hueco y se sigue con las
+      # demás: un conector caído no debe dejar la web sin actualizar.
+      #
+      # Pero «se registra» tiene que poder LEERSE. El motivo por el que BDNS no
+      # respondió el 18/9/2026 resultó inalcanzable: el resumen del job no lo
+      # expone la API, y del log sólo se puede recuperar el final, que se lo
+      # come el desmontaje de contenedores. Por eso el detalle del fallo se
+      # guarda en fichero y se vuelca en un paso posterior — al final del job,
+      # que es lo único que se puede leer después.
       - name: ingerir
         working-directory: ingest
         continue-on-error: true
@@ -88,24 +97,25 @@ jobs:
           D="${{ inputs.desde || '2025-01-01' }}"
           H="${{ inputs.hasta || '2025-12-31' }}"
           P="${{ inputs.max_paginas || '12' }}"
-
-          {
-            echo "### Ingesta por fuente"
-            echo
-            echo "| conector | resultado |"
-            echo "| --- | --- |"
-          } >> "$GITHUB_STEP_SUMMARY"
+          : > /tmp/fuentes-caidas.txt
 
           ejecutar() {
-            local nombre="$1"; shift
+            nombre="$1"; shift
             echo "::group::$nombre"
-            if sinapsis-worker --run "$nombre" "$@"; then
-              echo "| \`$nombre\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "| \`$nombre\` | ❌ no respondió o falló |" >> "$GITHUB_STEP_SUMMARY"
+            set +e
+            sinapsis-worker --run "$nombre" "$@" > "/tmp/log-$nombre.txt" 2>&1
+            rc=$?
+            set -e
+            cat "/tmp/log-$nombre.txt"
+            echo "::endgroup::"
+            if [ "$rc" -ne 0 ]; then
+              {
+                echo "### $nombre (código $rc)"
+                tail -n 6 "/tmp/log-$nombre.txt"
+                echo
+              } >> /tmp/fuentes-caidas.txt
               echo "::warning title=Fuente sin datos::$nombre no aportó nada a esta instantánea"
             fi
-            echo "::endgroup::"
           }
 
           for c in bdns bdns-partidos placsp; do
@@ -134,6 +144,20 @@ jobs:
       - name: exportar instantánea
         working-directory: ingest
         run: sinapsis-worker --exportar ../frontend/public/datos/grafo.json
+
+      # Va aquí, casi al final, a propósito: es el único tramo del log que se
+      # puede recuperar después con la API.
+      - name: por qué falló cada fuente
+        if: always()
+        run: |
+          if [ -s /tmp/fuentes-caidas.txt ]; then
+            echo "===== FUENTES QUE NO APORTARON ====="
+            cat /tmp/fuentes-caidas.txt
+            echo "===================================="
+            cat /tmp/fuentes-caidas.txt >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "todas las fuentes respondieron"
+          fi
 
       - name: resumen
         run: |
