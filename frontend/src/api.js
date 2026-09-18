@@ -10,6 +10,7 @@
 
 import { buscarDemo, entidadDemo, vecinosDemo } from './demo.js'
 import { crearGrafoLocal } from './grafoLocal.js'
+import { sanearImportes } from './saneado.js'
 
 // Por defecto se habla con la API del mismo dominio (`/api/...`), que es lo
 // que despliegan las funciones de Vercel. `VITE_API_URL` sirve para apuntar a
@@ -37,8 +38,12 @@ export async function cargarInstantanea() {
   try {
     const r = await fetch('/datos/grafo.json', { headers: { Accept: 'application/json' } })
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
-    const datos = await r.json()
-    if (!datos.nodes?.length) throw new Error('instantánea vacía')
+    const bruto = await r.json()
+    if (!bruto.nodes?.length) throw new Error('instantánea vacía')
+    // La instantánea y el código se despliegan por separado, así que la web
+    // puede estar sirviendo un volcado anterior al último arreglo del
+    // conector. Las cifras no atribuibles se retiran aquí también.
+    const datos = sanearImportes(bruto)
     _grafoEstatico = crearGrafoLocal(datos)
     estado.instantanea = {
       generado: datos.generado,
@@ -50,6 +55,7 @@ export async function cargarInstantanea() {
       // entidades de BDNS dentro.
       fuentesConDatos: (datos.fuentes ?? []).filter((f) => (f.entidades ?? 1) > 0),
       fuentesSinDatos: (datos.fuentes ?? []).filter((f) => f.entidades === 0),
+      importesSaneados: datos.importesSaneados ?? 0,
     }
     return _grafoEstatico
   } catch {
