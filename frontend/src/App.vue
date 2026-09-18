@@ -9,6 +9,7 @@ import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
 import {
   buscarTodo,
+  cargarIndice,
   cargarInstantanea,
   entidad as pedirEntidad,
   estado,
@@ -40,6 +41,7 @@ const esDemo = ref(false)
 const baseVacia = ref(false)
 const arrancando = ref(true)
 const instantanea = ref(null)
+const indice = ref(null)
 
 // --- vistas ---------------------------------------------------------------
 // `portada` es lo primero que se ve con instantánea cargada. El mapa entero es
@@ -235,6 +237,11 @@ onMounted(async () => {
     instantanea.value = estado.instantanea
     grafoEntero.value = grafoCompleto()
     vista.value = 'portada'
+    // La portada rankea sobre el índice, que cubre toda la base. Se pide sin
+    // bloquear: el mapa y las listas del grafo ya se ven mientras llega.
+    cargarIndice().then((i) => {
+      indice.value = i
+    })
   } else {
     await abrir(ENTIDAD_INICIAL) // demostración, y se anuncia como tal
   }
@@ -488,6 +495,7 @@ onMounted(async () => {
         class="portada-encima"
         :datos="grafoColapsado"
         :crudo="grafoEntero"
+        :indice="indice"
         @seleccionar="enfocar"
         @ver-mapa="verMapa"
       />

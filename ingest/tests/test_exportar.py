@@ -573,3 +573,91 @@ def test_el_indice_no_revienta_con_la_base_vacia(store, tmp_path):
     idx = _indice(store, tmp_path)
     assert idx["total"] == 0
     assert idx["entidades"] == []
+
+
+# --- el índice puentea el expediente, como el mapa -------------------------
+
+
+def _contrato(store: Store, organo: str, empresa: str, importe: str) -> str:
+    """Órgano --UnknownLink--> expediente --ContractAward--> adjudicatario."""
+    exp = _entidad(store, f"EXPEDIENTE {uuid.uuid4().hex[:6]}", "Contract")
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, amount, currency,
+             confidence, status, dedupe_key)
+        VALUES ('UnknownLink', %s, %s, NULL, '', 1.0, 'asserted', %s)
+        """,
+        (organo, exp, f"test:{uuid.uuid4()}"),
+    )
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, amount, currency,
+             confidence, status, dedupe_key)
+        VALUES ('ContractAward', %s, %s, %s, 'EUR', 1.0, 'asserted', %s)
+        """,
+        (exp, empresa, importe, f"test:{uuid.uuid4()}"),
+    )
+    return exp
+
+
+def test_el_dinero_del_expediente_se_le_imputa_a_su_organo(store, tmp_path):
+    # Sin puentear, «quién reparte más dinero público» sale contestado con una
+    # lista de expedientes y todos los organismos aparecen repartiendo cero.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "CONSTRUCTORA SL")
+    _contrato(store, organo, empresa, "250000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    por_caption = {e["caption"]: e for e in idx["entidades"]}
+    assert por_caption["AYUNTAMIENTO"]["pagado"] == "250000.00"
+    assert por_caption["AYUNTAMIENTO"]["receptores"] == 1
+    assert por_caption["CONSTRUCTORA SL"]["recibido"] == "250000.00"
+    assert por_caption["CONSTRUCTORA SL"]["pagadores"] == 1
+
+
+def test_el_expediente_no_entra_en_el_indice(store, tmp_path):
+    # Un contrato no es un actor y no se busca por él.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "CONSTRUCTORA SL")
+    _contrato(store, organo, empresa, "250000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    assert "Contract" not in {e["schema"] for e in idx["entidades"]}
+
+
+def test_se_cuentan_organos_distintos_y_no_expedientes(store, tmp_path):
+    # Contar expedientes exageraría el alcance de quien encadena muchos
+    # contratos con una sola administración: diez contratos del mismo
+    # ayuntamiento no son diez administraciones.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    otro = _entidad(store, "DIPUTACIÓN", "PublicBody")
+    empresa = _entidad(store, "CONSTRUCTORA SL")
+    for _ in range(4):
+        _contrato(store, organo, empresa, "1000")
+    _contrato(store, otro, empresa, "1000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    fila = next(e for e in idx["entidades"] if e["caption"] == "CONSTRUCTORA SL")
+    assert fila["pagadores"] == 2
+    assert fila["recibido"] == "5000.00"
+
+
+def test_se_suman_las_dos_vias_de_dinero(store, tmp_path):
+    # Un organismo puede a la vez subvencionar (Payment directo) y adjudicar
+    # (a través de un expediente). Las dos son dinero que reparte.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "CONSTRUCTORA SL")
+    asociacion = _entidad(store, "ASOCIACIÓN VECINAL")
+    _arista(store, organo, asociacion, "2000")
+    _contrato(store, organo, empresa, "8000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    fila = next(e for e in idx["entidades"] if e["caption"] == "AYUNTAMIENTO")
+    assert fila["pagado"] == "10000.00"
+    assert fila["receptores"] == 2

@@ -377,32 +377,80 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
 
     `en_mapa` marca las que además están en el grafo publicado: de ésas se
     puede enseñar la red; del resto, sólo las cifras, y diciéndolo.
+
+    ## El expediente se puentea aquí también
+
+    Entre el organismo que adjudica y la empresa que cobra SIEMPRE hay un
+    contrato de por medio: la arista con el dinero sale del expediente, no del
+    organismo. Sumando en crudo, «quién reparte más dinero público» sale
+    contestado con una lista de expedientes y todos los organismos aparecen
+    repartiendo cero.
+
+    Así que se hace en SQL lo mismo que el mapa hace al dibujar: el dinero de
+    un expediente se le imputa a su órgano de contratación, y los
+    adjudicatarios cuentan como receptores suyos. Los expedientes no entran en
+    el índice —un contrato no es un actor y no se busca por él—.
     """
     filas = store.conn.execute(
         """
-        WITH mov AS (
+        WITH vivas AS (
+            SELECT r.* FROM relationships r WHERE r.status <> 'retracted'
+        ),
+        -- Lo que entra y sale de cada entidad por una arista directa.
+        directo AS (
             SELECT e.id,
-                   sum(CASE WHEN r.target_entity_id = e.id
-                             AND r.ftm_schema IN ('Payment','ContractAward')
-                            THEN r.amount ELSE 0 END) AS recibido,
-                   sum(CASE WHEN r.source_entity_id = e.id
-                             AND r.ftm_schema IN ('Payment','ContractAward')
-                            THEN r.amount ELSE 0 END) AS pagado,
+                   coalesce(sum(CASE WHEN r.target_entity_id = e.id
+                                      AND r.ftm_schema IN ('Payment','ContractAward')
+                                     THEN r.amount END), 0) AS recibido,
+                   coalesce(sum(CASE WHEN r.source_entity_id = e.id
+                                      AND r.ftm_schema = 'Payment'
+                                     THEN r.amount END), 0) AS pagado,
                    count(DISTINCT CASE WHEN r.target_entity_id = e.id
+                                        AND r.ftm_schema = 'Payment'
                                        THEN r.source_entity_id END) AS pagadores,
                    count(DISTINCT CASE WHEN r.source_entity_id = e.id
+                                        AND r.ftm_schema = 'Payment'
                                        THEN r.target_entity_id END) AS receptores
             FROM entities e
-            LEFT JOIN relationships r
-                   ON (r.source_entity_id = e.id OR r.target_entity_id = e.id)
-                  AND r.status <> 'retracted'
-            WHERE e.canonical_id IS NULL AND e.ftm_schema <> %s
+            LEFT JOIN vivas r ON r.source_entity_id = e.id OR r.target_entity_id = e.id
+            WHERE e.canonical_id IS NULL
+              AND e.ftm_schema NOT IN (%s, 'Contract')
             GROUP BY e.id
+        ),
+        -- Órgano -> (UnknownLink) -> expediente -> (ContractAward) -> empresa.
+        -- El dinero del expediente es del órgano que lo adjudicó.
+        puente AS (
+            SELECT u.source_entity_id AS organo,
+                   coalesce(sum(a.amount), 0) AS pagado,
+                   count(DISTINCT a.target_entity_id) AS receptores
+            FROM vivas u
+            JOIN entities c ON c.id = u.target_entity_id AND c.ftm_schema = 'Contract'
+            JOIN vivas a ON a.source_entity_id = c.id AND a.ftm_schema = 'ContractAward'
+            WHERE u.ftm_schema = 'UnknownLink'
+            GROUP BY u.source_entity_id
+        ),
+        -- Y al revés: de cuántos ÓRGANOS distintos cobra cada adjudicatario.
+        -- Contar expedientes en vez de órganos exageraría el alcance de quien
+        -- encadena muchos contratos con una sola administración.
+        puente_inverso AS (
+            SELECT a.target_entity_id AS empresa,
+                   count(DISTINCT u.source_entity_id) AS pagadores
+            FROM vivas a
+            JOIN entities c ON c.id = a.source_entity_id AND c.ftm_schema = 'Contract'
+            JOIN vivas u ON u.target_entity_id = c.id AND u.ftm_schema = 'UnknownLink'
+            WHERE a.ftm_schema = 'ContractAward'
+            GROUP BY a.target_entity_id
         )
-        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif,
-               e.properties, mov.recibido, mov.pagado, mov.pagadores, mov.receptores
-        FROM mov JOIN entities e ON e.id = mov.id
-        ORDER BY mov.recibido + mov.pagado DESC NULLS LAST, e.caption
+        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif, e.properties,
+               d.recibido,
+               d.pagado + coalesce(p.pagado, 0) AS pagado,
+               d.pagadores + coalesce(pi.pagadores, 0) AS pagadores,
+               d.receptores + coalesce(p.receptores, 0) AS receptores
+        FROM directo d
+        JOIN entities e ON e.id = d.id
+        LEFT JOIN puente p ON p.organo = d.id
+        LEFT JOIN puente_inverso pi ON pi.empresa = d.id
+        ORDER BY d.recibido + d.pagado + coalesce(p.pagado, 0) DESC, e.caption
         """,
         (PERSONALES,),
     ).fetchall()
@@ -425,6 +473,11 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
                 **({"receptores": int(f["receptores"])} if f["receptores"] else {}),
                 **({"partido": True} if props.get("partido_politico") else {}),
                 **({"extranjera": True} if props.get("entidad_extranjera") else {}),
+                **(
+                    {"extranjeraIndicio": True}
+                    if props.get("entidad_extranjera_indicio")
+                    else {}
+                ),
                 **({"enMapa": True} if str(f["id"]) in en_mapa else {}),
             }
         )

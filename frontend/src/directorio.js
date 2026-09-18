@@ -158,3 +158,97 @@ export function construirDirectorio(datos, { limite = 25 } = {}) {
     },
   }
 }
+
+
+/**
+ * Los mismos rankings, pero desde el índice.
+ *
+ * El índice cubre TODA la base; el grafo publicado, sólo lo que cabe. Con
+ * rankings calculados sobre el grafo, «quién reparte más dinero público»
+ * contestaba en realidad «de los que caben en el mapa, quién reparte más», y
+ * eso no se parece a la pregunta cuando el mapa recorta a la mitad de la base.
+ *
+ * Los totales vienen ya sumados del volcado —y con el expediente puenteado,
+ * que si no los organismos saldrían repartiendo cero—, así que aquí sólo se
+ * ordena.
+ *
+ * Lo que NO se puede sacar de aquí es el ámbito de interés ni la publicidad:
+ * el índice no lleva aristas, y para saber quién comparte pagadores con quién
+ * hacen falta las aristas. Eso sigue saliendo del grafo.
+ */
+export function construirDirectorioDesdeIndice(indice, { limite = 25 } = {}) {
+  const entidades = indice?.entidades ?? []
+  if (!entidades.length) return null
+
+  const conDinero = (campo) =>
+    entidades
+      .filter((e) => aNumero(e[campo]) > 0)
+      .map((e) => ({
+        id: e.id,
+        caption: e.caption,
+        schema: e.schema,
+        extranjera: Boolean(e.extranjera),
+        extranjeraIndicio: Boolean(e.extranjeraIndicio),
+        partido: Boolean(e.partido),
+        enMapa: Boolean(e.enMapa),
+        total: aNumero(e[campo]),
+        n: campo === 'pagado' ? (e.receptores ?? 0) : (e.pagadores ?? 0),
+      }))
+      .sort((a, b) => b.total - a.total || b.n - a.n)
+      .slice(0, limite)
+
+  const transversales = entidades
+    .filter((e) => (e.pagadores ?? 0) >= 2)
+    .map((e) => ({
+      id: e.id,
+      caption: e.caption,
+      schema: e.schema,
+      extranjera: Boolean(e.extranjera),
+      partido: Boolean(e.partido),
+      enMapa: Boolean(e.enMapa),
+      total: aNumero(e.recibido),
+      n: e.pagadores,
+    }))
+    .sort((a, b) => b.n - a.n || b.total - a.total)
+    .slice(0, limite)
+
+  const extranjeras = entidades
+    .filter((e) => e.extranjera)
+    .map((e) => ({
+      id: e.id,
+      caption: e.caption,
+      schema: e.schema,
+      extranjera: true,
+      enMapa: Boolean(e.enMapa),
+      total: aNumero(e.recibido) + aNumero(e.pagado),
+      n: (e.pagadores ?? 0) + (e.receptores ?? 0),
+    }))
+    .sort((a, b) => b.total - a.total || b.n - a.n)
+    .slice(0, limite)
+
+  // El dinero total se suma SÓLO por el lado que paga. Sumar las dos columnas
+  // contaría cada operación dos veces, una en quien la paga y otra en quien la
+  // cobra, y el total saldría al doble.
+  const dineroTotal = entidades.reduce((s, e) => s + aNumero(e.pagado), 0)
+
+  return {
+    pagadores: conDinero('pagado'),
+    receptores: conDinero('recibido'),
+    transversales,
+    extranjeras,
+    // Las sanciones no están en el índice: son aristas `Debt` y el índice no
+    // lleva aristas. Quien las quiera, del grafo.
+    sancionados: [],
+    totales: {
+      dineroTotal,
+      nOperaciones: 0,
+      nActores: entidades.length,
+      nPartidos: entidades.filter((e) => e.partido).length,
+      nExtranjeras: entidades.filter((e) => e.extranjera).length,
+      nSancionados: 0,
+      totalSancionado: 0,
+      nSinCifra: 0,
+      enMapa: entidades.filter((e) => e.enMapa).length,
+    },
+  }
+}

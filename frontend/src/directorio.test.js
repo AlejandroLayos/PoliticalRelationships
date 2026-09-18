@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { construirDirectorio } from './directorio.js'
+import { construirDirectorio, construirDirectorioDesdeIndice } from './directorio.js'
 
 function grafo() {
   return {
@@ -115,5 +115,59 @@ describe('las operaciones sin cifra se cuentan, no se esconden', () => {
     expect(d.totales.nOperaciones).toBe(6)
     // Pero no inventa dinero.
     expect(d.totales.dineroTotal).toBe(9_406_000)
+  })
+})
+
+describe('construirDirectorioDesdeIndice', () => {
+  const indice = {
+    total: 4,
+    entidades: [
+      { id: 'sas', schema: 'PublicBody', caption: 'SERVICIO DE SALUD', pagado: '9000000.00', receptores: 3, enMapa: true },
+      { id: 'ayto', schema: 'PublicBody', caption: 'AYUNTAMIENTO DE UN PUEBLO', pagado: '1200.00', receptores: 2 },
+      { id: 'ubicua', schema: 'Company', caption: 'CONSULTORA UBICUA SL', recibido: '5000.00', pagadores: 6 },
+      { id: 'grande', schema: 'Company', caption: 'CONSTRUCTORA SA', recibido: '9000000.00', pagadores: 1, enMapa: true },
+      { id: 'ext', schema: 'Company', caption: 'PHARMA BV', recibido: '400000.00', pagadores: 1, extranjera: true },
+    ],
+  }
+  const d = construirDirectorioDesdeIndice(indice)
+
+  it('cubre también lo que no cabe en el mapa', () => {
+    // Es la razón de ser del índice: el ayuntamiento de un pueblo pequeño no
+    // entra en el grafo publicado, y con rankings calculados sobre el grafo
+    // «quién reparte más dinero público» contestaba en realidad «de los que
+    // caben en el mapa, quién reparte más».
+    expect(d.pagadores.map((x) => x.caption)).toContain('AYUNTAMIENTO DE UN PUEBLO')
+    expect(d.pagadores.find((x) => x.id === 'ayto').enMapa).toBe(false)
+    expect(d.pagadores.find((x) => x.id === 'sas').enMapa).toBe(true)
+  })
+
+  it('ordena por dinero', () => {
+    expect(d.pagadores[0].caption).toBe('SERVICIO DE SALUD')
+    expect(d.receptores[0].caption).toBe('CONSTRUCTORA SA')
+  })
+
+  it('los transversales van por número de pagadores, no por dinero', () => {
+    expect(d.transversales[0].caption).toBe('CONSULTORA UBICUA SL')
+    expect(d.transversales[0].n).toBe(6)
+  })
+
+  it('no cuenta el dinero dos veces', () => {
+    // Sumar lo pagado Y lo recibido contaría cada operación dos veces, una en
+    // quien la paga y otra en quien la cobra.
+    expect(d.totales.dineroTotal).toBe(9_001_200)
+  })
+
+  it('no incluye a quien no mueve dinero por ese lado', () => {
+    expect(d.pagadores.map((x) => x.id)).not.toContain('grande')
+    expect(d.receptores.map((x) => x.id)).not.toContain('sas')
+  })
+
+  it('separa el capital extranjero', () => {
+    expect(d.extranjeras.map((x) => x.caption)).toEqual(['PHARMA BV'])
+  })
+
+  it('devuelve null sin índice, para que se use el grafo', () => {
+    expect(construirDirectorioDesdeIndice(null)).toBeNull()
+    expect(construirDirectorioDesdeIndice({ entidades: [] })).toBeNull()
   })
 })

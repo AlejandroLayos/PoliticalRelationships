@@ -11,7 +11,7 @@
  * quiere decir que se compra mucho.
  */
 import { computed } from 'vue'
-import { construirDirectorio } from '../directorio.js'
+import { construirDirectorio, construirDirectorioDesdeIndice } from '../directorio.js'
 import { contratosDeMedios } from '../medios.js'
 import { dineroCorto } from '../nucleos.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
@@ -21,10 +21,45 @@ const props = defineProps({
   datos: { type: Object, default: null },
   /** El grafo sin colapsar: el CPV vive en el expediente, no en la arista. */
   crudo: { type: Object, default: null },
+  /** Índice de TODA la base. Si está, manda él para los rankings de dinero. */
+  indice: { type: Object, default: null },
 })
 const emit = defineEmits(['seleccionar', 'verMapa'])
 
-const dir = computed(() => construirDirectorio(props.datos))
+/**
+ * Los rankings de dinero salen del índice cuando lo hay, porque el índice
+ * cubre toda la base y el grafo sólo lo que cabe en el mapa. Con rankings
+ * calculados sobre el grafo, «quién reparte más dinero público» contestaba en
+ * realidad «de los que caben en el mapa, quién reparte más».
+ *
+ * Las sanciones y el ámbito de interés siguen saliendo del grafo: son
+ * relaciones, y el índice no lleva aristas.
+ */
+const delGrafo = computed(() => construirDirectorio(props.datos))
+const delIndice = computed(() => construirDirectorioDesdeIndice(props.indice))
+
+const dir = computed(() => {
+  const g = delGrafo.value
+  const i = delIndice.value
+  if (!i) return g
+  return {
+    ...i,
+    sancionados: g.sancionados,
+    totales: {
+      ...i.totales,
+      nOperaciones: g.totales.nOperaciones,
+      nSancionados: g.totales.nSancionados,
+      totalSancionado: g.totales.totalSancionado,
+      nSinCifra: g.totales.nSinCifra,
+    },
+  }
+})
+
+/** Cuántas entidades hay en la base que no caben en el mapa publicado. */
+const fueraDelMapa = computed(() => {
+  const t = delIndice.value?.totales
+  return t ? Math.max(0, t.nActores - (t.enMapa ?? 0)) : 0
+})
 const medios = computed(() => contratosDeMedios(props.crudo))
 
 function dinero(v) {
@@ -97,7 +132,10 @@ function color(schema) {
       <div class="totales">
         <div><b>{{ dineroCorto(dir.totales.dineroTotal) }}</b><span>en operaciones publicadas</span></div>
         <div><b>{{ dir.totales.nOperaciones.toLocaleString('es-ES') }}</b><span>operaciones</span></div>
-        <div><b>{{ dir.totales.nActores.toLocaleString('es-ES') }}</b><span>entidades</span></div>
+        <div>
+          <b>{{ dir.totales.nActores.toLocaleString('es-ES') }}</b>
+          <span>entidades{{ fueraDelMapa ? ', el mapa enseña parte' : '' }}</span>
+        </div>
         <div><b>{{ dir.totales.nPartidos.toLocaleString('es-ES') }}</b><span>formaciones políticas</span></div>
         <div><b>{{ dir.totales.nExtranjeras }}</b><span>entidades no residentes</span></div>
       </div>
@@ -122,6 +160,12 @@ function color(schema) {
               <span class="meta">
                 {{ etiquetaEsquema(f.schema) }} · {{ l.unidad(f) }}
                 <span v-if="f.extranjera && l.clave !== 'extranjeras'" class="marca">· no residente</span>
+                <!--
+                  Está en la base pero no en el grafo publicado: se puede
+                  abrir su ficha y ver sus cifras, no su red. Decirlo aquí
+                  evita que el clic parezca roto.
+                -->
+                <span v-if="f.enMapa === false" class="sin-red">· sin red en el mapa</span>
               </span>
             </div>
             <span class="cifra">{{ dineroCorto(f.total) }}</span>
@@ -194,9 +238,20 @@ function color(schema) {
     </section>
 
     <p class="pie">
-      Las listas se calculan sobre la instantánea publicada, que es una parte
-      del total: lo que falta por ingerir no aparece, y la ausencia de una
-      entidad aquí no dice nada sobre ella.
+      <template v-if="fueraDelMapa">
+        Los rankings cubren las
+        {{ dir.totales.nActores.toLocaleString('es-ES') }} entidades ingeridas;
+        el mapa dibuja las {{ (dir.totales.enMapa ?? 0).toLocaleString('es-ES') }}
+        con más dinero, así que
+        {{ fueraDelMapa.toLocaleString('es-ES') }} se pueden buscar y consultar
+        pero no se ven en el grafo.
+      </template>
+      <template v-else>
+        Las listas se calculan sobre la instantánea publicada, que es una parte
+        del total.
+      </template>
+      Lo que falta por ingerir no aparece, y la ausencia de una entidad aquí no
+      dice nada sobre ella.
       <template v-if="dir.totales.nSinCifra">
         Otras <b>{{ dir.totales.nSinCifra.toLocaleString('es-ES') }}</b>
         operaciones constan pero sin cifra utilizable, así que no suman en
@@ -261,6 +316,7 @@ function color(schema) {
 .tarjeta.sancion .barra i { background: #d9635c; }
 .meta { font-size: 0.68rem; color: var(--texto-tenue); }
 .meta .marca { color: #b08cd9; }
+.meta .sin-red { color: var(--aviso); }
 .cifra { font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--texto-tenue); }
 .tarjeta.sancion .cifra { color: #e8877f; }
 
