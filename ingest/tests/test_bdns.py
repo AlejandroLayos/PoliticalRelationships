@@ -399,3 +399,70 @@ def test_una_persona_fisica_con_nif_visible_si_se_identifica(conector):
     assert n is not None
     assert n.entidades[1].ftm_schema == "Person"
     assert n.entidades[1].nif == "12345678Z"
+
+
+# --- reintentos: un servicio lento no es un servicio caído ----------------
+
+
+def test_un_timeout_puntual_no_tumba_la_ingesta():
+    """El fallo que dejó el mapa sin subvenciones días seguidos.
+
+    BDNS agotó el tiempo en la página 0 y la ingesta entera se fue a cero sin
+    un segundo intento: sin subvenciones y sin partidos en el mapa por un
+    timeout de un servicio público que responde, sólo que despacio.
+    """
+    intentos = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        intentos["n"] += 1
+        if intentos["n"] == 1:
+            raise httpx.ReadTimeout("timed out", request=request)
+        return httpx.Response(200, json={"content": [{"codConcesion": 1}], "totalPages": 1})
+
+    conector = BDNSConnector(
+        cliente=httpx.Client(transport=httpx.MockTransport(handler)),
+        peticiones_por_segundo=0,
+    )
+    docs = list(conector.fetch(fecha_desde=date(2025, 1, 1), fecha_hasta=date(2025, 1, 31)))
+
+    assert intentos["n"] == 2, "no reintentó tras el timeout"
+    assert len(docs) == 1, "el reintento no llegó a traer la página"
+
+
+def test_se_deja_de_insistir_y_no_se_inventa_nada():
+    """Tolerar el hueco sigue siendo la regla: se reintenta, no se insiste eternamente."""
+    intentos = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        intentos["n"] += 1
+        raise httpx.ConnectTimeout("no hay manera", request=request)
+
+    conector = BDNSConnector(
+        cliente=httpx.Client(transport=httpx.MockTransport(handler)),
+        peticiones_por_segundo=0,
+    )
+    docs = list(conector.fetch(fecha_desde=date(2025, 1, 1), fecha_hasta=date(2025, 1, 31)))
+
+    assert intentos["n"] == 3, "el número de intentos no está acotado"
+    assert docs == [], "se fabricó un documento con una página que nunca llegó"
+
+
+def test_un_error_del_servidor_no_se_reintenta():
+    """Un 500 es el servidor diciendo que no.
+
+    Insistir triplicaría la carga sobre un servicio público sin ninguna razón
+    para esperar una respuesta distinta.
+    """
+    intentos = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        intentos["n"] += 1
+        return httpx.Response(500, text="error del servidor")
+
+    conector = BDNSConnector(
+        cliente=httpx.Client(transport=httpx.MockTransport(handler)),
+        peticiones_por_segundo=0,
+    )
+    list(conector.fetch(fecha_desde=date(2025, 1, 1), fecha_hasta=date(2025, 1, 31)))
+
+    assert intentos["n"] == 1, "se insistió sobre un error del servidor"

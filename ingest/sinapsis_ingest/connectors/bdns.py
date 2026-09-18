@@ -41,6 +41,11 @@ from sinapsis_ingest.util import (
 
 log = structlog.get_logger()
 
+# Reintentos por página. Un timeout puntual de un servicio público no puede
+# dejar el mapa sin subvenciones.
+INTENTOS_POR_PAGINA = 3
+ESPERA_REINTENTO = 5.0
+
 SOURCE_ID = "bdns"
 BASE_URL = "https://www.infosubvenciones.es/bdnstrans/api"
 ENDPOINT_CONCESIONES = f"{BASE_URL}/concesiones/busqueda"
@@ -80,6 +85,9 @@ class BDNSConnector:
         self._cliente = cliente
         self._intervalo = 1.0 / peticiones_por_segundo if peticiones_por_segundo > 0 else 0.0
         self._ultima_peticion = 0.0
+        # En tests el ritmo va a cero; esperar entre reintentos allí sólo
+        # serviría para que la suite tarde medio minuto por caso.
+        self._espera_reintento = ESPERA_REINTENTO if peticiones_por_segundo > 0 else 0.0
 
     # --- fetch ------------------------------------------------------------
 
@@ -105,7 +113,10 @@ class BDNSConnector:
         Guardamos la página entera sin interpretar: es la prueba, y BDNS
         despublica registros pasado su plazo legal.
         """
-        cliente = self._cliente or httpx.Client(timeout=30.0)
+        # 30 s no bastaban: BDNS agotó el tiempo en la página 0 y la ingesta
+        # se fue a cero varios días seguidos. El servicio responde, sólo que
+        # despacio; la página trae mil concesiones.
+        cliente = self._cliente or httpx.Client(timeout=httpx.Timeout(120.0, connect=30.0))
         cerrar = self._cliente is None
 
         params_base = {
@@ -125,15 +136,53 @@ class BDNSConnector:
                 params = {**params_base, "page": pagina}
                 self._esperar_turno()
 
-                try:
-                    resp = cliente.get(self.endpoint, params=params)
-                    resp.raise_for_status()
-                except httpx.HTTPError as exc:
+                # Un servicio público lento no es un servicio caído. BDNS
+                # agotó el tiempo en la página 0 varios días seguidos y la
+                # ingesta entera se fue a cero sin más intento: sin
+                # subvenciones y sin partidos en el mapa por un timeout.
+                resp = None
+                ultimo: httpx.HTTPError | None = None
+                for intento in range(1, INTENTOS_POR_PAGINA + 1):
+                    try:
+                        # A una variable aparte: `cliente.get` devuelve también
+                        # las respuestas de error, así que asignar `resp` antes
+                        # de comprobar el estado la deja no-nula tras un 500 y
+                        # el cuerpo del error acaba publicado como si fuera un
+                        # documento bueno. Pasó, y lo cazó el test.
+                        candidata = cliente.get(self.endpoint, params=params)
+                        candidata.raise_for_status()
+                        resp = candidata
+                        break
+                    except httpx.HTTPStatusError as exc:
+                        # Un 4xx/5xx es el servidor contestando que no. Se
+                        # registra el hueco y se sigue: insistir triplicaría la
+                        # carga sobre un servicio público sin ninguna razón
+                        # para esperar otra respuesta.
+                        ultimo = exc
+                        break
+                    except httpx.TransportError as exc:
+                        # Esto sí merece otra oportunidad: es lo que tumbó la
+                        # ingesta días seguidos, un "timed out" en la página 0.
+                        ultimo = exc
+                        if intento < INTENTOS_POR_PAGINA:
+                            espera = self._espera_reintento * intento
+                            log.info(
+                                "bdns: reintentando la página",
+                                pagina=pagina,
+                                intento=intento,
+                                espera=espera,
+                                error=str(exc),
+                            )
+                            if espera:
+                                time.sleep(espera)
+
+                if resp is None:
                     # No inventamos datos: se registra el hueco y se sigue.
                     log.warning(
                         "bdns: fallo al descargar página",
                         pagina=pagina,
-                        error=str(exc),
+                        intentos=INTENTOS_POR_PAGINA,
+                        error=str(ultimo),
                     )
                     break
 

@@ -43,6 +43,7 @@ import structlog
 
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.normalizado import AristaNormalizada, EntidadNormalizada, Normalizado
+from sinapsis_ingest.tls import verificacion_para
 from sinapsis_ingest.util import a_decimal, normalizar_nif, slug
 
 log = structlog.get_logger()
@@ -183,10 +184,19 @@ class TCUConnector:
         documentos acumulativos que el organismo reescribe. La idempotencia la
         da el `content_hash`, así que reejecutar sin cambios no crea nada.
         """
+        # www.tcu.es no envía el certificado intermedio, así que la
+        # verificación normal falla con "unable to get local issuer
+        # certificate". Se completa la cadena por AIA como hace un navegador.
+        # Estuvo fallando días porque el arreglo vivía en el script de
+        # reconocimiento y no aquí.
+        verify = self._verify
+        if verify is True and self._documentos:
+            verify = verificacion_para(httpx.URL(self._documentos[0]).host)
+
         cliente = self._cliente or httpx.Client(
             timeout=60.0,
             follow_redirects=True,
-            verify=self._verify,
+            verify=verify,
             headers={
                 "User-Agent": (
                     "Sinapsis/0.1 (proyecto abierto de transparencia; "
