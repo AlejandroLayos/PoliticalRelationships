@@ -279,3 +279,43 @@ def test_el_informe_no_imprime_ningun_dato_personal():
     import re as _re
 
     assert not _re.search(r"\b[0-9]{8}[A-Za-z]\b", r.stdout), "hay un DNI en el informe"
+
+
+def test_retira_por_id_aunque_en_ese_volcado_ya_no_se_note():
+    """La señal puede estar en un fichero y el dato personal en otro.
+
+    Pasó de verdad: una pasada anterior le quitó el DNI a «UTE PERAFITA (socios retirados)» en el grafo y dejó la ficha publicada.
+    Con el DNI fuera, esa ficha quedó indistinguible de una empresa normal —y
+    con los nombres de los dos socios todavía en el nombre—. La señal seguía
+    existiendo, pero en el índice, que es otro fichero.
+
+    El id sí es estable entre ficheros y entre reescrituras.
+    """
+    grafo = {
+        "nodes": [
+            {"id": "org", "schema": "PublicBody", "caption": "AYUNTAMIENTO"},
+            # Sin nif: aquí ya no se nota que es una persona.
+            {"id": "ute", "schema": "Company", "caption": "UTE (Nombre Apellido y Otro)"},
+        ],
+        "edges": [{"id": "a", "source": "org", "target": "ute", "amount": "1000"}],
+    }
+    salida, cuantas = redaccion.redactar(grafo, {"ute"})
+    assert cuantas == 1
+    assert "Nombre Apellido" not in json.dumps(salida, ensure_ascii=False)
+    assert salida["edges"] == []
+
+
+def test_sin_ids_extra_se_comporta_igual_que_antes():
+    grafo = {
+        "nodes": [{"id": "x", "schema": "Company", "caption": "EMPRESA SL", "nif": "B1"}],
+        "edges": [],
+    }
+    salida, cuantas = redaccion.redactar(grafo)
+    assert cuantas == 0
+    assert salida["nodes"][0]["caption"] == "EMPRESA SL"
+
+
+def test_mira_los_dos_ficheros_publicados():
+    # Mirar sólo el grafo dejó el índice entero sin filtrar, con un NIE dentro.
+    assert any("indice.json" in r for r in redaccion.RUTAS)
+    assert any("grafo.json" in r for r in redaccion.RUTAS)

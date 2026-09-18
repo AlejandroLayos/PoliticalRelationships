@@ -70,6 +70,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ESQUEMA_PERSONAL = "Person"
@@ -87,7 +88,9 @@ _IDENTIFICADOR_PERSONAL = re.compile(r"^(?:[0-9]{8}|[XYZxyz][0-9]{7})[A-Za-z]$")
 
 def es_identificador_personal(nif: str | None) -> bool:
     return bool(nif) and bool(_IDENTIFICADOR_PERSONAL.match(nif.strip()))
-RUTA = "frontend/public/datos/grafo.json"
+# Los DOS ficheros que se publican. Mirar sólo el grafo dejó el índice entero
+# sin filtrar, con un NIE dentro.
+RUTAS = ("frontend/public/datos/grafo.json", "frontend/public/datos/indice.json")
 
 # Prefiltro barato antes de parsear JSON de varios megas. Es a propósito laxo:
 # los volcados de agosto de 2026 se serializaban compactos —`"schema":"Person"`,
@@ -103,7 +106,7 @@ MOTIVO = (
 )
 
 
-def redactar(datos: dict) -> tuple[dict, int]:
+def redactar(datos: dict, ids_extra: set[str] | None = None) -> tuple[dict, int]:
     """Devuelve el volcado sin datos personales y cuántas entidades se fueron.
 
     Sirve para los DOS ficheros que se publican, que tienen forma distinta: el
@@ -111,6 +114,9 @@ def redactar(datos: dict) -> tuple[dict, int]:
     primera versión sólo miraba `nodes`, así que el índice pasó entero por el
     filtro sin que nadie lo notara — con cuatro identificadores personales
     dentro, y un DNI que en el grafo ya se había retirado.
+
+    `ids_extra` son los id que el historial entero ya delató como personales,
+    aunque en ESTE volcado no se note: ver `ids_personales()`.
 
     ## Por qué se va la entidad entera y no sólo el identificador
 
@@ -135,10 +141,13 @@ def redactar(datos: dict) -> tuple[dict, int]:
         return datos, 0
     entidades = datos.get(clave) or []
 
+    objetivo = ids_extra or set()
     fuera = {
         e["id"]
         for e in entidades
-        if e.get("schema") == ESQUEMA_PERSONAL or es_identificador_personal(e.get("nif"))
+        if e.get("schema") == ESQUEMA_PERSONAL
+        or es_identificador_personal(e.get("nif"))
+        or e["id"] in objetivo
     }
     if not fuera:
         return datos, 0
@@ -172,9 +181,10 @@ def blob_callback(blob, metadata):  # (metadata: firma que exige git-filter-repo
     blob.data = json.dumps(datos, ensure_ascii=False).encode("utf-8")
 
 
-def _blobs_afectados() -> list[tuple[str, int, str]]:
+def _volcados_del_historial() -> list[tuple[str, bytes]]:
+    """Todos los blobs de los ficheros publicados, con su contenido."""
     salida = subprocess.run(
-        ["git", "rev-list", "--all", "--objects", "--", RUTA],
+        ["git", "rev-list", "--all", "--objects", "--", *RUTAS],
         capture_output=True,
         text=True,
         check=True,
@@ -185,31 +195,63 @@ def _blobs_afectados() -> list[tuple[str, int, str]]:
         if len(partes) == 2:
             vistos.setdefault(partes[0], None)
 
-    afectados = []
+    volcados = []
     for sha in vistos:
         tipo = subprocess.run(
             ["git", "cat-file", "-t", sha], capture_output=True, text=True
         ).stdout.strip()
         if tipo != "blob":
             continue
-        crudo = subprocess.run(
-            ["git", "cat-file", "-p", sha], capture_output=True
-        ).stdout
-        if b'"nodes"' not in crudo and b'"entidades"' not in crudo:
+        crudo = subprocess.run(["git", "cat-file", "-p", sha], capture_output=True).stdout
+        if b'"nodes"' in crudo or b'"entidades"' in crudo:
+            volcados.append((sha, crudo))
+    return volcados
+
+
+def ids_personales() -> set[str]:
+    """Los id de entidad que EN ALGÚN volcado resultaron ser de una persona.
+
+    Hace falta mirar el historial entero antes de tocar nada, y no volcado a
+    volcado, porque la señal puede estar en un fichero y el dato personal en
+    otro.
+
+    Pasó de verdad: una pasada anterior le quitó el DNI a «UTE PERAFITA (socios retirados)» en el grafo y dejó la ficha publicada.
+    Con el DNI fuera, esa ficha quedó indistinguible de una empresa normal —y
+    con los nombres de los dos socios todavía en el nombre—. La señal seguía
+    existiendo, pero en el índice, que es otro fichero.
+
+    El id de la entidad sí es estable entre ficheros y entre reescrituras. Se
+    recogen aquí y luego se retiran de todas partes.
+    """
+    ids: set[str] = set()
+    for _sha, crudo in _volcados_del_historial():
+        try:
+            datos = json.loads(crudo)
+        except Exception:
             continue
+        for e in datos.get("nodes") or datos.get("entidades") or []:
+            if e.get("schema") == ESQUEMA_PERSONAL or es_identificador_personal(e.get("nif")):
+                ids.add(e["id"])
+    return ids
+
+
+def _blobs_afectados() -> list[tuple[str, int, int]]:
+    objetivo = ids_personales()
+    afectados = []
+    for sha, crudo in _volcados_del_historial():
         try:
             datos = json.loads(crudo)
         except Exception:
             continue
         entidades = datos.get("nodes") or datos.get("entidades") or []
         personas = [n for n in entidades if n.get("schema") == ESQUEMA_PERSONAL]
-        con_dni = [
+        otras = [
             n
             for n in entidades
-            if n.get("schema") != ESQUEMA_PERSONAL and es_identificador_personal(n.get("nif"))
+            if n.get("schema") != ESQUEMA_PERSONAL and n["id"] in objetivo
         ]
-        if personas or con_dni:
-            afectados.append((sha, len(personas), len(con_dni)))
+        if personas or otras:
+            afectados.append((sha, len(personas), len(otras)))
     return afectados
 
 
@@ -347,17 +389,27 @@ def _ejecutar_filter_repo() -> int:
     personales se publican no puede tener dos copias.
     """
     aqui = str(Path(__file__).resolve().parent)
+
+    # El conjunto de id viaja por fichero y no por la línea de órdenes: son
+    # cientos de UUID y hay límites de longitud de argumentos.
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".json", delete=False, encoding="utf-8"
+    ) as f:
+        json.dump(sorted(ids_personales()), f)
+        ruta_ids = f.name
+
     callback = (
         "import sys, json\n"
         f"sys.path.insert(0, {aqui!r})\n"
         "from redactar_particulares_del_historico import redactar\n"
+        f"_ids = set(json.load(open({ruta_ids!r})))\n"
         "if b'\"nodes\"' in blob.data or b'\"entidades\"' in blob.data:\n"
         "    try:\n"
         "        d = json.loads(blob.data)\n"
         "    except Exception:\n"
         "        d = None\n"
         "    if d is not None:\n"
-        "        d, cuantos = redactar(d)\n"
+        "        d, cuantos = redactar(d, _ids)\n"
         "        if cuantos:\n"
         "            blob.data = json.dumps(d, ensure_ascii=False).encode('utf-8')\n"
     )
