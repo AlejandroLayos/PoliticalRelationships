@@ -516,11 +516,67 @@ SUSTITUCIONES_TEXTO = (
 )
 
 
+def _ocurrencias_reales() -> list[tuple[str, str]]:
+    """Los textos concretos que hay que sustituir, sacados del repositorio.
+
+    Se extraen con el patrón en tiempo de ejecución en vez de escribirlos en
+    el guion, por lo de siempre: una lista de qué borrar por datos personales
+    no puede ser otra copia de esos datos. Aquí no se commitea nada; el
+    fichero vive en /tmp mientras dura el borrado.
+
+    Y se pasan a filter-repo como LITERALES. Con `regex:` no sustituía nada en
+    los mensajes de commit —la comprobación posterior lo pilló y se negó a
+    empujar, que para eso está—. Un literal no depende de cómo compile los
+    patrones ni de si los aplica por líneas o de una vez.
+    """
+    fuentes = [
+        subprocess.run(
+            ["git", "log", "--all", "--format=%B"],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout
+    ]
+    for _sha, crudo in _todos_los_blobs_de_texto():
+        fuentes.append(crudo.decode("utf-8", errors="ignore"))
+
+    pares: dict[str, str] = {}
+    for linea in SUSTITUCIONES_TEXTO:
+        patron, reemplazo = linea.split("==>")
+        if not patron.startswith("regex:"):
+            continue
+        rx = re.compile(patron[len("regex:") :])
+        for texto in fuentes:
+            for hallado in rx.findall(texto):
+                # Lo ya sustituido vuelve a casar con el patrón. Sustituirlo
+                # por sí mismo no rompe nada pero ensucia el fichero y deja
+                # dudando de si el borrado hizo algo.
+                if hallado == reemplazo:
+                    continue
+                pares.setdefault(hallado, reemplazo)
+    return sorted(pares.items())
+
+
 def _fichero_de_sustituciones() -> str:
+    pares = _ocurrencias_reales()
     with tempfile.NamedTemporaryFile(
         "w", suffix=".txt", delete=False, encoding="utf-8"
     ) as f:
-        f.write("\n".join(SUSTITUCIONES_TEXTO) + "\n")
+        for original, nuevo in pares:
+            # Formato de filter-repo: `literal==>reemplazo`, una por línea. Un
+            # salto de línea dentro de la coincidencia no cabe ahí, y pasa
+            # cuando el nombre quedó partido al ajustar el ancho del párrafo.
+            #
+            # Se trocea: el primer pedazo lleva el reemplazo entero y los
+            # siguientes se van a la nada. Mapear cada trozo al texto completo
+            # lo repetiría tantas veces como líneas ocupara.
+            trozos = [t for t in original.split("\n") if t.strip()]
+            if len(trozos) <= 1:
+                f.write(f"{original}==>{nuevo}\n")
+                continue
+            f.write(f"{trozos[0]}==>{nuevo}\n")
+            for trozo in trozos[1:]:
+                f.write(f"{trozo}==>\n")
         return f.name
 
 
