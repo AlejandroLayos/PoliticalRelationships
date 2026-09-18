@@ -269,6 +269,18 @@ Reglas:
   acuerdo marco repetido en cada adjudicatario— se documentan en el
   [ADR 0005](adr/0005-importes-que-no-se-publican.md); entre los dos suponían
   el 90 % del dinero que llegó a publicarse.
+- **Un nombre tampoco se publica DENTRO de un texto.** Retirar la ficha de una
+  persona física no la saca de la prosa que la rodea. Los pliegos la nombran:
+  «…el contracte per al projecte de creació “Veus de Parets” de \<nombre\>».
+  El expediente sí se publica, así que el nombre salía igual, en un campo que
+  la regla de las entidades no mira. El volcado tapa esos nombres —los de toda
+  la base, no sólo los de las fichas publicadas— y **marca el hueco** en vez de
+  borrarlo a escondidas.
+
+  Se busca el nombre entero y sólo si tiene forma de nombre: un apellido suelto
+  aparece en topónimos y razones sociales («taller de Sant Genís», «calle
+  Adell») y perseguirlo destrozaría el texto sin proteger a nadie que no
+  estuviera ya protegido por la retirada de su ficha.
 
 ## 13. Seguridad
 

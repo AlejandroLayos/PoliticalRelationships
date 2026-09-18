@@ -22,8 +22,9 @@ from pathlib import Path
 
 import pytest
 
-from sinapsis_ingest.exportar import exportar
+from sinapsis_ingest.exportar import _SQL_IDENTIFICADOR_PERSONAL, exportar
 from sinapsis_ingest.store import Source, Store
+from sinapsis_ingest.util import es_identificador_personal
 
 DSN = os.environ.get("SINAPSIS_TEST_POSTGRES_DSN", "")
 
@@ -578,9 +579,9 @@ def test_el_indice_no_revienta_con_la_base_vacia(store, tmp_path):
 # --- el índice puentea el expediente, como el mapa -------------------------
 
 
-def _contrato(store: Store, organo: str, empresa: str, importe: str) -> str:
+def _contrato(store: Store, organo: str, empresa: str, importe: str, caption: str = "") -> str:
     """Órgano --UnknownLink--> expediente --ContractAward--> adjudicatario."""
-    exp = _entidad(store, f"EXPEDIENTE {uuid.uuid4().hex[:6]}", "Contract")
+    exp = _entidad(store, caption or f"EXPEDIENTE {uuid.uuid4().hex[:6]}", "Contract")
     store.conn.execute(
         """
         INSERT INTO relationships
@@ -778,9 +779,11 @@ def test_los_totales_del_extracto_son_los_de_toda_la_base(store, tmp_path):
         _arista(store, organo, _entidad(store, f"EMPRESA {i}"), "1000")
     store.conn.commit()
 
-    completo = json.loads(
-        (tmp_path / "indice.json").read_text(encoding="utf-8")
-    ) if (tmp_path / "indice.json").exists() else None
+    completo = (
+        json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+        if (tmp_path / "indice.json").exists()
+        else None
+    )
     top = _indice_top(store, tmp_path)
     completo = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
 
@@ -864,3 +867,128 @@ def test_el_nif_de_una_empresa_de_verdad_sigue_publicandose(store, tmp_path):
     g = _exportado(store, tmp_path)
     empresa = next(n for n in g["nodes"] if n["caption"] == "EMPRESA SL")
     assert empresa["nif"] == "B12345678"
+
+
+# --- El nombre dentro del texto -------------------------------------------
+#
+# Omitir la ficha no saca a la persona de la prosa que la rodea. El 18/9/2026,
+# con la regla de §12 aplicándose bien a las entidades, la descripción de un
+# expediente seguía nombrando al artista contratado. El expediente sí se
+# publica; la ficha de esa persona estaba correctamente retirada del mapa y su
+# nombre salió igual. Los tests de las funciones puras están en
+# `test_censura_de_nombres.py`; éstos comprueban el volcado entero.
+
+
+def test_el_nombre_de_una_persona_no_sale_dentro_de_la_descripcion(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _entidad(store, "Queralt Riera", "Person")
+    _contrato(
+        store,
+        organo,
+        empresa,
+        "5000",
+        'licitació del contracte per al projecte de creació "Veus de Parets" de Queralt Riera',
+    )
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    crudo = json.dumps(g, ensure_ascii=False)
+    assert "Queralt" not in crudo
+    assert "Riera" not in crudo
+    # Y el resto de la descripción se queda: el expediente sigue diciendo qué
+    # se contrató. Tapar el nombre no es motivo para perder el dato.
+    assert "Veus de Parets" in crudo
+
+
+def test_tambien_si_la_persona_no_cupo_en_el_mapa(store, tmp_path):
+    """Por eso la lista de nombres se saca de TODA la base.
+
+    La persona puede no tener ni una arista —y entonces no aparece por ninguna
+    parte del volcado— y estar nombrada igualmente en la descripción de un
+    contrato que sí cabe. Mirar sólo las fichas publicadas no la habría visto.
+    """
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _entidad(store, "Marta Solanes", "Person")  # sin ninguna arista
+    _contrato(store, organo, empresa, "5000", "taller impartido por Marta Solanes")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert "Solanes" not in json.dumps(g, ensure_ascii=False)
+
+
+def test_tambien_se_tapa_en_el_extracto_de_procedencia(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _entidad(store, "Marta Solanes", "Person")
+    _arista(store, organo, empresa, "9000")
+    doc = store.conn.execute(
+        """
+        INSERT INTO raw_documents (source_id, url, content_hash, media_type, retrieved_at, content)
+        VALUES ('test', 'https://ejemplo.test/y', %s, 'application/json', now(), '{}'::bytea)
+        RETURNING id
+        """,
+        ("e" * 64,),
+    ).fetchone()
+    store.conn.execute(
+        """
+        INSERT INTO provenance (entity_id, raw_document_id, extractor_version, excerpt)
+        VALUES (%s, %s, 'test', 'representada por Marta Solanes ante el órgano')
+        """,
+        (empresa, doc["id"]),
+    )
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert "Solanes" not in json.dumps(g, ensure_ascii=False)
+    assert "ante el órgano" in json.dumps(g, ensure_ascii=False)
+
+
+def test_el_volcado_dice_cuantas_menciones_tapo(store, tmp_path):
+    """Si se tapa algo, se dice. Un hueco callado es indistinguible de no haberlo."""
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _entidad(store, "Marta Solanes", "Person")
+    _contrato(store, organo, empresa, "5000", "curso de Marta Solanes y taller")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert g["personasOmitidas"]["menciones_en_texto"] >= 1
+    assert g["personasOmitidas"]["fichas"] >= 0
+
+
+def test_una_empresa_con_nombre_parecido_no_se_tapa(store, tmp_path):
+    """Un falso positivo aquí destroza texto legítimo, así que se mide.
+
+    `Solanes SL` no es `Marta Solanes`: el patrón busca el nombre entero, no
+    un apellido suelto, precisamente porque un apellido corriente aparece en
+    topónimos y razones sociales.
+    """
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "CONSTRUCCIONES SOLANES SL")
+    _entidad(store, "Marta Solanes", "Person")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert "CONSTRUCCIONES SOLANES SL" in json.dumps(g, ensure_ascii=False)
+
+
+@pytest.mark.parametrize(
+    "nif",
+    ["12345678Z", "X1234567L", "z7654321b", "B12345678", "A1234567X", "", "1234567Z"],
+)
+def test_el_sql_y_el_python_deciden_lo_mismo(store, nif):
+    """La prueba de «esto es un identificador de persona» está escrita dos veces.
+
+    En Python, para filtrar las fichas que se publican; y en SQL, porque la
+    lista de nombres a tapar se saca de toda la base y traérsela entera a
+    Python para descartarla aquí sería pasear decenas de miles de filas por la
+    red en cada volcado. Dos definiciones de la misma regla se separan solas;
+    esto lo impide.
+    """
+    fila = store.conn.execute(
+        "SELECT (%s ~ %s) AS casa", (nif, _SQL_IDENTIFICADOR_PERSONAL)
+    ).fetchone()
+    assert bool(fila["casa"]) is es_identificador_personal(nif)

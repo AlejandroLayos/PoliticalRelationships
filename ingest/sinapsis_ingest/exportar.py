@@ -17,6 +17,8 @@ que hace auditable el proyecto.
 from __future__ import annotations
 
 import json
+import re
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -39,6 +41,156 @@ MAX_ENTIDADES = 4000
 # El presupuesto que de verdad manda: se eligen aristas y los nodos salen de
 # sus extremos. Ver el docstring de `exportar`.
 MAX_ARISTAS = 6000
+
+
+# Lo que sustituye a un nombre de persona hallado dentro de un texto. Se marca
+# en vez de borrarse: el hueco tiene que verse, porque una descripción a la que
+# le falta una palabra sin avisar es otra forma de mentir.
+MARCA_NOMBRE_RETIRADO = "(nombre retirado)"
+
+_ESPACIO = re.compile(r"\s")
+
+# Un nombre de una sola palabra no se busca dentro de un texto, y no por
+# pereza: el riesgo se invierte. Un apellido corriente aparece en topónimos, en
+# razones sociales y en descripciones de obra —«taller de Sant Genís», «calle
+# Adell»— y taparlo destrozaría el texto sin proteger a nadie que no estuviera
+# ya protegido por la retirada de su ficha.
+MIN_PALABRAS_NOMBRE = 2
+MIN_LETRAS_NOMBRE = 6
+
+# Partículas que van en minúscula dentro de un nombre propio perfectamente
+# normal. Sin esta lista, «Juan de la Cruz» no parecería un nombre.
+_PARTICULAS = frozenset(
+    [
+        "de",
+        "del",
+        "la",
+        "las",
+        "el",
+        "los",
+        "y",
+        "e",
+        "i",
+        "da",
+        "das",
+        "do",
+        "dos",
+        "van",
+        "von",
+        "der",
+        "den",
+        "bin",
+        "ben",
+    ]
+)
+
+
+def _parece_nombre_de_persona(nombre: str) -> bool:
+    """¿Esta cadena es lo bastante nombre como para buscarla dentro de un texto?
+
+    El filtro que importa no es la longitud sino las mayúsculas. Las fuentes
+    traen basura en el campo del nombre —la instantánea tenía una ficha de
+    persona cuyo «nombre» era una frase corriente en minúscula—, y buscar esa
+    frase con `IGNORECASE` dentro de todas las descripciones publicadas taparía
+    prosa legítima a puñados sin proteger a nadie.
+
+    Así que se exige lo que sí distingue a un nombre: que todas sus palabras
+    empiecen por mayúscula, salvo las partículas.
+    """
+    palabras = nombre.split()
+    if len(palabras) < MIN_PALABRAS_NOMBRE:
+        return False
+    if sum(len(p) for p in palabras) < MIN_LETRAS_NOMBRE:
+        return False
+    propias = 0
+    for palabra in palabras:
+        if palabra.lower().strip(".,;:()") in _PARTICULAS:
+            continue
+        letra = palabra.lstrip("'\u2019(«\"")[:1]
+        if not letra.isalpha() or not letra.isupper():
+            return False
+        propias += 1
+    return propias >= MIN_PALABRAS_NOMBRE
+
+
+# La misma prueba que `es_identificador_personal`, escrita para Postgres.
+# Va en SQL porque la lista de nombres se saca de TODA la base —decenas de
+# miles de filas— y no sólo del trozo que se publica: traérselas a Python para
+# descartarlas aquí sería pasear la base entera por la red en cada volcado.
+# Hay un test que compara las dos contra los mismos casos; si alguien cambia
+# una y no la otra, salta.
+_SQL_IDENTIFICADOR_PERSONAL = r"^([0-9]{8}|[XYZxyz][0-9]{7})[A-Za-z]$"
+
+
+def nombres_de_persona(store: Store) -> list[str]:
+    """Los nombres que no pueden aparecer en NINGÚN texto publicado.
+
+    Retirar la ficha de una persona física no basta. Los pliegos la nombran en
+    prosa: «el contracte per al projecte de creació "Veus de Parets" de <nombre>»
+    salió publicado en la descripción de un expediente durante semanas, con la
+    ficha de esa persona correctamente omitida del mapa. La regla de §12 miraba
+    las entidades y no el texto que las rodea.
+
+    Se buscan en toda la base, no sólo entre lo que se publica: la persona
+    puede no caber en el mapa y estar nombrada igualmente en la descripción de
+    un contrato que sí cabe.
+    """
+    filas = store.conn.execute(
+        """
+        SELECT DISTINCT caption
+        FROM entities
+        WHERE canonical_id IS NULL
+          AND caption IS NOT NULL AND caption <> ''
+          AND (ftm_schema = %s OR COALESCE(nif,'') ~ %s)
+        """,
+        (PERSONALES, _SQL_IDENTIFICADOR_PERSONAL),
+    ).fetchall()
+    return [f["caption"].strip() for f in filas if f["caption"].strip()]
+
+
+def censor(nombres: Iterable[str]) -> re.Pattern[str] | None:
+    """Compila el patrón que tapa esos nombres, o `None` si no hay ninguno."""
+    piezas = []
+    for nombre in sorted(set(nombres), key=len, reverse=True):
+        if not _parece_nombre_de_persona(nombre):
+            continue
+        palabras = nombre.split()
+        # `\s+` y no un espacio literal. El mismo nombre viene partido por un
+        # salto de línea en cuanto el texto es un pliego copiado tal cual, y un
+        # patrón que exige el espacio encuentra CERO ocurrencias donde hay una.
+        # No es hipotético: costó seis intentos en el guion que limpia el
+        # historial, porque el borrado y su comprobación compartían el fallo.
+        piezas.append(r"\s+".join(re.escape(p) for p in palabras))
+    if not piezas:
+        return None
+    # Sin `\b`: un nombre puede empezar o acabar en apóstrofo o guion, y ahí
+    # `\b` se comporta al revés de lo que parece.
+    return re.compile(r"(?<!\w)(?:" + "|".join(piezas) + r")(?!\w)", re.IGNORECASE)
+
+
+def tapar_nombres(valor: Any, patron: re.Pattern[str], cuenta: list[int]) -> Any:
+    """Sustituye los nombres en cualquier cadena que cuelgue de `valor`.
+
+    Recorre diccionarios y listas porque las propiedades de un nodo son un
+    JSON arbitrario que viene de la fuente: acotar la búsqueda a las claves que
+    hoy existen sería dejar abierta la siguiente.
+    """
+    if isinstance(valor, str):
+        # Un nombre lleva al menos dos palabras, así que una cadena sin un solo
+        # espacio no puede contener ninguno. El volcado son 3,4 millones de
+        # caracteres repartidos en 113.000 cadenas, y la inmensa mayoría son
+        # UUID, fechas, hashes y códigos: descartarlos con una prueba de una
+        # línea deja el recorrido en una fracción de lo que costaba.
+        if not _ESPACIO.search(valor):
+            return valor
+        nuevo, n = patron.subn(MARCA_NOMBRE_RETIRADO, valor)
+        cuenta[0] += n
+        return nuevo
+    if isinstance(valor, dict):
+        return {k: tapar_nombres(v, patron, cuenta) for k, v in valor.items()}
+    if isinstance(valor, list):
+        return [tapar_nombres(v, patron, cuenta) for v in valor]
+    return valor
 
 
 def exportar(
@@ -287,9 +439,7 @@ def exportar(
     # un falso positivo es una acusación falsa, un falso negativo es un hueco.
     personales = [f for f in filas if f["ftm_schema"] == PERSONALES]
     con_identificador = [
-        f
-        for f in filas
-        if f["ftm_schema"] != PERSONALES and es_identificador_personal(f["nif"])
+        f for f in filas if f["ftm_schema"] != PERSONALES and es_identificador_personal(f["nif"])
     ]
     if personales or con_identificador:
         log.error(
@@ -352,6 +502,28 @@ def exportar(
                 }
             )
 
+    # Y el último cierre: los nombres DENTRO del texto.
+    #
+    # Omitir la ficha de una persona física no la saca de la prosa que la
+    # rodea. La descripción de un expediente nombraba al artista contratado, y
+    # el expediente sí se publica: ficha retirada, nombre publicado igual, en
+    # un campo que ninguna de las dos reglas anteriores mira.
+    #
+    # Se hace aquí, al final, sobre lo que ya está decidido que sale: así
+    # cubre el caption, las propiedades, las aristas y los extractos de
+    # procedencia a la vez, y no depende de que cada conector se acuerde.
+    menciones = [0]
+    patron = censor(nombres_de_persona(store))
+    if patron is not None:
+        nodos = tapar_nombres(nodos, patron, menciones)
+        aristas = tapar_nombres(aristas, patron, menciones)
+        procedencia = tapar_nombres(procedencia, patron, menciones)
+        if menciones[0]:
+            log.warning(
+                "se han tapado nombres de persona dentro de texto publicado",
+                menciones=menciones[0],
+            )
+
     total = store.conn.execute(
         "SELECT count(*) AS n FROM entities WHERE canonical_id IS NULL"
     ).fetchone()
@@ -401,6 +573,10 @@ def exportar(
         "nodes": nodos,
         "edges": aristas,
         "provenance": procedencia,
+        "personasOmitidas": {
+            "fichas": len(omitidas),
+            "menciones_en_texto": menciones[0],
+        },
     }
 
     destino.parent.mkdir(parents=True, exist_ok=True)
@@ -409,10 +585,12 @@ def exportar(
         encoding="utf-8",
     )
 
-    indice = _exportar_indice(store, destino, {str(n["id"]) for n in nodos})
+    indice = _exportar_indice(store, destino, {str(n["id"]) for n in nodos}, patron)
 
     resumen = {
         "entidades": len(nodos),
+        "personas_omitidas": len(omitidas),
+        "menciones_tapadas": menciones[0],
         "aristas": len(aristas),
         "con_procedencia": len(procedencia),
         "truncado": documento["truncado"],
@@ -423,7 +601,12 @@ def exportar(
     return resumen
 
 
-def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str, Any]:
+def _exportar_indice(
+    store: Store,
+    destino: Path,
+    en_mapa: set[str],
+    patron: re.Pattern[str] | None = None,
+) -> dict[str, Any]:
     """Escribe, junto al grafo, un índice de TODAS las entidades.
 
     El mapa está acotado a propósito: por encima de unos miles de nodos el
@@ -518,6 +701,7 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
     ).fetchall()
 
     entradas = []
+    tapadas = [0]
     for f in filas:
         # Misma regla que en el grafo: el índice es otra puerta de publicación.
         if es_identificador_personal(f["nif"]):
@@ -527,7 +711,13 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
             {
                 "id": str(f["id"]),
                 "schema": f["ftm_schema"],
-                "caption": f["caption"],
+                # El caption de una ficha del índice es un nombre, no prosa,
+                # pero es otra puerta y se cierra igual: la UTE que costó el
+                # historial era una `Company` con forma societaria correcta y
+                # los nombres de sus dos socios dentro del nombre.
+                "caption": (
+                    f["caption"] if patron is None else tapar_nombres(f["caption"], patron, tapadas)
+                ),
                 **({"nif": f["nif"]} if f["nif"] else {}),
                 # Sólo se escriben si no son cero: multiplicado por decenas de
                 # miles de entradas, un `0` de más es peso muerto en un fichero
@@ -538,11 +728,7 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
                 **({"receptores": int(f["receptores"])} if f["receptores"] else {}),
                 **({"partido": True} if props.get("partido_politico") else {}),
                 **({"extranjera": True} if props.get("entidad_extranjera") else {}),
-                **(
-                    {"extranjeraIndicio": True}
-                    if props.get("entidad_extranjera_indicio")
-                    else {}
-                ),
+                **({"extranjeraIndicio": True} if props.get("entidad_extranjera_indicio") else {}),
                 **({"enMapa": True} if str(f["id"]) in en_mapa else {}),
             }
         )
@@ -585,6 +771,7 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
         "indice_entidades": len(entradas),
         "indice_bytes": ruta.stat().st_size,
         "indice_top_bytes": ruta_top.stat().st_size,
+        "indice_menciones_tapadas": tapadas[0],
     }
 
 
