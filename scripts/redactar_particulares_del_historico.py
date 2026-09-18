@@ -615,7 +615,18 @@ def _ejecutar_filter_repo() -> int:
         "        if cuantos:\n"
         "            blob.data = json.dumps(d, ensure_ascii=False).encode('utf-8')\n"
     )
-    sustituciones = _fichero_de_sustituciones()
+    # Un fichero para cada cosa. Apuntando los dos al MISMO fichero, las
+    # sustituciones no se aplicaban a los mensajes: filter-repo se quedaba con
+    # una de las dos opciones. La comprobación posterior lo pilló dos veces
+    # seguidas y se negó a empujar, que es exactamente para lo que está.
+    para_texto = _fichero_de_sustituciones()
+    para_mensajes = _fichero_de_sustituciones()
+
+    pares = _ocurrencias_reales()
+    print(f"sustituciones preparadas: {len(pares)}")
+    for original, _nuevo in pares:
+        print(f"  una de {len(original)} caracteres (no se imprime)")
+
     return subprocess.run(
         [
             "git",
@@ -625,11 +636,11 @@ def _ejecutar_filter_repo() -> int:
             callback,
             # En el contenido de los ficheros...
             "--replace-text",
-            sustituciones,
+            para_texto,
             # ...y en los mensajes de commit, que son parte del repositorio
             # igual que los ficheros y no los toca ningún callback de blobs.
             "--replace-message",
-            sustituciones,
+            para_mensajes,
         ],
         check=False,
     ).returncode
