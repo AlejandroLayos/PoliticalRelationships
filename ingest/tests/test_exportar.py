@@ -841,9 +841,10 @@ def test_un_dni_no_se_publica_aunque_la_ficha_sea_de_una_empresa(store, tmp_path
     g = _exportado(store, tmp_path)
     idx = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
 
-    # La entidad se publica: una UTE adjudicataria es un dato.
-    assert "UTE EJEMPLO" in {n["caption"] for n in g["nodes"]}
-    # El identificador personal, no.
+    # La ficha entera se va, no sólo el número: en el historial había una UTE
+    # así cuyo NOMBRE eran los nombres y apellidos de los dos socios.
+    assert "UTE EJEMPLO" not in {n["caption"] for n in g["nodes"]}
+    assert "UTE EJEMPLO" not in {e["caption"] for e in idx["entidades"]}
     assert "12345678Z" not in json.dumps(g, ensure_ascii=False)
     assert "12345678Z" not in json.dumps(idx, ensure_ascii=False)
 

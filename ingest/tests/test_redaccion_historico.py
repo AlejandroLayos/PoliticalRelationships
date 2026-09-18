@@ -117,19 +117,30 @@ def test_la_pista_encuentra_las_dos_serializaciones():
 # perfectamente y aun así se seguía publicando un DNI.
 
 
-def test_le_quita_el_dni_a_una_empresa_sin_borrar_la_empresa(volcado):
-    # La ficha se queda: una UTE adjudicataria de un contrato público es un
-    # dato. Lo que no se publica es el identificador personal.
+def test_se_va_entera_la_ficha_identificada_con_un_dni(volcado):
+    """Quitar sólo el identificador no bastaba.
+
+    En el historial había una UTE identificada con el DNI de un socio cuyo
+    NOMBRE eran los nombres y apellidos de los dos socios: «UTE PERAFITA (socios retirados)». Retirado el DNI, seguían
+    publicados los dos nombres.
+
+    Si la fuente identificó a esa parte contratante con un DNI, es una persona
+    física a efectos de publicar, y aquí sólo salen personas jurídicas.
+    """
     volcado["nodes"].append(
-        {"id": "ute", "schema": "Company", "caption": "UTE EJEMPLO", "nif": "12345678Z"}
+        {
+            "id": "ute",
+            "schema": "Company",
+            "caption": "UTE EJEMPLO (Nombre Apellido y Otro Apellido)",
+            "nif": "12345678Z",
+        }
     )
     salida, cuantas = redaccion.redactar(volcado)
-    ute = next(n for n in salida["nodes"] if n["id"] == "ute")
-    assert "nif" not in ute
-    assert ute["caption"] == "UTE EJEMPLO"
-    assert "12345678Z" not in json.dumps(salida, ensure_ascii=False)
-    assert salida["redactado"]["identificadores_retirados"] == 1
-    assert cuantas == 2  # la persona entera + el identificador
+    assert "ute" not in {n["id"] for n in salida["nodes"]}
+    texto = json.dumps(salida, ensure_ascii=False)
+    assert "12345678Z" not in texto
+    assert "Nombre Apellido" not in texto
+    assert cuantas == 2  # la persona y la UTE
 
 
 def test_tambien_quita_los_nie(volcado):
@@ -138,6 +149,40 @@ def test_tambien_quita_los_nie(volcado):
     )
     salida, _ = redaccion.redactar(volcado)
     assert "X1234567L" not in json.dumps(salida, ensure_ascii=False)
+
+
+def test_redacta_tambien_el_indice_que_tiene_otra_forma():
+    """El grafo guarda las entidades en `nodes`; el índice, en `entidades`.
+
+    Mirando sólo `nodes`, el índice pasaba entero por el filtro sin que nadie
+    lo notara — con cuatro identificadores personales dentro, y un DNI que en
+    el grafo ya se había retirado. Dos ficheros publicados, dos formas, una
+    sola puerta.
+    """
+    indice = {
+        "total": 3,
+        "entidades": [
+            {"id": "a", "schema": "PublicBody", "caption": "AYUNTAMIENTO"},
+            {"id": "b", "schema": "Company", "caption": "EMPRESA SL", "nif": "B12345678"},
+            {
+                "id": "c",
+                "schema": "Company",
+                "caption": "UTE (Nombre Apellido)",
+                "nif": "47877961B",
+            },
+        ],
+    }
+    salida, cuantas = redaccion.redactar(indice)
+    assert cuantas == 1
+    assert {e["id"] for e in salida["entidades"]} == {"a", "b"}
+    assert "47877961B" not in json.dumps(salida, ensure_ascii=False)
+
+
+def test_un_fichero_sin_entidades_no_se_toca():
+    datos = {"algo": "otra cosa"}
+    salida, cuantas = redaccion.redactar(datos)
+    assert cuantas == 0
+    assert salida == {"algo": "otra cosa"}
 
 
 def test_no_toca_el_nif_de_una_empresa_de_verdad(volcado):
@@ -153,12 +198,14 @@ def test_un_volcado_con_solo_un_dni_mal_puesto_tambien_se_redacta():
             {"id": "a", "schema": "PublicBody", "caption": "AYUNTAMIENTO"},
             {"id": "b", "schema": "Company", "caption": "UTE", "nif": "12345678Z"},
         ],
-        "edges": [],
+        "edges": [{"id": "e", "source": "a", "target": "b", "amount": "1000"}],
     }
     salida, cuantas = redaccion.redactar(datos)
     assert cuantas == 1
     assert "12345678Z" not in json.dumps(salida, ensure_ascii=False)
-    assert len(salida["nodes"]) == 2
+    assert len(salida["nodes"]) == 1
+    # Y su arista se va con ella: no puede quedar colgando de un nodo ausente.
+    assert salida["edges"] == []
 
 
 @pytest.mark.parametrize(

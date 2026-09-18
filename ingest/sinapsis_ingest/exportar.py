@@ -273,30 +273,39 @@ def exportar(
     # No se lanza excepción: se omite la entidad y se registra. Un volcado sin
     # una entidad es un hueco; un volcado con el DNI de un particular es una
     # infracción del RGPD que además no se puede retirar de internet.
+    # Dos formas de ser una persona física aquí, y las dos salen.
+    #
+    # La obvia es el esquema. La otra la destapó el historial: una UTE
+    # clasificada como `Company`, con forma societaria explícita y todo el
+    # criterio bien aplicado, identificada con el DNI de uno de sus socios y
+    # cuyo NOMBRE eran los nombres y apellidos de los dos. La regla de «esto es
+    # una empresa» funcionaba y aun así se publicaban dos personas.
+    #
+    # Si la fuente identificó a esa parte contratante con un DNI o un NIE, es
+    # una persona física a efectos de publicar. Se pierde alguna empresa real
+    # cuyo NIF vino mal escrito, y es el lado correcto por el que equivocarse:
+    # un falso positivo es una acusación falsa, un falso negativo es un hueco.
     personales = [f for f in filas if f["ftm_schema"] == PERSONALES]
-    if personales:
+    con_identificador = [
+        f
+        for f in filas
+        if f["ftm_schema"] != PERSONALES and es_identificador_personal(f["nif"])
+    ]
+    if personales or con_identificador:
         log.error(
             "se han omitido personas físicas del volcado; revisa el conector que las creó",
-            cuantas=len(personales),
-            ids=[str(f["id"]) for f in personales][:20],
+            por_esquema=len(personales),
+            por_identificador=len(con_identificador),
+            ids=[str(f["id"]) for f in personales + con_identificador][:20],
         )
-    omitidas = {f["id"] for f in personales}
+    omitidas = {f["id"] for f in personales + con_identificador}
 
     nodos = [
         {
             "id": str(f["id"]),
             "schema": f["ftm_schema"],
             "caption": f["caption"],
-            # Un DNI o un NIE no se publican aunque la ficha sea de una
-            # empresa. En el historial había una UTE clasificada como
-            # `Company` con todo el criterio —forma societaria explícita— cuyo
-            # NIF era el DNI de uno de sus socios. La regla de «esto es una
-            # empresa» funcionaba bien y aun así salía publicado un DNI.
-            **(
-                {"nif": f["nif"]}
-                if f["nif"] and not es_identificador_personal(f["nif"])
-                else {}
-            ),
+            **({"nif": f["nif"]} if f["nif"] else {}),
             **({"country": f["country"]} if f["country"] else {}),
             "properties": f["properties"] or {},
             "degree": int(f["grado"]),
@@ -510,18 +519,16 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
 
     entradas = []
     for f in filas:
+        # Misma regla que en el grafo: el índice es otra puerta de publicación.
+        if es_identificador_personal(f["nif"]):
+            continue
         props = f["properties"] or {}
         entradas.append(
             {
                 "id": str(f["id"]),
                 "schema": f["ftm_schema"],
                 "caption": f["caption"],
-                # El índice es otra puerta de publicación: misma regla.
-                **(
-                    {"nif": f["nif"]}
-                    if f["nif"] and not es_identificador_personal(f["nif"])
-                    else {}
-                ),
+                **({"nif": f["nif"]} if f["nif"] else {}),
                 # Sólo se escriben si no son cero: multiplicado por decenas de
                 # miles de entradas, un `0` de más es peso muerto en un fichero
                 # que se descarga entero.

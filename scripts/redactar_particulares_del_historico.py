@@ -104,49 +104,58 @@ MOTIVO = (
 
 
 def redactar(datos: dict) -> tuple[dict, int]:
-    """Devuelve el volcado sin datos personales y cuántos se quitaron.
+    """Devuelve el volcado sin datos personales y cuántas entidades se fueron.
 
-    Dos cosas distintas:
+    Sirve para los DOS ficheros que se publican, que tienen forma distinta: el
+    grafo guarda las entidades en `nodes` y el índice en `entidades`. La
+    primera versión sólo miraba `nodes`, así que el índice pasó entero por el
+    filtro sin que nadie lo notara — con cuatro identificadores personales
+    dentro, y un DNI que en el grafo ya se había retirado.
 
-    - Las entidades de esquema `Person` se van enteras: la ficha ES de una
-      persona.
-    - A las demás se les quita el NIF si resulta ser un DNI o un NIE. La ficha
-      se queda —una UTE adjudicataria de un contrato público es un dato— pero
-      el identificador personal no se publica.
+    ## Por qué se va la entidad entera y no sólo el identificador
+
+    La versión anterior le quitaba el NIF a la ficha y la dejaba publicada. No
+    basta: en el historial había una UTE identificada por el DNI de un socio
+    cuyo NOMBRE eran los nombres y apellidos de los dos socios. Quitado el DNI,
+    seguían publicados los nombres.
+
+    Detectar qué parte de un nombre es el de una persona es justo la heurística
+    frágil que este proyecto evita en todas partes. Pero hay una señal
+    objetiva y no hace falta adivinar nada: si la fuente identificó a esa parte
+    contratante con un DNI o un NIE, es una persona física a efectos de
+    publicación, y aquí sólo se publican personas jurídicas (spec §12).
+
+    Se pierde alguna empresa real cuyo NIF vino mal escrito. Es un hueco en una
+    instantánea vieja que nadie lee, y la regla del proyecto es explícita sobre
+    hacia qué lado equivocarse: un falso positivo es una acusación falsa, un
+    falso negativo es sólo un hueco.
     """
-    nodos = datos.get("nodes") or []
-    personales = {n["id"] for n in nodos if n.get("schema") == ESQUEMA_PERSONAL}
+    clave = "nodes" if "nodes" in datos else ("entidades" if "entidades" in datos else None)
+    if clave is None:
+        return datos, 0
+    entidades = datos.get(clave) or []
 
-    nifs_retirados = 0
-    for n in nodos:
-        if n["id"] in personales:
-            continue
-        if es_identificador_personal(n.get("nif")):
-            n.pop("nif", None)
-            props = n.get("properties")
-            if isinstance(props, dict):
-                props.pop("nif", None)
-            nifs_retirados += 1
-
-    if not personales and not nifs_retirados:
+    fuera = {
+        e["id"]
+        for e in entidades
+        if e.get("schema") == ESQUEMA_PERSONAL or es_identificador_personal(e.get("nif"))
+    }
+    if not fuera:
         return datos, 0
 
-    datos["nodes"] = [n for n in nodos if n["id"] not in personales]
-    datos["edges"] = [
-        a
-        for a in (datos.get("edges") or [])
-        if a.get("source") not in personales and a.get("target") not in personales
-    ]
+    datos[clave] = [e for e in entidades if e["id"] not in fuera]
+    if "edges" in datos:
+        datos["edges"] = [
+            a
+            for a in (datos.get("edges") or [])
+            if a.get("source") not in fuera and a.get("target") not in fuera
+        ]
     procedencia = datos.get("provenance")
     if isinstance(procedencia, dict):
-        datos["provenance"] = {k: v for k, v in procedencia.items() if k not in personales}
+        datos["provenance"] = {k: v for k, v in procedencia.items() if k not in fuera}
 
-    datos["redactado"] = {
-        "entidades_retiradas": len(personales),
-        "identificadores_retirados": nifs_retirados,
-        "motivo": MOTIVO,
-    }
-    return datos, len(personales) + nifs_retirados
+    datos["redactado"] = {"entidades_retiradas": len(fuera), "motivo": MOTIVO}
+    return datos, len(fuera)
 
 
 def blob_callback(blob, metadata):  # (metadata: firma que exige git-filter-repo)
@@ -186,17 +195,17 @@ def _blobs_afectados() -> list[tuple[str, int, str]]:
         crudo = subprocess.run(
             ["git", "cat-file", "-p", sha], capture_output=True
         ).stdout
-        if b'"nodes"' not in crudo:
+        if b'"nodes"' not in crudo and b'"entidades"' not in crudo:
             continue
         try:
             datos = json.loads(crudo)
         except Exception:
             continue
-        nodos = datos.get("nodes", [])
-        personas = [n for n in nodos if n.get("schema") == ESQUEMA_PERSONAL]
+        entidades = datos.get("nodes") or datos.get("entidades") or []
+        personas = [n for n in entidades if n.get("schema") == ESQUEMA_PERSONAL]
         con_dni = [
             n
-            for n in nodos
+            for n in entidades
             if n.get("schema") != ESQUEMA_PERSONAL and es_identificador_personal(n.get("nif"))
         ]
         if personas or con_dni:
@@ -223,9 +232,10 @@ def comprobar() -> int:
         fichas += n_personas
         identificadores += n_dni
         print(f"  {sha}  {n_personas:>8}   {n_dni:>13}")
-    print(f"\nFichas de personas físicas, que se retiran enteras: {fichas}")
-    print("DNI o NIE colgando de otras fichas, de los que se retira")
-    print(f"sólo el identificador: {identificadores}")
+    print(f"\nFichas de esquema personal: {fichas}")
+    print(f"Fichas identificadas con un DNI o un NIE: {identificadores}")
+    print("Se retiran todas: si la fuente identificó a esa parte contratante con")
+    print("un identificador personal, es una persona física a efectos de publicar.")
     print("\nLos commits que los contienen NO se borran: se reescribe su contenido.")
     return 1
 
@@ -341,7 +351,7 @@ def _ejecutar_filter_repo() -> int:
         "import sys, json\n"
         f"sys.path.insert(0, {aqui!r})\n"
         "from redactar_particulares_del_historico import redactar\n"
-        "if b'\"nodes\"' in blob.data:\n"
+        "if b'\"nodes\"' in blob.data or b'\"entidades\"' in blob.data:\n"
         "    try:\n"
         "        d = json.loads(blob.data)\n"
         "    except Exception:\n"
