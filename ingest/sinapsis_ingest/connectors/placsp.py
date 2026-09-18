@@ -263,7 +263,24 @@ class PLACSPConnector:
         try:
             raiz = ET.fromstring(raw.content)
         except ET.ParseError as exc:
-            log.warning("placsp: XML inválido", error=str(exc), url=raw.url)
+            # El error de `ExpatError` dice dónde falla, no QUÉ llegó, y eso no
+            # basta para diagnosticar. El feed de contratos menores devolvió
+            # «mismatched tag: line 1, column 200» el 18/9/2026 y con eso no se
+            # puede saber si el servidor sirvió un HTML de error, otro formato,
+            # o un ATOM de verdad con una etiqueta rota.
+            #
+            # El documento crudo queda guardado en `raw_documents` —es la
+            # prueba— pero el log es lo que se lee. Así que va un trozo del
+            # principio, que es donde está la cabecera que lo identifica.
+            cabeza = raw.content[:300].decode("utf-8", errors="replace").replace("\n", " ")
+            log.warning(
+                "placsp: XML inválido",
+                error=str(exc),
+                url=raw.url,
+                bytes=len(raw.content),
+                content_type=raw.media_type,
+                empieza_por=cabeza,
+            )
             return
 
         for entry in raiz.findall("atom:entry", NS):

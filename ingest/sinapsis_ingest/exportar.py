@@ -92,14 +92,56 @@ def exportar(
     ids_set: set[Any] = set()
     usadas: set[Any] = set()
 
+    # Una adjudicación y el enlace de su órgano viajan JUNTOS.
+    #
+    # Entre el organismo y la empresa siempre hay un expediente, y la arista
+    # que lo cuelga de su órgano no lleva importe. Como todo se recorre por
+    # importe descendente, esas aristas van las últimas: cuando les llega el
+    # turno el cupo de nodos está agotado y el órgano ya no entra.
+    #
+    # El resultado no es "un poco menos de detalle". El 18/9/2026, al doblarse
+    # los datos ingeridos, 1.070 de los 1.368 expedientes publicados salieron
+    # SIN órgano: un nodo colgando que dice que alguien adjudicó algo sin decir
+    # quién. El grafo pasó de 354 a 601 pedazos y la componente mayor se quedó
+    # en la mitad.
+    #
+    # Un expediente sin su órgano no es medio dato, es ninguno. Así que el
+    # triple (órgano, expediente, adjudicatario) se reserva entero o no se
+    # reserva: cuesta un nodo más la primera vez y los órganos se comparten
+    # entre sus contratos, así que el precio real es pequeño.
+    expedientes = {
+        f["id"]
+        for f in store.conn.execute(
+            "SELECT id FROM entities WHERE canonical_id IS NULL AND ftm_schema = 'Contract'"
+        ).fetchall()
+    }
+    enlace_organo: dict[Any, Any] = {}
+    for a in todas:
+        if a["ftm_schema"] == "UnknownLink" and a["target_entity_id"] in expedientes:
+            enlace_organo.setdefault(a["target_entity_id"], a)
+
+    def _con_organo(a: Any) -> tuple[set[Any], Any]:
+        """Los nodos que hace falta reservar por esta arista, y el enlace extra."""
+        ids = {a["source_entity_id"], a["target_entity_id"]}
+        enlace = None
+        if a["ftm_schema"] == "ContractAward":
+            enlace = enlace_organo.get(a["source_entity_id"])
+            if enlace is not None:
+                ids |= {enlace["source_entity_id"], enlace["target_entity_id"]}
+        return ids, enlace
+
     def cabe(a: Any, tope: int) -> bool:
-        nuevos = {a["source_entity_id"], a["target_entity_id"]} - ids_set
-        return len(ids_set) + len(nuevos) <= tope
+        ids, _ = _con_organo(a)
+        return len(ids_set | ids) <= tope
 
     def tomar(a: Any) -> None:
-        ids_set.update({a["source_entity_id"], a["target_entity_id"]})
+        ids, enlace = _con_organo(a)
+        ids_set.update(ids)
         elegidas.append(a)
         usadas.add(a["id"])
+        if enlace is not None and enlace["id"] not in usadas:
+            elegidas.append(enlace)
+            usadas.add(enlace["id"])
 
     # 0. Los partidos, antes que nada.
     #

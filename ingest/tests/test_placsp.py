@@ -677,3 +677,23 @@ def test_una_variante_normaliza_igual_que_la_base(crudo):
     n2 = menores.normalize(r2)
     assert n1 is not None and n2 is not None
     assert [a.dedupe_key for a in n1.aristas] == [a.dedupe_key for a in n2.aristas]
+
+
+def test_un_feed_ilegible_dice_que_llego_y_no_solo_donde_falla(conector, capsys):
+    # «mismatched tag: line 1, column 200» no permite saber si el servidor
+    # sirvió un HTML de error, otro formato o un ATOM con una etiqueta rota.
+    # El crudo queda guardado, pero el log es lo que se lee.
+    raw = RawDocument(
+        source_id="placsp",
+        url="https://contrataciondelestado.es/sindicacion/x.atom",
+        content=b"<html><head><title>Servicio no disponible</title></head><body>502</body>",
+        media_type="text/html",
+        retrieved_at=datetime(2026, 9, 18, tzinfo=UTC),
+    )
+    registros = list(conector.parse(raw))
+    assert registros == []
+    # structlog escribe por su cuenta, no por el logging de la librería
+    # estándar, así que se mira la salida y no `caplog`.
+    salida = capsys.readouterr().out
+    assert "Servicio no disponible" in salida
+    assert "text/html" in salida

@@ -661,3 +661,84 @@ def test_se_suman_las_dos_vias_de_dinero(store, tmp_path):
     fila = next(e for e in idx["entidades"] if e["caption"] == "AYUNTAMIENTO")
     assert fila["pagado"] == "10000.00"
     assert fila["receptores"] == 2
+
+
+# --- el expediente nunca se publica sin su órgano --------------------------
+#
+# El 18/9/2026, al doblarse los datos ingeridos, 1.070 de los 1.368
+# expedientes publicados salieron SIN órgano: un nodo colgando que dice que
+# alguien adjudicó algo sin decir quién. El grafo pasó de 354 a 601 pedazos.
+#
+# La causa: la arista que cuelga el expediente de su órgano no lleva importe,
+# y todo se recorre por importe descendente, así que van las últimas. Cuando
+# les llega el turno el cupo de nodos está agotado.
+
+
+def test_ningun_expediente_se_publica_sin_su_organo(store, tmp_path):
+    # Muchas adjudicaciones caras compitiendo por un cupo pequeño: es la
+    # situación exacta que destapó el fallo.
+    for i in range(40):
+        organo = _entidad(store, f"ÓRGANO {i}", "PublicBody")
+        empresa = _entidad(store, f"EMPRESA {i}")
+        _contrato(store, organo, empresa, str(10_000_000 - i))
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path, max_entidades=30)
+    publicados = {n["id"] for n in g["nodes"]}
+    expedientes = {n["id"] for n in g["nodes"] if n["schema"] == "Contract"}
+    con_organo = {
+        a["target"]
+        for a in g["edges"]
+        if a["schema"] == "UnknownLink" and a["target"] in expedientes
+    }
+    assert expedientes, "el caso de prueba no publicó ningún expediente"
+    assert expedientes == con_organo, "hay expedientes publicados sin su órgano"
+    assert publicados >= expedientes
+
+
+def test_el_triple_no_se_salta_el_tope(store, tmp_path):
+    # Reservar tres nodos en vez de dos no puede colarse por encima del cupo.
+    for i in range(40):
+        organo = _entidad(store, f"ÓRGANO {i}", "PublicBody")
+        empresa = _entidad(store, f"EMPRESA {i}")
+        _contrato(store, organo, empresa, str(10_000_000 - i))
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path, max_entidades=30)
+    assert len(g["nodes"]) <= 30
+
+
+def test_los_organos_se_comparten_entre_sus_contratos(store, tmp_path):
+    # El precio del triple es un nodo más la PRIMERA vez: si un órgano adjudica
+    # veinte contratos, entra una sola vez.
+    organo = _entidad(store, "ÓRGANO ÚNICO", "PublicBody")
+    for i in range(20):
+        empresa = _entidad(store, f"EMPRESA {i}")
+        _contrato(store, organo, empresa, str(1_000_000 - i))
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    organismos = [n for n in g["nodes"] if n["schema"] == "PublicBody"]
+    assert len(organismos) == 1
+    expedientes = {n["id"] for n in g["nodes"] if n["schema"] == "Contract"}
+    assert len(expedientes) == 20
+
+
+def test_una_adjudicacion_sin_organo_conocido_sigue_publicandose(store, tmp_path):
+    # Si la fuente no dice qué órgano adjudicó, el hueco se tolera: no se
+    # descarta la adjudicación por no poder completar el triple.
+    exp = _entidad(store, "EXPEDIENTE SUELTO", "Contract")
+    empresa = _entidad(store, "EMPRESA SL")
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, amount, currency,
+             confidence, status, dedupe_key)
+        VALUES ('ContractAward', %s, %s, '5000', 'EUR', 1.0, 'asserted', %s)
+        """,
+        (exp, empresa, f"test:{uuid.uuid4()}"),
+    )
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert "EXPEDIENTE SUELTO" in {n["caption"] for n in g["nodes"]}
