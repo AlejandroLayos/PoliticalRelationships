@@ -60,10 +60,19 @@ def exportar(
     porque el dinero es de lo que va esto; las que no lo llevan van después,
     por grado de sus extremos, para no perder el tejido que une los núcleos.
     """
-    # Se recorren las aristas en orden de interés y se van tomando sus
-    # extremos hasta agotar el presupuesto de nodos. Así el corte cae en el
-    # borde del mapa y no por el medio.
-    candidatas = store.conn.execute(
+    # La selección crece POR EL GRAFO, no sólo por dinero. Tres pasadas.
+    #
+    # Sólo por importe no funciona, y costó dos intentos verlo. El enlace del
+    # órgano de contratación con su contrato no lleva importe a propósito —el
+    # dinero lo lleva la adjudicación y duplicarlo lo contaría dos veces—, así
+    # que ordenando por importe ese enlace nunca entra. Y peor: el órgano de
+    # PLACSP no tiene NINGUNA arista con dinero, sólo ese enlace, de modo que
+    # tampoco entra él. Quedaban 129 organismos frente a 1.646 contratos, y el
+    # grafo llegaba en 1.274 pedazos aunque ningún nodo estuviera aislado.
+    #
+    # Pedir que los dos extremos estuvieran ya dentro tampoco valía: es
+    # circular, porque el órgano sólo puede entrar por esa misma arista.
+    todas = store.conn.execute(
         """
         SELECT r.id, r.ftm_schema, r.source_entity_id, r.target_entity_id,
                r.amount, r.currency, r.confidence, r.status,
@@ -73,52 +82,48 @@ def exportar(
         JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
         WHERE r.status <> 'retracted'
         ORDER BY r.amount DESC NULLS LAST, r.id
-        LIMIT %s
-        """,
-        (max_aristas * 4,),
+        """
     ).fetchall()
 
-    elegidas = []
+    elegidas: list[Any] = []
     ids_set: set[Any] = set()
-    for a in candidatas:
+    usadas: set[Any] = set()
+
+    def cabe(a: Any) -> bool:
+        nuevos = {a["source_entity_id"], a["target_entity_id"]} - ids_set
+        return len(ids_set) + len(nuevos) <= max_entidades
+
+    def tomar(a: Any) -> None:
+        ids_set.update({a["source_entity_id"], a["target_entity_id"]})
+        elegidas.append(a)
+        usadas.add(a["id"])
+
+    # 1. El esqueleto de dinero: lo más caro primero. Es un mapa de dinero.
+    for a in todas:
         if len(elegidas) >= max_aristas:
             break
-        nuevos = {a["source_entity_id"], a["target_entity_id"]} - ids_set
-        if len(ids_set) + len(nuevos) > max_entidades:
-            # Cabe todavía alguna arista entre nodos ya tomados: se sigue
-            # mirando en vez de cortar en seco.
-            continue
-        ids_set |= nuevos
-        elegidas.append(a)
+        if a["id"] not in usadas and cabe(a):
+            tomar(a)
 
-    # Segunda pasada: el tejido conectivo.
-    #
-    # La primera ordena por importe, y eso deja fuera por construcción a las
-    # aristas que no llevan dinero — entre ellas el enlace del órgano de
-    # contratación con su contrato, que no lleva importe A PROPÓSITO para no
-    # contar el mismo dinero dos veces. O sea que el criterio expulsaba
-    # justamente lo que da cohesión al grafo, y el mapa volvía a salir en mil
-    # pedazos pese a tener cero nodos aislados.
-    #
-    # Estas aristas son gratis: van entre nodos que YA están dentro, así que no
-    # traen ningún nodo nuevo ni ensanchan el volcado. Sólo unen lo que ya hay.
-    if ids_set:
-        elegidas_ids = {a["id"] for a in elegidas}
-        for a in store.conn.execute(
-            """
-            SELECT r.id, r.ftm_schema, r.source_entity_id, r.target_entity_id,
-                   r.amount, r.currency, r.confidence, r.status,
-                   r.start_date, r.end_date
-            FROM relationships r
-            WHERE r.status <> 'retracted'
-              AND r.source_entity_id = ANY(%s)
-              AND r.target_entity_id = ANY(%s)
-            """,
-            (list(ids_set), list(ids_set)),
-        ).fetchall():
-            if a["id"] not in elegidas_ids:
-                elegidas.append(a)
-                elegidas_ids.add(a["id"])
+    # 2. Crecer por los bordes: aristas que tocan algo ya elegido. Aquí entran
+    #    los organismos, colgando del contrato que adjudicaron.
+    for a in todas:
+        if len(elegidas) >= max_aristas:
+            break
+        if a["id"] in usadas:
+            continue
+        toca = a["source_entity_id"] in ids_set or a["target_entity_id"] in ids_set
+        if toca and cabe(a):
+            tomar(a)
+
+    # 3. Coser: lo que va entre nodos que ya están dentro es gratis —no trae
+    #    ningún nodo nuevo— y es lo que convierte fragmentos en núcleos.
+    for a in todas:
+        if a["id"] in usadas:
+            continue
+        if a["source_entity_id"] in ids_set and a["target_entity_id"] in ids_set:
+            elegidas.append(a)
+            usadas.add(a["id"])
 
     ids = list(ids_set)
     aristas = [

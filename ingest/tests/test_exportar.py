@@ -187,3 +187,38 @@ def test_la_segunda_pasada_no_mete_nodos_nuevos(store, tmp_path):
     for a in d["edges"]:
         assert a["source"] in publicados
         assert a["target"] in publicados
+
+
+def test_el_organismo_entra_aunque_no_tenga_ninguna_arista_con_dinero(store, tmp_path):
+    """El caso real de PLACSP, que dejó el mapa sin organismos.
+
+    El órgano de contratación cuelga de su contrato por una arista sin importe
+    —el dinero lo lleva la adjudicación—, así que ordenando por importe no
+    entra nunca. Y no basta con admitir después las aristas cuyos dos extremos
+    ya estén dentro: es circular, porque el órgano sólo puede entrar por esa
+    misma arista.
+    """
+    organo = _entidad(store, "MINISTERIO", "PublicBody")
+    expediente = _entidad(store, "EXPEDIENTE", "Contract")
+    empresa = _entidad(store, "EMPRESA")
+    _arista(store, expediente, empresa, "5000000.00")
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, confidence, status, dedupe_key)
+        VALUES ('UnknownLink', %s, %s, 1.0, 'asserted', %s)
+        """,
+        (organo, expediente, "test:organo"),
+    )
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=10, max_aristas=10)
+
+    captions = {n["caption"] for n in d["nodes"]}
+    assert "MINISTERIO" in captions, "el organismo se quedó fuera del mapa"
+    assert "UnknownLink" in {e["schema"] for e in d["edges"]}
+
+    # Y queda de verdad conectado, no suelto.
+    enlaces = [e for e in d["edges"] if e["schema"] == "UnknownLink"]
+    assert len(enlaces) == 1
+    assert {enlaces[0]["source"], enlaces[0]["target"]} <= {n["id"] for n in d["nodes"]}
