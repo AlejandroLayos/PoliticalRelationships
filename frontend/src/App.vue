@@ -157,8 +157,14 @@ onMounted(async () => {
     -->
     <div v-if="instantanea && !esDemo" class="banda-info">
       <strong>Instantánea del {{ new Date(instantanea.generado).toLocaleDateString('es-ES') }}.</strong>
-      Datos reales de {{ instantanea.fuentes.map((f) => f.name).join(', ') }}, generados por la
-      ingesta automática. No es una consulta en vivo.
+      Datos reales de
+      {{ (instantanea.fuentesConDatos ?? instantanea.fuentes).map((f) => f.name).join(', ') }},
+      generados por la ingesta automática. No es una consulta en vivo.
+      <span v-if="instantanea.fuentesSinDatos?.length" class="fuente-caida">
+        ⚠ Hoy falta {{ instantanea.fuentesSinDatos.map((f) => f.name).join(' y ') }}:
+        no respondió al generar esta instantánea, así que este mapa no incluye
+        sus datos.
+      </span>
       <span v-if="instantanea.truncado">
         Se publica la parte del grafo con más dinero, no la base entera
         ({{ instantanea.total }} entidades).
@@ -422,6 +428,11 @@ main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; 
   border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.78rem; cursor: pointer;
 }
 .volver:hover { border-color: var(--acento); }
+.fuente-caida {
+  display: block;
+  margin-top: 0.3rem;
+  color: #e8c37a;
+}
 .recuento {
   position: absolute; top: 0.6rem; left: 0.9rem; margin: 0;
   font-size: 0.75rem; color: var(--texto-tenue);

@@ -246,8 +246,36 @@ def exportar(
     ).fetchone()
     total_entidades = int(total["n"]) if total else 0
 
+    # Cuánto aporta cada fuente AL VOLCADO, no cuántas hay registradas.
+    #
+    # Las tres fuentes se dan de alta antes de ingerir, así que la tabla dice
+    # "bdns, placsp, tcu" aunque una de ellas no haya traído nada. El 18/9/2026
+    # BDNS no respondió y la instantánea salió con el 100 % de la procedencia
+    # en PLACSP: sin subvenciones, sin partidos, la mitad del mapa. Y el
+    # cartel de la web seguía diciendo "datos reales de BDNS, PLACSP y TdC".
+    #
+    # Eso es mentir por omisión, que es justo lo que este proyecto no puede
+    # hacer. Si una fuente falla se tolera el hueco, pero se DICE.
+    aporte = (
+        {
+            f["source_id"]: int(f["n"])
+            for f in store.conn.execute(
+                """
+            SELECT rd.source_id, count(DISTINCT p.entity_id) AS n
+            FROM provenance p
+            JOIN raw_documents rd ON rd.id = p.raw_document_id
+            WHERE p.entity_id = ANY(%s)
+            GROUP BY rd.source_id
+            """,
+                (ids,),
+            ).fetchall()
+        }
+        if ids
+        else {}
+    )
+
     fuentes = [
-        dict(f)
+        {**dict(f), "entidades": aporte.get(f["id"], 0)}
         for f in store.conn.execute("SELECT id, name, url FROM sources ORDER BY id").fetchall()
     ]
 

@@ -45,6 +45,11 @@ export async function cargarInstantanea() {
       truncado: Boolean(datos.truncado),
       total: datos.total_entidades_en_base ?? datos.nodes.length,
       fuentes: datos.fuentes ?? [],
+      // Una fuente registrada que no aportó nada no puede anunciarse como si
+      // hubiera aportado: el cartel diría "datos reales de BDNS" con cero
+      // entidades de BDNS dentro.
+      fuentesConDatos: (datos.fuentes ?? []).filter((f) => (f.entidades ?? 1) > 0),
+      fuentesSinDatos: (datos.fuentes ?? []).filter((f) => f.entidades === 0),
     }
     return _grafoEstatico
   } catch {

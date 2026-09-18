@@ -72,6 +72,14 @@ jobs:
 
       # Si una fuente pública falla, se registra el hueco y se sigue con las
       # demás: un conector caído no debe dejar la web sin actualizar.
+      # Si una fuente pública falla, se registra el hueco y se sigue con las
+      # demás: un conector caído no debe dejar la web sin actualizar.
+      #
+      # Pero «se registra» tiene que significar algo. El 18/9/2026 BDNS no
+      # respondió, la instantánea salió con el 100 % de la procedencia en
+      # PLACSP —sin subvenciones ni partidos— y el único rastro era una línea
+      # perdida entre miles en el log. Ahora cada conector deja su resultado en
+      # el resumen del job, que es donde se mira.
       - name: ingerir
         working-directory: ingest
         continue-on-error: true
@@ -80,20 +88,33 @@ jobs:
           D="${{ inputs.desde || '2025-01-01' }}"
           H="${{ inputs.hasta || '2025-12-31' }}"
           P="${{ inputs.max_paginas || '12' }}"
-          for c in bdns bdns-partidos; do
-            echo "::group::$c"
-            sinapsis-worker --run "$c" --desde "$D" --hasta "$H" --max-paginas "$P" || echo "$c falló"
+
+          {
+            echo "### Ingesta por fuente"
+            echo
+            echo "| conector | resultado |"
+            echo "| --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          ejecutar() {
+            local nombre="$1"; shift
+            echo "::group::$nombre"
+            if sinapsis-worker --run "$nombre" "$@"; then
+              echo "| \`$nombre\` | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| \`$nombre\` | ❌ no respondió o falló |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::warning title=Fuente sin datos::$nombre no aportó nada a esta instantánea"
+            fi
             echo "::endgroup::"
+          }
+
+          for c in bdns bdns-partidos placsp; do
+            ejecutar "$c" --desde "$D" --hasta "$H" --max-paginas "$P"
           done
-          echo "::group::placsp"
-          sinapsis-worker --run placsp --desde "$D" --hasta "$H" --max-paginas "$P" || echo "placsp falló"
-          echo "::endgroup::"
           # El TdC ignora el rango de fechas: son cuatro PDF acumulativos que
           # el organismo reescribe. Se pasan igual porque el worker los exige,
           # y la idempotencia la da el content_hash.
-          echo "::group::tcu"
-          sinapsis-worker --run tcu --desde "$D" --hasta "$H" || echo "tcu falló"
-          echo "::endgroup::"
+          ejecutar tcu --desde "$D" --hasta "$H"
 
       # Acotado a propósito. Este paso propone fusiones para que las revise una
       # persona: no fusiona nada y la web no depende de él. El emparejamiento

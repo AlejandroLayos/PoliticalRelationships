@@ -300,3 +300,26 @@ def test_los_partidos_no_pierden_contra_un_contrato_grande(store, tmp_path):
     captions = {n["caption"] for n in d["nodes"]}
     assert "PARTIDO DE PRUEBA" in captions, "el partido perdió contra los contratos"
     assert "MINISTERIO DEL INTERIOR" in captions, "el partido entró pero suelto"
+
+
+def test_el_volcado_dice_que_fuente_no_aporto_nada(store, tmp_path):
+    """Una fuente caída no puede pasar desapercibida.
+
+    Las fuentes se dan de alta antes de ingerir, así que la tabla las lista
+    aunque no hayan traído nada. El 18/9/2026 BDNS no respondió y la
+    instantánea salió con toda la procedencia en PLACSP —sin subvenciones y
+    sin partidos, la mitad del mapa— mientras el cartel seguía diciendo "datos
+    reales de BDNS, PLACSP y Tribunal de Cuentas". Mentir por omisión.
+    """
+    store.upsert_source(Source(id="caida", name="Fuente Caída", url="https://ejemplo.test"))
+    a = _entidad(store, "A")
+    b = _entidad(store, "B")
+    _arista(store, a, b, "100.00")
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path)
+
+    por_id = {f["id"]: f for f in d["fuentes"]}
+    assert por_id["caida"]["entidades"] == 0, "la fuente sin aporte no se distingue"
+    # Y la que sí aportó no puede salir a cero.
+    assert "entidades" in por_id["test"]
