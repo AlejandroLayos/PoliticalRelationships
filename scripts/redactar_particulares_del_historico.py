@@ -66,6 +66,7 @@ mitad que importa.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -99,6 +100,35 @@ RUTAS = ("frontend/public/datos/grafo.json", "frontend/public/datos/indice.json"
 # sobre dos blobs con 27 personas cada uno. Se busca la palabra suelta y decide
 # el parseo, que es lo único que no depende del formato.
 PISTA = b'"Person"'
+
+# Residuos confirmados a mano, identificados por el SHA-256 de su `caption`.
+#
+# Va por hash y no por el texto a propósito: una lista de qué borrar por
+# motivos de datos personales no puede ser, ella misma, otra copia de esos
+# datos personales en el repositorio.
+#
+# El que hay es una UTE cuyo nombre oficial incluye el nombre y los dos
+# apellidos de sus dos socios. Tenía un DNI por NIF, que es lo que la delataba,
+# pero una redacción anterior le quitó el NIF y dejó la ficha: con la pista
+# borrada quedó indistinguible de una empresa normal, y los nombres dentro.
+#
+# Tampoco servía cruzar por id con el índice, donde el NIF sí sobrevivía: los
+# UUID se regeneran en cada ingesta, así que el id de un volcado de agosto no
+# es el de un índice de septiembre.
+#
+# Cuando una redacción parcial ha borrado su propia pista, lo único que queda
+# es una lista explícita y revisada. No es una heurística: es un caso
+# comprobado uno a uno.
+HASHES_CAPTION_PERSONAL = frozenset(
+    {"ea0d7e13e63b3f03cdc0fd7da4713589388e75463c0503e923ebef6da62126cb"}
+)
+
+
+def _caption_confirmado_personal(caption: str | None) -> bool:
+    if not caption:
+        return False
+    return hashlib.sha256(caption.encode("utf-8")).hexdigest() in HASHES_CAPTION_PERSONAL
+
 
 MOTIVO = (
     "se retiraron personas físicas (nombre, DNI y procedencia) del historial:"
@@ -147,6 +177,7 @@ def redactar(datos: dict, ids_extra: set[str] | None = None) -> tuple[dict, int]
         for e in entidades
         if e.get("schema") == ESQUEMA_PERSONAL
         or es_identificador_personal(e.get("nif"))
+        or _caption_confirmado_personal(e.get("caption"))
         or e["id"] in objetivo
     }
     if not fuera:
@@ -230,7 +261,11 @@ def ids_personales() -> set[str]:
         except Exception:
             continue
         for e in datos.get("nodes") or datos.get("entidades") or []:
-            if e.get("schema") == ESQUEMA_PERSONAL or es_identificador_personal(e.get("nif")):
+            if (
+                e.get("schema") == ESQUEMA_PERSONAL
+                or es_identificador_personal(e.get("nif"))
+                or _caption_confirmado_personal(e.get("caption"))
+            ):
                 ids.add(e["id"])
     return ids
 
@@ -248,7 +283,8 @@ def _blobs_afectados() -> list[tuple[str, int, int]]:
         otras = [
             n
             for n in entidades
-            if n.get("schema") != ESQUEMA_PERSONAL and n["id"] in objetivo
+            if n.get("schema") != ESQUEMA_PERSONAL
+            and (n["id"] in objetivo or _caption_confirmado_personal(n.get("caption")))
         ]
         if personas or otras:
             afectados.append((sha, len(personas), len(otras)))

@@ -319,3 +319,44 @@ def test_mira_los_dos_ficheros_publicados():
     # Mirar sólo el grafo dejó el índice entero sin filtrar, con un NIE dentro.
     assert any("indice.json" in r for r in redaccion.RUTAS)
     assert any("grafo.json" in r for r in redaccion.RUTAS)
+
+
+def test_retira_los_captions_confirmados_a_mano():
+    """Cuando una redacción parcial ha borrado su propia pista.
+
+    La UTE cuyo nombre incluye el de sus dos socios tenía un DNI por NIF —lo
+    que la delataba— pero una pasada anterior le quitó el NIF y dejó la ficha.
+    Con la pista borrada quedó indistinguible de una empresa normal. Cruzar
+    por id con el índice tampoco valía: los UUID se regeneran en cada ingesta.
+
+    Lo único que queda es una lista explícita, y va por hash del nombre para
+    que la lista no sea otra copia de los datos personales.
+    """
+    import hashlib
+
+    caption = "UTE DE PRUEBA (Nombre Apellido y Otro Apellido)"
+    h = hashlib.sha256(caption.encode()).hexdigest()
+    original = redaccion.HASHES_CAPTION_PERSONAL
+    redaccion.HASHES_CAPTION_PERSONAL = frozenset({h})
+    try:
+        datos = {
+            "nodes": [
+                {"id": "a", "schema": "PublicBody", "caption": "AYUNTAMIENTO"},
+                {"id": "b", "schema": "Company", "caption": caption},
+            ],
+            "edges": [{"id": "e", "source": "a", "target": "b", "amount": "1"}],
+        }
+        salida, cuantas = redaccion.redactar(datos)
+        assert cuantas == 1
+        assert caption not in json.dumps(salida, ensure_ascii=False)
+        assert salida["edges"] == []
+    finally:
+        redaccion.HASHES_CAPTION_PERSONAL = original
+
+
+def test_la_lista_de_hashes_no_contiene_datos_personales():
+    # Una lista de qué borrar por datos personales no puede ser, ella misma,
+    # otra copia de esos datos.
+    for h in redaccion.HASHES_CAPTION_PERSONAL:
+        assert len(h) == 64
+        assert all(c in "0123456789abcdef" for c in h)
