@@ -199,10 +199,20 @@ def test_el_adjudicatario_sin_nif_baja_la_confianza(conector):
             "organo": "Ayuntamiento de Ejemplo",
             "presupuesto": Decimal("200000"),
             "adjudicaciones": [
-                {"nombre": "CON NIF SA", "nif": "A28526275", "importe": Decimal("120000"),
-                 "moneda": "EUR", "codigo_resultado": "8"},
-                {"nombre": "SIN NIF SL", "nif": "", "importe": Decimal("55000"),
-                 "moneda": "EUR", "codigo_resultado": "8"},
+                {
+                    "nombre": "CON NIF SA",
+                    "nif": "A28526275",
+                    "importe": Decimal("120000"),
+                    "moneda": "EUR",
+                    "codigo_resultado": "8",
+                },
+                {
+                    "nombre": "SIN NIF SL",
+                    "nif": "",
+                    "importe": Decimal("55000"),
+                    "moneda": "EUR",
+                    "codigo_resultado": "8",
+                },
             ],
         },
     )

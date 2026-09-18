@@ -165,7 +165,6 @@ def _importe_inverosimil(importe: Any, presupuesto: Any) -> bool:
         return False
 
 
-
 class PLACSPConnector:
     """Conector de contratación pública."""
 
@@ -269,9 +268,9 @@ class PLACSPConnector:
         # Pasó con el feed de contratos menores el 18/9/2026. Con el mensaje
         # genérico había que abrir el documento crudo para entenderlo; dicho
         # así, se arregla mirando la especificación de sindicación.
-        if raw.content[:200].lstrip()[:5].lower() == b"<html" or (
-            raw.media_type or ""
-        ).startswith("text/html"):
+        if raw.content[:200].lstrip()[:5].lower() == b"<html" or (raw.media_type or "").startswith(
+            "text/html"
+        ):
             log.error(
                 "placsp: la ruta no sirve el feed, devuelve una página HTML",
                 url=raw.url,

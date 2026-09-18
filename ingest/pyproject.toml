@@ -19,7 +19,12 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
-    "ruff>=0.6",
+    # Acotado por arriba a propósito. `ruff format` cambia de criterio entre
+    # versiones menores: la CI instala la última publicada y en local había
+    # otra, así que `ruff format` pasaba aquí y fallaba allí sobre los mismos
+    # ficheros. Un fallo de formato corta el job antes de pytest, o sea que
+    # los tests de integración dejaron de ejecutarse sin que nada lo dijera.
+    "ruff>=0.16.8,<0.17",
     "respx>=0.21",
 ]
 

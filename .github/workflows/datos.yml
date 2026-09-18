@@ -72,18 +72,14 @@ jobs:
 
       # Si una fuente pública falla, se registra el hueco y se sigue con las
       # demás: un conector caído no debe dejar la web sin actualizar.
-      # Si una fuente pública falla, se registra el hueco y se sigue con las
-      # demás: un conector caído no debe dejar la web sin actualizar.
       #
       # Pero «se registra» tiene que significar algo. El 18/9/2026 BDNS no
       # respondió, la instantánea salió con el 100 % de la procedencia en
       # PLACSP —sin subvenciones ni partidos— y el único rastro era una línea
       # perdida entre miles en el log. Ahora cada conector deja su resultado en
       # el resumen del job, que es donde se mira.
-      # Si una fuente pública falla, se registra el hueco y se sigue con las
-      # demás: un conector caído no debe dejar la web sin actualizar.
       #
-      # Pero «se registra» tiene que poder LEERSE. El motivo por el que BDNS no
+      # Y tiene que poder LEERSE. El motivo por el que BDNS no
       # respondió el 18/9/2026 resultó inalcanzable: el resumen del job no lo
       # expone la API, y del log sólo se puede recuperar el final, que se lo
       # come el desmontaje de contenedores. Por eso el detalle del fallo se

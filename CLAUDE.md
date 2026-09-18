@@ -89,6 +89,13 @@ cd ingest  && pytest        # requiere pkg-config y libicu-dev en el sistema
   contra la librería FtM; si añades un esquema, ese test te dirá si te has
   equivocado de lado.
 - **pgx v5.10 exige Go >= 1.25.** La CI lo fija.
+- **`ruff format` decide distinto según la versión.** Está acotado en
+  `ingest/pyproject.toml` (`>=0.16.8,<0.17`) porque sin tope la CI instalaba la
+  última publicada, en local había otra, y el mismo fichero pasaba aquí y
+  fallaba allí. Y el fallo no es sólo cosmético: corta el job antes de
+  `pytest`, así que los tests de integración se dejan de ejecutar y el único
+  rastro es un paso en rojo que parece de estilo. Usa el `ruff` del entorno
+  virtual (`ingest/.venv/bin/ruff`), no el que haya en el `PATH`.
 - **`followthemoney` compila PyICU desde fuente** y necesita `pkg-config` y
   `libicu-dev`. Está en el Dockerfile y en la CI.
 - **`/healthz` no consulta dependencias** a propósito. Es liveness. La
