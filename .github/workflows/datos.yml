@@ -145,19 +145,52 @@ jobs:
         working-directory: ingest
         run: sinapsis-worker --exportar ../frontend/public/datos/grafo.json
 
-      # Va aquí, casi al final, a propósito: es el único tramo del log que se
-      # puede recuperar después con la API.
-      - name: por qué falló cada fuente
+      # El estado de las fuentes se COMMITEA, no se deja en el log.
+      #
+      # Intenté leerlo del resumen del job (la API no lo expone) y del log
+      # (sólo se recupera el final, y se lo comen el eco del script de
+      # publicación y el desmontaje de contenedores: tres tamaños de ventana
+      # distintos y el tramo nunca entró). Un diagnóstico que no se puede leer
+      # no es un diagnóstico.
+      #
+      # En fichero versionado sí: se lee con un `git pull`, queda histórico de
+      # qué días falló cada organismo, y de paso es público, que para un
+      # proyecto de transparencia no está de más.
+      - name: registrar el estado de las fuentes
         if: always()
         run: |
-          if [ -s /tmp/fuentes-caidas.txt ]; then
-            echo "===== FUENTES QUE NO APORTARON ====="
-            cat /tmp/fuentes-caidas.txt
-            echo "===================================="
-            cat /tmp/fuentes-caidas.txt >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "todas las fuentes respondieron"
-          fi
+          mkdir -p docs/fuentes
+          {
+            echo "# Estado de la última ingesta"
+            echo
+            echo "Generado automáticamente por el workflow «Instantánea de datos»."
+            echo "Dice qué fuentes respondieron y qué aportaron al mapa publicado."
+            echo
+            echo "- Ejecución: \`$GITHUB_RUN_ID\` · $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            if [ -s /tmp/fuentes-caidas.txt ]; then
+              echo "## Fuentes que no aportaron"
+              echo
+              echo '```'
+              cat /tmp/fuentes-caidas.txt
+              echo '```'
+            else
+              echo "Todas las fuentes respondieron."
+            fi
+            echo
+            echo "## Aporte al volcado"
+            echo
+            python3 - <<'PYEOF'
+          import json
+          d = json.load(open("frontend/public/datos/grafo.json"))
+          print("| fuente | entidades en el mapa |")
+          print("| --- | ---: |")
+          for f in d.get("fuentes", []):
+              n = f.get("entidades", 0)
+              print(f"| {f['name']} | {n if n else '**0 — no aportó**'} |")
+          PYEOF
+          } > docs/fuentes/estado-ingesta.md
+          cat docs/fuentes/estado-ingesta.md
 
       - name: resumen
         run: |
@@ -193,8 +226,11 @@ jobs:
         run: |
           set -euo pipefail
           ARCHIVO=frontend/public/datos/grafo.json
+          ESTADO=docs/fuentes/estado-ingesta.md
           GUARDADO=$(mktemp)
+          GUARDADO_ESTADO=$(mktemp)
           cp "$ARCHIVO" "$GUARDADO"
+          cp "$ESTADO" "$GUARDADO_ESTADO" 2>/dev/null || : > "$GUARDADO_ESTADO"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -202,11 +238,13 @@ jobs:
           for intento in 1 2 3 4 5; do
             git fetch --quiet origin "$GITHUB_REF_NAME"
             git reset --quiet --hard "origin/$GITHUB_REF_NAME"
-            mkdir -p "$(dirname "$ARCHIVO")"
+            mkdir -p "$(dirname "$ARCHIVO")" "$(dirname "$ESTADO")"
             cp "$GUARDADO" "$ARCHIVO"
+            [ -s "$GUARDADO_ESTADO" ] && cp "$GUARDADO_ESTADO" "$ESTADO"
             # El fichero está en .gitignore para que nadie suba un volcado de
             # pruebas a mano; la CI sí debe poder subirlo.
             git add -f "$ARCHIVO"
+            git add "$ESTADO" 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios en los datos"
               exit 0
