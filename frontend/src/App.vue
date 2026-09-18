@@ -6,6 +6,7 @@ import MapaNucleos from './components/MapaNucleos.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
 import PanelInfluencia from './components/PanelInfluencia.vue'
 import PanelNucleos from './components/PanelNucleos.vue'
+import Portada from './components/Portada.vue'
 import {
   buscar,
   cargarInstantanea,
@@ -34,12 +35,19 @@ const baseVacia = ref(false)
 const arrancando = ref(true)
 const instantanea = ref(null)
 
-// --- mapa de núcleos ------------------------------------------------------
-// `mapa` es la vista por defecto cuando hay instantánea: enseñar la estructura
-// entera antes que la ego-red de un nodo cualquiera. La vista de vecindario
-// sigue existiendo, pero como lo que es — un detalle al que se baja.
-const vista = ref('mapa')
+// --- vistas ---------------------------------------------------------------
+// `portada` es lo primero que se ve con instantánea cargada. El mapa entero es
+// una textura —dos mil entidades en mil píxeles son dos píxeles cada una— y
+// como pantalla de entrada no da ningún asidero: quien llega no sabe qué
+// buscar. Una lista ordenada por dinero sí. El mapa sigue estando, a un clic,
+// para lo que sí hace bien: enseñar la forma y los grupos.
+const vista = ref('portada')
 const grafoEntero = ref(null)
+// El mapa no se monta hasta que alguien lo pide: calcular núcleos y layout de
+// dos mil nodos son varios segundos de CPU, y hacerlos al cargar la portada
+// sería cobrárselos a todo el mundo para una vista que no todos abren. Una vez
+// montado se queda, para que volver sea instantáneo.
+const mapaPedido = ref(false)
 const nucleos = ref([])
 const nucleoEnfocado = ref(null)
 const totalDinero = ref(0)
@@ -163,8 +171,13 @@ async function enfocar(id) {
   }
 }
 
-function volverAlMapa() {
+function verMapa() {
+  mapaPedido.value = true
   vista.value = 'mapa'
+}
+
+function volverAlMapa() {
+  vista.value = 'portada'
   seleccionId.value = ''
   seleccionado.value = null
 }
@@ -195,7 +208,7 @@ onMounted(async () => {
   if (estatico) {
     instantanea.value = estado.instantanea
     grafoEntero.value = grafoCompleto()
-    vista.value = 'mapa'
+    vista.value = 'portada'
   } else {
     await abrir(ENTIDAD_INICIAL) // demostración, y se anuncia como tal
   }
@@ -268,16 +281,15 @@ onMounted(async () => {
       </div>
 
       <div v-if="hayMapa" class="controles">
-        <button
-          v-if="vista !== 'mapa'"
-          class="volver"
-          @click="volverAlMapa"
-        >
-          ← Ver el mapa completo
+        <button v-if="vista !== 'portada'" class="volver" @click="volverAlMapa">
+          ← Portada
+        </button>
+        <button v-if="vista !== 'mapa'" class="volver" @click="verMapa">
+          Mapa de núcleos
         </button>
 
         <button v-if="vista === 'ficha'" class="volver" @click="verProcedencia">
-          Ver conexiones y procedencia
+          Conexiones y procedencia
         </button>
 
         <template v-if="vista === 'mapa'">
@@ -313,6 +325,7 @@ onMounted(async () => {
     </header>
 
     <main>
+      <div class="vista-grafo">
       <div class="lienzo-wrap">
         <!--
           El mapa no se desmonta al abrir una ficha: recalcular el layout de
@@ -321,7 +334,7 @@ onMounted(async () => {
           vistas se dibujan ENCIMA.
         -->
         <MapaNucleos
-          v-if="hayMapa"
+          v-if="hayMapa && mapaPedido"
           :datos="grafoEntero"
           :seleccion="seleccionId"
           :nucleo-enfocado="nucleoEnfocado"
@@ -417,6 +430,20 @@ onMounted(async () => {
         @ir="enfocar"
         @expandir="abrir"
       />
+      </div>
+
+      <!--
+        La portada va ENCIMA en vez de sustituir al resto: así el mapa, que
+        tarda segundos en calcularse, no se desmonta cada vez que se vuelve.
+      -->
+      <Portada
+        v-if="vista === 'portada' && hayMapa"
+        class="portada-encima"
+        :datos="grafoColapsado"
+        :crudo="grafoEntero"
+        @seleccionar="enfocar"
+        @ver-mapa="verMapa"
+      />
     </main>
   </div>
 </template>
@@ -474,7 +501,9 @@ onMounted(async () => {
   border: 1px solid var(--borde); border-radius: 5px; padding: 0.3rem 0.4rem;
 }
 
-main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+main { flex: 1; position: relative; min-height: 0; }
+.vista-grafo { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 340px; }
+.portada-encima { position: absolute; inset: 0; background: var(--fondo); z-index: 5; }
 .lienzo-wrap { position: relative; min-height: 0; }
 .encima { position: absolute; inset: 0; background: var(--fondo-grafo); }
 
@@ -505,7 +534,7 @@ main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; 
 .ayuda { position: absolute; bottom: 0.6rem; right: 0.8rem; font-size: 0.7rem; color: var(--texto-tenue); margin: 0; }
 
 @media (max-width: 820px) {
-  main { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
+  .vista-grafo { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
   .leyenda { max-width: 100%; }
 }
 

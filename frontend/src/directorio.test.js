@@ -1,0 +1,100 @@
+import { describe, expect, it } from 'vitest'
+import { construirDirectorio } from './directorio.js'
+
+function grafo() {
+  return {
+    nodes: [
+      { id: 'sas', caption: 'SERVICIO DE SALUD', schema: 'PublicBody', properties: {} },
+      { id: 'ayto', caption: 'AYUNTAMIENTO', schema: 'PublicBody', properties: {} },
+      { id: 'dipu', caption: 'DIPUTACIÓN', schema: 'PublicBody', properties: {} },
+      { id: 'grande', caption: 'CONSTRUCTORA SA', schema: 'Company', properties: {} },
+      { id: 'ubicua', caption: 'CONSULTORA UBICUA SL', schema: 'Company', properties: {} },
+      { id: 'ext', caption: 'PHARMA BV', schema: 'Company', properties: { entidad_extranjera: true } },
+      { id: 'partido', caption: 'PARTIDO', schema: 'Organization', properties: { partido_politico: true } },
+      { id: 'tcu', caption: 'Tribunal de Cuentas', schema: 'PublicBody', properties: {} },
+      { id: 'exp', caption: 'EXPEDIENTE 1/2025', schema: 'Contract', properties: {} },
+    ],
+    edges: [
+      { id: '1', source: 'sas', target: 'grande', amount: '9000000', schema: 'ContractAward' },
+      { id: '2', source: 'sas', target: 'ext', amount: '400000', schema: 'ContractAward' },
+      { id: '3', source: 'ayto', target: 'ubicua', amount: '1000', schema: 'ContractAward' },
+      { id: '4', source: 'dipu', target: 'ubicua', amount: '2000', schema: 'ContractAward' },
+      { id: '5', source: 'sas', target: 'ubicua', amount: '3000', schema: 'ContractAward' },
+      { id: '6', source: 'partido', target: 'tcu', amount: '50000', schema: 'Debt' },
+      // Estructura: no es dinero y no puede colarse en ninguna lista.
+      { id: '7', source: 'ayto', target: 'exp', schema: 'UnknownLink' },
+    ],
+  }
+}
+
+describe('construirDirectorio', () => {
+  const d = construirDirectorio(grafo())
+
+  it('ordena a los pagadores por dinero repartido', () => {
+    expect(d.pagadores[0].caption).toBe('SERVICIO DE SALUD')
+    expect(d.pagadores[0].total).toBe(9_403_000)
+    expect(d.pagadores[0].n).toBe(3)
+  })
+
+  it('ordena a los receptores por dinero cobrado', () => {
+    expect(d.receptores.map((x) => x.caption)).toEqual([
+      'CONSTRUCTORA SA',
+      'PHARMA BV',
+      'CONSULTORA UBICUA SL',
+    ])
+  })
+
+  it('los transversales se ordenan por número de administraciones, no por dinero', () => {
+    // Justo lo que distingue esta lista de la de receptores: la ubicua cobra
+    // cinco mil euros y la constructora nueve millones, pero la ubicua ha
+    // cobrado de tres administraciones distintas y la constructora de una.
+    expect(d.transversales[0].caption).toBe('CONSULTORA UBICUA SL')
+    expect(d.transversales[0].n).toBe(3)
+    expect(d.transversales.map((x) => x.caption)).not.toContain('CONSTRUCTORA SA')
+  })
+
+  it('una sanción no convierte al Tribunal de Cuentas en receptor de dinero', () => {
+    expect(d.receptores.map((x) => x.id)).not.toContain('tcu')
+    expect(d.pagadores.map((x) => x.id)).not.toContain('partido')
+  })
+
+  it('lista a los sancionados con su cuantía', () => {
+    expect(d.sancionados).toHaveLength(1)
+    expect(d.sancionados[0].caption).toBe('PARTIDO')
+    expect(d.sancionados[0].total).toBe(50000)
+    expect(d.sancionados[0].partido).toBe(true)
+  })
+
+  it('separa el capital extranjero', () => {
+    expect(d.extranjeras.map((x) => x.caption)).toEqual(['PHARMA BV'])
+    expect(d.extranjeras[0].total).toBe(400000)
+  })
+
+  it('un expediente no encabeza ninguna lista', () => {
+    const todas = [...d.pagadores, ...d.receptores, ...d.transversales]
+    expect(todas.map((x) => x.schema)).not.toContain('Contract')
+  })
+
+  it('la estructura sin dinero no suma al total', () => {
+    expect(d.totales.dineroTotal).toBe(9_406_000)
+    expect(d.totales.nOperaciones).toBe(5)
+  })
+
+  it('cuenta partidos y extranjeras', () => {
+    expect(d.totales.nPartidos).toBe(1)
+    expect(d.totales.nExtranjeras).toBe(1)
+    expect(d.totales.totalSancionado).toBe(50000)
+  })
+
+  it('respeta el límite de cada lista', () => {
+    const d2 = construirDirectorio(grafo(), { limite: 1 })
+    expect(d2.pagadores).toHaveLength(1)
+    expect(d2.receptores).toHaveLength(1)
+  })
+
+  it('no revienta sin datos', () => {
+    const vacio = construirDirectorio(undefined)
+    expect(vacio.pagadores).toEqual([])
+    expect(vacio.totales.dineroTotal).toBe(0)
+  })
+})
