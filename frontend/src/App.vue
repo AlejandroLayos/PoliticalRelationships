@@ -1,8 +1,10 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import FlujoDinero from './components/FlujoDinero.vue'
 import GrafoRed from './components/GrafoRed.vue'
 import MapaNucleos from './components/MapaNucleos.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
+import PanelInfluencia from './components/PanelInfluencia.vue'
 import PanelNucleos from './components/PanelNucleos.vue'
 import {
   buscar,
@@ -15,7 +17,8 @@ import {
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
-import { dineroCorto } from './nucleos.js'
+import { areaDeInfluencia } from './influencia.js'
+import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
 
 const consulta = ref('')
 const resultados = ref([])
@@ -62,6 +65,36 @@ function alAnalizar({ nucleos: n, totalDinero: d, visibles }) {
 
 const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
 
+// --- ficha de influencia --------------------------------------------------
+// El grafo se colapsa ANTES de calcular la ficha, y eso no es un detalle de
+// dibujo: sin colapsar, la pregunta «¿a qué empresas paga mi ayuntamiento?» se
+// contesta con una lista de expedientes, porque entre el organismo y la empresa
+// siempre hay un contrato de por medio. El expediente no desaparece —cada
+// relación conserva el suyo y el panel lo cuenta—, pero deja de ser la
+// respuesta.
+const grafoColapsado = computed(() =>
+  grafoEntero.value ? colapsarNodosDePaso(grafoEntero.value) : null,
+)
+
+const area = computed(() => {
+  if (!seleccionId.value) return null
+  // Si lo seleccionado ES un expediente —se pueden mostrar con el filtro—, en
+  // el grafo colapsado ya no existe: se mira el crudo.
+  const enColapsado = grafoColapsado.value
+    ? areaDeInfluencia(grafoColapsado.value, seleccionId.value)
+    : null
+  if (enColapsado?.entidad) return enColapsado
+  return grafoEntero.value ? areaDeInfluencia(grafoEntero.value, seleccionId.value) : null
+})
+
+/** Lo que hay que advertir cuando una ficha sale sin dinero por culpa nuestra. */
+const notaDeHueco = computed(() => {
+  const caidas = instantanea.value?.fuentesSinDatos ?? []
+  if (!caidas.length) return ''
+  return `Hoy no respondió ${caidas.map((f) => f.name).join(' ni ')}, así que lo que`
+    + ' cubre esa fuente no está en esta instantánea.'
+})
+
 let temporizador = null
 watch(consulta, (q) => {
   clearTimeout(temporizador)
@@ -99,9 +132,26 @@ async function abrir(id) {
   }
 }
 
+/**
+ * Qué pasa al elegir un resultado de la búsqueda.
+ *
+ * Con el mapa cargado se abre la ficha de influencia, no el vecindario: quien
+ * busca «mi ayuntamiento» quiere saber a quién le paga, y lo que le salía era
+ * una ego-red de expedientes con la que no se puede contestar eso.
+ */
+function elegir(id) {
+  resultados.value = []
+  consulta.value = ''
+  return hayMapa.value ? enfocar(id) : abrir(id)
+}
+
 /** Selección sin recargar el grafo: sólo cambia el foco y la ficha. */
 async function enfocar(id) {
   seleccionId.value = id
+  // Con el mapa cargado, pulsar una entidad abre su ficha de influencia: es la
+  // pregunta que trae a la gente («¿quién financia esto?»), y contestarla con
+  // otra maraña de nodos era justo lo que no se entendía.
+  if (hayMapa.value) vista.value = 'ficha'
   try {
     seleccionado.value = await pedirEntidad(id)
   } catch {
@@ -117,6 +167,11 @@ function volverAlMapa() {
   vista.value = 'mapa'
   seleccionId.value = ''
   seleccionado.value = null
+}
+
+/** De la ficha al vecindario crudo: conexiones una a una y procedencia. */
+function verProcedencia() {
+  if (seleccionId.value) abrir(seleccionId.value)
 }
 
 watch(profundidad, () => {
@@ -200,7 +255,7 @@ onMounted(async () => {
         />
         <ul v-if="resultados.length" class="sugerencias">
           <li v-for="r in resultados" :key="r.id">
-            <button @click="abrir(r.id)">
+            <button @click="elegir(r.id)">
               <span class="punto" :style="{ background: COLOR_POR_ESQUEMA[r.schema] ?? '#8b93a7' }" />
               <span class="nombre">{{ r.caption }}</span>
               <span class="tipo">{{ NOMBRE_ESQUEMA[r.schema] ?? r.schema }}</span>
@@ -214,11 +269,15 @@ onMounted(async () => {
 
       <div v-if="hayMapa" class="controles">
         <button
-          v-if="vista === 'vecindario'"
+          v-if="vista !== 'mapa'"
           class="volver"
           @click="volverAlMapa"
         >
           ← Ver el mapa completo
+        </button>
+
+        <button v-if="vista === 'ficha'" class="volver" @click="verProcedencia">
+          Ver conexiones y procedencia
         </button>
 
         <template v-if="vista === 'mapa'">
@@ -242,7 +301,7 @@ onMounted(async () => {
           </label>
         </template>
 
-        <label v-else class="control">
+        <label v-else-if="vista === 'vecindario'" class="control">
           Saltos
           <select v-model.number="profundidad">
             <option :value="1">1</option>
@@ -255,8 +314,14 @@ onMounted(async () => {
 
     <main>
       <div class="lienzo-wrap">
+        <!--
+          El mapa no se desmonta al abrir una ficha: recalcular el layout de
+          fuerzas de cuatro mil nodos tarda segundos, y volver atrás tiene que
+          ser instantáneo o la gente deja de entrar a las fichas. Las demás
+          vistas se dibujan ENCIMA.
+        -->
         <MapaNucleos
-          v-if="vista === 'mapa' && hayMapa"
+          v-if="hayMapa"
           :datos="grafoEntero"
           :seleccion="seleccionId"
           :nucleo-enfocado="nucleoEnfocado"
@@ -267,13 +332,21 @@ onMounted(async () => {
           @seleccionar="enfocar"
           @analizado="alAnalizar"
         />
-        <GrafoRed
-          v-else
-          :datos="datos"
-          :seleccion="seleccionId"
+        <FlujoDinero
+          v-if="vista === 'ficha'"
+          class="encima"
+          :area="area"
+          :nota="notaDeHueco"
           @seleccionar="enfocar"
-          @expandir="abrir"
         />
+        <div v-else-if="vista === 'vecindario' || !hayMapa" class="encima">
+          <GrafoRed
+            :datos="datos"
+            :seleccion="seleccionId"
+            @seleccionar="enfocar"
+            @expandir="abrir"
+          />
+        </div>
 
         <p v-if="arrancando || cargando" class="estado-flotante">Cargando…</p>
         <p v-else-if="error" class="estado-flotante error">{{ error }}</p>
@@ -289,7 +362,13 @@ onMounted(async () => {
           Vista recortada por tamaño: hay más conexiones de las que se muestran.
         </p>
 
-        <div v-if="vista === 'vecindario'" class="leyenda">
+        <div v-if="vista === 'ficha'" class="leyenda">
+          <span><i style="background: #4bb47f" />Dinero que entra</span>
+          <span><i style="background: #e8703a" />Dinero que sale</span>
+          <span><i style="background: #b08cd9" />Contraparte no residente</span>
+          <span>El grosor ordena · la cifra exacta va escrita</span>
+        </div>
+        <div v-else-if="vista === 'vecindario'" class="leyenda">
           <span v-for="(color, esquema) in COLOR_POR_ESQUEMA" :key="esquema">
             <i :style="{ background: color }" />{{ NOMBRE_ESQUEMA[esquema] ?? esquema }}
           </span>
@@ -300,12 +379,25 @@ onMounted(async () => {
         </div>
 
         <p class="ayuda">
-          {{ vista === 'mapa' ? 'Clic en un nodo para ver su ficha' : 'Clic para ver · doble clic para expandir' }}
+          {{
+            vista === 'mapa'
+              ? 'Clic en un nodo para abrir su ficha de influencia'
+              : vista === 'ficha'
+                ? 'Clic en una contraparte para seguir el rastro'
+                : 'Clic para ver · doble clic para expandir'
+          }}
         </p>
       </div>
 
+      <PanelInfluencia
+        v-if="vista === 'ficha'"
+        :area="area"
+        :crudo="grafoEntero"
+        @seleccionar="enfocar"
+        @volver="volverAlMapa"
+      />
       <PanelEntidad
-        v-if="seleccionado"
+        v-else-if="seleccionado"
         :entidad="seleccionado"
         :datos="vista === 'mapa' ? grafoEntero : datos"
         @ir="enfocar"
@@ -384,6 +476,7 @@ onMounted(async () => {
 
 main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
 .lienzo-wrap { position: relative; min-height: 0; }
+.encima { position: absolute; inset: 0; background: var(--fondo-grafo); }
 
 .estado-flotante {
   position: absolute; inset: 0; display: grid; place-items: center;
