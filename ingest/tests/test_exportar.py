@@ -266,3 +266,37 @@ def test_el_dinero_no_agota_el_sitio_del_tejido_conectivo(store, tmp_path):
     # Lo que de verdad se comprueba: queda sitio libre tras la pasada del
     # dinero, que es la condición para que el tejido conectivo pueda entrar.
     assert len(d["nodes"]) < 20 or any(n["schema"] == "Contract" for n in d["nodes"])
+
+
+def test_los_partidos_no_pierden_contra_un_contrato_grande(store, tmp_path):
+    """Un mapa de financiación política sin partidos no sirve de nada.
+
+    Se comprobó sobre datos reales: al coser bien el grafo entraron 456
+    organismos y desaparecieron los 179 partidos. Una subvención electoral es
+    calderilla al lado de un contrato de infraestructuras, así que compitiendo
+    por importe un partido nunca gana.
+    """
+    for i in range(20):
+        a = _entidad(store, f"MINISTERIO {i}", "PublicBody")
+        b = _entidad(store, f"CONSTRUCTORA {i}")
+        _arista(store, a, b, f"{50_000_000 - i}.00")
+
+    fila = store.conn.execute(
+        """
+        INSERT INTO entities (ftm_schema, caption, dedupe_key, properties)
+        VALUES ('Organization', 'PARTIDO DE PRUEBA', 'nif:G00000000',
+                '{"partido_politico": true}'::jsonb)
+        RETURNING id
+        """
+    ).fetchone()
+    assert fila is not None
+    partido = str(fila["id"])
+    organo = _entidad(store, "MINISTERIO DEL INTERIOR", "PublicBody")
+    _arista(store, organo, partido, "12000.00")  # subvención electoral, calderilla
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=12, max_aristas=12)
+
+    captions = {n["caption"] for n in d["nodes"]}
+    assert "PARTIDO DE PRUEBA" in captions, "el partido perdió contra los contratos"
+    assert "MINISTERIO DEL INTERIOR" in captions, "el partido entró pero suelto"

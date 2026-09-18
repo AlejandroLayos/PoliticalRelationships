@@ -98,6 +98,34 @@ def exportar(
         elegidas.append(a)
         usadas.add(a["id"])
 
+    # 0. Los partidos, antes que nada.
+    #
+    # Ordenar por importe los expulsa del mapa, y se comprobó: al coser bien el
+    # grafo entraron 456 organismos y desaparecieron LOS 179 partidos. Una
+    # subvención electoral es calderilla al lado de un contrato de
+    # infraestructuras, así que compitiendo por dinero un partido nunca gana.
+    #
+    # En un mapa de financiación política eso no es una pérdida aceptable: es
+    # perder el sujeto. El dinero ordena el resto; los partidos entran por
+    # derecho propio.
+    partidos = {
+        f["id"]
+        for f in store.conn.execute(
+            """
+            SELECT id FROM entities
+            WHERE canonical_id IS NULL
+              AND (properties ->> 'partido_politico') = 'true'
+            """
+        ).fetchall()
+    }
+    if partidos:
+        for a in todas:
+            if len(elegidas) >= max_aristas:
+                break
+            toca_partido = a["source_entity_id"] in partidos or a["target_entity_id"] in partidos
+            if toca_partido and a["id"] not in usadas and cabe(a, max_entidades):
+                tomar(a)
+
     # 1. El esqueleto de dinero: lo más caro primero. Es un mapa de dinero.
     #
     # Pero NO se gasta todo el presupuesto de nodos aquí, y esto es lo que
