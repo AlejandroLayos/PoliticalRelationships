@@ -3,32 +3,26 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `35342702683` · 2026-09-18T12:13:31Z
+- Ejecución: `35344161704` · 2026-09-18T12:31:02Z
 
 ## Fuentes que no aportaron
 
 ```
 ### bdns (código 1)
-{"fuente": "bdns", "params": "{'fecha_desde': datetime.date(2025, 1, 1), 'fecha_hasta': datetime.date(2025, 12, 31), 'max_paginas': 12}", "event": "ingesta iniciada", "level": "info", "timestamp": "2026-09-18T12:05:26.660047Z"}
-{"pagina": 0, "error": "timed out", "event": "bdns: fallo al descargar p\u00e1gina", "level": "warning", "timestamp": "2026-09-18T12:05:56.824285Z"}
-{"fuente": "bdns", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-18T12:05:56.825049Z"}
-{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-18T12:05:56.825227Z"}
-{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-18T12:05:56.825291Z"}
+{"pagina": 0, "intento": 1, "espera": 5.0, "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1016)", "event": "bdns: reintentando la p\u00e1gina", "level": "info", "timestamp": "2026-09-18T12:22:23.014250Z"}
+{"pagina": 0, "intento": 2, "espera": 10.0, "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1016)", "event": "bdns: reintentando la p\u00e1gina", "level": "info", "timestamp": "2026-09-18T12:22:28.269423Z"}
+{"pagina": 0, "intentos": 3, "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1016)", "event": "bdns: fallo al descargar p\u00e1gina", "level": "warning", "timestamp": "2026-09-18T12:22:38.524736Z"}
+{"fuente": "bdns", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-18T12:22:38.524842Z"}
+{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-18T12:22:38.524969Z"}
+{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-18T12:22:38.525009Z"}
 
 ### bdns-partidos (código 1)
-{"fuente": "bdns", "params": "{'fecha_desde': datetime.date(2025, 1, 1), 'fecha_hasta': datetime.date(2025, 12, 31), 'max_paginas': 12}", "event": "ingesta iniciada", "level": "info", "timestamp": "2026-09-18T12:05:57.094171Z"}
-{"pagina": 0, "error": "timed out", "event": "bdns: fallo al descargar p\u00e1gina", "level": "warning", "timestamp": "2026-09-18T12:06:27.162725Z"}
-{"fuente": "bdns", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-18T12:06:27.163546Z"}
-{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-18T12:06:27.163713Z"}
-{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-18T12:06:27.163770Z"}
-
-### tcu (código 1)
-{"url": "https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-electoral-2019.pdf", "detalle": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1016)", "event": "tcu: documento no disponible", "level": "warning", "timestamp": "2026-09-18T12:10:25.431147Z"}
-{"url": "https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-electoral-2023.pdf", "detalle": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1016)", "event": "tcu: documento no disponible", "level": "warning", "timestamp": "2026-09-18T12:10:26.029790Z"}
-{"url": "https://www.tcu.es/export/sites/portal/.galleries/Documentos-oficiales/Partidos-politicos/Procedimientos-sancionadores-contabilidad-ordinaria.pdf", "detalle": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1016)", "event": "tcu: documento no disponible", "level": "warning", "timestamp": "2026-09-18T12:10:26.638247Z"}
-{"fuente": "tcu", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-18T12:10:26.638924Z"}
-{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-18T12:10:26.639072Z"}
-{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-18T12:10:26.639165Z"}
+{"pagina": 0, "intento": 1, "espera": 5.0, "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1016)", "event": "bdns: reintentando la p\u00e1gina", "level": "info", "timestamp": "2026-09-18T12:22:39.083844Z"}
+{"pagina": 0, "intento": 2, "espera": 10.0, "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1016)", "event": "bdns: reintentando la p\u00e1gina", "level": "info", "timestamp": "2026-09-18T12:22:44.325501Z"}
+{"pagina": 0, "intentos": 3, "error": "[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:1016)", "event": "bdns: fallo al descargar p\u00e1gina", "level": "warning", "timestamp": "2026-09-18T12:22:54.597777Z"}
+{"fuente": "bdns", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-18T12:22:54.597872Z"}
+{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-18T12:22:54.597996Z"}
+{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-18T12:22:54.598056Z"}
 
 ```
 
@@ -37,5 +31,5 @@ Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 | fuente | entidades en el mapa |
 | --- | ---: |
 | Base de Datos Nacional de Subvenciones | **0 — no aportó** |
-| Plataforma de Contratación del Sector Público | 4000 |
-| Tribunal de Cuentas | **0 — no aportó** |
+| Plataforma de Contratación del Sector Público | 3370 |
+| Tribunal de Cuentas | 630 |
