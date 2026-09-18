@@ -95,9 +95,19 @@ jobs:
           sinapsis-worker --run tcu --desde "$D" --hasta "$H" || echo "tcu falló"
           echo "::endgroup::"
 
+      # Acotado a propósito. Este paso propone fusiones para que las revise una
+      # persona: no fusiona nada y la web no depende de él. El emparejamiento
+      # difuso por trigramas crece mucho más rápido que el número de entidades,
+      # y sin tope puede quedarse horas colgado — pasó el 18/9/2026, con la
+      # ingesta terminada en 7 minutos y este paso 40 y subiendo, bloqueando la
+      # exportación detrás.
+      #
+      # Que se corte es un hueco en una cola de revisión, recuperable en la
+      # siguiente ejecución. Que no se publique la instantánea corregida, no.
       - name: proponer fusiones (no las aplica)
         working-directory: ingest
         continue-on-error: true
+        timeout-minutes: 10
         run: sinapsis-worker --candidatos
 
       - name: exportar instantánea
