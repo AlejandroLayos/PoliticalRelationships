@@ -334,7 +334,16 @@ onMounted(async () => {
           Mapa de núcleos
         </button>
 
-        <button v-if="vista === 'ficha'" class="volver" @click="verProcedencia">
+        <!--
+          Sin red que enseñar no hay vecindario al que bajar: pulsarlo daría
+          «entidad no encontrada», que parece un fallo de la web y es
+          exactamente lo contrario de lo que pasa.
+        -->
+        <button
+          v-if="vista === 'ficha' && !fueraDelMapa"
+          class="volver"
+          @click="verProcedencia"
+        >
           Conexiones y procedencia
         </button>
 
