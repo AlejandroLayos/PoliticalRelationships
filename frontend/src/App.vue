@@ -11,6 +11,7 @@ import {
   buscarTodo,
   cargarIndiceTop,
   cargarInstantanea,
+  indiceCargado,
   entidad as pedirEntidad,
   estado,
   estadoServidor,
@@ -92,6 +93,9 @@ const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
 const grafoColapsado = computed(() =>
   grafoEntero.value ? colapsarNodosDePaso(grafoEntero.value) : null,
 )
+
+/** Qué hay dibujado. Se consulta en cada clic, así que no puede ser un barrido. */
+const idsDelMapa = computed(() => new Set((grafoEntero.value?.nodes ?? []).map((n) => n.id)))
 
 const area = computed(() => {
   if (!seleccionId.value) return null
@@ -179,10 +183,28 @@ function elegir(id) {
   return hayMapa.value ? enfocar(id) : abrir(id)
 }
 
-/** Selección sin recargar el grafo: sólo cambia el foco y la ficha. */
+/**
+ * Selección sin recargar el grafo: sólo cambia el foco y la ficha.
+ *
+ * Si la entidad no está en el grafo publicado —pasa desde que los rankings
+ * salen del índice, que cubre toda la base— se abre su ficha con las cifras
+ * que sí hay. Antes el clic llevaba a un panel vacío que decía «Pulsa una
+ * entidad del mapa», que parece un fallo de la web.
+ */
 async function enfocar(id) {
   seleccionId.value = id
   fueraDelMapa.value = null
+
+  if (hayMapa.value && !idsDelMapa.value.has(id)) {
+    fueraDelMapa.value =
+      (indice.value?.entidades ?? []).find((e) => e.id === id) ??
+      indiceCargado()?.entidades?.find((e) => e.id === id) ??
+      null
+    if (fueraDelMapa.value) {
+      vista.value = 'ficha'
+      return
+    }
+  }
   // Con el mapa cargado, pulsar una entidad abre su ficha de influencia: es la
   // pregunta que trae a la gente («¿quién financia esto?»), y contestarla con
   // otra maraña de nodos era justo lo que no se entendía.
