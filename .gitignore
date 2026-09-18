@@ -35,6 +35,7 @@ dist/
 # (se commitea desde CI; ignorada en local para no subir volcados de pruebas)
 /frontend/public/datos/grafo.json
 /frontend/public/datos/indice.json
+/frontend/public/datos/indice-top.json
 
 # Texto extraído de los PDF del Tribunal de Cuentas. Nombra a personas: se
 # sube como artefacto del workflow para poder escribir el parser, y no entra

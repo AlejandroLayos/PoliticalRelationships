@@ -742,3 +742,81 @@ def test_una_adjudicacion_sin_organo_conocido_sigue_publicandose(store, tmp_path
 
     g = _exportado(store, tmp_path)
     assert "EXPEDIENTE SUELTO" in {n["caption"] for n in g["nodes"]}
+
+
+# --- el extracto del índice, para no cobrarle a todo el mundo la cobertura --
+#
+# El índice completo crece con la base: a 40.000 entidades son casi 6 MB.
+# Descargarlo entero en cada visita para enseñar cuatro listas de 25 filas es
+# cobrarle a todo el mundo el precio de la cobertura.
+
+
+def _indice_top(store: Store, tmp_path: Path, **kw) -> dict:
+    exportar(store, tmp_path / "g.json", **kw)
+    return json.loads((tmp_path / "indice-top.json").read_text(encoding="utf-8"))
+
+
+def test_el_extracto_trae_las_cabezas_de_los_rankings(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    for i in range(10):
+        empresa = _entidad(store, f"EMPRESA {i:02d}")
+        _arista(store, organo, empresa, str((10 - i) * 1000))
+    store.conn.commit()
+
+    top = _indice_top(store, tmp_path)
+    captions = [e["caption"] for e in top["entidades"]]
+    assert "AYUNTAMIENTO" in captions
+    assert "EMPRESA 00" in captions  # la que más cobra
+    assert top["parcial"] is True
+
+
+def test_los_totales_del_extracto_son_los_de_toda_la_base(store, tmp_path):
+    # Si los totales se recalcularan sobre el extracto, la portada diría menos
+    # dinero y menos entidades de las que hay, y nadie podría notarlo.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    for i in range(5):
+        _arista(store, organo, _entidad(store, f"EMPRESA {i}"), "1000")
+    store.conn.commit()
+
+    completo = json.loads(
+        (tmp_path / "indice.json").read_text(encoding="utf-8")
+    ) if (tmp_path / "indice.json").exists() else None
+    top = _indice_top(store, tmp_path)
+    completo = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+
+    assert top["total"] == completo["total"] == 6
+    assert top["nActores"] == 6
+    assert top["dineroTotal"] == completo["dineroTotal"] == "5000.00"
+
+
+def test_el_extracto_conserva_partidos_y_extranjeras_enteros(store, tmp_path):
+    # Son listas propias de la portada y son pocas: se llevan enteras aunque
+    # no entren por dinero.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    partido = _entidad(store, "PARTIDO MINÚSCULO", "Organization")
+    store.conn.execute(
+        "UPDATE entities SET properties = '{\"partido_politico\": true}'::jsonb WHERE id = %s",
+        (partido,),
+    )
+    _arista(store, organo, partido, "1")
+    for i in range(5):
+        _arista(store, organo, _entidad(store, f"EMPRESA {i}"), "9000000")
+    store.conn.commit()
+
+    top = _indice_top(store, tmp_path)
+    assert "PARTIDO MINÚSCULO" in {e["caption"] for e in top["entidades"]}
+
+
+def test_el_extracto_no_es_mayor_que_el_indice(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    for i in range(20):
+        _arista(store, organo, _entidad(store, f"EMPRESA {i}"), str(1000 + i))
+    store.conn.commit()
+
+    exportar(store, tmp_path / "g.json")
+    top = json.loads((tmp_path / "indice-top.json").read_text(encoding="utf-8"))
+    completo = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+    assert len(top["entidades"]) <= len(completo["entidades"])
+    ids_top = {e["id"] for e in top["entidades"]}
+    ids_completo = {e["id"] for e in completo["entidades"]}
+    assert ids_top <= ids_completo

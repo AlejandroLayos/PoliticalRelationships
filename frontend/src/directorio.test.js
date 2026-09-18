@@ -171,3 +171,40 @@ describe('construirDirectorioDesdeIndice', () => {
     expect(construirDirectorioDesdeIndice({ entidades: [] })).toBeNull()
   })
 })
+
+describe('los totales salen del fichero, no del extracto', () => {
+  it('usa los totales de toda la base cuando vienen en la cabecera', () => {
+    // El extracto son unas cientos de filas de las decenas de miles que hay.
+    // Recalcular sobre él haría que la portada dijera menos dinero y menos
+    // entidades de las que hay, y nadie podría notarlo.
+    const d = construirDirectorioDesdeIndice({
+      parcial: true,
+      dineroTotal: '987654321.00',
+      nActores: 40000,
+      nPartidos: 963,
+      nExtranjeras: 11,
+      enMapa: 4000,
+      entidades: [
+        { id: 'a', schema: 'PublicBody', caption: 'UNO', pagado: '1000.00', receptores: 1 },
+      ],
+    })
+    expect(d.totales.dineroTotal).toBe(987654321)
+    expect(d.totales.nActores).toBe(40000)
+    expect(d.totales.nPartidos).toBe(963)
+    expect(d.totales.enMapa).toBe(4000)
+    expect(d.totales.parcial).toBe(true)
+  })
+
+  it('si el fichero no los trae, los calcula sobre lo que hay', () => {
+    // Un índice viejo, publicado antes de que la cabecera existiera.
+    const d = construirDirectorioDesdeIndice({
+      entidades: [
+        { id: 'a', schema: 'PublicBody', caption: 'UNO', pagado: '1000.00' },
+        { id: 'b', schema: 'PublicBody', caption: 'DOS', pagado: '2000.00' },
+      ],
+    })
+    expect(d.totales.dineroTotal).toBe(3000)
+    expect(d.totales.nActores).toBe(2)
+    expect(d.totales.parcial).toBe(false)
+  })
+})

@@ -257,12 +257,18 @@ jobs:
           # sin aristas, para que la búsqueda no esté acotada por el tope del
           # mapa. Publicar uno sin el otro deja la web incoherente.
           INDICE=frontend/public/datos/indice.json
+          # El extracto es lo que descarga TODO el mundo al entrar; el índice
+          # completo, sólo quien busca. Publicar uno sin el otro deja la
+          # portada con las listas de una instantánea y la búsqueda de otra.
+          INDICE_TOP=frontend/public/datos/indice-top.json
           ESTADO=docs/fuentes/estado-ingesta.md
           GUARDADO=$(mktemp)
           GUARDADO_INDICE=$(mktemp)
+          GUARDADO_INDICE_TOP=$(mktemp)
           GUARDADO_ESTADO=$(mktemp)
           cp "$ARCHIVO" "$GUARDADO"
           cp "$INDICE" "$GUARDADO_INDICE" 2>/dev/null || : > "$GUARDADO_INDICE"
+          cp "$INDICE_TOP" "$GUARDADO_INDICE_TOP" 2>/dev/null || : > "$GUARDADO_INDICE_TOP"
           cp "$ESTADO" "$GUARDADO_ESTADO" 2>/dev/null || : > "$GUARDADO_ESTADO"
 
           git config user.name "github-actions[bot]"
@@ -278,11 +284,13 @@ jobs:
             # índice o el estado es un hueco tolerable; que no se publique la
             # instantánea por eso, no.
             [ -s "$GUARDADO_INDICE" ] && cp "$GUARDADO_INDICE" "$INDICE" || true
+            [ -s "$GUARDADO_INDICE_TOP" ] && cp "$GUARDADO_INDICE_TOP" "$INDICE_TOP" || true
             [ -s "$GUARDADO_ESTADO" ] && cp "$GUARDADO_ESTADO" "$ESTADO" || true
             # Los dos ficheros de datos están en .gitignore para que nadie suba
             # un volcado de pruebas a mano; la CI sí debe poder subirlos.
             git add -f "$ARCHIVO"
             [ -s "$GUARDADO_INDICE" ] && git add -f "$INDICE" || true
+            [ -s "$GUARDADO_INDICE_TOP" ] && git add -f "$INDICE_TOP" || true
             git add "$ESTADO" 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios en los datos"

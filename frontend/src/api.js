@@ -76,25 +76,60 @@ export async function cargarInstantanea() {
  * Se carga perezosamente, en la primera búsqueda: el que sólo mira el mapa no
  * lo descarga.
  */
+const VACIO = { total: 0, entidades: [] }
+
+async function _pedirIndice(ruta) {
+  try {
+    const r = await fetch(ruta, { headers: { Accept: 'application/json' } })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const d = await r.json()
+    return Array.isArray(d.entidades) ? d : VACIO
+  } catch {
+    // Sin índice la búsqueda sigue funcionando sobre el mapa, y la portada
+    // rankea sobre el grafo. Es un hueco, no un fallo.
+    return VACIO
+  }
+}
+
+/**
+ * El extracto: las cabezas de cada ranking, más los partidos y el capital
+ * extranjero enteros. Es lo que descarga todo el que entra.
+ *
+ * El índice completo crece con la base —a 40.000 entidades son casi 6 MB— y
+ * traérselo entero para enseñar cuatro listas de 25 filas es cobrarle a todo
+ * el mundo el precio de la cobertura. Los rankings salen exactos igual: el
+ * primero de 25 por dinero está por definición entre los 300 primeros por
+ * dinero.
+ */
+let _indiceTop = null
+let _cargandoTop = null
+
+export async function cargarIndiceTop() {
+  if (_indiceTop !== null) return _indiceTop
+  if (!_cargandoTop) {
+    _cargandoTop = _pedirIndice('/datos/indice-top.json').then((d) => {
+      _indiceTop = d
+      return d
+    })
+  }
+  return _cargandoTop
+}
+
+/**
+ * El índice entero. Sólo se pide cuando alguien busca, que es cuando hace
+ * falta: para buscar sí hay que tenerlo todo.
+ */
 let _indice = null
 let _cargandoIndice = null
 
 export async function cargarIndice() {
   if (_indice !== null) return _indice
-  if (_cargandoIndice) return _cargandoIndice
-  _cargandoIndice = (async () => {
-    try {
-      const r = await fetch('/datos/indice.json', { headers: { Accept: 'application/json' } })
-      if (!r.ok) throw new Error(`HTTP ${r.status}`)
-      const d = await r.json()
-      _indice = Array.isArray(d.entidades) ? d : { total: 0, entidades: [] }
-    } catch {
-      // Sin índice la búsqueda sigue funcionando sobre el mapa. Es un hueco,
-      // no un fallo.
-      _indice = { total: 0, entidades: [] }
-    }
-    return _indice
-  })()
+  if (!_cargandoIndice) {
+    _cargandoIndice = _pedirIndice('/datos/indice.json').then((d) => {
+      _indice = d
+      return d
+    })
+  }
   return _cargandoIndice
 }
 

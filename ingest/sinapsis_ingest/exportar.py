@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -524,18 +525,82 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
             }
         )
 
+    # Los totales se calculan sobre TODO, aunque luego se publique un extracto:
+    # el dinero se suma sólo por el lado que paga, porque sumar las dos
+    # columnas contaría cada operación dos veces —una en quien la paga y otra
+    # en quien la cobra— y el total saldría al doble.
+    totales = {
+        "dineroTotal": str(sum(Decimal(e.get("pagado", "0")) for e in entradas)),
+        "nActores": len(entradas),
+        "nPartidos": sum(1 for e in entradas if e.get("partido")),
+        "nExtranjeras": sum(1 for e in entradas if e.get("extranjera")),
+        "enMapa": len(en_mapa),
+    }
+
+    cabecera = {"generado": datetime.now(UTC).isoformat(), "total": len(entradas), **totales}
+
     ruta = destino.with_name("indice.json")
     ruta.write_text(
         json.dumps(
-            {
-                "generado": datetime.now(UTC).isoformat(),
-                "total": len(entradas),
-                "en_mapa": len(en_mapa),
-                "entidades": entradas,
-            },
+            {**cabecera, "entidades": entradas},
             ensure_ascii=False,
             separators=(",", ":"),
         ),
         encoding="utf-8",
     )
-    return {"indice_entidades": len(entradas), "indice_bytes": ruta.stat().st_size}
+
+    ruta_top = destino.with_name("indice-top.json")
+    ruta_top.write_text(
+        json.dumps(
+            {**cabecera, "parcial": True, "entidades": _cabeza_del_indice(entradas)},
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ),
+        encoding="utf-8",
+    )
+
+    return {
+        "indice_entidades": len(entradas),
+        "indice_bytes": ruta.stat().st_size,
+        "indice_top_bytes": ruta_top.stat().st_size,
+    }
+
+
+# Cuántas entidades se guardan por cada criterio en el extracto. Los rankings
+# de la portada enseñan 25; 300 deja margen de sobra para que el recorte no
+# pueda cambiar ninguno de esos 25, y sigue cabiendo en unas decenas de kB.
+CABEZA_POR_CRITERIO = 300
+
+
+def _cabeza_del_indice(entradas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """El extracto del índice que necesita la portada.
+
+    El índice completo crece con la base: a 40.000 entidades son casi 6 MB, y
+    descargarlo entero en cada visita para enseñar cuatro listas de 25 filas
+    es cobrarle a todo el mundo el precio de la cobertura.
+
+    Aquí van sólo las cabezas de cada ranking —más los partidos y el capital
+    extranjero, que son listas enteras y son pocas—. Los rankings salen
+    EXACTOS: el primero de los 25 por dinero repartido está por definición
+    dentro de los 300 primeros por dinero repartido.
+
+    El índice completo sigue publicándose, y la web lo pide sólo cuando alguien
+    busca. Que es cuando hace falta: para buscar sí hay que tenerlo todo.
+    """
+
+    def cabeza(clave: str, numerico: bool) -> list[dict[str, Any]]:
+        con_valor = [e for e in entradas if e.get(clave)]
+        con_valor.sort(
+            key=lambda e: Decimal(e[clave]) if numerico else int(e[clave]),
+            reverse=True,
+        )
+        return con_valor[:CABEZA_POR_CRITERIO]
+
+    elegidas: dict[str, dict[str, Any]] = {}
+    for clave, numerico in (("pagado", True), ("recibido", True), ("pagadores", False)):
+        for e in cabeza(clave, numerico):
+            elegidas[e["id"]] = e
+    for e in entradas:
+        if e.get("partido") or e.get("extranjera") or e.get("extranjeraIndicio"):
+            elegidas[e["id"]] = e
+    return list(elegidas.values())

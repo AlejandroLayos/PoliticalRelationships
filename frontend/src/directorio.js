@@ -226,10 +226,18 @@ export function construirDirectorioDesdeIndice(indice, { limite = 25 } = {}) {
     .sort((a, b) => b.total - a.total || b.n - a.n)
     .slice(0, limite)
 
-  // El dinero total se suma SÓLO por el lado que paga. Sumar las dos columnas
-  // contaría cada operación dos veces, una en quien la paga y otra en quien la
-  // cobra, y el total saldría al doble.
-  const dineroTotal = entidades.reduce((s, e) => s + aNumero(e.pagado), 0)
+  // Los totales vienen calculados sobre TODA la base y llegan en la cabecera
+  // del fichero. Recalcularlos aquí daría los del extracto —unos cientos de
+  // filas— y la portada diría menos dinero y menos entidades de las que hay,
+  // sin que nadie pudiera notarlo.
+  //
+  // Sólo se recalculan si el fichero no los trae, que es el caso de un índice
+  // viejo: entonces se suma por el lado que paga, nunca las dos columnas, que
+  // contaría cada operación dos veces.
+  const dineroTotal =
+    indice.dineroTotal !== undefined
+      ? aNumero(indice.dineroTotal)
+      : entidades.reduce((s, e) => s + aNumero(e.pagado), 0)
 
   return {
     pagadores: conDinero('pagado'),
@@ -242,13 +250,14 @@ export function construirDirectorioDesdeIndice(indice, { limite = 25 } = {}) {
     totales: {
       dineroTotal,
       nOperaciones: 0,
-      nActores: entidades.length,
-      nPartidos: entidades.filter((e) => e.partido).length,
-      nExtranjeras: entidades.filter((e) => e.extranjera).length,
+      nActores: indice.nActores ?? entidades.length,
+      nPartidos: indice.nPartidos ?? entidades.filter((e) => e.partido).length,
+      nExtranjeras: indice.nExtranjeras ?? entidades.filter((e) => e.extranjera).length,
       nSancionados: 0,
       totalSancionado: 0,
       nSinCifra: 0,
-      enMapa: entidades.filter((e) => e.enMapa).length,
+      enMapa: indice.enMapa ?? entidades.filter((e) => e.enMapa).length,
+      parcial: Boolean(indice.parcial),
     },
   }
 }

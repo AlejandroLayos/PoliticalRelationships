@@ -9,7 +9,7 @@ import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
 import {
   buscarTodo,
-  cargarIndice,
+  cargarIndiceTop,
   cargarInstantanea,
   entidad as pedirEntidad,
   estado,
@@ -237,9 +237,11 @@ onMounted(async () => {
     instantanea.value = estado.instantanea
     grafoEntero.value = grafoCompleto()
     vista.value = 'portada'
-    // La portada rankea sobre el índice, que cubre toda la base. Se pide sin
-    // bloquear: el mapa y las listas del grafo ya se ven mientras llega.
-    cargarIndice().then((i) => {
+    // La portada rankea sobre el EXTRACTO del índice, no sobre el índice
+    // entero: las listas necesitan las cabezas, no las cuarenta mil filas. El
+    // completo se pide sólo cuando alguien busca. Sin bloquear: el mapa y las
+    // listas del grafo ya se ven mientras llega.
+    cargarIndiceTop().then((i) => {
       indice.value = i
     })
   } else {
