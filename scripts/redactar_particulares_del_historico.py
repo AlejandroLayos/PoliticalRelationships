@@ -516,6 +516,27 @@ SUSTITUCIONES_TEXTO = (
 )
 
 
+def sustituir_texto(datos: bytes) -> bytes:
+    """Aplica las sustituciones al contenido de un blob o a un mensaje.
+
+    Se hace aquí, en Python, y no con `--replace-text` / `--replace-message`.
+    Esas dos opciones no sustituían nada en los mensajes de commit: tres
+    ejecuciones seguidas reescribieron el historial y la comprobación
+    posterior las paró a las tres antes de empujar. Con `regex:`, con
+    literales, y con un fichero para cada una — las tres igual.
+
+    El callback de blobs, que es Python y lo controlo yo, funcionaba a la
+    primera. Así que los dos van por ahí.
+    """
+    for linea in SUSTITUCIONES_TEXTO:
+        patron, reemplazo = linea.split("==>")
+        if not patron.startswith("regex:"):
+            continue
+        rx = re.compile(patron[len("regex:") :].encode("utf-8"), re.DOTALL)
+        datos = rx.sub(reemplazo.encode("utf-8"), datos)
+    return datos
+
+
 def _ocurrencias_reales() -> list[tuple[str, str]]:
     """Los textos concretos que hay que sustituir, sacados del repositorio.
 
@@ -603,7 +624,7 @@ def _ejecutar_filter_repo() -> int:
     callback = (
         "import sys, json\n"
         f"sys.path.insert(0, {aqui!r})\n"
-        "from redactar_particulares_del_historico import redactar\n"
+        "from redactar_particulares_del_historico import redactar, sustituir_texto\n"
         f"_ids = set(json.load(open({ruta_ids!r})))\n"
         "if b'\"nodes\"' in blob.data or b'\"entidades\"' in blob.data:\n"
         "    try:\n"
@@ -614,16 +635,17 @@ def _ejecutar_filter_repo() -> int:
         "        d, cuantos = redactar(d, _ids)\n"
         "        if cuantos:\n"
         "            blob.data = json.dumps(d, ensure_ascii=False).encode('utf-8')\n"
+        "blob.data = sustituir_texto(blob.data)\n"
     )
-    # Un fichero para cada cosa. Apuntando los dos al MISMO fichero, las
-    # sustituciones no se aplicaban a los mensajes: filter-repo se quedaba con
-    # una de las dos opciones. La comprobación posterior lo pilló dos veces
-    # seguidas y se negó a empujar, que es exactamente para lo que está.
-    para_texto = _fichero_de_sustituciones()
-    para_mensajes = _fichero_de_sustituciones()
 
+    callback_mensaje = (
+        "import sys\n"
+        f"sys.path.insert(0, {aqui!r})\n"
+        "from redactar_particulares_del_historico import sustituir_texto\n"
+        "return sustituir_texto(message)\n"
+    )
     pares = _ocurrencias_reales()
-    print(f"sustituciones preparadas: {len(pares)}")
+    print(f"ocurrencias a sustituir: {len(pares)}")
     for original, _nuevo in pares:
         print(f"  una de {len(original)} caracteres (no se imprime)")
 
@@ -634,13 +656,10 @@ def _ejecutar_filter_repo() -> int:
             "--force",
             "--blob-callback",
             callback,
-            # En el contenido de los ficheros...
-            "--replace-text",
-            para_texto,
-            # ...y en los mensajes de commit, que son parte del repositorio
-            # igual que los ficheros y no los toca ningún callback de blobs.
-            "--replace-message",
-            para_mensajes,
+            # Los mensajes de commit son parte del repositorio igual que los
+            # ficheros, y no los toca el callback de blobs.
+            "--message-callback",
+            callback_mensaje,
         ],
         check=False,
     ).returncode

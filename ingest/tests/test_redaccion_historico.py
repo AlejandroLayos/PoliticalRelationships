@@ -384,14 +384,18 @@ def test_las_sustituciones_de_texto_no_nombran_a_nadie():
 
 def test_el_guion_sustituye_tambien_en_los_mensajes_de_commit():
     # Los mensajes de commit son parte del repositorio igual que los ficheros,
-    # y no los toca ningún callback de blobs. Me pasó a mí: retiré los datos
-    # de los ficheros de datos y los volví a publicar en la prosa que explicaba
-    # cómo los había retirado.
+    # y no los toca el callback de blobs. Me pasó a mí: retiré los datos de los
+    # ficheros de datos y los volví a publicar en la prosa que explicaba cómo
+    # los había retirado.
+    #
+    # Va por `--message-callback` y no por `--replace-message`: esa opción no
+    # sustituía nada, y la comprobación posterior paró tres reescrituras
+    # seguidas antes de empujar.
     import inspect
 
     fuente = inspect.getsource(redaccion._ejecutar_filter_repo)
-    assert "--replace-message" in fuente
-    assert "--replace-text" in fuente
+    assert "--message-callback" in fuente
+    assert "sustituir_texto" in fuente
 
 
 def test_no_corta_cuando_solo_quedan_sustituciones_de_texto():
@@ -409,3 +413,30 @@ def test_no_corta_cuando_solo_quedan_sustituciones_de_texto():
     assert "SUSTITUCIONES_TEXTO" in fuente, (
         "el corte anticipado no tiene en cuenta las sustituciones de texto"
     )
+
+
+def test_sustituir_texto_funciona_sobre_bytes_y_con_saltos_de_linea():
+    """Se hace en Python, no con --replace-text / --replace-message.
+
+    Esas dos opciones no sustituían nada en los mensajes de commit: tres
+    ejecuciones seguidas reescribieron el historial y la comprobación
+    posterior las paró a las tres antes de empujar. Con `regex:`, con
+    literales, y con un fichero para cada una — las tres igual.
+
+    El callback de blobs, que es Python, funcionaba a la primera.
+    """
+    plano = b"cobro UTE PERAFITA (socios retirados) el contrato"
+    assert b"Nombre Apellido" not in redaccion.sustituir_texto(plano)
+    assert b"socios retirados" in redaccion.sustituir_texto(plano)
+
+    # Partido por un salto de línea, como queda al ajustar el ancho de un
+    # párrafo en un mensaje de commit.
+    partido = "«UTE PERAFITA (socios retirados)» en el grafo".encode()
+    salida = redaccion.sustituir_texto(partido)
+    assert b"Apellido" not in salida
+    assert b"socios retirados" in salida
+
+
+def test_sustituir_texto_no_toca_lo_que_no_casa():
+    intacto = b"UTE ACCIONA CONSTRUCCION SA Y DRAGADOS SA (CIUDAD DE LA JUSTICIA)"
+    assert redaccion.sustituir_texto(intacto) == intacto
