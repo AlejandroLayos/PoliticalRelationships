@@ -67,10 +67,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
+from pathlib import Path
 
 ESQUEMA_PERSONAL = "Person"
+
+# DNI: ocho dígitos y letra. NIE: X/Y/Z, siete dígitos y letra. Los dos
+# identifican a UNA persona, aunque cuelguen de la ficha de una empresa.
+#
+# Hizo falta después de la primera reescritura: quitar los nodos `Person`
+# dejó limpio lo que estaba clasificado como persona, pero en el historial
+# quedaba una UTE —`Company`, con forma societaria explícita— cuyo NIF era el
+# DNI de uno de sus socios. La regla de «esto es una empresa» funcionaba bien
+# y aun así seguía habiendo un DNI publicado.
+_IDENTIFICADOR_PERSONAL = re.compile(r"^(?:[0-9]{8}|[XYZxyz][0-9]{7})[A-Za-z]$")
+
+
+def es_identificador_personal(nif: str | None) -> bool:
+    return bool(nif) and bool(_IDENTIFICADOR_PERSONAL.match(nif.strip()))
 RUTA = "frontend/public/datos/grafo.json"
 
 # Prefiltro barato antes de parsear JSON de varios megas. Es a propósito laxo:
@@ -88,10 +104,31 @@ MOTIVO = (
 
 
 def redactar(datos: dict) -> tuple[dict, int]:
-    """Devuelve el volcado sin personas físicas y cuántas se quitaron."""
+    """Devuelve el volcado sin datos personales y cuántos se quitaron.
+
+    Dos cosas distintas:
+
+    - Las entidades de esquema `Person` se van enteras: la ficha ES de una
+      persona.
+    - A las demás se les quita el NIF si resulta ser un DNI o un NIE. La ficha
+      se queda —una UTE adjudicataria de un contrato público es un dato— pero
+      el identificador personal no se publica.
+    """
     nodos = datos.get("nodes") or []
     personales = {n["id"] for n in nodos if n.get("schema") == ESQUEMA_PERSONAL}
-    if not personales:
+
+    nifs_retirados = 0
+    for n in nodos:
+        if n["id"] in personales:
+            continue
+        if es_identificador_personal(n.get("nif")):
+            n.pop("nif", None)
+            props = n.get("properties")
+            if isinstance(props, dict):
+                props.pop("nif", None)
+            nifs_retirados += 1
+
+    if not personales and not nifs_retirados:
         return datos, 0
 
     datos["nodes"] = [n for n in nodos if n["id"] not in personales]
@@ -104,13 +141,17 @@ def redactar(datos: dict) -> tuple[dict, int]:
     if isinstance(procedencia, dict):
         datos["provenance"] = {k: v for k, v in procedencia.items() if k not in personales}
 
-    datos["redactado"] = {"entidades_retiradas": len(personales), "motivo": MOTIVO}
-    return datos, len(personales)
+    datos["redactado"] = {
+        "entidades_retiradas": len(personales),
+        "identificadores_retirados": nifs_retirados,
+        "motivo": MOTIVO,
+    }
+    return datos, len(personales) + nifs_retirados
 
 
 def blob_callback(blob, metadata):  # (metadata: firma que exige git-filter-repo)
     """Lo llama git-filter-repo con cada blob del historial."""
-    if PISTA not in blob.data:
+    if b'"nodes"' not in blob.data:
         return
     try:
         datos = json.loads(blob.data)
@@ -145,31 +186,47 @@ def _blobs_afectados() -> list[tuple[str, int, str]]:
         crudo = subprocess.run(
             ["git", "cat-file", "-p", sha], capture_output=True
         ).stdout
-        if PISTA not in crudo:
+        if b'"nodes"' not in crudo:
             continue
         try:
             datos = json.loads(crudo)
         except Exception:
             continue
-        personas = [n for n in datos.get("nodes", []) if n.get("schema") == ESQUEMA_PERSONAL]
-        if personas:
-            afectados.append((sha, len(personas), personas[0].get("caption", "")))
+        nodos = datos.get("nodes", [])
+        personas = [n for n in nodos if n.get("schema") == ESQUEMA_PERSONAL]
+        con_dni = [
+            n
+            for n in nodos
+            if n.get("schema") != ESQUEMA_PERSONAL and es_identificador_personal(n.get("nif"))
+        ]
+        if personas or con_dni:
+            afectados.append((sha, len(personas), len(con_dni)))
     return afectados
 
 
 def comprobar() -> int:
+    """Informa de qué hay que retirar. Sale con 1 si encuentra algo.
+
+    No imprime ningún nombre ni ningún número: el informe de un problema de
+    datos personales no puede ser otra copia de los datos personales.
+    """
     afectados = _blobs_afectados()
     if not afectados:
-        print("No queda ningún volcado con personas físicas en el historial.")
+        print("No queda ningún dato personal en los volcados del historial.")
         return 0
-    print(f"{len(afectados)} blob(s) con personas físicas:\n")
-    total = 0
-    for sha, cuantas, ejemplo in afectados:
-        total += cuantas
-        inicial = (ejemplo or "?")[:1]
-        print(f"  {sha}  {cuantas:>3} personas  (p. ej. «{inicial}…», nombre no impreso)")
-    print(f"\nTotal de entidades personales a retirar: {total}")
-    print("\nLos commits que las contienen NO se borran: se reescribe su contenido.")
+
+    print(f"{len(afectados)} blob(s) con datos personales:\n")
+    print("  blob                                      fichas   identificadores")
+    print("                                          personales  en otras fichas")
+    fichas = identificadores = 0
+    for sha, n_personas, n_dni in afectados:
+        fichas += n_personas
+        identificadores += n_dni
+        print(f"  {sha}  {n_personas:>8}   {n_dni:>13}")
+    print(f"\nFichas de personas físicas, que se retiran enteras: {fichas}")
+    print("DNI o NIE colgando de otras fichas, de los que se retira")
+    print(f"sólo el identificador: {identificadores}")
+    print("\nLos commits que los contienen NO se borran: se reescribe su contenido.")
     return 1
 
 
@@ -270,35 +327,32 @@ def main() -> int:
 
 
 def _ejecutar_filter_repo() -> int:
-    # Se delega en el ejecutable, que es la forma soportada de usarlo.
+    """Lanza git-filter-repo con `redactar()` como callback.
+
+    El callback IMPORTA esta misma función en vez de repetirla dentro de una
+    cadena de texto. La primera versión llevaba una copia del filtro embebida
+    en el argumento, y en cuanto la regla creció —quitar también los DNI que
+    cuelgan de empresas— las dos versiones se separaron: la probada por los
+    tests y la que se ejecutaba de verdad. Una lógica que decide qué datos
+    personales se publican no puede tener dos copias.
+    """
+    aqui = str(Path(__file__).resolve().parent)
+    callback = (
+        "import sys, json\n"
+        f"sys.path.insert(0, {aqui!r})\n"
+        "from redactar_particulares_del_historico import redactar\n"
+        "if b'\"nodes\"' in blob.data:\n"
+        "    try:\n"
+        "        d = json.loads(blob.data)\n"
+        "    except Exception:\n"
+        "        d = None\n"
+        "    if d is not None:\n"
+        "        d, cuantos = redactar(d)\n"
+        "        if cuantos:\n"
+        "            blob.data = json.dumps(d, ensure_ascii=False).encode('utf-8')\n"
+    )
     return subprocess.run(
-        [
-            "git",
-            "filter-repo",
-            "--force",
-            "--blob-callback",
-            (
-                "import json\n"
-                "if b'\"Person\"' in blob.data:\n"
-                "    try:\n"
-                "        d = json.loads(blob.data)\n"
-                "    except Exception:\n"
-                "        d = None\n"
-                "    if d is not None:\n"
-                "        ids = {n['id'] for n in d.get('nodes') or [] "
-                "if n.get('schema') == 'Person'}\n"
-                "        if ids:\n"
-                "            d['nodes'] = [n for n in d['nodes'] if n['id'] not in ids]\n"
-                "            d['edges'] = [a for a in (d.get('edges') or []) "
-                "if a.get('source') not in ids and a.get('target') not in ids]\n"
-                "            p = d.get('provenance')\n"
-                "            if isinstance(p, dict):\n"
-                "                d['provenance'] = {k: v for k, v in p.items() if k not in ids}\n"
-                f"            d['redactado'] = {{'entidades_retiradas': len(ids), "
-                f"'motivo': {MOTIVO!r}}}\n"
-                "            blob.data = json.dumps(d, ensure_ascii=False).encode('utf-8')\n"
-            ),
-        ],
+        ["git", "filter-repo", "--force", "--blob-callback", callback],
         check=False,
     ).returncode
 

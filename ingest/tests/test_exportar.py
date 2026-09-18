@@ -820,3 +820,46 @@ def test_el_extracto_no_es_mayor_que_el_indice(store, tmp_path):
     ids_top = {e["id"] for e in top["entidades"]}
     ids_completo = {e["id"] for e in completo["entidades"]}
     assert ids_top <= ids_completo
+
+
+def test_un_dni_no_se_publica_aunque_la_ficha_sea_de_una_empresa(store, tmp_path):
+    # En el historial había una UTE —`Company`, con forma societaria
+    # explícita— cuyo NIF era el DNI de uno de sus socios. La regla de «esto
+    # es una empresa» funcionaba bien y aun así salía publicado un DNI.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    fila = store.conn.execute(
+        """
+        INSERT INTO entities (ftm_schema, caption, nif, dedupe_key, properties)
+        VALUES ('Company', 'UTE EJEMPLO', '12345678Z', %s, '{}'::jsonb) RETURNING id
+        """,
+        (f"test:{uuid.uuid4()}",),
+    ).fetchone()
+    ute = str(fila["id"])
+    _arista(store, organo, ute, "5000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    idx = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+
+    # La entidad se publica: una UTE adjudicataria es un dato.
+    assert "UTE EJEMPLO" in {n["caption"] for n in g["nodes"]}
+    # El identificador personal, no.
+    assert "12345678Z" not in json.dumps(g, ensure_ascii=False)
+    assert "12345678Z" not in json.dumps(idx, ensure_ascii=False)
+
+
+def test_el_nif_de_una_empresa_de_verdad_sigue_publicandose(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    fila = store.conn.execute(
+        """
+        INSERT INTO entities (ftm_schema, caption, nif, dedupe_key, properties)
+        VALUES ('Company', 'EMPRESA SL', 'B12345678', %s, '{}'::jsonb) RETURNING id
+        """,
+        (f"test:{uuid.uuid4()}",),
+    ).fetchone()
+    _arista(store, organo, str(fila["id"]), "5000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    empresa = next(n for n in g["nodes"] if n["caption"] == "EMPRESA SL")
+    assert empresa["nif"] == "B12345678"

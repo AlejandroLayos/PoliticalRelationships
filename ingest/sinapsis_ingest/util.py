@@ -204,6 +204,33 @@ def parece_persona_fisica(nif: str, nombre: str | None = None) -> bool:
     return nif[0].isdigit() or nif[0] in _INICIALES_PERSONA_FISICA
 
 
+# DNI: ocho dígitos y una letra de control. NIE: X, Y o Z, siete dígitos y
+# letra. Los dos identifican a UNA PERSONA y a nadie más.
+_IDENTIFICADOR_PERSONAL = re.compile(r"^(?:[0-9]{8}|[XYZxyz][0-9]{7})[A-Za-z]$")
+
+
+def es_identificador_personal(nif: str | None) -> bool:
+    """¿Este NIF identifica a una persona física, sea de quién sea la ficha?
+
+    Distinto de `parece_persona_fisica`, y la diferencia importa. Aquélla
+    decide si la FICHA es de una persona, y deja que el nombre desmienta al
+    NIF: una S.L. con un identificador raro sigue siendo una S.L., y está
+    bien que así sea.
+
+    Ésta pregunta otra cosa: si ese número, por sí solo, es un identificador
+    personal. Y lo es aunque cuelgue de una empresa.
+
+    En el historial del repositorio había una UTE —persona jurídica, forma
+    societaria explícita, clasificada como `Company` con todo el criterio—
+    cuyo NIF era el DNI de uno de sus socios, y con los nombres de los dos
+    dentro del propio nombre de la UTE. La regla de «esto es una empresa»
+    funcionaba perfectamente y aun así se estaba publicando un DNI.
+
+    Un DNI es un dato personal esté pegado a lo que esté.
+    """
+    return bool(nif) and bool(_IDENTIFICADOR_PERSONAL.match(nif.strip()))
+
+
 def slug(texto: str) -> str:
     """Clave estable y legible a partir de un nombre.
 

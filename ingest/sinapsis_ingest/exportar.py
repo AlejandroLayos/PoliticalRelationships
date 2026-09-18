@@ -25,6 +25,7 @@ from typing import Any
 import structlog
 
 from sinapsis_ingest.store import Store
+from sinapsis_ingest.util import es_identificador_personal
 
 log = structlog.get_logger()
 
@@ -286,7 +287,16 @@ def exportar(
             "id": str(f["id"]),
             "schema": f["ftm_schema"],
             "caption": f["caption"],
-            **({"nif": f["nif"]} if f["nif"] else {}),
+            # Un DNI o un NIE no se publican aunque la ficha sea de una
+            # empresa. En el historial había una UTE clasificada como
+            # `Company` con todo el criterio —forma societaria explícita— cuyo
+            # NIF era el DNI de uno de sus socios. La regla de «esto es una
+            # empresa» funcionaba bien y aun así salía publicado un DNI.
+            **(
+                {"nif": f["nif"]}
+                if f["nif"] and not es_identificador_personal(f["nif"])
+                else {}
+            ),
             **({"country": f["country"]} if f["country"] else {}),
             "properties": f["properties"] or {},
             "degree": int(f["grado"]),
@@ -506,7 +516,12 @@ def _exportar_indice(store: Store, destino: Path, en_mapa: set[str]) -> dict[str
                 "id": str(f["id"]),
                 "schema": f["ftm_schema"],
                 "caption": f["caption"],
-                **({"nif": f["nif"]} if f["nif"] else {}),
+                # El índice es otra puerta de publicación: misma regla.
+                **(
+                    {"nif": f["nif"]}
+                    if f["nif"] and not es_identificador_personal(f["nif"])
+                    else {}
+                ),
                 # Sólo se escriben si no son cero: multiplicado por decenas de
                 # miles de entradas, un `0` de más es peso muerto en un fichero
                 # que se descarga entero.
