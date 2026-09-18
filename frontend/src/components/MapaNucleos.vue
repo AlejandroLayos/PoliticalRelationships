@@ -20,7 +20,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import Sigma from 'sigma'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
-import { analizarNucleos, colapsarNodosDePaso, colorNucleo } from '../nucleos.js'
+import { analizarNucleos, colapsarNodosDePaso, FONDO, paletaDeNucleos } from '../nucleos.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -45,8 +45,13 @@ const etiquetados = shallowRef(new Set())
  * Emergencias Secretaría General Técnica"— y una etiqueta así tapa media
  * pantalla. Se recorta para el mapa; el nombre entero está en el panel y al
  * pasar por encima.
+ *
+ * Corto, además, porque Sigma reparte las etiquetas por una rejilla y evita
+ * que dos caigan en la misma celda, pero no comprueba si se solapan de
+ * verdad: dos etiquetas de treinta y cuatro caracteres en celdas vecinas se
+ * pisan igual. Estrechándolas caben donde antes se superponían.
  */
-function recortar(texto, max = 34) {
+function recortar(texto, max = 24) {
   if (!texto || texto.length <= max) return texto ?? ''
   return `${texto.slice(0, max - 1).trimEnd()}…`
 }
@@ -124,18 +129,26 @@ function construir() {
     for (const id of fragmentos) g.dropNode(id)
   }
 
-  // Sólo los pesados de cada núcleo llevan etiqueta.
-  // Rotular tiene un presupuesto, como todo lo demás. Sigma decide el solape
-  // con su rejilla, pero no sabe que unas etiquetas importan más que otras, así
-  // que si se le dan doscientas elige mal y el centro queda ilegible.
+  // El color sólo lo llevan los núcleos de cabeza, y es el mismo que su fila
+  // en la lista de al lado. Ver `paletaDeNucleos`.
   //
-  // Se rotulan los núcleos con más dinero y nada más. Al resto se llega
-  // pasando el ratón por encima o desde el panel.
-  const MAX_ETIQUETAS = 18
+  // Se reparte sobre la lista VISIBLE y no sobre la del análisis, y ése es el
+  // detalle que importa: `recalcularVisible` reordena por el dinero que queda
+  // después de los filtros, así que con las dos listas en órdenes distintos la
+  // fila decía un color y su mancha en el mapa otro.
+  const visible = recalcularVisible(g, nucleos)
+  const color = paletaDeNucleos(visible.nucleos)
+
+  // Etiqueta EXACTAMENTE los que llevan color, y en el mismo orden.
+  //
+  // Antes eran dieciocho, elegidas de otra lista: seis manchas grises salían
+  // rotuladas y el ojo las leía como importantes, mientras que alguna de las
+  // de color se quedaba muda. Color, etiqueta y fila de la lista señalan ahora
+  // al mismo núcleo, que es lo que permite pasar del mapa a la lista y al
+  // revés sin tener que adivinar nada.
   const conEtiqueta = new Set()
-  for (const n of nucleos) {
-    if (conEtiqueta.size >= MAX_ETIQUETAS) break
-    if (n.tamano < 4) continue
+  for (const n of visible.nucleos) {
+    if (color(n.id) === FONDO) break
     const cabeza = n.principales.find((m) => g.hasNode(m.id))
     if (cabeza) conEtiqueta.add(cabeza.id)
   }
@@ -145,7 +158,7 @@ function construir() {
     g.mergeNodeAttributes(id, {
       label: conEtiqueta.has(id) ? recortar(attrs.label) : '',
       etiquetaReal: attrs.label,
-      color: colorNucleo(attrs.nucleo),
+      color: color(attrs.nucleo),
       extranjera: Boolean(nodosPorId.get(id)?.properties?.entidad_extranjera),
       size: tamano(attrs.dinero, attrs.grado),
       x: Math.random(),
@@ -180,7 +193,7 @@ function construir() {
   // sin filtros. Con «Sólo partidos» puesto, la lista seguía encabezada por
   // núcleos enteros que el filtro había quitado de la pantalla: se leían
   // nombres y cifras que no estaban en ninguna parte del dibujo.
-  emit('analizado', recalcularVisible(g, nucleos))
+  emit('analizado', visible)
   calculando.value = false
 }
 
@@ -323,6 +336,36 @@ function separarNucleos(g) {
   })
 }
 
+/**
+ * Etiqueta con placa: rectángulo oscuro redondeado y el texto encima.
+ *
+ * Firma de Sigma 3: `(contexto, datos, ajustes)`, donde `datos` trae ya las
+ * coordenadas en píxeles de pantalla y el tamaño del nodo.
+ */
+function dibujarEtiqueta(ctx, datos, ajustes) {
+  if (!datos.label) return
+  const fuente = `${ajustes.labelWeight} ${ajustes.labelSize}px ${ajustes.labelFont}`
+  ctx.font = fuente
+  const ancho = ctx.measureText(datos.label).width
+  const alto = ajustes.labelSize + 6
+  const x = datos.x + datos.size + 4
+  const y = datos.y + ajustes.labelSize / 3 - alto + 3
+  const r = 4
+
+  ctx.beginPath()
+  ctx.moveTo(x - 4 + r, y)
+  ctx.arcTo(x + ancho + 4, y, x + ancho + 4, y + alto, r)
+  ctx.arcTo(x + ancho + 4, y + alto, x - 4, y + alto, r)
+  ctx.arcTo(x - 4, y + alto, x - 4, y, r)
+  ctx.arcTo(x - 4, y, x + ancho + 4, y, r)
+  ctx.closePath()
+  ctx.fillStyle = 'rgba(9, 13, 19, 0.82)'
+  ctx.fill()
+
+  ctx.fillStyle = ajustes.labelColor.color
+  ctx.fillText(datos.label, x, y + alto - 6)
+}
+
 function pintar() {
   if (!contenedor.value) return
   if (sigma) {
@@ -342,6 +385,11 @@ function pintar() {
     labelColor: { color: '#f2f5fa' },
     labelSize: 12,
     labelWeight: '600',
+    // Sigma dibuja el texto a pelo. Encima de una mancha de color claro
+    // —verde, amarillo, turquesa— el blanco no se lee, y encima de dos manchas
+    // que se tocan, menos. Con una placa oscura detrás se lee siempre, sobre
+    // lo que sea, que es lo que tiene que pasar con el nombre de un organismo.
+    defaultDrawNodeLabel: dibujarEtiqueta,
     minCameraRatio: 0.03,
     maxCameraRatio: 12,
     zIndex: true,

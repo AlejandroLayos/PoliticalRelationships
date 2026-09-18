@@ -12,14 +12,21 @@
  * (spec §12).
  */
 import { computed } from 'vue'
-import { colorNucleo, dineroCorto } from '../nucleos.js'
-import { etiquetaEsquema } from '../esquemas.js'
+import { dineroCorto, paletaDeNucleos } from '../nucleos.js'
+import { etiquetaEsquemaPlural } from '../esquemas.js'
 
 const props = defineProps({
   nucleos: { type: Array, default: () => [] },
   enfocado: { type: Number, default: null },
 })
 const emit = defineEmits(['enfocar', 'seleccionar'])
+
+/*
+  El mismo color que el mapa, y calculado igual: por el orden de esta lista.
+  Antes cada uno pedía su color por el id del núcleo, así que la fila decía un
+  color y la mancha otro en cuanto el orden no coincidía con el id.
+*/
+const color = computed(() => paletaDeNucleos(props.nucleos))
 
 // Un puñado de entidades alrededor de una empresa y sus contratos no es un
 // núcleo: es una relación con adornos, y ordenando por dinero se cuelan
@@ -33,7 +40,7 @@ function resumenTipos(tipos) {
   return Object.entries(tipos)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([k, v]) => `${v} ${etiquetaEsquema(k).toLowerCase()}`)
+    .map(([k, v]) => `${v} ${etiquetaEsquemaPlural(k, v)}`)
     .join(' · ')
 }
 </script>
@@ -60,7 +67,7 @@ function resumenTipos(tipos) {
           :class="{ activo: enfocado === n.id }"
           @click="emit('enfocar', enfocado === n.id ? null : n.id)"
         >
-          <span class="marca" :style="{ background: colorNucleo(n.id) }" />
+          <span class="marca" :style="{ background: color(n.id) }" />
           <span class="cuerpo">
             <span class="titulo">{{ n.etiqueta }}</span>
             <span class="cifras">

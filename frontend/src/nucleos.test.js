@@ -4,6 +4,8 @@ import {
   analizarNucleos,
   colapsarNodosDePaso,
   colorNucleo,
+  paletaDeNucleos,
+  FONDO,
   dineroCorto,
   etiquetaDe,
   peso,
@@ -325,5 +327,30 @@ describe('el puente conserva el porqué de un hueco', () => {
     const puente = g.edges.find((e) => e.source === 'org' && e.target === 'emp')
     expect(puente.properties.importeCompartido).toBe('900000000')
     expect(puente.properties.motivoImporteDudoso).toContain('acuerdo marco')
+  })
+})
+
+describe('paletaDeNucleos', () => {
+  it('colorea la cabeza y deja el resto en gris', () => {
+    const nucleos = Array.from({ length: 30 }, (_, i) => ({ id: i }))
+    const color = paletaDeNucleos(nucleos, 3)
+    const cabeza = [color(0), color(1), color(2)]
+    expect(new Set(cabeza).size).toBe(3)
+    expect(cabeza).not.toContain(FONDO)
+    expect(color(3)).toBe(FONDO)
+    expect(color(29)).toBe(FONDO)
+  })
+
+  it('un núcleo que no existe también es fondo', () => {
+    expect(paletaDeNucleos([{ id: 7 }])(99)).toBe(FONDO)
+    expect(paletaDeNucleos([])(0)).toBe(FONDO)
+    expect(paletaDeNucleos(null)(0)).toBe(FONDO)
+  })
+
+  it('el orden manda: el primero de la lista se lleva el primer color', () => {
+    const a = paletaDeNucleos([{ id: 5 }, { id: 9 }])
+    const b = paletaDeNucleos([{ id: 9 }, { id: 5 }])
+    expect(a(5)).toBe(b(9))
+    expect(a(9)).toBe(b(5))
   })
 })

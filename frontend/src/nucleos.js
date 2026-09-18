@@ -244,8 +244,31 @@ const PALETA = [
 ]
 
 export function colorNucleo(idNucleo) {
-  if (idNucleo === undefined || idNucleo === null || idNucleo < 0) return '#6b7280'
+  if (idNucleo === undefined || idNucleo === null || idNucleo < 0) return FONDO
   return PALETA[idNucleo % PALETA.length]
+}
+
+/** El gris de lo que no está entre los primeros. No es «sin núcleo»: es fondo. */
+export const FONDO = '#6b7280'
+
+/**
+ * Colorea sólo los núcleos de cabeza; el resto, gris.
+ *
+ * Con un color por núcleo, 165 núcleos son 165 colores repetidos cada doce, y
+ * el mapa sale un confeti donde ningún color significa nada: dos manchas del
+ * mismo tono no tienen nada que ver entre sí y parece que sí.
+ *
+ * Coloreando sólo la cabeza, el color pasa a querer decir algo concreto —«éste
+ * es uno de los doce núcleos con más dinero»— y además es el MISMO que lleva
+ * su fila en la lista de al lado, así que el mapa y la lista se señalan
+ * mutuamente. Lo demás se ve, en gris, que es lo que es: contexto.
+ *
+ * `nucleos` tiene que venir ya ordenado como se presenta en la lista.
+ */
+export function paletaDeNucleos(nucleos, cuantos = PALETA.length) {
+  const mapa = new Map()
+  for (const [i, n] of (nucleos ?? []).slice(0, cuantos).entries()) mapa.set(n.id, PALETA[i])
+  return (idNucleo) => mapa.get(idNucleo) ?? FONDO
 }
 
 /** Formato de dinero legible: 12.400.000 € se lee peor que 12,4 M €. */

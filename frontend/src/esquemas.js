@@ -46,6 +46,25 @@ export const NOMBRE_ESTADO = {
 export function etiquetaEsquema(s) {
   return NOMBRE_ESQUEMA[s] ?? s
 }
+
+/**
+ * En plural. Los nombres llevan adjetivo y no valen con una `s` al final:
+ * «8 persona jurídica» y «21 organismo público» es lo que se estaba leyendo
+ * en el resumen de cada núcleo.
+ */
+const PLURAL_ESQUEMA = {
+  PublicBody: 'organismos públicos',
+  Organization: 'organizaciones',
+  Company: 'empresas',
+  LegalEntity: 'personas jurídicas',
+  Person: 'personas',
+  Contract: 'expedientes',
+}
+
+export function etiquetaEsquemaPlural(s, n) {
+  if (n === 1) return etiquetaEsquema(s).toLowerCase()
+  return PLURAL_ESQUEMA[s] ?? `${etiquetaEsquema(s).toLowerCase()}s`
+}
 export function etiquetaArista(s) {
   return NOMBRE_ARISTA[s] ?? s
 }

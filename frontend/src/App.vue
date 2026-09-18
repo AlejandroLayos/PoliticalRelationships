@@ -517,7 +517,10 @@ onMounted(async () => {
           <span class="leyenda-inferido"><i class="linea-inferida" />Conexión inferida (fina y ámbar)</span>
         </div>
         <div v-else class="leyenda">
-          <span>Cada color es un núcleo · el tamaño es dinero</span>
+          <span>
+            En color, los núcleos con más dinero —los mismos de la lista—;
+            en gris, el resto. El tamaño de cada punto es dinero.
+          </span>
         </div>
 
         <p class="ayuda">
