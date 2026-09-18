@@ -246,7 +246,8 @@ def ids_personales() -> set[str]:
     volcado, porque la señal puede estar en un fichero y el dato personal en
     otro.
 
-    Pasó de verdad: una pasada anterior le quitó el DNI a «UTE PERAFITA (socios retirados)» en el grafo y dejó la ficha publicada.
+    Pasó de verdad: una pasada anterior le quitó el DNI a esa UTE en el
+    grafo y dejó la ficha publicada.
     Con el DNI fuera, esa ficha quedó indistinguible de una empresa normal —y
     con los nombres de los dos socios todavía en el nombre—. La señal seguía
     existiendo, pero en el índice, que es otro fichero.
@@ -414,6 +415,31 @@ def main() -> int:
     return 0
 
 
+# Patrones que retiran nombres de persona del TEXTO del repositorio: código,
+# comentarios y mensajes de commit.
+#
+# Hizo falta porque me pasó a mí. Al documentar el caso escribí el nombre
+# completo de la UTE —con los nombres y apellidos de sus dos socios dentro— en
+# los docstrings del guion, en los de su test y en varios mensajes de commit.
+# O sea que retiré los datos personales de los ficheros de datos y los volví a
+# publicar en la prosa que explicaba cómo los había retirado.
+#
+# El patrón no nombra a nadie: casa la forma «UTE <topónimo> (…)» y se queda
+# con el topónimo, que es un nombre de lugar y no de persona. Así esta lista
+# tampoco es otra copia de los datos personales.
+SUSTITUCIONES_TEXTO = (
+    r"regex:UTE PERAFITA \([^)]*\)==>UTE PERAFITA (socios retirados)",
+)
+
+
+def _fichero_de_sustituciones() -> str:
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".txt", delete=False, encoding="utf-8"
+    ) as f:
+        f.write("\n".join(SUSTITUCIONES_TEXTO) + "\n")
+        return f.name
+
+
 def _ejecutar_filter_repo() -> int:
     """Lanza git-filter-repo con `redactar()` como callback.
 
@@ -449,8 +475,22 @@ def _ejecutar_filter_repo() -> int:
         "        if cuantos:\n"
         "            blob.data = json.dumps(d, ensure_ascii=False).encode('utf-8')\n"
     )
+    sustituciones = _fichero_de_sustituciones()
     return subprocess.run(
-        ["git", "filter-repo", "--force", "--blob-callback", callback],
+        [
+            "git",
+            "filter-repo",
+            "--force",
+            "--blob-callback",
+            callback,
+            # En el contenido de los ficheros...
+            "--replace-text",
+            sustituciones,
+            # ...y en los mensajes de commit, que son parte del repositorio
+            # igual que los ficheros y no los toca ningún callback de blobs.
+            "--replace-message",
+            sustituciones,
+        ],
         check=False,
     ).returncode
 

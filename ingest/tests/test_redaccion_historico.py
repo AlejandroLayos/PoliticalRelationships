@@ -120,9 +120,9 @@ def test_la_pista_encuentra_las_dos_serializaciones():
 def test_se_va_entera_la_ficha_identificada_con_un_dni(volcado):
     """Quitar sólo el identificador no bastaba.
 
-    En el historial había una UTE identificada con el DNI de un socio cuyo
-    NOMBRE eran los nombres y apellidos de los dos socios: «UTE PERAFITA (socios retirados)». Retirado el DNI, seguían
-    publicados los dos nombres.
+    En el historial había una UTE identificada con el DNI de uno de sus socios
+    y cuyo NOMBRE OFICIAL eran los nombres y apellidos de los dos. Retirado el
+    DNI, seguían publicados los dos nombres.
 
     Si la fuente identificó a esa parte contratante con un DNI, es una persona
     física a efectos de publicar, y aquí sólo salen personas jurídicas.
@@ -284,7 +284,8 @@ def test_el_informe_no_imprime_ningun_dato_personal():
 def test_retira_por_id_aunque_en_ese_volcado_ya_no_se_note():
     """La señal puede estar en un fichero y el dato personal en otro.
 
-    Pasó de verdad: una pasada anterior le quitó el DNI a «UTE PERAFITA (socios retirados)» en el grafo y dejó la ficha publicada.
+    Pasó de verdad: una pasada anterior le quitó el DNI a esa UTE en el
+    grafo y dejó la ficha publicada.
     Con el DNI fuera, esa ficha quedó indistinguible de una empresa normal —y
     con los nombres de los dos socios todavía en el nombre—. La señal seguía
     existiendo, pero en el índice, que es otro fichero.
@@ -360,3 +361,34 @@ def test_la_lista_de_hashes_no_contiene_datos_personales():
     for h in redaccion.HASHES_CAPTION_PERSONAL:
         assert len(h) == 64
         assert all(c in "0123456789abcdef" for c in h)
+
+
+def test_las_sustituciones_de_texto_no_nombran_a_nadie():
+    """La lista de qué sustituir tampoco puede ser otra copia de los datos.
+
+    El patrón casa la forma «UTE <topónimo> (…)» y conserva el topónimo, que
+    es un nombre de lugar. Lo que se retira es el paréntesis, que es donde
+    están los nombres de los socios.
+    """
+    import re
+
+    for linea in redaccion.SUSTITUCIONES_TEXTO:
+        patron, reemplazo = linea.split("==>")
+        assert patron.startswith("regex:")
+        rx = re.compile(patron[len("regex:") :])
+        ejemplo = "cobró UTE PERAFITA (socios retirados) el contrato"
+        salida = rx.sub(reemplazo, ejemplo)
+        assert "Nombre Apellido" not in salida
+        assert "socios retirados" in salida
+
+
+def test_el_guion_sustituye_tambien_en_los_mensajes_de_commit():
+    # Los mensajes de commit son parte del repositorio igual que los ficheros,
+    # y no los toca ningún callback de blobs. Me pasó a mí: retiré los datos
+    # de los ficheros de datos y los volví a publicar en la prosa que explicaba
+    # cómo los había retirado.
+    import inspect
+
+    fuente = inspect.getsource(redaccion._ejecutar_filter_repo)
+    assert "--replace-message" in fuente
+    assert "--replace-text" in fuente
