@@ -208,9 +208,7 @@ def test_un_volcado_con_solo_un_dni_mal_puesto_tambien_se_redacta():
     assert salida["edges"] == []
 
 
-@pytest.mark.parametrize(
-    "nif", ["12345678Z", "X1234567L", "Y7654321M", "z0000000A", " 12345678Z "]
-)
+@pytest.mark.parametrize("nif", ["12345678Z", "X1234567L", "Y7654321M", "z0000000A", " 12345678Z "])
 def test_reconoce_los_identificadores_personales(nif):
     assert redaccion.es_identificador_personal(nif)
 
@@ -462,3 +460,22 @@ def test_el_reemplazo_no_se_cuenta_como_pendiente():
         una = redaccion.sustituir_texto(b"x UTE PERAFITA (socios retirados) y")
         dos = redaccion.sustituir_texto(una)
         assert una == dos, "la sustitución no es idempotente"
+
+
+def test_casa_aunque_el_salto_de_linea_caiga_antes_del_parentesis():
+    """El sexto intento falló por un espacio literal en el patrón.
+
+    Al ajustar el ancho de un párrafo, el nombre quedó partido justo entre el
+    topónimo y el paréntesis: «UTE <topónimo>\\n   (nombres)». El patrón exigía
+    un espacio ahí, así que encontraba una ocurrencia donde había dos, y la
+    mitad sobrevivía a la reescritura sin que nada lo dijera.
+    """
+    partido = b"vease la\n   UTE PERAFITA\n   (Nombre Apellido, Otro Apellido)\n   y su NIF"
+    salida = redaccion.sustituir_texto(partido)
+    assert b"Apellido" not in salida, "el salto de linea salva el nombre"
+    assert b"socios retirados" in salida
+
+    # Y con tabulador, y sin separacion ninguna.
+    for medio in (b"\t", b"", b"  \n\t"):
+        uno = b"UTE PERAFITA" + medio + b"(Nombre Apellido)"
+        assert b"Apellido" not in redaccion.sustituir_texto(uno), medio

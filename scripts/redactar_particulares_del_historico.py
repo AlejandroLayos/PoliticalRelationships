@@ -89,6 +89,8 @@ _IDENTIFICADOR_PERSONAL = re.compile(r"^(?:[0-9]{8}|[XYZxyz][0-9]{7})[A-Za-z]$")
 
 def es_identificador_personal(nif: str | None) -> bool:
     return bool(nif) and bool(_IDENTIFICADOR_PERSONAL.match(nif.strip()))
+
+
 # Los DOS ficheros que se publican. Mirar sólo el grafo dejó el índice entero
 # sin filtrar, con un NIE dentro.
 RUTAS = ("frontend/public/datos/grafo.json", "frontend/public/datos/indice.json")
@@ -322,9 +324,12 @@ def _todos_los_blobs_de_texto() -> list[tuple[str, bytes]]:
         if len(partes) != 2 or not partes[1].endswith(interesantes):
             continue
         sha = partes[0]
-        if subprocess.run(
-            ["git", "cat-file", "-t", sha], capture_output=True, text=True
-        ).stdout.strip() != "blob":
+        if (
+            subprocess.run(
+                ["git", "cat-file", "-t", sha], capture_output=True, text=True
+            ).stdout.strip()
+            != "blob"
+        ):
             continue
         crudo = subprocess.run(["git", "cat-file", "-p", sha], capture_output=True).stdout
         fuera.append((sha, crudo))
@@ -492,7 +497,11 @@ def main() -> int:
 # con el topónimo, que es un nombre de lugar y no de persona. Así esta lista
 # tampoco es otra copia de los datos personales.
 SUSTITUCIONES_TEXTO = (
-    r"regex:UTE PERAFITA \([^)]*\)==>UTE PERAFITA (socios retirados)",
+    # `\s*` y no un espacio literal: al ajustar el ancho de un párrafo, el
+    # nombre quedó partido entre el topónimo y el paréntesis. Con el espacio
+    # el patrón encontraba una ocurrencia donde había dos, y la mitad
+    # sobrevivía a la reescritura sin que nada lo dijera.
+    r"regex:UTE PERAFITA\s*\([^)]*\)==>UTE PERAFITA (socios retirados)",
 )
 
 
@@ -560,9 +569,7 @@ def _ocurrencias_reales() -> list[tuple[str, str]]:
 
 def _fichero_de_sustituciones() -> str:
     pares = _ocurrencias_reales()
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".txt", delete=False, encoding="utf-8"
-    ) as f:
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
         for original, nuevo in pares:
             # Formato de filter-repo: `literal==>reemplazo`, una por línea. Un
             # salto de línea dentro de la coincidencia no cabe ahí, y pasa
@@ -595,9 +602,7 @@ def _ejecutar_filter_repo() -> int:
 
     # El conjunto de id viaja por fichero y no por la línea de órdenes: son
     # cientos de UUID y hay límites de longitud de argumentos.
-    with tempfile.NamedTemporaryFile(
-        "w", suffix=".json", delete=False, encoding="utf-8"
-    ) as f:
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as f:
         json.dump(sorted(ids_personales()), f)
         ruta_ids = f.name
 
