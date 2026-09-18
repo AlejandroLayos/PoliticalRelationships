@@ -39,6 +39,17 @@ let sigma = null
 const grafo = shallowRef(null)
 const etiquetados = shallowRef(new Set())
 
+/**
+ * Los nombres oficiales son larguísimos —"Consejería de Sanidad, Presidencia y
+ * Emergencias Secretaría General Técnica"— y una etiqueta así tapa media
+ * pantalla. Se recorta para el mapa; el nombre entero está en el panel y al
+ * pasar por encima.
+ */
+function recortar(texto, max = 34) {
+  if (!texto || texto.length <= max) return texto ?? ''
+  return `${texto.slice(0, max - 1).trimEnd()}…`
+}
+
 /** Tamaño por dinero, no por número de conexiones: esto es un mapa de dinero. */
 function tamano(dinero, grado) {
   const base = 2.5 + Math.log10(1 + Math.max(0, dinero)) * 1.5
@@ -96,10 +107,16 @@ function construir() {
   }
 
   // Sólo los pesados de cada núcleo llevan etiqueta.
-  // Una etiqueta por núcleo, y sólo en los que tienen cuerpo. Tres por núcleo
-  // llenaban el centro de texto solapado y no se leía ninguna.
+  // Rotular tiene un presupuesto, como todo lo demás. Sigma decide el solape
+  // con su rejilla, pero no sabe que unas etiquetas importan más que otras, así
+  // que si se le dan doscientas elige mal y el centro queda ilegible.
+  //
+  // Se rotulan los núcleos con más dinero y nada más. Al resto se llega
+  // pasando el ratón por encima o desde el panel.
+  const MAX_ETIQUETAS = 18
   const conEtiqueta = new Set()
   for (const n of nucleos) {
+    if (conEtiqueta.size >= MAX_ETIQUETAS) break
     if (n.tamano < 4) continue
     const cabeza = n.principales.find((m) => g.hasNode(m.id))
     if (cabeza) conEtiqueta.add(cabeza.id)
@@ -108,7 +125,7 @@ function construir() {
 
   g.forEachNode((id, attrs) => {
     g.mergeNodeAttributes(id, {
-      label: conEtiqueta.has(id) ? attrs.label : '',
+      label: conEtiqueta.has(id) ? recortar(attrs.label) : '',
       etiquetaReal: attrs.label,
       color: colorNucleo(attrs.nucleo),
       extranjera: Boolean(nodosPorId.get(id)?.properties?.entidad_extranjera),
@@ -243,7 +260,9 @@ function pintar() {
     labelGridCellSize: 220,
     labelRenderedSizeThreshold: 11,
     labelFont: 'system-ui, sans-serif',
-    labelColor: { color: '#e8ecf4' },
+    labelColor: { color: '#f2f5fa' },
+    labelSize: 12,
+    labelWeight: '600',
     minCameraRatio: 0.03,
     maxCameraRatio: 12,
     zIndex: true,
