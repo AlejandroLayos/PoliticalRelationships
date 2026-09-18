@@ -64,8 +64,42 @@ jobs:
       - name: qué datos personales quedan
         run: python3 scripts/redactar_particulares_del_historico.py --comprobar || true
 
+      # Decidir el modo en bash y no en un `if:` de YAML.
+      #
+      # La primera versión comparaba `inputs.confirmacion == 'REESCRIBIR'` en
+      # la condición del paso. Cuando no coincide, el paso se SALTA y el job
+      # sale verde: exactamente igual que si hubiera funcionado. Se lanzó una
+      # vez creyendo que estaba hecho y no se había tocado nada, y desde fuera
+      # no había manera de distinguir un espacio de más de una condición rota.
+      #
+      # Aquí se imprime lo que llegó, se normaliza —espacios y mayúsculas— y
+      # se dice en qué modo va. Un error de tecleo ya no pasa por éxito.
+      - name: decidir el modo
+        id: modo
+        env:
+          RECIBIDO: ${{ github.event.inputs.confirmacion }}
+        run: |
+          set -euo pipefail
+          echo "texto recibido: «${RECIBIDO}»"
+          NORMALIZADO=$(printf '%s' "${RECIBIDO}" | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')
+          if [ "$NORMALIZADO" = "REESCRIBIR" ]; then
+            echo "reescribir=true" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Modo reescritura::se va a reescribir el historial y forzar el empuje"
+            { echo "## MODO REESCRITURA"; echo; echo "Se reescribe el historial y se fuerza el empuje."; } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "reescribir=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Sólo ensayo::NO se ha tocado nada; para reescribir hay que escribir REESCRIBIR"
+            {
+              echo "## MODO ENSAYO — no se ha tocado nada"
+              echo
+              echo "El texto recibido fue \`${RECIBIDO}\`, que no es \`REESCRIBIR\`."
+              echo "Para reescribir de verdad hay que volver a lanzarlo escribiendo"
+              echo "exactamente **REESCRIBIR** en el formulario."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: reescribir y empujar
-        if: ${{ inputs.confirmacion == 'REESCRIBIR' }}
+        if: steps.modo.outputs.reescribir == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
