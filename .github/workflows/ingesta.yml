@@ -122,11 +122,22 @@ jobs:
           # nada; el worker sale distinto de 0 y aquí queda constancia.
           sinapsis-worker $ARGS
 
+      # Acotado igual que en `datos.yml`, y aquí importa más todavía: este
+      # paso no llevaba ni tope ni `continue-on-error`, así que un
+      # emparejamiento lento habría tumbado la ingesta entera después de
+      # haberla completado. Está latente sólo porque este workflow no corre
+      # sin Neon; mordería el día que se conecte, que es justo cuando el
+      # conjunto de entidades será mayor.
+      #
+      # Sólo encola candidatos; no fusiona nada. La decisión es de una persona,
+      # así que quedarse corto es un hueco en una cola de revisión, no un dato
+      # perdido.
       - name: proponer fusiones para revisión humana
         env:
           SINAPSIS_POSTGRES_DSN: ${{ secrets.NEON_DATABASE_URL }}
         working-directory: ingest
-        # Sólo encola candidatos; no fusiona nada. La decisión es de una persona.
+        continue-on-error: true
+        timeout-minutes: 15
         run: sinapsis-worker --candidatos
 
       - name: resumen

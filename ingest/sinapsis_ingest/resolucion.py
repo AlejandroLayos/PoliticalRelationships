@@ -102,6 +102,24 @@ def generar_candidatos(store: Store, *, umbral: float = UMBRAL_CANDIDATO, limite
     """Busca pares parecidos y los encola para revisión humana.
 
     Devuelve cuántos candidatos nuevos se encolaron. **No fusiona nada.**
+
+    OJO, ESTO ESCALA MAL. El `LIMIT` acota el resultado, no el trabajo: el
+    `ORDER BY sim DESC` obliga a Postgres a materializar *todos* los pares que
+    casan por trigramas antes de ordenarlos y quedarse con los primeros. El
+    índice GIN evita el O(n²) de comparar todo contra todo, pero con un umbral
+    de bloqueo bajo el número de pares que casan crece muy por encima del
+    número de entidades.
+
+    El 18/9/2026 esto dejó el paso corriendo más de 40 minutos con ~4.000
+    entidades, bloqueando la publicación de la instantánea que iba detrás. Los
+    workflows lo acotan ahora con `timeout-minutes`, pero eso tapa el síntoma.
+
+    Arreglarlo de verdad pasa por no volver a examinar en cada ejecución pares
+    que ya se examinaron: acotar el lado `a` del join a las entidades tocadas
+    por la ingesta en curso. Es correcto —lo que se propone son candidatos para
+    una persona, nunca fusiones automáticas, y los pares antiguos ya se
+    propusieron— pero toca la parte más delicada del proyecto y merece hacerse
+    con calma y con medición, no de pasada.
     """
     # Bloqueo por índice de trigramas: sin esto sería O(n²) y no terminaría.
     # El umbral del operador `%` se baja un poco respecto al de aceptación para
