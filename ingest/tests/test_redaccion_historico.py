@@ -392,3 +392,20 @@ def test_el_guion_sustituye_tambien_en_los_mensajes_de_commit():
     fuente = inspect.getsource(redaccion._ejecutar_filter_repo)
     assert "--replace-message" in fuente
     assert "--replace-text" in fuente
+
+
+def test_no_corta_cuando_solo_quedan_sustituciones_de_texto():
+    """El corte de «no hay nada que hacer» tiene que cubrir todo el trabajo.
+
+    Miraba sólo las entidades dentro de los volcados. Cuando lo que quedaba
+    eran nombres en el texto de los ficheros y en los mensajes de commit,
+    decía «no hay nada que reescribir» y filter-repo —que es quien aplica las
+    sustituciones— no llegaba a ejecutarse. El job terminaba en verde sin
+    haber tocado nada.
+    """
+    import inspect
+
+    fuente = inspect.getsource(redaccion.main)
+    assert "SUSTITUCIONES_TEXTO" in fuente, (
+        "el corte anticipado no tiene en cuenta las sustituciones de texto"
+    )

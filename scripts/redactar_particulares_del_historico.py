@@ -292,6 +292,65 @@ def _blobs_afectados() -> list[tuple[str, int, int]]:
     return afectados
 
 
+def _texto_pendiente() -> list[str]:
+    """Patrones de texto que todavía casan en algún sitio del repositorio.
+
+    La comprobación miraba sólo las entidades dentro de los volcados, así que
+    decía «limpio» mientras quedaban nombres en el texto de los ficheros y en
+    los mensajes de commit. Una comprobación que no cubre lo mismo que el
+    borrado no sirve para autorizar un empujón irreversible.
+    """
+    pendientes = []
+    for linea in SUSTITUCIONES_TEXTO:
+        patron = linea.split("==>")[0]
+        if not patron.startswith("regex:"):
+            continue
+        rx = re.compile(patron[len("regex:") :])
+
+        mensajes = subprocess.run(
+            ["git", "log", "--all", "--format=%B"],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout
+        if rx.search(mensajes):
+            pendientes.append(f"{patron} (en mensajes de commit)")
+            continue
+
+        for _sha, crudo in _todos_los_blobs_de_texto():
+            try:
+                if rx.search(crudo.decode("utf-8", errors="ignore")):
+                    pendientes.append(f"{patron} (en el contenido de un fichero)")
+                    break
+            except Exception:
+                continue
+    return pendientes
+
+
+def _todos_los_blobs_de_texto() -> list[tuple[str, bytes]]:
+    """Blobs de ficheros de texto del historial. Acotado a lo que puede llevar prosa."""
+    salida = subprocess.run(
+        ["git", "rev-list", "--all", "--objects"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout
+    interesantes = (".py", ".md", ".yml", ".yaml", ".json", ".txt", ".sql", ".vue", ".js")
+    fuera = []
+    for linea in salida.splitlines():
+        partes = linea.split(maxsplit=1)
+        if len(partes) != 2 or not partes[1].endswith(interesantes):
+            continue
+        sha = partes[0]
+        if subprocess.run(
+            ["git", "cat-file", "-t", sha], capture_output=True, text=True
+        ).stdout.strip() != "blob":
+            continue
+        crudo = subprocess.run(["git", "cat-file", "-p", sha], capture_output=True).stdout
+        fuera.append((sha, crudo))
+    return fuera
+
+
 def comprobar() -> int:
     """Informa de qué hay que retirar. Sale con 1 si encuentra algo.
 
@@ -299,9 +358,20 @@ def comprobar() -> int:
     datos personales no puede ser otra copia de los datos personales.
     """
     afectados = _blobs_afectados()
-    if not afectados:
-        print("No queda ningún dato personal en los volcados del historial.")
+    pendientes = _texto_pendiente()
+
+    if not afectados and not pendientes:
+        print("No queda ningún dato personal en el historial.")
         return 0
+
+    if pendientes:
+        print("Texto pendiente de sustituir:")
+        for p in pendientes:
+            print(f"  {p}")
+        print()
+
+    if not afectados:
+        return 1
 
     print(f"{len(afectados)} blob(s) con datos personales:\n")
     print("  blob                                      fichas   identificadores")
@@ -359,9 +429,23 @@ def main() -> int:
         return 2
 
     afectados = _blobs_afectados()
-    if not afectados:
+    # El corte de «no hay nada que hacer» tiene que cubrir TODO lo que el
+    # borrado hace, no sólo una parte.
+    #
+    # Miraba únicamente las entidades dentro de los volcados. Cuando lo que
+    # quedaba eran nombres en el texto de los ficheros y en los mensajes de
+    # commit, decía «no hay nada que reescribir», salía con 0, y filter-repo
+    # —que es quien aplica las sustituciones— no llegaba a ejecutarse. El job
+    # terminaba en verde sin haber tocado nada.
+    #
+    # Con sustituciones configuradas se ejecuta siempre. Si no casa ninguna,
+    # filter-repo reconstruye los mismos commits y el resultado es idéntico:
+    # no cuesta nada y no puede dejarse trabajo sin hacer.
+    if not afectados and not SUSTITUCIONES_TEXTO:
         print("No hay nada que reescribir.")
         return 0
+    if not afectados:
+        print("Sin entidades que retirar; quedan las sustituciones de texto.")
 
     remotos = _remotos()
     ramas = _ramas_locales()
