@@ -535,7 +535,20 @@ main { flex: 1; position: relative; min-height: 0; }
 
 @media (max-width: 820px) {
   .vista-grafo { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
-  .leyenda { max-width: 100%; }
+  /*
+    En estrecho la leyenda envolvía a tres líneas y se cruzaba con la ayuda de
+    la esquina: dos textos superpuestos e ilegibles los dos. La ayuda sobra en
+    táctil —no hay ratón que pasar por encima— y la leyenda se pone sobre
+    fondo para no leerse encima del diagrama.
+  */
+  .ayuda { display: none; }
+  .leyenda {
+    max-width: calc(100% - 1.4rem);
+    background: rgba(10, 14, 20, 0.85);
+    padding: 0.3rem 0.45rem;
+    border-radius: 6px;
+  }
+  .banda-info, .banda-demo { font-size: 0.72rem; padding: 0.4rem 0.7rem; }
 }
 
 .controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }

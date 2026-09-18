@@ -37,6 +37,9 @@ const HUECO = 6
 const CABECERA = 30
 // Banda inferior reservada para el «+N más». Sin ella se pintaba encima de la
 // última ficha y de la ayuda de la esquina: tres textos superpuestos.
+//
+// En pantallas estrechas hace falta más, porque la leyenda pasa de una línea a
+// tres y se comía la última ficha. Por eso es un parámetro.
 const PIE = 22
 
 function ancla(valor, min, max) {
@@ -91,7 +94,7 @@ function cinta(x1, y1a, y1b, x2, y2a, y2b) {
  * `area` es lo que devuelve `areaDeInfluencia`. Devuelve cajas y rutas SVG ya
  * resueltas: el componente sólo pinta, no decide.
  */
-export function disponerFlujo(area, { ancho, alto, maxPorLado = 12 } = {}) {
+export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } = {}) {
   const vacio = { centro: null, izquierda: [], derecha: [], cintas: [], recortado: { izquierda: 0, derecha: 0 } }
   if (!area?.entidad || !ancho || !alto) return vacio
 
@@ -101,7 +104,7 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12 } = {}) {
   const xDer = ancho - MARGEN - anchoColumna
 
   const arriba = CABECERA
-  const abajo = alto - MARGEN - PIE
+  const abajo = alto - MARGEN - pie
   const util = abajo - arriba
 
   const izq = area.recibeDe.slice(0, maxPorLado)

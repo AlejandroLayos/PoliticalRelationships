@@ -40,7 +40,13 @@ onMounted(() => {
 onBeforeUnmount(() => observador?.disconnect())
 
 const disposicion = computed(() =>
-  disponerFlujo(props.area, { ancho: ancho.value, alto: alto.value }),
+  disponerFlujo(props.area, {
+    ancho: ancho.value,
+    alto: alto.value,
+    // En móvil la leyenda ocupa tres líneas y se comía la última ficha.
+    pie: ancho.value < 700 ? 66 : 22,
+    maxPorLado: ancho.value < 700 ? 8 : 12,
+  }),
 )
 
 /**

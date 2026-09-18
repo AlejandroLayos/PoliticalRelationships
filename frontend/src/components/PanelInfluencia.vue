@@ -51,7 +51,7 @@ const sinDatos = computed(
     <p v-if="!area?.entidad" class="vacio">Pulsa una entidad del mapa.</p>
 
     <template v-else>
-      <button class="volver" @click="emit('volver')">← Volver al mapa</button>
+      <button class="volver" @click="emit('volver')">← Volver a la portada</button>
 
       <header>
         <span class="punto" :style="{ background: color(area.entidad.schema) }" />
