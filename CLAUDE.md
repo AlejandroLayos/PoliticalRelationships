@@ -63,6 +63,21 @@ cd ingest  && pytest        # requiere pkg-config y libicu-dev en el sistema
 
 ## Detalles que muerden
 
+- **La rama por defecto es `claude/sinapsis-phase-0-1-setup-o6tdcp`, no
+  `main`.** GitHub sólo dispara los `cron` en la rama por defecto, y Vercel
+  despliega esa misma rama. Lo que se publica es lo que hay ahí. Trabajar en
+  `main` y no fusionar significa que **nada de lo que escribas llega a la
+  web**, y sin que nada falle: la CI pasa, los tests pasan, y la instantánea
+  diaria se sigue generando tan campante con el código viejo.
+
+  No es hipotético. Pasó entre el 3 de agosto y el 18 de septiembre de 2026:
+  la corrección que dejó de publicar nombres de personas físicas se quedó en
+  `main` seis semanas, mientras la instantánea diaria seguía publicando 89
+  particulares con nombre y apellidos. Ver el commit de fusión `ff50d25`.
+
+  Si algo «ya está arreglado» pero se sigue viendo mal en la web, esto es lo
+  primero que hay que mirar.
+
 - **`Contract` es una entidad en FollowTheMoney, no una arista.** La arista de
   adjudicación es `ContractAward`. Hay un test
   (`ingest/tests/test_esquema_ftm.py`) que valida los `CHECK` del esquema
