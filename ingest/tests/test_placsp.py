@@ -17,7 +17,13 @@ import httpx
 import pytest
 
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
-from sinapsis_ingest.connectors.placsp import FEEDS, NS, PLACSPConnector
+from sinapsis_ingest.connectors.placsp import (
+    FEEDS,
+    NS,
+    PLACSPConnector,
+    PLACSPLicitacionesConnector,
+    PLACSPMenoresConnector,
+)
 
 MUESTRA = Path(__file__).parent / "golden" / "placsp_agregadas_muestra.atom"
 
@@ -600,3 +606,74 @@ def test_varias_adjudicaciones_sin_importe_no_se_consideran_repetidas(conector):
     aristas = _adjudicaciones(conector, [None, None])
     assert all(a.amount is None for a in aristas)
     assert all("importeCompartido" not in a.properties for a in aristas)
+
+
+# --- los tres feeds de la Plataforma ---------------------------------------
+#
+# Hasta el 18/9/2026 sólo se ingería `agregadas`, que trae lo que vuelcan las
+# plataformas autonómicas. Todo lo publicado directamente en la Plataforma del
+# Estado, y todo el contrato menor —donde vive el gasto municipal del día a
+# día—, quedaba fuera del mapa sin que nada lo dijera.
+
+
+class _ClienteFalso:
+    """Devuelve la muestra pida lo que pida, y apunta a qué URL se le pidió."""
+
+    def __init__(self):
+        self.urls: list[str] = []
+
+    def get(self, url, *a, **kw):
+        self.urls.append(url)
+        return httpx.Response(
+            200,
+            content=MUESTRA.read_bytes(),
+            headers={"content-type": "application/atom+xml"},
+            request=httpx.Request("GET", url),
+        )
+
+    def close(self):
+        pass
+
+
+@pytest.mark.parametrize(
+    ("fabrica", "esperado"),
+    [
+        (PLACSPConnector, FEEDS["agregadas"]),
+        (PLACSPLicitacionesConnector, FEEDS["licitaciones"]),
+        (PLACSPMenoresConnector, FEEDS["menores"]),
+    ],
+    ids=["agregadas", "licitaciones", "menores"],
+)
+def test_cada_variante_pide_su_feed(fabrica, esperado):
+    cliente = _ClienteFalso()
+    conector = fabrica(cliente=cliente, peticiones_por_segundo=0)
+    list(conector.fetch(max_paginas=1))
+    assert cliente.urls[0] == esperado
+
+
+def test_las_tres_variantes_comparten_fuente():
+    # `source_id` es la fuente; la clave del registro es el conector. Si las
+    # variantes declararan fuentes distintas, la misma empresa saldría
+    # duplicada según por qué feed hubiera entrado.
+    assert PLACSPLicitacionesConnector.source_id == PLACSPConnector.source_id
+    assert PLACSPMenoresConnector.source_id == PLACSPConnector.source_id
+
+
+def test_se_puede_pedir_otro_feed_a_una_variante():
+    # El valor por defecto no puede impedir reutilizar el conector.
+    cliente = _ClienteFalso()
+    conector = PLACSPMenoresConnector(cliente=cliente, peticiones_por_segundo=0)
+    list(conector.fetch(feed="licitaciones", max_paginas=1))
+    assert cliente.urls[0] == FEEDS["licitaciones"]
+
+
+def test_una_variante_normaliza_igual_que_la_base(crudo):
+    # Mismo esquema CODICE: lo que cambia es de dónde se descarga.
+    base = PLACSPConnector(peticiones_por_segundo=0)
+    menores = PLACSPMenoresConnector(peticiones_por_segundo=0)
+    r1 = next(iter(base.parse(crudo)))
+    r2 = next(iter(menores.parse(crudo)))
+    n1 = base.normalize(r1)
+    n2 = menores.normalize(r2)
+    assert n1 is not None and n2 is not None
+    assert [a.dedupe_key for a in n1.aristas] == [a.dedupe_key for a in n2.aristas]

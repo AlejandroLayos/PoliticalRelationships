@@ -92,7 +92,11 @@ jobs:
       - name: ingerir
         working-directory: ingest
         continue-on-error: true
-        timeout-minutes: 45
+        # Cinco conectores en vez de tres, y BDNS reintenta hasta tres veces por
+        # página con esperas crecientes cuando el servicio va lento. El tope
+        # sigue estando para que una fuente colgada no deje la web sin
+        # actualizar, no para acotar el trabajo normal.
+        timeout-minutes: 75
         run: |
           D="${{ inputs.desde || '2025-01-01' }}"
           H="${{ inputs.hasta || '2025-12-31' }}"
@@ -118,7 +122,12 @@ jobs:
             fi
           }
 
-          for c in bdns bdns-partidos placsp; do
+          # La Plataforma publica tres feeds y hasta el 18/9/2026 sólo se
+          # leía uno. `agregadas` trae lo que vuelcan las plataformas
+          # autonómicas; `licitaciones` es el feed principal del Estado y
+          # `menores` es el contrato menor, que es donde vive el gasto
+          # municipal del día a día y el que más se pregunta.
+          for c in bdns bdns-partidos placsp placsp-licitaciones placsp-menores; do
             ejecutar "$c" --desde "$D" --hasta "$H" --max-paginas "$P"
           done
           # El TdC ignora el rango de fechas: son cuatro PDF acumulativos que

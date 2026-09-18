@@ -535,6 +535,45 @@ class PLACSPConnector:
         return Normalizado(entidades=entidades, aristas=aristas)
 
 
+class PLACSPLicitacionesConnector(PLACSPConnector):
+    """El feed principal de la Plataforma, el que publican los perfiles del Estado.
+
+    `agregadas` —el único que se ingería hasta ahora— trae lo que vuelcan las
+    plataformas autonómicas agregadas. Todo lo que se publica directamente en
+    la Plataforma del Sector Público estaba fuera del mapa.
+    """
+
+    def fetch(self, **kw: Any) -> Iterator[RawDocument]:
+        kw.setdefault("feed", "licitaciones")
+        return super().fetch(**kw)
+
+
+class PLACSPMenoresConnector(PLACSPConnector):
+    """Contratos menores.
+
+    Es donde vive el gasto municipal del día a día: por debajo del umbral del
+    contrato menor no hay licitación pública, y eso hace que sea justo el
+    tramo que menos se mira y el que más aparece cuando alguien pregunta por su
+    propio ayuntamiento.
+
+    Trae muchos adjudicatarios que son personas físicas —autónomos—, y ahí
+    manda la regla de siempre: se agregan en un nodo anónimo y no se publica ni
+    un nombre. Ver `docs/spec.md` §12.
+    """
+
+    def fetch(self, **kw: Any) -> Iterator[RawDocument]:
+        kw.setdefault("feed", "menores")
+        return super().fetch(**kw)
+
+
 def crear() -> PLACSPConnector:
     """Fábrica para el registro de conectores."""
     return PLACSPConnector()
+
+
+def crear_licitaciones() -> PLACSPLicitacionesConnector:
+    return PLACSPLicitacionesConnector()
+
+
+def crear_menores() -> PLACSPMenoresConnector:
+    return PLACSPMenoresConnector()

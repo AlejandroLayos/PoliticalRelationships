@@ -54,6 +54,12 @@ _CONECTORES: dict[str, Any] = {
     "bdns": bdns.crear,
     "bdns-partidos": bdns.crear_partidos,
     "placsp": placsp.crear,
+    # La Plataforma publica tres feeds y hasta ahora sólo se leía uno.
+    # `agregadas` trae lo que vuelcan las plataformas autonómicas; todo lo que
+    # se publica directamente en la Plataforma del Estado, y todo el contrato
+    # menor —donde vive el gasto municipal del día a día— quedaba fuera.
+    "placsp-licitaciones": placsp.crear_licitaciones,
+    "placsp-menores": placsp.crear_menores,
     "tcu": tcu.crear,
 }
 
