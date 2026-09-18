@@ -143,7 +143,10 @@ def test_normalize_produce_contract_y_contract_awards(conector, crudo):
     esquemas = {e.ftm_schema for e in n.entidades}
     assert "Contract" in esquemas  # el expediente es una entidad en FtM
     assert "PublicBody" in esquemas
-    assert all(a.ftm_schema == "ContractAward" for a in n.aristas)
+    # Dos clases de arista, y las dos hacen falta: la adjudicación lleva el
+    # dinero al proveedor, y el enlace del órgano cuelga el contrato de quien
+    # lo adjudicó. Sin la segunda el organismo queda suelto en el grafo.
+    assert {a.ftm_schema for a in n.aristas} == {"ContractAward", "UnknownLink"}
 
 
 def test_la_arista_va_del_contrato_al_adjudicatario(conector, crudo):
@@ -151,14 +154,19 @@ def test_la_arista_va_del_contrato_al_adjudicatario(conector, crudo):
     contrato = next(e for e in n.entidades if e.ftm_schema == "Contract")
     # Dirección canónica de FtM: contract -> supplier.
     for a in n.aristas:
+        if a.ftm_schema != "ContractAward":
+            continue
         assert a.source_key == contrato.dedupe_key
         assert a.target_key != contrato.dedupe_key
 
 
 def test_hay_una_arista_por_adjudicatario(conector, crudo):
     n = _normalizado(conector, crudo)
-    assert len(n.aristas) == 2
-    assert len({a.dedupe_key for a in n.aristas}) == 2, "las claves de arista colisionan"
+    adjudicaciones = [a for a in n.aristas if a.ftm_schema == "ContractAward"]
+    assert len(adjudicaciones) == 2
+    assert len({a.dedupe_key for a in n.aristas}) == len(n.aristas), (
+        "las claves de arista colisionan"
+    )
 
 
 def test_el_adjudicatario_con_nif_converge_con_otras_fuentes(conector, crudo):
@@ -171,8 +179,9 @@ def test_el_adjudicatario_con_nif_converge_con_otras_fuentes(conector, crudo):
 
 def test_el_adjudicatario_sin_nif_baja_la_confianza(conector, crudo):
     n = _normalizado(conector, crudo)
-    con_nif = [a for a in n.aristas if a.confidence == 1.0]
-    sin_nif = [a for a in n.aristas if a.confidence == 0.7]
+    adjudicaciones = [a for a in n.aristas if a.ftm_schema == "ContractAward"]
+    con_nif = [a for a in adjudicaciones if a.confidence == 1.0]
+    sin_nif = [a for a in adjudicaciones if a.confidence == 0.7]
     assert len(con_nif) == 1
     assert len(sin_nif) == 1
 
@@ -181,9 +190,21 @@ def test_el_contrato_referencia_a_su_organo(conector, crudo):
     n = _normalizado(conector, crudo)
     contrato = next(e for e in n.entidades if e.ftm_schema == "Contract")
     organo = next(e for e in n.entidades if e.ftm_schema == "PublicBody")
-    # En FollowTheMoney la autoridad es una propiedad del contrato, no una
-    # arista: no existe esquema de arista órgano->contrato.
+    # En FollowTheMoney la autoridad es una propiedad del contrato: no existe
+    # esquema de arista órgano->contrato.
     assert contrato.properties["authority"] == organo.dedupe_key
+
+    # Pero una propiedad no se puede recorrer en un grafo, así que además hay
+    # una arista `UnknownLink` con su `role`. Es la vía canónica de FtM para
+    # "están relacionados y la naturaleza va aparte", y es lo que permite ver
+    # qué organismo adjudicó qué.
+    enlace = next(a for a in n.aristas if a.ftm_schema == "UnknownLink")
+    assert enlace.source_key == organo.dedupe_key
+    assert enlace.target_key == contrato.dedupe_key
+    assert enlace.properties["role"] == "órgano de contratación"
+    # Sin importe: el dinero lo lleva el ContractAward y duplicarlo aquí lo
+    # contaría dos veces.
+    assert enlace.amount is None
 
 
 def test_el_contrato_conserva_cpv_y_expediente(conector, crudo):
@@ -349,7 +370,8 @@ def test_el_adjudicatario_persona_fisica_no_se_publica_con_nombre(conector):
         assert prohibido not in plano, f"se publicó {prohibido}"
 
     # Pero el dinero y el órgano siguen ahí: es un hueco de identidad, no de hecho.
-    assert n.aristas[0].amount is not None
+    adjudicacion = next(a for a in n.aristas if a.ftm_schema == "ContractAward")
+    assert adjudicacion.amount is not None
     assert any(e.ftm_schema == "PublicBody" for e in n.entidades)
     agregado = [e for e in n.entidades if e.dedupe_key.startswith("placsp:particulares:")]
     assert len(agregado) == 1
@@ -383,7 +405,8 @@ def test_dos_particulares_en_el_mismo_contrato_no_pierden_dinero(conector):
         _feed_con_adjudicatarios(("12345678Z", "JUAN PEREZ"), ("87654321X", "ANA LOPEZ")),
     )
     assert n is not None
-    claves = {a.dedupe_key for a in n.aristas}
+    adjudicaciones = [a for a in n.aristas if a.ftm_schema == "ContractAward"]
+    claves = {a.dedupe_key for a in adjudicaciones}
     assert len(claves) == 2, "una adjudicación se perdió al agregar a los particulares"
     # Y las dos apuntan al mismo nodo agregado.
-    assert len({a.target_key for a in n.aristas}) == 1
+    assert len({a.target_key for a in adjudicaciones}) == 1

@@ -318,7 +318,30 @@ class PLACSPConnector:
             ),
         ]
 
-        aristas: list[AristaNormalizada] = []
+        # El órgano de contratación tiene que quedar ENLAZADO con su contrato.
+        # Sin esta arista el organismo era una entidad suelta: existía en el
+        # grafo pero no colgaba de nada, y los contratos flotaban sujetos sólo
+        # a su adjudicatario. El resultado eran 1.393 componentes conexas y
+        # ningún núcleo visible — nadie podía ver qué organismo adjudicó qué.
+        #
+        # FollowTheMoney no tiene arista propia para esto: `Contract.authority`
+        # es una *propiedad*, y `Contract` es una entidad, no una arista. La vía
+        # canónica en FtM para "están relacionados y la naturaleza va aparte" es
+        # `UnknownLink` con `role`, que es lo que se usa aquí.
+        #
+        # Sin importe a propósito: el dinero ya lo lleva el ContractAward y
+        # ponerlo también aquí lo contaría dos veces.
+        aristas: list[AristaNormalizada] = [
+            AristaNormalizada(
+                ftm_schema="UnknownLink",
+                source_key=clave_organo,
+                target_key=clave_contrato,
+                dedupe_key=f"placsp:organo-contrato:{d['entry_id']}",
+                status="asserted",
+                confidence=1.0,
+                properties={"role": "órgano de contratación"},
+            )
+        ]
         vistos: set[str] = set()
         for orden, adj in enumerate(adjudicaciones):
             nif = adj.get("nif") or ""

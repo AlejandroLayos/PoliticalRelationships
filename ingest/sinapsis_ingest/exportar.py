@@ -31,58 +31,67 @@ log = structlog.get_logger()
 # ser útil: si hace falta más, lo que hace falta es la API, no un JSON mayor.
 MAX_ENTIDADES = 4000
 
+# El presupuesto que de verdad manda: se eligen aristas y los nodos salen de
+# sus extremos. Ver el docstring de `exportar`.
+MAX_ARISTAS = 6000
 
-def exportar(store: Store, destino: Path, max_entidades: int = MAX_ENTIDADES) -> dict[str, Any]:
-    """Escribe el grafo en `destino`. Devuelve el resumen de lo exportado."""
 
-    # Se priorizan las entidades más conectadas: son las que dan sentido a un
-    # mapa de influencia. Las aisladas no aportan nada a la vista.
-    filas = store.conn.execute(
+def exportar(
+    store: Store,
+    destino: Path,
+    max_entidades: int = MAX_ENTIDADES,
+    max_aristas: int = MAX_ARISTAS,
+) -> dict[str, Any]:
+    """Escribe el grafo en `destino`. Devuelve el resumen de lo exportado.
+
+    Se eligen **aristas primero**, y los nodos salen de sus extremos.
+
+    Antes era al revés: se cogían las N entidades de mayor grado y luego sólo
+    las aristas con los dos extremos dentro. Suena razonable y destroza el
+    grafo. Un nodo muy conectado entra, pero sus vecinos de grado 1 se quedan
+    fuera del corte, así que sus aristas se caen y el nodo acaba suelto. El
+    resultado medido sobre la instantánea del 3/8/2026: 4.000 nodos, 4.351
+    aristas, **1.393 componentes conexas** y 548 nodos aislados *entre los más
+    conectados de la base*. Un mapa de influencia troceado en 1.393 pedazos no
+    enseña ninguna influencia.
+
+    Eligiendo aristas primero eso no puede pasar: cada nodo publicado tiene al
+    menos una arista y ninguna arista queda colgando. Se ordenan por importe
+    porque el dinero es de lo que va esto; las que no lo llevan van después,
+    por grado de sus extremos, para no perder el tejido que une los núcleos.
+    """
+    # Se recorren las aristas en orden de interés y se van tomando sus
+    # extremos hasta agotar el presupuesto de nodos. Así el corte cae en el
+    # borde del mapa y no por el medio.
+    candidatas = store.conn.execute(
         """
-        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif,
-               COALESCE(e.country,'') AS country, e.properties,
-               (SELECT count(*) FROM relationships r
-                 WHERE (r.source_entity_id = e.id OR r.target_entity_id = e.id)
-                   AND r.status <> 'retracted') AS grado
-        FROM entities e
-        WHERE e.canonical_id IS NULL
-        ORDER BY grado DESC, e.caption
+        SELECT r.id, r.ftm_schema, r.source_entity_id, r.target_entity_id,
+               r.amount, r.currency, r.confidence, r.status,
+               r.start_date, r.end_date
+        FROM relationships r
+        JOIN entities es ON es.id = r.source_entity_id AND es.canonical_id IS NULL
+        JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
+        WHERE r.status <> 'retracted'
+        ORDER BY r.amount DESC NULLS LAST, r.id
         LIMIT %s
         """,
-        (max_entidades,),
+        (max_aristas * 4,),
     ).fetchall()
 
-    ids = [f["id"] for f in filas]
-    nodos = [
-        {
-            "id": str(f["id"]),
-            "schema": f["ftm_schema"],
-            "caption": f["caption"],
-            **({"nif": f["nif"]} if f["nif"] else {}),
-            **({"country": f["country"]} if f["country"] else {}),
-            "properties": f["properties"] or {},
-            "degree": int(f["grado"]),
-        }
-        for f in filas
-    ]
+    elegidas = []
+    ids_set: set[Any] = set()
+    for a in candidatas:
+        if len(elegidas) >= max_aristas:
+            break
+        nuevos = {a["source_entity_id"], a["target_entity_id"]} - ids_set
+        if len(ids_set) + len(nuevos) > max_entidades:
+            # Cabe todavía alguna arista entre nodos ya tomados: se sigue
+            # mirando en vez de cortar en seco.
+            continue
+        ids_set |= nuevos
+        elegidas.append(a)
 
-    # Sólo aristas con los DOS extremos dentro: una arista a un nodo ausente
-    # colgaría en el vacío al dibujarla.
-    aristas_filas = (
-        store.conn.execute(
-            """
-        SELECT id, ftm_schema, source_entity_id, target_entity_id,
-               amount, currency, confidence, status, start_date, end_date, properties
-        FROM relationships
-        WHERE status <> 'retracted'
-          AND source_entity_id = ANY(%s) AND target_entity_id = ANY(%s)
-        """,
-            (ids, ids),
-        ).fetchall()
-        if ids
-        else []
-    )
-
+    ids = list(ids_set)
     aristas = [
         {
             "id": str(a["id"]),
@@ -97,7 +106,38 @@ def exportar(store: Store, destino: Path, max_entidades: int = MAX_ENTIDADES) ->
             **({"start_date": a["start_date"].isoformat()} if a["start_date"] else {}),
             **({"end_date": a["end_date"].isoformat()} if a["end_date"] else {}),
         }
-        for a in aristas_filas
+        for a in elegidas
+    ]
+
+    filas = (
+        store.conn.execute(
+            """
+        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif,
+               COALESCE(e.country,'') AS country, e.properties,
+               (SELECT count(*) FROM relationships r
+                 WHERE (r.source_entity_id = e.id OR r.target_entity_id = e.id)
+                   AND r.status <> 'retracted') AS grado
+        FROM entities e
+        WHERE e.id = ANY(%s)
+        ORDER BY grado DESC, e.caption
+        """,
+            (ids,),
+        ).fetchall()
+        if ids
+        else []
+    )
+
+    nodos = [
+        {
+            "id": str(f["id"]),
+            "schema": f["ftm_schema"],
+            "caption": f["caption"],
+            **({"nif": f["nif"]} if f["nif"] else {}),
+            **({"country": f["country"]} if f["country"] else {}),
+            "properties": f["properties"] or {},
+            "degree": int(f["grado"]),
+        }
+        for f in filas
     ]
 
     # Procedencia por entidad: es lo que permite volver al documento original

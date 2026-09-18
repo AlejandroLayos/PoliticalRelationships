@@ -211,7 +211,9 @@ def test_placsp_persiste_contrato_y_todas_sus_adjudicaciones(store):
     store.conn.commit()
 
     assert not resultado.errores
-    assert resultado.aristas == 2, "se perdió un adjudicatario"
+    # Dos adjudicaciones más el enlace del órgano de contratación con su
+    # contrato, que es lo que impide que el organismo quede suelto en el grafo.
+    assert resultado.aristas == 3, "se perdió un adjudicatario o el enlace del órgano"
 
     # El expediente es una entidad Contract, no una arista.
     fila = store.conn.execute(

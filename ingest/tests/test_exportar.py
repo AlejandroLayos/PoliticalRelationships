@@ -1,0 +1,142 @@
+"""Tests del volcado que publica la web.
+
+Lo que se comprueba aquí es una invariante de *forma del grafo*, no de
+contenido: **ningún nodo publicado puede quedarse sin aristas, y ninguna
+arista puede colgar de un nodo ausente.**
+
+Parece obvio y no lo era. Hasta el 18/9/2026 el volcado elegía las N
+entidades de mayor grado y después se quedaba sólo con las aristas cuyos dos
+extremos estuvieran dentro. El corte caía por el medio del grafo: un nodo muy
+conectado entraba, sus vecinos de grado 1 no, y sus aristas desaparecían. La
+instantánea publicada tenía 4.000 nodos repartidos en **1.393 componentes
+conexas**, con 548 nodos aislados entre los más conectados de la base. No se
+veía ni un núcleo porque no quedaba ninguno que ver.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import uuid
+from pathlib import Path
+
+import pytest
+
+from sinapsis_ingest.exportar import exportar
+from sinapsis_ingest.store import Source, Store
+
+DSN = os.environ.get("SINAPSIS_TEST_POSTGRES_DSN", "")
+
+pytestmark = pytest.mark.skipif(not DSN, reason="SINAPSIS_TEST_POSTGRES_DSN sin definir")
+
+
+def _entidad(store: Store, caption: str, esquema: str = "Company") -> str:
+    fila = store.conn.execute(
+        """
+        INSERT INTO entities (ftm_schema, caption, dedupe_key, properties)
+        VALUES (%s, %s, %s, '{}'::jsonb) RETURNING id
+        """,
+        (esquema, caption, f"test:{uuid.uuid4()}"),
+    ).fetchone()
+    assert fila is not None
+    return str(fila["id"])
+
+
+def _arista(store: Store, a: str, b: str, importe: str | None) -> None:
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, amount, currency,
+             confidence, status, dedupe_key)
+        VALUES ('Payment', %s, %s, %s, %s, 1.0, 'asserted', %s)
+        """,
+        (a, b, importe, "EUR" if importe else "", f"test:{uuid.uuid4()}"),
+    )
+
+
+@pytest.fixture
+def store():
+    with Store(DSN) as s:
+        migraciones = Path(__file__).resolve().parents[2] / "backend" / "migrations"
+        for f in sorted(migraciones.glob("*.up.sql")):
+            try:
+                s.conn.execute(f.read_text(encoding="utf-8"))
+            except Exception:
+                s.conn.rollback()
+        s.conn.commit()
+        s.conn.execute(
+            """TRUNCATE provenance, entity_resolution_decisions, review_queue,
+                        relationships, entities, raw_documents, sources CASCADE"""
+        )
+        s.upsert_source(Source(id="test", name="Test", url="https://ejemplo.test"))
+        s.conn.commit()
+        yield s
+
+
+def _exportado(store: Store, tmp_path: Path, **kw) -> dict:
+    exportar(store, tmp_path / "g.json", **kw)
+    return json.loads((tmp_path / "g.json").read_text(encoding="utf-8"))
+
+
+def test_ningun_nodo_publicado_se_queda_sin_aristas(store, tmp_path):
+    """La invariante que rompía el volcado anterior."""
+    # Una cadena larga de pagos: al recortar, el método viejo la troceaba.
+    ids = [_entidad(store, f"EMPRESA {i}") for i in range(40)]
+    for i in range(39):
+        _arista(store, ids[i], ids[i + 1], f"{(i + 1) * 100}.00")
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=20, max_aristas=15)
+
+    publicados = {n["id"] for n in d["nodes"]}
+    con_arista = set()
+    for a in d["edges"]:
+        con_arista.add(a["source"])
+        con_arista.add(a["target"])
+
+    aislados = publicados - con_arista
+    assert not aislados, f"{len(aislados)} nodos publicados sin ninguna arista"
+
+
+def test_ninguna_arista_cuelga_de_un_nodo_ausente(store, tmp_path):
+    ids = [_entidad(store, f"E{i}") for i in range(30)]
+    for i in range(29):
+        _arista(store, ids[i], ids[i + 1], f"{i + 1}.00")
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=12, max_aristas=10)
+
+    publicados = {n["id"] for n in d["nodes"]}
+    for a in d["edges"]:
+        assert a["source"] in publicados, "arista con origen fuera del volcado"
+        assert a["target"] in publicados, "arista con destino fuera del volcado"
+
+
+def test_se_respetan_los_topes(store, tmp_path):
+    ids = [_entidad(store, f"E{i}") for i in range(60)]
+    for i in range(59):
+        _arista(store, ids[i], ids[i + 1], f"{i + 1}.00")
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=20, max_aristas=15)
+    assert len(d["nodes"]) <= 20
+    assert len(d["edges"]) <= 15
+
+
+def test_manda_el_dinero_al_elegir_que_publicar(store, tmp_path):
+    """Con sitio justo, entra lo caro: es un mapa de dinero."""
+    a, b = _entidad(store, "PAGO GRANDE A"), _entidad(store, "PAGO GRANDE B")
+    c, e = _entidad(store, "PAGO CHICO A"), _entidad(store, "PAGO CHICO B")
+    _arista(store, a, b, "9000000.00")
+    _arista(store, c, e, "1.00")
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=2, max_aristas=1)
+    captions = {n["caption"] for n in d["nodes"]}
+    assert captions == {"PAGO GRANDE A", "PAGO GRANDE B"}
+
+
+def test_un_grafo_vacio_no_revienta(store, tmp_path):
+    d = _exportado(store, tmp_path)
+    assert d["nodes"] == []
+    assert d["edges"] == []
