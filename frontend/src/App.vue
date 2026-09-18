@@ -280,20 +280,43 @@ onMounted(async () => {
       público con datos inventados sin decirlo sería lo contrario de lo que
       este proyecto pretende.
     -->
+    <!--
+      Antes esto era un párrafo de cuatro líneas fijo en lo alto de TODAS las
+      vistas. En móvil se comía la primera pantalla entera: antes de ver un
+      solo dato había que leer las advertencias. Y la advertencia que de
+      verdad importa —que hoy ha fallado una fuente y por eso falta media
+      España— quedaba enterrada entre las que no cambian nunca.
+      Ahora: una línea con lo imprescindible, el aviso de fuente caída aparte
+      y siempre visible, y el resto a un clic.
+    -->
     <div v-if="instantanea && !esDemo" class="banda-info">
-      <strong>Instantánea del {{ new Date(instantanea.generado).toLocaleDateString('es-ES') }}.</strong>
-      Datos reales de
-      {{ (instantanea.fuentesConDatos ?? instantanea.fuentes).map((f) => f.name).join(', ') }},
-      generados por la ingesta automática. No es una consulta en vivo.
-      <span v-if="instantanea.fuentesSinDatos?.length" class="fuente-caida">
+      <div class="banda-linea">
+        <span class="banda-dicho">
+          <strong>Instantánea del {{ new Date(instantanea.generado).toLocaleDateString('es-ES') }}</strong>
+          · no es una consulta en vivo
+        </span>
+        <details class="banda-mas">
+          <summary>De dónde salen estos datos</summary>
+          <div class="banda-detalle">
+            <p>
+              Datos reales de
+              {{ (instantanea.fuentesConDatos ?? instantanea.fuentes).map((f) => f.name).join(', ') }},
+              descargados y enlazados por la ingesta automática. Cada cifra
+              lleva el documento del que salió.
+            </p>
+            <p v-if="instantanea.truncado">
+              El mapa se recorta a la parte con más dinero para que el
+              navegador pueda con él. La base entera tiene
+              {{ instantanea.total }} entidades y la búsqueda las cubre todas.
+            </p>
+          </div>
+        </details>
+      </div>
+      <p v-if="instantanea.fuentesSinDatos?.length" class="fuente-caida">
         ⚠ Hoy falta {{ instantanea.fuentesSinDatos.map((f) => f.name).join(' y ') }}:
         no respondió al generar esta instantánea, así que este mapa no incluye
         sus datos.
-      </span>
-      <span v-if="instantanea.truncado">
-        Se publica la parte del grafo con más dinero, no la base entera
-        ({{ instantanea.total }} entidades).
-      </span>
+      </p>
     </div>
 
     <div v-else-if="esDemo" class="banda-demo">
@@ -548,9 +571,21 @@ onMounted(async () => {
 
 .banda-info {
   background: #16232e; color: #a9cbe4;
-  padding: 0.5rem 1rem; font-size: 0.8rem; line-height: 1.4;
+  padding: 0.35rem 1rem; font-size: 0.78rem; line-height: 1.4;
   border-bottom: 1px solid #23384a;
 }
+.banda-linea {
+  display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
+}
+.banda-dicho strong { font-weight: 600; }
+.banda-mas summary {
+  cursor: pointer; color: #8fb6d4; text-decoration: underline;
+  text-underline-offset: 2px; font-size: 0.74rem;
+}
+.banda-mas summary::marker { color: #6d8ba4; }
+.banda-detalle { padding: 0.4rem 0 0.2rem; max-width: 62ch; }
+.banda-detalle p { margin: 0 0 0.35rem; }
+.banda-detalle p:last-child { margin-bottom: 0; }
 
 .cabecera {
   display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
@@ -645,7 +680,20 @@ main { flex: 1; position: relative; min-height: 0; }
     padding: 0.3rem 0.45rem;
     border-radius: 6px;
   }
-  .banda-info, .banda-demo { font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+  .banda-info, .banda-demo { font-size: 0.72rem; padding: 0.35rem 0.7rem; }
+
+  /*
+    En estrecho la cabecera ocupaba cuatro renglones —marca, lema, buscador y
+    una fila por cada botón— y empujaba el primer dato por debajo del pliegue.
+    La marca y los botones comparten renglón, y el lema sobra: el buscador que
+    hay justo debajo dice lo mismo con un ejemplo.
+  */
+  .cabecera { gap: 0.6rem 0.9rem; padding: 0.55rem 0.8rem; }
+  .cabecera .marca { flex: 1; min-width: 0; }
+  .marca p { display: none; }
+  .buscador { order: 3; flex-basis: 100%; max-width: none; }
+  .controles { gap: 0.5rem; }
+  .volver, .controles .volver { padding: 0.3rem 0.6rem; font-size: 0.74rem; }
 }
 
 .controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }

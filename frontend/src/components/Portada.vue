@@ -114,6 +114,28 @@ function tope(filas, campo = 'total') {
   return Math.max(1, ...filas.map((f) => f[campo] ?? 0))
 }
 
+/**
+ * Cuánto ocupa la barra de fondo de una fila, en porcentaje del primero.
+ *
+ * Proporcional de verdad, sin raíz ni mínimos: aquí la cifra exacta va al lado
+ * en la misma línea, así que una barra corta no esconde nada — y en una lista
+ * lo que se quiere ver de un vistazo es precisamente si el primero se lleva
+ * casi todo o si está repartido.
+ */
+/** La cifra destacada: la magnitud por la que la lista está ordenada. */
+function cifraCabeza(f, lista) {
+  if (lista.destacar === 'n') return lista.unidad(f)
+  return dineroCorto(f.total)
+}
+
+function proporcion(f, lista) {
+  const campo = lista.destacar === 'n' ? 'n' : 'total'
+  // Tope en 92 % y no en 100: con la barra llegando al borde, la primera fila
+  // de cada lista parecía seleccionada en vez de medida. Que se vea dónde
+  // acaba es lo que la convierte en una barra.
+  return Math.max(1.5, ((f[campo] ?? 0) / tope(lista.filas, campo)) * 92)
+}
+
 function color(schema) {
   return COLOR_POR_ESQUEMA[schema] ?? COLOR_POR_DEFECTO
 }
@@ -121,25 +143,29 @@ function color(schema) {
 
 <template>
   <div class="portada">
+    <!--
+      La entradilla era un párrafo de cuatro líneas explicando cómo usar la
+      página («pulsa cualquier nombre para ver…») y cinco recuadros de cifras
+      del mismo tamaño. En móvil eso son dos pantallas de scroll antes del
+      primer dato.
+      Si hay que explicar que se puede pulsar un nombre, lo que falla es que
+      no lo parezca; se arregla en la lista, no con un párrafo. Y de las cinco
+      cifras, tres tienen su propia sección más abajo.
+    -->
     <section class="intro">
       <h2>Dónde está el dinero</h2>
-      <p>
-        Todo lo que sigue sale de los documentos públicos que la ingesta guarda
-        con su procedencia. Pulsa cualquier nombre para ver su área de
-        influencia: de quién recibe, a quién paga y con quién comparte
-        pagadores.
+      <p class="lema">
+        Quién paga a quién en la contratación y las subvenciones públicas
+        españolas, sacado de los documentos oficiales y con el documento
+        siempre a mano.
       </p>
-      <div class="totales">
-        <div><b>{{ dineroCorto(dir.totales.dineroTotal) }}</b><span>en operaciones publicadas</span></div>
-        <div><b>{{ dir.totales.nOperaciones.toLocaleString('es-ES') }}</b><span>operaciones</span></div>
-        <div>
-          <b>{{ dir.totales.nActores.toLocaleString('es-ES') }}</b>
-          <span>entidades{{ fueraDelMapa ? ', el mapa enseña parte' : '' }}</span>
-        </div>
-        <div><b>{{ dir.totales.nPartidos.toLocaleString('es-ES') }}</b><span>formaciones políticas</span></div>
-        <div><b>{{ dir.totales.nExtranjeras }}</b><span>entidades no residentes</span></div>
-      </div>
-      <button class="ir-mapa" @click="emit('verMapa')">Ver el mapa de núcleos →</button>
+      <p class="totales">
+        <b>{{ dineroCorto(dir.totales.dineroTotal) }}</b> repartidos ·
+        <b>{{ dir.totales.nActores.toLocaleString('es-ES') }}</b>
+        entidades<template v-if="fueraDelMapa">, de las que
+          <b>{{ (dir.totales.enMapa ?? 0).toLocaleString('es-ES') }}</b>
+          caben en el mapa</template>
+      </p>
     </section>
 
     <div class="rejilla">
@@ -147,28 +173,49 @@ function color(schema) {
         <h3>{{ l.titulo }}</h3>
         <p class="que">{{ l.que }}</p>
         <ol class="ranking">
+          <!--
+            La fila ENTERA es el botón. Antes sólo lo era el nombre: el resto
+            de la línea —el puesto, el tipo, la cifra— no hacía nada al
+            pulsarlo, y había que explicar en un párrafo de la entradilla que
+            se podía pulsar. Si hay que decirlo, es que no se ve.
+          -->
           <li v-for="(f, i) in l.filas" :key="f.id">
-            <span class="puesto">{{ i + 1 }}</span>
-            <div class="cuerpo">
-              <button class="nombre" @click="emit('seleccionar', f.id)">
-                <span class="punto" :style="{ background: color(f.schema) }" />
-                {{ f.caption }}
-              </button>
-              <span class="barra">
-                <i :style="{ width: `${Math.max(2, ((l.destacar === 'n' ? f.n : f.total) / tope(l.filas, l.destacar === 'n' ? 'n' : 'total')) * 100)}%` }" />
+            <button class="fila" @click="emit('seleccionar', f.id)">
+              <span
+                class="fondo"
+                :style="{ width: `${proporcion(f, l)}%` }"
+                aria-hidden="true"
+              />
+              <span class="puesto">{{ i + 1 }}</span>
+              <span class="cuerpo">
+                <span class="nombre">
+                  <span class="punto" :style="{ background: color(f.schema) }" />
+                  {{ f.caption }}
+                </span>
+                <span class="meta">
+                  {{ etiquetaEsquema(f.schema) }} ·
+                  <!-- La otra magnitud, la que no encabeza la fila. -->
+                  <template v-if="l.destacar === 'n'">{{ dineroCorto(f.total) }}</template>
+                  <template v-else>{{ l.unidad(f) }}</template>
+                  <span v-if="f.extranjera && l.clave !== 'extranjeras'" class="marca">· no residente</span>
+                  <!--
+                    Está en la base pero no en el grafo publicado: se puede
+                    abrir su ficha y ver sus cifras, no su red. Decirlo aquí
+                    evita que el clic parezca roto.
+                  -->
+                  <span v-if="f.enMapa === false" class="sin-red">· sin red en el mapa</span>
+                </span>
               </span>
-              <span class="meta">
-                {{ etiquetaEsquema(f.schema) }} · {{ l.unidad(f) }}
-                <span v-if="f.extranjera && l.clave !== 'extranjeras'" class="marca">· no residente</span>
-                <!--
-                  Está en la base pero no en el grafo publicado: se puede
-                  abrir su ficha y ver sus cifras, no su red. Decirlo aquí
-                  evita que el clic parezca roto.
-                -->
-                <span v-if="f.enMapa === false" class="sin-red">· sin red en el mapa</span>
-              </span>
-            </div>
-            <span class="cifra">{{ dineroCorto(f.total) }}</span>
+              <!--
+                La cifra grande es SIEMPRE la magnitud por la que está
+                ordenada la lista. En «cobran de más administraciones» se
+                enseñaba el dinero al lado de una barra que medía
+                administraciones: el número 3 tenía la barra más larga que el
+                7 y la cifra cinco veces menor. Parecía un fallo de cálculo y
+                era una comparación de dos cosas distintas.
+              -->
+              <span class="cifra">{{ cifraCabeza(f, l) }}</span>
+            </button>
           </li>
         </ol>
         <p class="no-es">{{ l.noEs }}</p>
@@ -270,23 +317,20 @@ function color(schema) {
 .intro h2 { font-size: 1.35rem; margin: 0 0 0.4rem; letter-spacing: -0.015em; }
 .intro p { font-size: 0.88rem; color: var(--texto-tenue); line-height: 1.55; margin: 0 0 0.9rem; max-width: 44rem; }
 
-.totales { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.totales div {
-  background: var(--fondo-panel); border: 1px solid var(--borde); border-radius: 8px;
-  padding: 0.5rem 0.8rem; display: flex; flex-direction: column; min-width: 8.5rem;
-}
-.totales b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-.totales span { font-size: 0.7rem; color: var(--texto-tenue); margin-top: 0.1rem; }
+.lema { max-width: 46rem; }
 
-.ir-mapa {
-  margin-top: 0.9rem; background: var(--fondo-boton); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: 7px; padding: 0.45rem 0.85rem;
-  font: inherit; font-size: 0.82rem; cursor: pointer;
+/* Una línea, no cinco recuadros: orienta y deja sitio a lo que se ha venido a ver. */
+.totales {
+  font-size: 0.86rem; color: var(--texto-tenue);
+  margin: 0 0 0.2rem; max-width: none;
 }
-.ir-mapa:hover { border-color: var(--acento); color: var(--acento); }
+.totales b {
+  color: var(--texto); font-size: 1rem; font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
 
 .rejilla {
-  display: grid; gap: 1rem; margin-top: 1.5rem;
+  display: grid; gap: 1rem; margin-top: 1.25rem;
   grid-template-columns: repeat(auto-fit, minmax(23rem, 1fr));
 }
 
@@ -297,27 +341,55 @@ function color(schema) {
 .tarjeta h3 { font-size: 0.95rem; margin: 0 0 0.3rem; letter-spacing: -0.01em; }
 .que { font-size: 0.75rem; color: var(--texto-tenue); line-height: 1.45; margin: 0 0 0.7rem; }
 
-.ranking { list-style: none; margin: 0; padding: 0; counter-reset: n; }
-.ranking li {
-  display: grid; grid-template-columns: 1.4rem 1fr auto; gap: 0.5rem; align-items: baseline;
-  padding: 0.4rem 0; border-bottom: 1px solid var(--borde-suave);
+.ranking { list-style: none; margin: 0; padding: 0; }
+.ranking li { border-bottom: 1px solid var(--borde-suave); }
+.ranking li:last-child { border-bottom: none; }
+
+.fila {
+  position: relative; width: 100%; display: grid; gap: 0.5rem;
+  grid-template-columns: 1.4rem 1fr auto; align-items: baseline;
+  background: none; border: none; color: inherit; font: inherit;
+  padding: 0.45rem 0.4rem; margin: 0 -0.4rem; text-align: left; cursor: pointer;
+  border-radius: 6px;
 }
+/*
+  El ratón NO pinta fondo, y es a propósito: el fondo ya significa otra cosa
+  —la barra proporcional— y con las dos cosas pintadas igual la fila bajo el
+  cursor parecía la más grande de la lista.
+*/
+.fila:hover, .fila:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--acento); }
+.fila:hover .nombre, .fila:focus-visible .nombre { color: var(--acento); }
+
+/*
+  La barra va DETRÁS de la fila y no debajo del nombre. Como línea de 3 px
+  entre el nombre y el tipo se leía como un subrayado o un separador: había
+  que saber que era una barra para verla como tal. De fondo, la lista entera
+  dibuja el reparto de un vistazo — si el primero se lo lleva casi todo, se ve
+  sin leer una sola cifra.
+*/
+.fondo {
+  position: absolute; left: 0; top: 2px; bottom: 2px;
+  background: var(--acento); opacity: 0.09; pointer-events: none;
+  border-radius: 4px;
+  /* El filo de la derecha es lo que la hace medir: sin él sólo es un tinte. */
+  border-right: 2px solid var(--acento);
+}
+.tarjeta.sancion .fondo { background: #d9635c; border-right-color: #d9635c; }
+
 .puesto { font-size: 0.72rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; text-align: right; }
-.cuerpo { min-width: 0; }
+.cuerpo { min-width: 0; display: block; }
 .nombre {
-  background: none; border: none; color: var(--texto); font: inherit; font-size: 0.84rem;
-  padding: 0; cursor: pointer; text-align: left; line-height: 1.3; display: flex;
-  align-items: baseline; gap: 0.35rem;
+  color: var(--texto); font-size: 0.84rem; line-height: 1.3;
+  display: flex; align-items: baseline; gap: 0.35rem;
 }
-.nombre:hover { color: var(--acento); }
 .punto { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-.barra { display: block; height: 3px; background: var(--borde-suave); border-radius: 2px; margin: 0.28rem 0 0.22rem; overflow: hidden; }
-.barra i { display: block; height: 100%; background: var(--acento); }
-.tarjeta.sancion .barra i { background: #d9635c; }
-.meta { font-size: 0.68rem; color: var(--texto-tenue); }
+.meta { display: block; font-size: 0.68rem; color: var(--texto-tenue); margin-top: 0.15rem; }
 .meta .marca { color: #b08cd9; }
 .meta .sin-red { color: var(--aviso); }
-.cifra { font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--texto-tenue); }
+.cifra {
+  font-size: 0.82rem; font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: var(--texto); font-weight: 600;
+}
 .tarjeta.sancion .cifra { color: #e8877f; }
 
 .no-es {

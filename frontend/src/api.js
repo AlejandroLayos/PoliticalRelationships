@@ -107,10 +107,23 @@ let _cargandoTop = null
 export async function cargarIndiceTop() {
   if (_indiceTop !== null) return _indiceTop
   if (!_cargandoTop) {
-    _cargandoTop = _pedirIndice('/datos/indice-top.json').then((d) => {
-      _indiceTop = d
-      return d
-    })
+    // Si el extracto no está, se pide el índice entero antes que rendirse.
+    //
+    // Cuesta más —son megas en vez de decenas de kB— pero la alternativa no
+    // es «un poco peor»: sin índice la portada rankea sobre el grafo, o sea
+    // sobre las 4.000 entidades que caben en el mapa, y presenta el resultado
+    // como si fuera de toda la base. En la misma pantalla se leía «12.153
+    // entidades» en la banda de arriba y «2.892 entidades» en la portada.
+    //
+    // Pasa de verdad y no en un caso raro: cualquier volcado generado antes
+    // de que existiera el extracto no lo lleva, y el fichero se publica junto
+    // al grafo, así que hay ventanas en las que uno está y el otro no.
+    _cargandoTop = _pedirIndice('/datos/indice-top.json')
+      .then((d) => (d.entidades.length ? d : cargarIndice()))
+      .then((d) => {
+        _indiceTop = d
+        return d
+      })
   }
   return _cargandoTop
 }

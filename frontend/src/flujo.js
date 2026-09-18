@@ -28,10 +28,17 @@ import { aNumero } from './nucleos.js'
 
 const MARGEN = 14
 const ALTO_MIN_FICHA = 26
-// Una ficha es una etiqueta con una cifra: pasado cierto alto no comunica más,
-// sólo ocupa. Sin tope, una entidad con tres contrapartes salía con tres
-// bloques del tamaño de media pantalla y la banda de color se comía la vista.
-// El sobrante se queda en blanco, que es lo que debe hacer el espacio vacío.
+// El tope es de la FICHA, no de la banda, y la distinción es todo el asunto.
+//
+// Antes topaba las dos cosas y entonces el grosor dejaba de significar nada en
+// cuanto el tope entraba en juego: en la ficha real de un organismo con tres
+// adjudicatarios —99,1 M €, 39,8 M € y 421 mil €— los dos primeros salían
+// exactamente igual de gruesos y el tercero, que es el 0,4 % del primero, a
+// tres cuartos de su altura. El dibujo afirmaba que repartía casi por igual.
+//
+// Ahora la banda crece sin tope, que es lo que la hace decir algo, y la ficha
+// —una etiqueta con una cifra, que pasado cierto alto no comunica más— se
+// queda en su tamaño y se centra sobre la banda.
 const ALTO_MAX_FICHA = 68
 const HUECO = 6
 const CABECERA = 30
@@ -63,8 +70,8 @@ export function repartirAlto(valores, disponible) {
   const pesos = valores.map((v) => Math.sqrt(Math.max(0, aNumero(v))))
   const suma = pesos.reduce((s, p) => s + p, 0)
   const extra = libre - n * ALTO_MIN_FICHA
-  if (suma <= 0) return valores.map(() => Math.min(ALTO_MAX_FICHA, libre / n))
-  return pesos.map((p) => Math.min(ALTO_MAX_FICHA, ALTO_MIN_FICHA + (extra * p) / suma))
+  if (suma <= 0) return valores.map(() => libre / n)
+  return pesos.map((p) => ALTO_MIN_FICHA + (extra * p) / suma)
 }
 
 function apilar(altos, desde) {
@@ -143,8 +150,25 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } 
     h: altoCentro,
   }
 
+  // La banda es el dato —su grosor es el importe—; la ficha es la etiqueta, y
+  // va centrada encima. En una banda fina las dos coinciden y no se nota; en
+  // una gruesa la etiqueta flota en medio y el color de alrededor es el que
+  // dice cuánto.
   const fichas = (lista, cajas, x, lado) =>
-    lista.map((c, i) => ({ ...c, lado, x, w: anchoColumna, y: cajas[i].y, h: cajas[i].h }))
+    lista.map((c, i) => {
+      const banda = cajas[i]
+      const h = Math.min(banda.h, ALTO_MAX_FICHA)
+      return {
+        ...c,
+        lado,
+        x,
+        w: anchoColumna,
+        y: banda.y + (banda.h - h) / 2,
+        h,
+        bandaY: banda.y,
+        bandaH: banda.h,
+      }
+    })
 
   const izquierda = fichas(izq, cajasIzq, xIzq, 'izquierda')
   const derecha = fichas(der, cajasDer, xDer, 'derecha')
@@ -155,13 +179,19 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } 
   const margenBorde = 8
   const bordeUtil = altoCentro - margenBorde * 2
 
+  // Con las cintas pegadas unas a otras el abanico llegaba al centro como una
+  // mancha: tres flujos muy distintos se fundían en un solo bloque marrón y
+  // había que seguir el borde con el dedo para saber dónde acababa cada uno.
+  // El mismo hueco que separa las fichas los separa también aquí.
   function convergencia(items) {
-    const suma = items.reduce((s, c) => s + c.h, 0)
-    let y = yCentro + margenBorde
+    const huecos = HUECO * Math.max(0, items.length - 1)
+    const util = Math.max(items.length, bordeUtil - huecos)
+    const suma = items.reduce((s, c) => s + c.bandaH, 0)
+    let y = yCentro + margenBorde + Math.max(0, (bordeUtil - util - huecos) / 2)
     return items.map((c) => {
-      const h = suma > 0 ? (c.h / suma) * bordeUtil : 0
+      const h = suma > 0 ? (c.bandaH / suma) * util : 0
       const caja = { a: y, b: y + h }
-      y += h
+      y += h + HUECO
       return caja
     })
   }
@@ -177,7 +207,7 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } 
       total: c.total,
       extranjera: c.extranjera,
       inferido: c.inferido,
-      d: cinta(c.x + c.w, c.y, c.y + c.h, centro.x, convIzq[i].a, convIzq[i].b),
+      d: cinta(c.x + c.w, c.bandaY, c.bandaY + c.bandaH, centro.x, convIzq[i].a, convIzq[i].b),
     })),
     ...derecha.map((c, i) => ({
       id: `out:${c.id}`,
@@ -186,7 +216,7 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } 
       total: c.total,
       extranjera: c.extranjera,
       inferido: c.inferido,
-      d: cinta(c.x, c.y, c.y + c.h, centro.x + centro.w, convDer[i].a, convDer[i].b),
+      d: cinta(c.x, c.bandaY, c.bandaY + c.bandaH, centro.x + centro.w, convDer[i].a, convDer[i].b),
     })),
   ]
 

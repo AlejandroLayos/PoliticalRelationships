@@ -106,12 +106,37 @@ describe('disponerFlujo', () => {
 })
 
 describe('tamaños y hueco', () => {
-  it('una ficha no crece sin límite aunque sobre sitio', () => {
-    // Con tres contrapartes en una pantalla alta, el reparto proporcional puro
-    // daba bloques de doscientos píxeles: la banda de color tapaba el dibujo y
-    // no decía nada más que con sesenta.
-    const altos = repartirAlto([100, 200, 300], 900)
-    expect(Math.max(...altos)).toBeLessThanOrEqual(68)
+  it('el grosor sigue diciendo algo aunque sobre sitio', () => {
+    // Lo contrario de lo que afirmaba este test antes, y por un motivo medido.
+    //
+    // Topar el grosor a 68 px hacía que dos importes muy distintos salieran
+    // idénticos en cuanto había sitio de sobra. En la ficha real de un
+    // organismo con tres adjudicatarios —99,1 M €, 39,8 M € y 421 mil €— los
+    // dos primeros salían exactamente igual de gruesos. El dibujo afirmaba
+    // que repartía casi por igual, que es justo lo que este proyecto no puede
+    // hacer.
+    //
+    // El tope sigue existiendo, pero es de la FICHA —la etiqueta con la
+    // cifra—, y lo aplica `disponerFlujo`. La banda crece.
+    const [a, b, c] = repartirAlto([99_100_000, 39_800_000, 421_000], 900)
+    expect(a).toBeGreaterThan(b * 1.2)
+    expect(b).toBeGreaterThan(c * 2)
+  })
+
+  it('la ficha sí se queda en su tamaño y se centra sobre la banda', () => {
+    const nodes = [
+      { id: 'c', caption: 'ORGANISMO', schema: 'PublicBody', properties: {} },
+      { id: 'e', caption: 'EMPRESA', schema: 'Company', properties: {} },
+    ]
+    const edges = [
+      { id: 'a', source: 'c', target: 'e', amount: '99100000', schema: 'ContractAward', confidence: 1, status: 'asserted' },
+    ]
+    const d = disponerFlujo(areaDeInfluencia({ nodes, edges }, 'c'), { ancho: 1000, alto: 900 })
+    const [ficha] = d.derecha
+    expect(ficha.h).toBeLessThanOrEqual(68)
+    expect(ficha.bandaH).toBeGreaterThan(ficha.h)
+    // Centrada: lo que sobra por arriba es lo que sobra por abajo.
+    expect(ficha.y - ficha.bandaY).toBeCloseTo(ficha.bandaY + ficha.bandaH - (ficha.y + ficha.h), 5)
   })
 
   it('con un lado vacío la entidad se corre hacia el hueco', () => {

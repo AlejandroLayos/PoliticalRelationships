@@ -85,6 +85,16 @@ function rellenoCinta(c) {
   return `url(#cinta-${c.lado === 'izquierda' ? 'entra' : 'sale'}${sufijo})`
 }
 
+function ultima(columna) {
+  return columna[columna.length - 1]
+}
+
+/** Justo debajo de la última ficha, sin salirse del lienzo. */
+function piePara(columna) {
+  const c = ultima(columna)
+  return Math.min(alto.value - 4, c.y + c.h + 14)
+}
+
 /** Resaltado: al pasar por una ficha se apaga todo lo demás. */
 function apagada(id) {
   return encima.value && encima.value !== id
@@ -116,12 +126,12 @@ const sinFlujo = computed(
       -->
       <defs>
         <linearGradient id="cinta-entra" x1="0" x2="1">
-          <stop offset="0" :stop-color="ENTRA" stop-opacity="0.5" />
-          <stop offset="1" :stop-color="ENTRA" stop-opacity="0.14" />
+          <stop offset="0" :stop-color="ENTRA" stop-opacity="0.42" />
+          <stop offset="1" :stop-color="ENTRA" stop-opacity="0.1" />
         </linearGradient>
         <linearGradient id="cinta-sale" x1="0" x2="1">
-          <stop offset="0" :stop-color="SALE" stop-opacity="0.14" />
-          <stop offset="1" :stop-color="SALE" stop-opacity="0.5" />
+          <stop offset="0" :stop-color="SALE" stop-opacity="0.1" />
+          <stop offset="1" :stop-color="SALE" stop-opacity="0.42" />
         </linearGradient>
         <linearGradient id="cinta-entra-ext" x1="0" x2="1">
           <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.55" />
@@ -154,6 +164,7 @@ const sinFlujo = computed(
           :key="c.id"
           :d="c.d"
           :fill="rellenoCinta(c)"
+          :stroke="colorDe(c)"
           :class="['cinta', { apagada: apagada(c.nodoId), inferida: c.inferido }]"
         />
       </g>
@@ -169,7 +180,17 @@ const sinFlujo = computed(
       >
         <title>{{ c.caption }} · {{ dineroCorto(c.total) }} · {{ c.n }} {{ c.n === 1 ? 'relación' : 'relaciones' }}</title>
         <rect :x="c.x" :y="c.y" :width="c.w" :height="c.h" rx="6" class="caja-ficha" />
-        <rect :x="c.lado === 'izquierda' ? c.x + c.w - 3 : c.x" :y="c.y" width="3" :height="c.h" :fill="colorDe(c)" />
+        <!--
+          La banda de color va por la BANDA, no por la ficha: es lo que deja
+          ver el grosor real cuando la etiqueta es más baja que el flujo.
+        -->
+        <rect
+          :x="c.lado === 'izquierda' ? c.x + c.w - 3 : c.x"
+          :y="c.bandaY"
+          width="3"
+          :height="c.bandaH"
+          :fill="colorDe(c)"
+        />
         <text :x="c.x + 9" :y="c.y + (esAlta(c) ? 17 : c.h / 2 + 4)" class="nombre">
           {{ recortar(c.caption, c.w, esAlta(c) ? 0 : anchoCifra(c.total)) }}
         </text>
@@ -241,36 +262,38 @@ const sinFlujo = computed(
         </p>
       </foreignObject>
 
-      <!-- Lo que no cupo se dice, no se esconde. -->
+      <!--
+        Lo que no cupo se dice, no se esconde. Va pegado debajo de la última
+        ficha de su columna y no al pie del lienzo: ahí se cruzaba con la ayuda
+        de la esquina —«+85 receptores más» encima de «Clic en una contraparte
+        para seguir el rastro»— y no se leía ninguna de las dos.
+      -->
       <text
         v-if="disposicion.recortado.izquierda"
-        :x="disposicion.izquierda[0].x"
-        :y="alto - 8"
+        :x="ultima(disposicion.izquierda).x"
+        :y="piePara(disposicion.izquierda)"
         class="recorte"
       >
-        +{{ disposicion.recortado.izquierda }} pagadores más, en la lista del panel
+        +{{ disposicion.recortado.izquierda }} pagadores más, en la lista
       </text>
       <text
         v-if="disposicion.recortado.derecha"
-        :x="disposicion.derecha[0].x"
-        :y="alto - 8"
+        :x="ultima(disposicion.derecha).x"
+        :y="piePara(disposicion.derecha)"
         class="recorte"
       >
-        +{{ disposicion.recortado.derecha }} receptores más, en la lista del panel
+        +{{ disposicion.recortado.derecha }} receptores más, en la lista
       </text>
     </svg>
 
-    <p v-if="fueraDelMapa" class="vacio">
-      De <strong>{{ fueraDelMapa.caption }}</strong> consta cuánto mueve, pero
-      no con quién: el mapa publicado se recorta a las relaciones con más
-      dinero y ésta no entró. Las cifras están en el panel.
-    </p>
+    <div v-if="fueraDelMapa" class="vacio">
+      <p>
+        De <strong>{{ fueraDelMapa.caption }}</strong> consta cuánto mueve,
+        pero no con quién: el mapa publicado se recorta a las relaciones con
+        más dinero y ésta no entró. Las cifras están en el panel.
+      </p>
+    </div>
 
-    <p v-else-if="area?.entidad" class="vacio">
-      De <strong>{{ area.entidad.caption }}</strong> no consta ningún movimiento
-      de dinero en lo publicado. Puede que la fuente que lo cubre no haya
-      respondido, o que esta entidad sólo aparezca como estructura.
-    </p>
   </div>
 </template>
 
@@ -280,7 +303,8 @@ const sinFlujo = computed(
 
 .cabecera { font-size: 10.5px; letter-spacing: 0.08em; font-weight: 700; opacity: 0.85; }
 
-.cinta { transition: opacity 0.15s; }
+/* El filo marca dónde acaba cada cinta cuando dos van pegadas. */
+.cinta { transition: opacity 0.15s; stroke-width: 1; stroke-opacity: 0.35; }
 .cinta.apagada { opacity: 0.12; }
 .cinta.inferida { opacity: 0.45; }
 
@@ -313,9 +337,18 @@ const sinFlujo = computed(
   color: var(--texto-tenue); font-family: system-ui, sans-serif;
 }
 
+/*
+  Era un <p> con `display: grid`, y eso convierte en celda cada hijo: los
+  trozos de texto por un lado y el <strong> por otro, cada uno centrado
+  aparte. En la ficha de un organismo salía la palabra «De» suelta arriba del
+  todo, el nombre en negrita pisando el diagrama por el medio y el resto de la
+  frase abajo. Parecía un fallo de render porque lo era.
+*/
 .vacio {
-  position: absolute; inset: 0; display: grid; place-items: center; margin: 0;
-  padding: 2rem; text-align: center; max-width: 34rem; margin-inline: auto;
+  position: absolute; inset: 0; margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem; text-align: center;
   color: var(--texto-tenue); font-size: 0.88rem; line-height: 1.5;
 }
+.vacio > * { max-width: 34rem; margin: 0; }
 </style>
