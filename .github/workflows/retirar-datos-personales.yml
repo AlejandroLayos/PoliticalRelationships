@@ -56,10 +56,13 @@ jobs:
         run: pip install git-filter-repo
 
       # Siempre, incluso en el ensayo: es el informe de qué hay que borrar.
+      #
+      # El guion sale con 1 cuando ENCUENTRA algo, que es lo útil para
+      # encadenarlo. Aquí eso no es un fallo —es justo lo que venimos a ver— y
+      # dejarlo salir pintaba un ##[error] en el log que se lee como si el
+      # paso se hubiera roto.
       - name: qué datos personales quedan
-        id: comprobar
-        continue-on-error: true
-        run: python3 scripts/redactar_particulares_del_historico.py --comprobar
+        run: python3 scripts/redactar_particulares_del_historico.py --comprobar || true
 
       - name: reescribir y empujar
         if: ${{ inputs.confirmacion == 'REESCRIBIR' }}
