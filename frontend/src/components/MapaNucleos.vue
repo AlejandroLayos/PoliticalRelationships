@@ -20,7 +20,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import Sigma from 'sigma'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
-import { analizarNucleos, colorNucleo } from '../nucleos.js'
+import { analizarNucleos, colapsarNodosDePaso, colorNucleo } from '../nucleos.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -29,6 +29,7 @@ const props = defineProps({
   minImporte: { type: Number, default: 0 },
   mostrarExpedientes: { type: Boolean, default: false },
   mostrarSueltos: { type: Boolean, default: false },
+  soloExtranjero: { type: Boolean, default: false },
 })
 const emit = defineEmits(['seleccionar', 'analizado'])
 
@@ -46,15 +47,38 @@ function tamano(dinero, grado) {
 
 function construir() {
   calculando.value = true
-  const { grafo: g, nucleos, porNodo, totalDinero } = analizarNucleos(props.datos)
+  // Se puentean los expedientes ANTES de agrupar: si se quitaran después, los
+  // núcleos se habrían calculado sobre un grafo con nodos de paso y saldrían
+  // artificialmente troceados.
+  const fuente = props.mostrarExpedientes ? props.datos : colapsarNodosDePaso(props.datos)
+  const { grafo: g, nucleos, porNodo, totalDinero } = analizarNucleos(fuente)
+  const nodosPorId = new Map((fuente?.nodes ?? []).map((n) => [n.id, n]))
 
   // Filtros: se aplican quitando nodos del grafo, no ocultándolos, para que el
   // layout no reserve sitio a lo que no se ve.
-  const fuera = []
+  // Set y no lista: un nodo puede caer por dos filtros a la vez y dropNode
+  // revienta la segunda.
+  const fuera = new Set()
   g.forEachNode((id, attrs) => {
-    if (!props.mostrarExpedientes && attrs.esquema === 'Contract') fuera.push(id)
-    else if (props.minImporte > 0 && attrs.dinero < props.minImporte) fuera.push(id)
+    if (props.minImporte > 0 && attrs.dinero < props.minImporte) fuera.add(id)
   })
+
+  // Capital extranjero: se conserva la entidad no residente y quien le paga,
+  // que es la relación que interesa. Quedarse sólo con las extranjeras dejaría
+  // nodos sueltos sin decir de dónde les viene el dinero.
+  if (props.soloExtranjero) {
+    const marcadas = new Set(
+      (fuente?.nodes ?? [])
+        .filter((n) => n.properties?.entidad_extranjera)
+        .map((n) => n.id)
+        .filter((id) => g.hasNode(id)),
+    )
+    const aSalvo = new Set(marcadas)
+    for (const id of marcadas) for (const v of g.neighbors(id)) aSalvo.add(v)
+    g.forEachNode((id) => {
+      if (!aSalvo.has(id)) fuera.add(id)
+    })
+  }
   for (const id of fuera) g.dropNode(id)
   // Un nodo que se queda sin aristas tras filtrar ya no cuenta nada.
   const sinAristas = g.filterNodes((id) => g.degree(id) === 0)
@@ -87,6 +111,7 @@ function construir() {
       label: conEtiqueta.has(id) ? attrs.label : '',
       etiquetaReal: attrs.label,
       color: colorNucleo(attrs.nucleo),
+      extranjera: Boolean(nodosPorId.get(id)?.properties?.entidad_extranjera),
       size: tamano(attrs.dinero, attrs.grado),
       x: Math.random(),
       y: Math.random(),
@@ -297,7 +322,10 @@ const hayAlgo = computed(() => (props.datos?.nodes?.length ?? 0) > 0)
 
 onMounted(pintar)
 watch(() => props.datos, pintar)
-watch(() => [props.minImporte, props.mostrarExpedientes, props.mostrarSueltos], pintar)
+watch(
+  () => [props.minImporte, props.mostrarExpedientes, props.mostrarSueltos, props.soloExtranjero],
+  pintar,
+)
 watch(() => props.seleccion, aplicarReductores)
 watch(
   () => props.nucleoEnfocado,

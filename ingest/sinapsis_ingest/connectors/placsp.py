@@ -38,6 +38,7 @@ from sinapsis_ingest.util import (
     a_fecha,
     normalizar_nif,
     parece_persona_fisica,
+    propiedades_extranjera,
     slug,
 )
 
@@ -384,7 +385,7 @@ class PLACSPConnector:
                             dedupe_key=clave_adj,
                             nif=nif,
                             country="es",
-                            properties={"name": nombre},
+                            properties={"name": nombre, **propiedades_extranjera(nif)},
                         )
                     )
 

@@ -39,6 +39,78 @@ export function peso(importe) {
   return 1 + Math.log10(1 + Math.max(0, aNumero(importe)))
 }
 
+/**
+ * Colapsa los nodos de paso, conservando el camino.
+ *
+ * Un expediente de contratación no es un actor: es el papel que une al órgano
+ * que adjudica con la empresa que cobra. Dibujarlo duplica la longitud de todo
+ * camino —organismo → contrato → empresa— y llena el mapa de nodos que no
+ * responden a ninguna pregunta.
+ *
+ * Pero *esconderlo* sin más rompe el grafo: los dos extremos se quedan sin
+ * camino entre ellos. Se vio al estrenar el filtro de capital extranjero, que
+ * devolvía cero entidades — las 19 empresas no residentes cuelgan justamente
+ * de expedientes.
+ *
+ * Así que se puentea: se une a los vecinos del nodo de paso entre sí y luego se
+ * quita. El dinero de la arista nueva es el mayor de los dos tramos, nunca la
+ * suma: el órgano no pagó dos veces, es el mismo dinero visto por sus dos
+ * lados, y sumarlo duplicaría el total del mapa.
+ */
+export function colapsarNodosDePaso(datos, esquema = 'Contract') {
+  const nodes = datos?.nodes ?? []
+  const edges = datos?.edges ?? []
+  const dePaso = new Set(nodes.filter((n) => n.schema === esquema).map((n) => n.id))
+  if (!dePaso.size) return { ...datos, nodes, edges }
+
+  // La DIRECCIÓN importa, y la primera versión la ignoraba: unía entre sí a
+  // todos los vecinos del expediente, así que un contrato con tres
+  // adjudicatarios generaba tres aristas repitiendo el importe y el dinero del
+  // mapa se disparó de 17 a 119 millones. Dos adjudicatarios del mismo
+  // contrato no se pagan el uno al otro.
+  //
+  // Lo correcto es unir quien ENTRA al expediente —el órgano que adjudica—
+  // con quien SALE de él —cada adjudicatario—, y nada más.
+  const entrantes = new Map()
+  const salientes = new Map()
+  for (const a of edges) {
+    if (dePaso.has(a.target) && !dePaso.has(a.source)) {
+      if (!entrantes.has(a.target)) entrantes.set(a.target, [])
+      entrantes.get(a.target).push(a)
+    }
+    if (dePaso.has(a.source) && !dePaso.has(a.target)) {
+      if (!salientes.has(a.source)) salientes.set(a.source, [])
+      salientes.get(a.source).push(a)
+    }
+  }
+
+  const salida = edges.filter((a) => !dePaso.has(a.source) && !dePaso.has(a.target))
+  for (const paso of dePaso) {
+    for (const dentro of entrantes.get(paso) ?? []) {
+      for (const fuera of salientes.get(paso) ?? []) {
+        salida.push({
+          id: `puente:${paso}:${dentro.source}:${fuera.target}`,
+          source: dentro.source,
+          target: fuera.target,
+          // El importe es el del tramo que lleva el dinero de verdad: lo que
+          // cobró el adjudicatario. El tramo de entrada no lleva cifra
+          // justamente para no contarlo dos veces.
+          amount: fuera.amount ?? dentro.amount ?? '',
+          schema: fuera.schema ?? dentro.schema,
+          // La confianza de un camino no puede ser mayor que la del tramo más
+          // flojo por el que pasa.
+          confidence: Math.min(dentro.confidence ?? 1, fuera.confidence ?? 1),
+          status:
+            dentro.status === 'inferred' || fuera.status === 'inferred' ? 'inferred' : 'asserted',
+          viaDePaso: paso,
+        })
+      }
+    }
+  }
+
+  return { ...datos, nodes: nodes.filter((n) => !dePaso.has(n.id)), edges: salida }
+}
+
 const TIPOS_CABECERA = ['PublicBody', 'Organization', 'Company', 'LegalEntity']
 
 /**

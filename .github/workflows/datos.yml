@@ -128,34 +128,51 @@ jobs:
           print(f"- fuentes: {', '.join(f['id'] for f in d['fuentes']) or 'ninguna'}")
           PY
 
-      - name: commitear si cambió
+      # Publicar no puede fallar por una carrera con otro push.
+      #
+      # El reintento con `pull --rebase` no bastó: falló los cinco intentos.
+      # Rebasar un commit sobre otro que toca el MISMO fichero generado deja un
+      # conflicto, y en un conflicto el rebase se queda a medias y todo lo que
+      # viene detrás falla también.
+      #
+      # Esto no puede conflictuar porque no fusiona nada: aparta el fichero
+      # recién generado, se pone exactamente en el estado del remoto, vuelve a
+      # dejar el fichero y commitea encima. El `reset --hard` sólo descarta el
+      # árbol efímero del runner, y lo único que queremos conservar está a
+      # salvo fuera.
+      #
+      # Es correcto porque grafo.json es un fichero GENERADO: no tiene cambios
+      # ajenos que preservar, y la versión buena es siempre la que se acaba de
+      # calcular.
+      - name: publicar la instantánea
         run: |
+          set -euo pipefail
+          ARCHIVO=frontend/public/datos/grafo.json
+          GUARDADO=$(mktemp)
+          cp "$ARCHIVO" "$GUARDADO"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # El fichero está en .gitignore para que nadie suba un volcado de
-          # pruebas a mano; la CI sí debe poder subirlo.
-          git add -f frontend/public/datos/grafo.json
-          if git diff --cached --quiet; then
-            echo "sin cambios en los datos"
-            exit 0
-          fi
-          git commit -m "datos: instantánea automática del grafo (no editar a mano)"
-          # Reintentar con rebase: entre que empezó la ejecución y termina
-          # pueden haber entrado commits en la rama, y entonces el push sale
-          # rechazado por no ser fast-forward. Pasó el 18/9/2026 y tiró una
-          # instantánea ya generada, con la ingesta y la exportación hechas,
-          # por el último paso de doce.
-          #
-          # El rebase es seguro aquí porque este commit toca un solo fichero
-          # generado, que nadie edita a mano (está en .gitignore justamente
-          # para eso).
+
           for intento in 1 2 3 4 5; do
-            if git push; then
+            git fetch --quiet origin "$GITHUB_REF_NAME"
+            git reset --quiet --hard "origin/$GITHUB_REF_NAME"
+            mkdir -p "$(dirname "$ARCHIVO")"
+            cp "$GUARDADO" "$ARCHIVO"
+            # El fichero está en .gitignore para que nadie suba un volcado de
+            # pruebas a mano; la CI sí debe poder subirlo.
+            git add -f "$ARCHIVO"
+            if git diff --cached --quiet; then
+              echo "sin cambios en los datos"
               exit 0
             fi
-            echo "push rechazado, reintento $intento tras rebase"
-            git pull --rebase --autostash origin "$GITHUB_REF_NAME" || true
+            git commit --quiet -m "datos: instantánea automática del grafo (no editar a mano)"
+            if git push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+              echo "publicada en el intento $intento"
+              exit 0
+            fi
+            echo "alguien empujó mientras tanto; se rehace sobre lo nuevo"
             sleep $((intento * 3))
           done
-          echo "::error::no se pudo publicar tras 5 intentos"
+          echo "::error::no se pudo publicar la instantánea tras 5 intentos"
           exit 1

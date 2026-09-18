@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { aNumero, analizarNucleos, colorNucleo, dineroCorto, etiquetaDe, peso } from './nucleos.js'
+import {
+  aNumero,
+  analizarNucleos,
+  colapsarNodosDePaso,
+  colorNucleo,
+  dineroCorto,
+  etiquetaDe,
+  peso,
+} from './nucleos.js'
 
 /** Dos grupos densos unidos por una sola arista: el caso que Louvain debe separar. */
 function grafoDeDosNucleos() {
@@ -172,5 +180,120 @@ describe('dineroCorto', () => {
     expect(dineroCorto(45_000)).toBe('45 mil €')
     expect(dineroCorto(320)).toBe('320 €')
     expect(dineroCorto(null)).toBe('0 €')
+  })
+})
+
+describe('colapsarNodosDePaso', () => {
+  const conExpediente = {
+    nodes: [
+      { id: 'org', caption: 'MINISTERIO', schema: 'PublicBody' },
+      { id: 'exp', caption: 'EXPEDIENTE 1', schema: 'Contract' },
+      { id: 'emp', caption: 'EMPRESA', schema: 'Company' },
+    ],
+    edges: [
+      { id: 'e1', source: 'org', target: 'exp', schema: 'UnknownLink', confidence: 1, status: 'asserted' },
+      { id: 'e2', source: 'exp', target: 'emp', amount: '500000', schema: 'ContractAward', confidence: 1, status: 'asserted' },
+    ],
+  }
+
+  it('el organismo acaba unido a la empresa sin el expediente en medio', () => {
+    const { nodes, edges } = colapsarNodosDePaso(conExpediente)
+    expect(nodes.map((n) => n.id)).toEqual(['org', 'emp'])
+    expect(edges).toHaveLength(1)
+    expect([edges[0].source, edges[0].target].sort()).toEqual(['emp', 'org'])
+  })
+
+  it('el dinero es el del tramo mayor, no la suma: es el mismo pago', () => {
+    const { edges } = colapsarNodosDePaso(conExpediente)
+    expect(aNumero(edges[0].amount)).toBe(500000)
+  })
+
+  it('la confianza del camino no supera la del tramo más flojo', () => {
+    const datos = structuredClone(conExpediente)
+    datos.edges[1].confidence = 0.7
+    const { edges } = colapsarNodosDePaso(datos)
+    expect(edges[0].confidence).toBe(0.7)
+  })
+
+  it('si un tramo era inferido, el camino entero queda inferido', () => {
+    const datos = structuredClone(conExpediente)
+    datos.edges[0].status = 'inferred'
+    const { edges } = colapsarNodosDePaso(datos)
+    expect(edges[0].status).toBe('inferred')
+  })
+
+  it('dos adjudicatarios del mismo contrato NO quedan unidos entre sí', () => {
+    // El fallo que infló el dinero del mapa de 17 a 119 millones: al unir
+    // todos los vecinos entre sí, cada pareja de adjudicatarios repetía el
+    // importe del contrato. No se pagan el uno al otro.
+    const datos = {
+      nodes: [
+        { id: 'org', caption: 'ORG', schema: 'PublicBody' },
+        { id: 'exp', caption: 'E', schema: 'Contract' },
+        { id: 'a', caption: 'A', schema: 'Company' },
+        { id: 'b', caption: 'B', schema: 'Company' },
+      ],
+      edges: [
+        { source: 'org', target: 'exp', schema: 'UnknownLink' },
+        { source: 'exp', target: 'a', amount: '100', schema: 'ContractAward' },
+        { source: 'exp', target: 'b', amount: '200', schema: 'ContractAward' },
+      ],
+    }
+    const { edges } = colapsarNodosDePaso(datos)
+    expect(edges).toHaveLength(2)
+    for (const e of edges) expect(e.source).toBe('org')
+    expect(edges.map((e) => e.target).sort()).toEqual(['a', 'b'])
+    // Y cada arista lleva SU importe, no el del otro ni la suma.
+    expect(edges.map((e) => aNumero(e.amount)).sort((x, y) => x - y)).toEqual([100, 200])
+  })
+
+  it('el total del mapa no se infla al colapsar', () => {
+    const datos = {
+      nodes: [
+        { id: 'org', caption: 'ORG', schema: 'PublicBody' },
+        { id: 'exp', caption: 'E', schema: 'Contract' },
+        { id: 'a', caption: 'A', schema: 'Company' },
+        { id: 'b', caption: 'B', schema: 'Company' },
+        { id: 'c', caption: 'C', schema: 'Company' },
+      ],
+      edges: [
+        { source: 'org', target: 'exp', schema: 'UnknownLink' },
+        { source: 'exp', target: 'a', amount: '100', schema: 'ContractAward' },
+        { source: 'exp', target: 'b', amount: '200', schema: 'ContractAward' },
+        { source: 'exp', target: 'c', amount: '300', schema: 'ContractAward' },
+      ],
+    }
+    const antes = analizarNucleos(datos).totalDinero
+    const despues = analizarNucleos(colapsarNodosDePaso(datos)).totalDinero
+    expect(despues).toBe(antes)
+    expect(despues).toBe(600)
+  })
+
+  it('sin órgano que adjudique no se inventa el camino', () => {
+    // Si el expediente no tiene quien entre —los datos previos al enlace del
+    // órgano de contratación— no hay nada que puentear. Dejar al adjudicatario
+    // suelto es correcto: no sabemos quién le pagó.
+    const datos = {
+      nodes: [
+        { id: 'exp', caption: 'E', schema: 'Contract' },
+        { id: 'a', caption: 'A', schema: 'Company' },
+      ],
+      edges: [{ source: 'exp', target: 'a', amount: '100' }],
+    }
+    expect(colapsarNodosDePaso(datos).edges).toHaveLength(0)
+  })
+
+  it('no toca un grafo que no tiene nodos de paso', () => {
+    const datos = {
+      nodes: [{ id: 'a', caption: 'A', schema: 'Company' }],
+      edges: [],
+    }
+    expect(colapsarNodosDePaso(datos).nodes).toHaveLength(1)
+  })
+
+  it('el camino sobrevive al colapso: sin puentear, el filtro se quedaba a cero', () => {
+    const { grafo } = analizarNucleos(colapsarNodosDePaso(conExpediente))
+    expect(grafo.order).toBe(2)
+    expect(grafo.size).toBe(1)
   })
 })

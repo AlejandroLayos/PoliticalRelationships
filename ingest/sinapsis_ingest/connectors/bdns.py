@@ -35,6 +35,7 @@ from sinapsis_ingest.util import (
     a_fecha,
     normalizar_nif,
     parece_persona_fisica,
+    propiedades_extranjera,
     slug,
 )
 
@@ -323,7 +324,7 @@ class BDNSConnector:
             return "LegalEntity", {}
         if parece_persona_fisica(nif):
             return "Person", {}
-        return "Company", {}
+        return "Company", propiedades_extranjera(nif)
 
     def normalize(self, record: ParsedRecord) -> Normalizado | None:
         """Traduce una concesión al vocabulario FollowTheMoney.

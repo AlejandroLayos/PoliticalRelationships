@@ -44,6 +44,7 @@ const visiblesEnMapa = ref(0)
 const minImporte = ref(0)
 const mostrarExpedientes = ref(false)
 const mostrarSueltos = ref(false)
+const soloExtranjero = ref(false)
 
 const ESCALONES = [
   { v: 0, t: 'todo' },
@@ -223,11 +224,15 @@ onMounted(async () => {
           </label>
           <label class="control check">
             <input v-model="mostrarExpedientes" type="checkbox" />
-            Expedientes
+            Ver expedientes
           </label>
           <label class="control check">
             <input v-model="mostrarSueltos" type="checkbox" />
             Relaciones sueltas
+          </label>
+          <label class="control check" title="Entidades con NIF de no residente (letras N y W) y quien les paga">
+            <input v-model="soloExtranjero" type="checkbox" />
+            Capital extranjero
           </label>
         </template>
 
@@ -252,6 +257,7 @@ onMounted(async () => {
           :min-importe="minImporte"
           :mostrar-expedientes="mostrarExpedientes"
           :mostrar-sueltos="mostrarSueltos"
+          :solo-extranjero="soloExtranjero"
           @seleccionar="enfocar"
           @analizado="alAnalizar"
         />

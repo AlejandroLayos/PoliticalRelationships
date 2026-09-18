@@ -55,6 +55,58 @@ _FORMAS_SOCIETARIAS = re.compile(
 )
 
 
+# La letra inicial del NIF dice la naturaleza del titular, y lo dice de forma
+# oficial: lo fija la Orden EHA/451/2008. Dos letras marcan capital de fuera:
+#
+#   N  entidad extranjera
+#   W  establecimiento permanente de una entidad no residente
+#
+# Y las de NIE —X, Y, Z— son personas físicas extranjeras. Se listan aparte
+# porque una persona física recibe el trato de minimización (spec §12) tenga la
+# nacionalidad que tenga: lo que interesa del extranjero es el capital, no quién.
+_INICIALES_ENTIDAD_EXTRANJERA = "NW"
+_INICIALES_NIE = "XYZ"
+
+
+def es_entidad_extranjera(nif: str | None) -> bool:
+    """True si el NIF corresponde a una entidad no residente.
+
+    No es una deducción por el nombre —"Gmbh", "Ltd"— que sería frágil y daría
+    falsos positivos con cualquier empresa española de nombre inglés. Es lo que
+    la propia Agencia Tributaria codifica en la letra inicial, así que es la
+    fuente afirmándolo, no nosotros dedujéndolo.
+    """
+    if not nif:
+        return False
+    return nif[0].upper() in _INICIALES_ENTIDAD_EXTRANJERA
+
+
+def motivo_extranjera(nif: str | None) -> str:
+    """Por qué se ha marcado como extranjera. Sin procedencia no se afirma nada."""
+    if not nif:
+        return ""
+    letra = nif[0].upper()
+    if letra == "N":
+        return "NIF de entidad extranjera (letra N)"
+    if letra == "W":
+        return "NIF de establecimiento permanente de entidad no residente (letra W)"
+    if letra in _INICIALES_NIE:
+        return f"NIE de persona física extranjera (letra {letra})"
+    return ""
+
+
+def propiedades_extranjera(nif: str | None) -> dict[str, object]:
+    """Propiedades que marcan capital no residente, con su motivo.
+
+    Devuelve {} si no lo es: así se puede mezclar en cualquier diccionario de
+    propiedades sin ensuciar a las entidades españolas con una clave a False
+    que luego habría que interpretar.
+    """
+    if not es_entidad_extranjera(nif):
+        return {}
+    return {"entidad_extranjera": True, "motivo_extranjera": motivo_extranjera(nif)}
+
+
 def parece_forma_societaria(nombre: str | None) -> bool:
     """True si el nombre delata una persona jurídica.
 

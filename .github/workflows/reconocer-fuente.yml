@@ -80,37 +80,43 @@ jobs:
         if: always()
         run: cat docs/fuentes/*-reconocimiento.md docs/fuentes/*-anatomia-pdf.md >> "$GITHUB_STEP_SUMMARY" || true
 
-      - name: commitear el informe
+      # Mismo patrón que en `datos.yml`: no fusiona, rehace sobre el remoto.
+      # Ver allí el porqué. Aquí son varios ficheros generados, así que se
+      # apartan todos antes del reset.
+      - name: publicar el informe
         if: always()
         run: |
+          set -euo pipefail
+          GUARDADO=$(mktemp -d)
+          mkdir -p "$GUARDADO/docs" "$GUARDADO/golden"
+          cp -r docs/fuentes "$GUARDADO/docs/" 2>/dev/null || true
+          cp ingest/tests/golden/tcu_*.pdf "$GUARDADO/golden/" 2>/dev/null || true
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
-          # nombres de personas y está en .gitignore, pero la barrera que de
-          # verdad importa es no pedir nunca que se añada todo.
-          git add docs/fuentes/
-          git add ingest/tests/golden/tcu_*.pdf 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo "sin cambios"
-            exit 0
-          fi
-          git commit -m "docs: reconocimiento de ${{ inputs.fuente || 'tcu' }}"
-          # Reintentar con rebase: entre que empezó la ejecución y termina
-          # pueden haber entrado commits en la rama, y entonces el push sale
-          # rechazado por no ser fast-forward. Pasó el 18/9/2026 y tiró una
-          # instantánea ya generada, con la ingesta y la exportación hechas,
-          # por el último paso de doce.
-          #
-          # El rebase es seguro aquí porque este commit toca un solo fichero
-          # generado, que nadie edita a mano (está en .gitignore justamente
-          # para eso).
+
           for intento in 1 2 3 4 5; do
-            if git push; then
+            git fetch --quiet origin "$GITHUB_REF_NAME"
+            git reset --quiet --hard "origin/$GITHUB_REF_NAME"
+            mkdir -p docs ingest/tests/golden
+            cp -r "$GUARDADO/docs/fuentes" docs/ 2>/dev/null || true
+            cp "$GUARDADO"/golden/tcu_*.pdf ingest/tests/golden/ 2>/dev/null || true
+            # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
+            # nombres de personas y está en .gitignore, pero la barrera que de
+            # verdad importa es no pedir nunca que se añada todo.
+            git add docs/fuentes/ || true
+            git add ingest/tests/golden/tcu_*.pdf 2>/dev/null || true
+            if git diff --cached --quiet; then
+              echo "sin cambios"
               exit 0
             fi
-            echo "push rechazado, reintento $intento tras rebase"
-            git pull --rebase --autostash origin "$GITHUB_REF_NAME" || true
+            git commit --quiet -m "docs: reconocimiento de ${{ inputs.fuente || 'tcu' }}"
+            if git push --quiet origin "HEAD:$GITHUB_REF_NAME"; then
+              echo "publicado en el intento $intento"
+              exit 0
+            fi
+            echo "alguien empujó mientras tanto; se rehace sobre lo nuevo"
             sleep $((intento * 3))
           done
-          echo "::error::no se pudo publicar tras 5 intentos"
+          echo "::error::no se pudo publicar el informe tras 5 intentos"
           exit 1
