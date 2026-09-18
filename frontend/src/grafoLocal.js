@@ -86,5 +86,14 @@ export function crearGrafoLocal(datos) {
     return nodos.reduce((mejor, n) => ((n.degree ?? 0) > (mejor.degree ?? 0) ? n : mejor)).id
   }
 
-  return { buscar, entidad, vecinos, entidadDestacada, total: nodos.length }
+  return {
+    buscar,
+    entidad,
+    vecinos,
+    entidadDestacada,
+    total: nodos.length,
+    // El mapa de núcleos necesita el grafo entero, no una ego-red: el
+    // agrupamiento sólo tiene sentido sobre todo lo publicado.
+    crudo: { nodes: nodos, edges: aristas, provenance: procedencia },
+  }
 }

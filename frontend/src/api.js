@@ -53,6 +53,16 @@ export async function cargarInstantanea() {
   }
 }
 
+/**
+ * El grafo completo de la instantánea, para el mapa de núcleos.
+ *
+ * Devuelve null si no hay instantánea: agrupar una ego-red no dice nada, así
+ * que sin el conjunto entero el mapa no se dibuja.
+ */
+export function grafoCompleto() {
+  return _grafoEstatico ? _grafoEstatico.crudo : null
+}
+
 /** Alternativa: primero la instantánea real, y sólo si no hay, la demostración. */
 function alternativa(fnEstatico, fnDemo) {
   return () => {

@@ -1,10 +1,21 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import GrafoRed from './components/GrafoRed.vue'
+import MapaNucleos from './components/MapaNucleos.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
-import { buscar, cargarInstantanea, entidad as pedirEntidad, estado, estadoServidor, vecinos } from './api.js'
+import PanelNucleos from './components/PanelNucleos.vue'
+import {
+  buscar,
+  cargarInstantanea,
+  entidad as pedirEntidad,
+  estado,
+  estadoServidor,
+  grafoCompleto,
+  vecinos,
+} from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
+import { dineroCorto } from './nucleos.js'
 
 const consulta = ref('')
 const resultados = ref([])
@@ -19,6 +30,36 @@ const esDemo = ref(false)
 const baseVacia = ref(false)
 const arrancando = ref(true)
 const instantanea = ref(null)
+
+// --- mapa de núcleos ------------------------------------------------------
+// `mapa` es la vista por defecto cuando hay instantánea: enseñar la estructura
+// entera antes que la ego-red de un nodo cualquiera. La vista de vecindario
+// sigue existiendo, pero como lo que es — un detalle al que se baja.
+const vista = ref('mapa')
+const grafoEntero = ref(null)
+const nucleos = ref([])
+const nucleoEnfocado = ref(null)
+const totalDinero = ref(0)
+const visiblesEnMapa = ref(0)
+const minImporte = ref(0)
+const mostrarExpedientes = ref(false)
+const mostrarSueltos = ref(false)
+
+const ESCALONES = [
+  { v: 0, t: 'todo' },
+  { v: 10_000, t: '10 mil €' },
+  { v: 100_000, t: '100 mil €' },
+  { v: 1_000_000, t: '1 M €' },
+  { v: 10_000_000, t: '10 M €' },
+]
+
+function alAnalizar({ nucleos: n, totalDinero: d, visibles }) {
+  nucleos.value = n
+  totalDinero.value = d
+  visiblesEnMapa.value = visibles
+}
+
+const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
 
 let temporizador = null
 watch(consulta, (q) => {
@@ -48,6 +89,7 @@ async function abrir(id) {
     datos.value = red
     resultados.value = []
     consulta.value = ''
+    vista.value = 'vecindario'
   } catch (e) {
     error.value = e.message || 'no se pudo cargar la entidad'
   } finally {
@@ -63,12 +105,21 @@ async function enfocar(id) {
     seleccionado.value = await pedirEntidad(id)
   } catch {
     // Si la ficha no carga, al menos se conserva lo que ya hay en el grafo.
-    seleccionado.value = datos.value.nodes.find((n) => n.id === id) ?? null
+    seleccionado.value =
+      datos.value.nodes.find((n) => n.id === id) ??
+      grafoEntero.value?.nodes.find((n) => n.id === id) ??
+      null
   }
 }
 
+function volverAlMapa() {
+  vista.value = 'mapa'
+  seleccionId.value = ''
+  seleccionado.value = null
+}
+
 watch(profundidad, () => {
-  if (seleccionId.value) abrir(seleccionId.value)
+  if (seleccionId.value && vista.value === 'vecindario') abrir(seleccionId.value)
 })
 
 onMounted(async () => {
@@ -87,7 +138,8 @@ onMounted(async () => {
 
   if (estatico) {
     instantanea.value = estado.instantanea
-    await abrir(estatico.entidadDestacada())
+    grafoEntero.value = grafoCompleto()
+    vista.value = 'mapa'
   } else {
     await abrir(ENTIDAD_INICIAL) // demostración, y se anuncia como tal
   }
@@ -107,7 +159,8 @@ onMounted(async () => {
       Datos reales de {{ instantanea.fuentes.map((f) => f.name).join(', ') }}, generados por la
       ingesta automática. No es una consulta en vivo.
       <span v-if="instantanea.truncado">
-        Se muestran las {{ datos.nodes.length ? instantanea.total : 0 }} entidades más conectadas.
+        Se publica la parte del grafo con más dinero, no la base entera
+        ({{ instantanea.total }} entidades).
       </span>
     </div>
 
@@ -152,19 +205,58 @@ onMounted(async () => {
         </p>
       </div>
 
-      <label class="profundidad">
-        Saltos
-        <select v-model.number="profundidad">
-          <option :value="1">1</option>
-          <option :value="2">2</option>
-          <option :value="3">3</option>
-        </select>
-      </label>
+      <div v-if="hayMapa" class="controles">
+        <button
+          v-if="vista === 'vecindario'"
+          class="volver"
+          @click="volverAlMapa"
+        >
+          ← Ver el mapa completo
+        </button>
+
+        <template v-if="vista === 'mapa'">
+          <label class="control">
+            Desde
+            <select v-model.number="minImporte">
+              <option v-for="e in ESCALONES" :key="e.v" :value="e.v">{{ e.t }}</option>
+            </select>
+          </label>
+          <label class="control check">
+            <input v-model="mostrarExpedientes" type="checkbox" />
+            Expedientes
+          </label>
+          <label class="control check">
+            <input v-model="mostrarSueltos" type="checkbox" />
+            Relaciones sueltas
+          </label>
+        </template>
+
+        <label v-else class="control">
+          Saltos
+          <select v-model.number="profundidad">
+            <option :value="1">1</option>
+            <option :value="2">2</option>
+            <option :value="3">3</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <main>
       <div class="lienzo-wrap">
+        <MapaNucleos
+          v-if="vista === 'mapa' && hayMapa"
+          :datos="grafoEntero"
+          :seleccion="seleccionId"
+          :nucleo-enfocado="nucleoEnfocado"
+          :min-importe="minImporte"
+          :mostrar-expedientes="mostrarExpedientes"
+          :mostrar-sueltos="mostrarSueltos"
+          @seleccionar="enfocar"
+          @analizado="alAnalizar"
+        />
         <GrafoRed
+          v-else
           :datos="datos"
           :seleccion="seleccionId"
           @seleccionar="enfocar"
@@ -173,25 +265,54 @@ onMounted(async () => {
 
         <p v-if="arrancando || cargando" class="estado-flotante">Cargando…</p>
         <p v-else-if="error" class="estado-flotante error">{{ error }}</p>
-        <p v-else-if="!datos.nodes.length" class="estado-flotante">
+        <p v-else-if="vista === 'vecindario' && !datos.nodes.length" class="estado-flotante">
           Busca una entidad para empezar.
         </p>
 
-        <p v-if="datos.truncated" class="recorte">
+        <p v-if="vista === 'mapa' && nucleos.length" class="recuento">
+          {{ nucleos.length }} núcleos · {{ visiblesEnMapa }} entidades ·
+          {{ dineroCorto(totalDinero) }} en juego
+        </p>
+        <p v-else-if="vista === 'vecindario' && datos.truncated" class="recorte">
           Vista recortada por tamaño: hay más conexiones de las que se muestran.
         </p>
 
-        <div class="leyenda">
+        <div v-if="vista === 'vecindario'" class="leyenda">
           <span v-for="(color, esquema) in COLOR_POR_ESQUEMA" :key="esquema">
             <i :style="{ background: color }" />{{ NOMBRE_ESQUEMA[esquema] ?? esquema }}
           </span>
           <span class="leyenda-inferido"><i class="linea-inferida" />Conexión inferida (fina y ámbar)</span>
         </div>
+        <div v-else class="leyenda">
+          <span>Cada color es un núcleo · el tamaño es dinero</span>
+        </div>
 
-        <p class="ayuda">Clic para ver · doble clic para expandir</p>
+        <p class="ayuda">
+          {{ vista === 'mapa' ? 'Clic en un nodo para ver su ficha' : 'Clic para ver · doble clic para expandir' }}
+        </p>
       </div>
 
-      <PanelEntidad :entidad="seleccionado" :datos="datos" @ir="enfocar" @expandir="abrir" />
+      <PanelEntidad
+        v-if="seleccionado"
+        :entidad="seleccionado"
+        :datos="vista === 'mapa' ? grafoEntero : datos"
+        @ir="enfocar"
+        @expandir="abrir"
+      />
+      <PanelNucleos
+        v-else-if="vista === 'mapa'"
+        :nucleos="nucleos"
+        :enfocado="nucleoEnfocado"
+        @enfocar="(n) => (nucleoEnfocado = n)"
+        @seleccionar="enfocar"
+      />
+      <PanelEntidad
+        v-else
+        :entidad="seleccionado"
+        :datos="datos"
+        @ir="enfocar"
+        @expandir="abrir"
+      />
     </main>
   </div>
 </template>
@@ -281,5 +402,23 @@ main { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; 
 @media (max-width: 820px) {
   main { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
   .leyenda { max-width: 100%; }
+}
+
+.controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
+.control { font-size: 0.78rem; color: var(--texto-tenue); display: flex; align-items: center; gap: 0.4rem; }
+.control select {
+  background: var(--fondo-boton); color: var(--texto);
+  border: 1px solid var(--borde); border-radius: 6px; padding: 0.25rem 0.4rem; font: inherit;
+}
+.control.check { cursor: pointer; }
+.volver {
+  background: var(--fondo-boton); color: var(--texto); border: 1px solid var(--borde);
+  border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.78rem; cursor: pointer;
+}
+.volver:hover { border-color: var(--acento); }
+.recuento {
+  position: absolute; top: 0.6rem; left: 0.9rem; margin: 0;
+  font-size: 0.75rem; color: var(--texto-tenue);
+  background: rgba(10, 14, 20, 0.72); padding: 0.25rem 0.55rem; border-radius: 6px;
 }
 </style>
