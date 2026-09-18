@@ -72,8 +72,13 @@ cd ingest  && pytest        # requiere pkg-config y libicu-dev en el sistema
 
   No es hipotético. Pasó entre el 3 de agosto y el 18 de septiembre de 2026:
   la corrección que dejó de publicar nombres de personas físicas se quedó en
-  `main` seis semanas, mientras la instantánea diaria seguía publicando 89
-  particulares con nombre y apellidos. Ver el commit de fusión `ff50d25`.
+  `main` seis semanas, mientras la instantánea diaria seguía publicando 27
+  particulares con nombre, apellidos y DNI.
+
+  Dos cosas salieron de ahí y las dos siguen en pie: el volcado comprueba por
+  su cuenta que no sale ninguna persona física —la redundancia es lo que
+  faltó— y `scripts/redactar_particulares_del_historico.py` limpia el rastro
+  que quedó en el historial.
 
   Si algo «ya está arreglado» pero se sigue viendo mal en la web, esto es lo
   primero que hay que mirar.

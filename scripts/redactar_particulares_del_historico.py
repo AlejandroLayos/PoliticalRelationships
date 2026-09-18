@@ -43,16 +43,24 @@ el historial sigue contando lo que pasó, sin los datos personales.
     python3 scripts/redactar_particulares_del_historico.py --comprobar   # sólo mira
     python3 scripts/redactar_particulares_del_historico.py --reescribir  # reescribe
 
-Después, y sólo después de comprobar el resultado:
+`--reescribir` pide confirmación, guarda la URL del remoto antes de que
+filter-repo la quite, comprueba el resultado y escribe al final las órdenes
+exactas de `push --force` que faltan. No empuja nada por su cuenta.
 
-    git remote add origin <url>        # filter-repo lo quita a propósito
-    git push --force origin main
-    git push --force origin claude/sinapsis-phase-0-1-setup-o6tdcp
+## Esto NO termina con el push --force
 
-Y queda una cosa que no se puede hacer desde aquí: **pedir a GitHub que purgue
-las cachés**. Los commits viejos siguen sirviéndose por su SHA en la web de
-GitHub y en la API aunque ninguna rama los alcance, hasta que el soporte los
-recoge. Sin ese paso el borrado está a medias.
+**GitHub no borra las refs de los pull request.** `refs/pull/1/head` apunta a
+`8a5613e`, cuyos antepasados incluyen los dos commits con datos personales, y
+un `push --force` a las ramas no la toca: los nombres y los DNI se siguen
+pudiendo descargar desde ahí.
+
+Tampoco desaparecen los commits sueltos, que GitHub sigue sirviendo por su SHA
+en la web y en la API aunque ninguna rama los alcance.
+
+Las dos cosas sólo las arregla el soporte de GitHub. Hay que abrirles un
+ticket pidiendo que purguen las refs de pull request y las cachés del
+repositorio, citando los SHA. Sin ese paso el borrado está a medias, y es la
+mitad que importa.
 """
 
 from __future__ import annotations
@@ -165,10 +173,34 @@ def comprobar() -> int:
     return 1
 
 
+def _remotos() -> dict[str, str]:
+    """La URL de cada remoto. filter-repo los quita, así que se apuntan antes."""
+    salida = subprocess.run(
+        ["git", "remote", "-v"], capture_output=True, text=True, check=False
+    ).stdout
+    remotos = {}
+    for linea in salida.splitlines():
+        partes = linea.split()
+        if len(partes) >= 2:
+            remotos.setdefault(partes[0], partes[1])
+    return remotos
+
+
+def _ramas_locales() -> list[str]:
+    salida = subprocess.run(
+        ["git", "for-each-ref", "--format=%(refname:short)", "refs/heads/"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout
+    return [r for r in salida.split() if r]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--comprobar", action="store_true", help="sólo informa, no toca nada")
     ap.add_argument("--reescribir", action="store_true", help="reescribe el historial")
+    ap.add_argument("--si", action="store_true", help="no preguntar (para automatizar)")
     args = ap.parse_args()
 
     if args.comprobar or not args.reescribir:
@@ -180,10 +212,64 @@ def main() -> int:
         print("Falta git-filter-repo:  pip install git-filter-repo", file=sys.stderr)
         return 2
 
-    if not _blobs_afectados():
+    afectados = _blobs_afectados()
+    if not afectados:
         print("No hay nada que reescribir.")
         return 0
 
+    remotos = _remotos()
+    ramas = _ramas_locales()
+
+    print("Se va a REESCRIBIR el historial de este repositorio.\n")
+    comprobar()
+    print("\nConsecuencias:")
+    print("  · Cambian TODOS los SHA a partir del commit más antiguo afectado.")
+    print("  · Hace falta `push --force`, y quien tenga un clon tendrá que rehacerlo.")
+    print(f"  · Ramas locales que se reescriben: {', '.join(ramas) or 'ninguna'}")
+    print(f"  · Remotos apuntados para después: {remotos or 'ninguno'}")
+    if not args.si:
+        try:
+            if input("\n¿Seguir? escribe «si»: ").strip().lower() not in {"si", "sí"}:
+                print("Cancelado. No se ha tocado nada.")
+                return 1
+        except EOFError:
+            print("Sin terminal para confirmar; usa --si si sabes lo que haces.")
+            return 1
+
+    codigo = _ejecutar_filter_repo()
+    if codigo != 0:
+        print("filter-repo falló; el repositorio NO se ha empujado.", file=sys.stderr)
+        return codigo
+
+    restantes = _blobs_afectados()
+    if restantes:
+        print(
+            f"\n¡ATENCIÓN! Siguen quedando {len(restantes)} blob(s) con datos"
+            " personales. NO empujes; revisa el guion.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print("\nHistorial reescrito y comprobado: no queda ningún dato personal en los blobs.")
+    print("\nFalta empujarlo. filter-repo quita los remotos a propósito, así que:\n")
+    for nombre, url in remotos.items():
+        print(f"    git remote add {nombre} {url}")
+    for rama in ramas:
+        destino = next(iter(remotos), "origin")
+        print(f"    git push --force {destino} {rama}")
+
+    print("\nY LO QUE FALTA DESPUÉS, que es la mitad que importa:\n")
+    print("    GitHub no borra las refs de los pull request. `refs/pull/1/head`")
+    print("    apunta a un commit cuyos antepasados llevan los datos personales,")
+    print("    y el push --force no la toca. Tampoco desaparecen los commits")
+    print("    sueltos, que GitHub sigue sirviendo por su SHA.")
+    print("\n    Hay que abrir un ticket al soporte de GitHub pidiendo que purguen")
+    print("    las refs de pull request y las cachés del repositorio, citando los")
+    print("    SHA afectados. Sin eso, el borrado está a medias.")
+    return 0
+
+
+def _ejecutar_filter_repo() -> int:
     # Se delega en el ejecutable, que es la forma soportada de usarlo.
     return subprocess.run(
         [
