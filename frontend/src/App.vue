@@ -57,6 +57,7 @@ const minImporte = ref(0)
 const mostrarExpedientes = ref(false)
 const mostrarSueltos = ref(false)
 const soloExtranjero = ref(false)
+const soloPartidos = ref(false)
 
 const ESCALONES = [
   { v: 0, t: 'todo' },
@@ -314,9 +315,13 @@ onMounted(async () => {
             <input v-model="mostrarSueltos" type="checkbox" />
             Relaciones sueltas
           </label>
-          <label class="control check" title="Entidades con NIF de no residente (letras N y W) y quien les paga">
+          <label class="control check" title="Entidades no residentes y quien les paga">
             <input v-model="soloExtranjero" type="checkbox" />
             Capital extranjero
+          </label>
+          <label class="control check" title="Formaciones políticas y quien les paga">
+            <input v-model="soloPartidos" type="checkbox" />
+            Sólo partidos
           </label>
         </template>
 
@@ -349,6 +354,7 @@ onMounted(async () => {
           :mostrar-expedientes="mostrarExpedientes"
           :mostrar-sueltos="mostrarSueltos"
           :solo-extranjero="soloExtranjero"
+          :solo-partidos="soloPartidos"
           @seleccionar="enfocar"
           @analizado="alAnalizar"
         />

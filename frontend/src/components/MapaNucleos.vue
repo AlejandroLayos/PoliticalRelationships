@@ -30,6 +30,7 @@ const props = defineProps({
   mostrarExpedientes: { type: Boolean, default: false },
   mostrarSueltos: { type: Boolean, default: false },
   soloExtranjero: { type: Boolean, default: false },
+  soloPartidos: { type: Boolean, default: false },
 })
 const emit = defineEmits(['seleccionar', 'analizado'])
 
@@ -74,13 +75,17 @@ function construir() {
     if (props.minImporte > 0 && attrs.dinero < props.minImporte) fuera.add(id)
   })
 
-  // Capital extranjero: se conserva la entidad no residente y quien le paga,
-  // que es la relación que interesa. Quedarse sólo con las extranjeras dejaría
-  // nodos sueltos sin decir de dónde les viene el dinero.
-  if (props.soloExtranjero) {
+  /**
+   * Filtros de «esto y su entorno inmediato».
+   *
+   * Se conserva la entidad marcada Y sus vecinos, que es la relación que
+   * interesa: quedarse sólo con las marcadas deja nodos sueltos sin decir de
+   * dónde les viene el dinero, y un nodo suelto no cuenta nada.
+   */
+  function soloEstasYSuEntorno(marca) {
     const marcadas = new Set(
       (fuente?.nodes ?? [])
-        .filter((n) => n.properties?.entidad_extranjera)
+        .filter(marca)
         .map((n) => n.id)
         .filter((id) => g.hasNode(id)),
     )
@@ -89,6 +94,19 @@ function construir() {
     g.forEachNode((id) => {
       if (!aSalvo.has(id)) fuera.add(id)
     })
+  }
+
+  if (props.soloExtranjero) {
+    soloEstasYSuEntorno(
+      (n) => n.properties?.entidad_extranjera || n.properties?.entidad_extranjera_indicio,
+    )
+  }
+
+  // Partidos y quien les paga: el mapa entero es una textura, pero recortado a
+  // las formaciones políticas y sus pagadores se vuelve legible y contesta
+  // directamente de dónde sale el dinero de los partidos.
+  if (props.soloPartidos) {
+    soloEstasYSuEntorno((n) => n.properties?.partido_politico)
   }
   for (const id of fuera) g.dropNode(id)
   // Un nodo que se queda sin aristas tras filtrar ya no cuenta nada.
@@ -158,10 +176,71 @@ function construir() {
   }
 
   grafo.value = g
-  emit('analizado', { nucleos, porNodo, totalDinero, visibles: g.order })
+  // El panel tiene que hablar del mapa que se está viendo, no del que habría
+  // sin filtros. Con «Sólo partidos» puesto, la lista seguía encabezada por
+  // núcleos enteros que el filtro había quitado de la pantalla: se leían
+  // nombres y cifras que no estaban en ninguna parte del dibujo.
+  emit('analizado', recalcularVisible(g, nucleos))
   calculando.value = false
 }
 
+
+/**
+ * Reduce el análisis a lo que ha sobrevivido a los filtros.
+ *
+ * Los núcleos se calculan sobre el grafo entero a propósito —agrupar después
+ * de filtrar daría grupos distintos cada vez que se toca una casilla, y la
+ * estructura dejaría de ser comparable—, pero lo que se cuenta tiene que ser
+ * lo que se ve.
+ */
+function recalcularVisible(g, nucleos) {
+  const vivos = new Map()
+  g.forEachNode((id, a) => {
+    const c = a.nucleo ?? -1
+    if (!vivos.has(c)) vivos.set(c, { tamano: 0, ids: new Set() })
+    const v = vivos.get(c)
+    v.tamano += 1
+    v.ids.add(id)
+  })
+
+  const dinero = new Map()
+  g.forEachEdge((_e, attrs, s, t) => {
+    const cs = g.getNodeAttribute(s, 'nucleo')
+    if (cs === g.getNodeAttribute(t, 'nucleo')) {
+      dinero.set(cs, (dinero.get(cs) ?? 0) + attrs.importe)
+    }
+  })
+
+  let totalDinero = 0
+  g.forEachEdge((_e, attrs) => {
+    totalDinero += attrs.importe
+  })
+
+  const visibles = nucleos
+    .filter((n) => (vivos.get(n.id)?.tamano ?? 0) > 1)
+    .map((n) => {
+      const v = vivos.get(n.id)
+      return {
+        ...n,
+        tamano: v.tamano,
+        dinero: dinero.get(n.id) ?? 0,
+        principales: n.principales.filter((m) => v.ids.has(m.id)),
+        // Los recuentos por tipo también son del recorte.
+        tipos: n.nodos.reduce((acc, id) => {
+          if (!v.ids.has(id)) return acc
+          const e = g.getNodeAttribute(id, 'esquema')
+          acc[e] = (acc[e] ?? 0) + 1
+          return acc
+        }, {}),
+      }
+    })
+    .sort((a, b) => b.dinero - a.dinero || b.tamano - a.tamano)
+
+  const porNodo = new Map()
+  g.forEachNode((id, attrs) => porNodo.set(id, attrs))
+
+  return { nucleos: visibles, porNodo, totalDinero, visibles: g.order }
+}
 
 /**
  * Aparta los núcleos unos de otros sin deshacer su forma interna.
@@ -342,7 +421,13 @@ const hayAlgo = computed(() => (props.datos?.nodes?.length ?? 0) > 0)
 onMounted(pintar)
 watch(() => props.datos, pintar)
 watch(
-  () => [props.minImporte, props.mostrarExpedientes, props.mostrarSueltos, props.soloExtranjero],
+  () => [
+    props.minImporte,
+    props.mostrarExpedientes,
+    props.mostrarSueltos,
+    props.soloExtranjero,
+    props.soloPartidos,
+  ],
   pintar,
 )
 watch(() => props.seleccion, aplicarReductores)
