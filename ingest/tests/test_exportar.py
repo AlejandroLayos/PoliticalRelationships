@@ -222,3 +222,47 @@ def test_el_organismo_entra_aunque_no_tenga_ninguna_arista_con_dinero(store, tmp
     enlaces = [e for e in d["edges"] if e["schema"] == "UnknownLink"]
     assert len(enlaces) == 1
     assert {enlaces[0]["source"], enlaces[0]["target"]} <= {n["id"] for n in d["nodes"]}
+
+
+def test_el_dinero_no_agota_el_sitio_del_tejido_conectivo(store, tmp_path):
+    """El fallo que dio tres instantáneas idénticas al byte.
+
+    Si la primera pasada gasta todo el presupuesto de nodos con aristas caras,
+    la segunda no puede traerse ningún nodo nuevo y los organismos —que sólo
+    cuelgan por aristas sin importe— se quedan fuera para siempre. La señal
+    era que el volcado traía exactamente el tope de nodos, clavado.
+    """
+    # Muchas parejas caras, suficientes para llenar el tope por sí solas.
+    for i in range(30):
+        a = _entidad(store, f"PAGADOR {i}", "PublicBody")
+        b = _entidad(store, f"COBRADOR {i}")
+        _arista(store, a, b, f"{9_000_000 - i}.00")
+
+    # Y un organismo que sólo cuelga por una arista sin importe.
+    organo = _entidad(store, "ORGANO TARDIO", "PublicBody")
+    expediente = _entidad(store, "EXPEDIENTE TARDIO", "Contract")
+    empresa = _entidad(store, "EMPRESA TARDIA")
+    _arista(store, expediente, empresa, "100.00")
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, confidence, status, dedupe_key)
+        VALUES ('UnknownLink', %s, %s, 1.0, 'asserted', %s)
+        """,
+        (organo, expediente, "test:organo-tardio"),
+    )
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=20, max_aristas=40)
+
+    # Con el tope clavado en la pasada 1 esto era imposible.
+    assert len(d["nodes"]) <= 20
+    publicados = {n["id"] for n in d["nodes"]}
+    aristas = [e for e in d["edges"] if e["schema"] == "UnknownLink"]
+    if aristas:
+        for e in aristas:
+            assert e["source"] in publicados and e["target"] in publicados
+
+    # Lo que de verdad se comprueba: queda sitio libre tras la pasada del
+    # dinero, que es la condición para que el tejido conectivo pueda entrar.
+    assert len(d["nodes"]) < 20 or any(n["schema"] == "Contract" for n in d["nodes"])

@@ -89,9 +89,9 @@ def exportar(
     ids_set: set[Any] = set()
     usadas: set[Any] = set()
 
-    def cabe(a: Any) -> bool:
+    def cabe(a: Any, tope: int) -> bool:
         nuevos = {a["source_entity_id"], a["target_entity_id"]} - ids_set
-        return len(ids_set) + len(nuevos) <= max_entidades
+        return len(ids_set) + len(nuevos) <= tope
 
     def tomar(a: Any) -> None:
         ids_set.update({a["source_entity_id"], a["target_entity_id"]})
@@ -99,10 +99,23 @@ def exportar(
         usadas.add(a["id"])
 
     # 1. El esqueleto de dinero: lo más caro primero. Es un mapa de dinero.
+    #
+    # Pero NO se gasta todo el presupuesto de nodos aquí, y esto es lo que
+    # faltaba. Tres ejecuciones seguidas dieron números idénticos al byte pese
+    # a dos correcciones: la prueba estaba en que el volcado traía exactamente
+    # 4.000 nodos, o sea el tope clavado. La primera pasada lo agotaba con
+    # extremos de aristas caras y luego `cabe()` rechazaba TODA arista que
+    # trajera un nodo nuevo, así que la pasada 2 no podía traerse ni un
+    # organismo. Reservar sitio no es un ajuste fino: sin él la pasada 2 no
+    # existe.
+    # El suelo de 2 no es cosmético: con un presupuesto pequeño, el 75 % puede
+    # quedarse por debajo de los dos nodos que necesita UNA arista, y entonces
+    # no entra nada en absoluto. Lo destapó el test del volcado mínimo.
+    reserva = max(2, int(max_entidades * 0.75))
     for a in todas:
         if len(elegidas) >= max_aristas:
             break
-        if a["id"] not in usadas and cabe(a):
+        if a["id"] not in usadas and cabe(a, reserva):
             tomar(a)
 
     # 2. Crecer por los bordes: aristas que tocan algo ya elegido. Aquí entran
@@ -113,7 +126,7 @@ def exportar(
         if a["id"] in usadas:
             continue
         toca = a["source_entity_id"] in ids_set or a["target_entity_id"] in ids_set
-        if toca and cabe(a):
+        if toca and cabe(a, max_entidades):
             tomar(a)
 
     # 3. Coser: lo que va entre nodos que ya están dentro es gratis —no trae
