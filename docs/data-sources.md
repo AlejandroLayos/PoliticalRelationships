@@ -168,7 +168,7 @@ constante `FEEDS`), cada uno como un conector aparte que comparte `source_id`:
 |---|---|---|
 | `placsp` | `PlataformasAgregadasSinMenores` | lo que vuelcan las plataformas autonómicas agregadas |
 | `placsp-licitaciones` | `licitacionesPerfilesContratanteCompleto3` | lo publicado directamente en la Plataforma del Estado |
-| `placsp-menores` | `contratosMenoresPerfilesContratantes` | contrato menor |
+| `placsp-menores` | `contratosMenoresPerfilesContratantes` | contrato menor — **la ruta no sirve** (ver abajo) |
 
 Hasta el 18/9/2026 sólo se leía el primero. Las URL de los otros dos llevaban
 en la misma constante desde el principio, sin que nada dijera que no se
@@ -185,6 +185,18 @@ conector fallara. Ver [spec §12](spec.md).
 Los que faltan —encargos a medios propios y consultas preliminares— son los
 dos que menos dinero mueven y los que peor encajan en el modelo de
 adjudicación; quedan pendientes.
+
+**La ruta del feed de contratos menores ya no sirve.** Comprobado el
+18/9/2026: `sindicacion_643/contratosMenoresPerfilesContratantes.atom`
+responde **200 con una página HTML** de redirección al portal
+(«Redireccionando… Se ha producido un error»), 521 bytes. No lo caza
+`raise_for_status` —el código es 200— ni el parser, que sólo decía «mismatched
+tag: line 1, column 200».
+
+El conector lo diagnostica ahora explícitamente y sigue en la ingesta diaria:
+una petición por noche a una ruta muerta no carga a nadie, y quitarlo haría
+invisible el hueco justo en el tramo que más se pregunta. Falta encontrar la
+ruta buena en la especificación de sindicación.
 
 **Coste real:** bastante mayor que BDNS. Hay que descargar ZIPs, descomprimir,
 recorrer la cadena de ATOM y parsear XML UBL. Es trabajo de fase 3, no de

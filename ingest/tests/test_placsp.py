@@ -679,6 +679,28 @@ def test_una_variante_normaliza_igual_que_la_base(crudo):
     assert [a.dedupe_key for a in n1.aristas] == [a.dedupe_key for a in n2.aristas]
 
 
+def test_un_html_donde_deberia_haber_atom_se_diagnostica_como_tal(conector, capsys):
+    # La Plataforma responde a una ruta que ya no existe con una página de
+    # redirección al portal Y UN 200, así que no lo caza `raise_for_status` ni
+    # el parser, que sólo dice que la etiqueta no cuadra. Pasó con el feed de
+    # contratos menores el 18/9/2026.
+    raw = RawDocument(
+        source_id="placsp",
+        url="https://contrataciondelestado.es/sindicacion/sindicacion_643/menores.atom",
+        content=(
+            b'<html><head><meta http-equiv="refresh" content="5;url=http://contrataci'
+            b'ondelestado.es/wps/portal"><title>Redireccionando...</title></head>'
+            b"<body><h1>Plataforma</h1><p>Se ha producido un error</p></body></html>"
+        ),
+        media_type="text/html; charset=UTF-8",
+        retrieved_at=datetime(2026, 9, 18, tzinfo=UTC),
+    )
+    assert list(conector.parse(raw)) == []
+    salida = capsys.readouterr().out
+    assert "no sirve el feed" in salida
+    assert "especificaci" in salida  # la pista de qué mirar
+
+
 def test_un_feed_ilegible_dice_que_llego_y_no_solo_donde_falla(conector, capsys):
     # «mismatched tag: line 1, column 200» no permite saber si el servidor
     # sirvió un HTML de error, otro formato o un ATOM con una etiqueta rota.
@@ -686,8 +708,9 @@ def test_un_feed_ilegible_dice_que_llego_y_no_solo_donde_falla(conector, capsys)
     raw = RawDocument(
         source_id="placsp",
         url="https://contrataciondelestado.es/sindicacion/x.atom",
-        content=b"<html><head><title>Servicio no disponible</title></head><body>502</body>",
-        media_type="text/html",
+        # XML de verdad, pero roto: aquí sí aplica el mensaje del parser.
+        content=b"<feed><entry><title>Sin cerrar</feed>",
+        media_type="application/atom+xml",
         retrieved_at=datetime(2026, 9, 18, tzinfo=UTC),
     )
     registros = list(conector.parse(raw))
@@ -695,5 +718,5 @@ def test_un_feed_ilegible_dice_que_llego_y_no_solo_donde_falla(conector, capsys)
     # structlog escribe por su cuenta, no por el logging de la librería
     # estándar, así que se mira la salida y no `caplog`.
     salida = capsys.readouterr().out
-    assert "Servicio no disponible" in salida
-    assert "text/html" in salida
+    assert "Sin cerrar" in salida
+    assert "atom" in salida

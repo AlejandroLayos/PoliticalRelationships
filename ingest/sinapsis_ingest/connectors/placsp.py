@@ -260,6 +260,30 @@ class PLACSPConnector:
 
     def parse(self, raw: RawDocument) -> Iterator[ParsedRecord]:
         """Extrae un registro por cada `<entry>` del feed."""
+        # Un HTML donde debería haber un ATOM no es «XML inválido»: es que esa
+        # ruta ya no sirve el feed. La Plataforma responde con una página de
+        # redirección al portal —«Redireccionando… Se ha producido un error»—
+        # y un 200, así que no lo caza ni `raise_for_status` ni el parser, que
+        # sólo dice que la etiqueta no cuadra.
+        #
+        # Pasó con el feed de contratos menores el 18/9/2026. Con el mensaje
+        # genérico había que abrir el documento crudo para entenderlo; dicho
+        # así, se arregla mirando la especificación de sindicación.
+        if raw.content[:200].lstrip()[:5].lower() == b"<html" or (
+            raw.media_type or ""
+        ).startswith("text/html"):
+            log.error(
+                "placsp: la ruta no sirve el feed, devuelve una página HTML",
+                url=raw.url,
+                content_type=raw.media_type,
+                bytes=len(raw.content),
+                pista=(
+                    "la ruta del feed ha cambiado o ya no existe;"
+                    " comprobar contra la especificación de sindicación"
+                ),
+            )
+            return
+
         try:
             raiz = ET.fromstring(raw.content)
         except ET.ParseError as exc:
