@@ -140,4 +140,22 @@ jobs:
             exit 0
           fi
           git commit -m "datos: instantánea automática del grafo (no editar a mano)"
-          git push
+          # Reintentar con rebase: entre que empezó la ejecución y termina
+          # pueden haber entrado commits en la rama, y entonces el push sale
+          # rechazado por no ser fast-forward. Pasó el 18/9/2026 y tiró una
+          # instantánea ya generada, con la ingesta y la exportación hechas,
+          # por el último paso de doce.
+          #
+          # El rebase es seguro aquí porque este commit toca un solo fichero
+          # generado, que nadie edita a mano (está en .gitignore justamente
+          # para eso).
+          for intento in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rechazado, reintento $intento tras rebase"
+            git pull --rebase --autostash origin "$GITHUB_REF_NAME" || true
+            sleep $((intento * 3))
+          done
+          echo "::error::no se pudo publicar tras 5 intentos"
+          exit 1
