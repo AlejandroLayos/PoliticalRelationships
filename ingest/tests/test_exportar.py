@@ -140,3 +140,50 @@ def test_un_grafo_vacio_no_revienta(store, tmp_path):
     d = _exportado(store, tmp_path)
     assert d["nodes"] == []
     assert d["edges"] == []
+
+
+def test_las_aristas_sin_importe_no_se_quedan_fuera(store, tmp_path):
+    """El tejido conectivo entra aunque no lleve dinero.
+
+    Ordenar por importe es correcto para elegir QUÉ publicar, pero deja fuera
+    por construcción a las aristas sin cifra — entre ellas el enlace del órgano
+    de contratación con su contrato, que no lleva importe a propósito para no
+    contar el mismo dinero dos veces. Sin ellas el grafo publicado volvía a
+    salir en pedazos aunque ningún nodo estuviera aislado.
+    """
+    a = _entidad(store, "ORGANISMO", "PublicBody")
+    b = _entidad(store, "EXPEDIENTE", "Contract")
+    c = _entidad(store, "EMPRESA")
+    _arista(store, b, c, "1000000.00")  # la adjudicación lleva el dinero
+    # El enlace órgano -> contrato, sin importe.
+    store.conn.execute(
+        """
+        INSERT INTO relationships
+            (ftm_schema, source_entity_id, target_entity_id, confidence, status, dedupe_key)
+        VALUES ('UnknownLink', %s, %s, 1.0, 'asserted', %s)
+        """,
+        (a, b, "test:enlace-organo"),
+    )
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=10, max_aristas=10)
+    esquemas = {e["schema"] for e in d["edges"]}
+    assert "UnknownLink" in esquemas, "el enlace sin importe se quedó fuera"
+    # Y la que sí lleva dinero sigue estando: el helper la crea como Payment.
+    assert "Payment" in esquemas
+    assert len(d["edges"]) == 2
+
+
+def test_la_segunda_pasada_no_mete_nodos_nuevos(store, tmp_path):
+    """Sólo une lo que ya está dentro; no ensancha el volcado."""
+    ids = [_entidad(store, f"E{i}") for i in range(10)]
+    for i in range(9):
+        _arista(store, ids[i], ids[i + 1], f"{(i + 1) * 1000}.00")
+    store.conn.commit()
+
+    d = _exportado(store, tmp_path, max_entidades=4, max_aristas=3)
+    assert len(d["nodes"]) <= 4
+    publicados = {n["id"] for n in d["nodes"]}
+    for a in d["edges"]:
+        assert a["source"] in publicados
+        assert a["target"] in publicados

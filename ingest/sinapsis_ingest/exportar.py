@@ -91,6 +91,35 @@ def exportar(
         ids_set |= nuevos
         elegidas.append(a)
 
+    # Segunda pasada: el tejido conectivo.
+    #
+    # La primera ordena por importe, y eso deja fuera por construcción a las
+    # aristas que no llevan dinero — entre ellas el enlace del órgano de
+    # contratación con su contrato, que no lleva importe A PROPÓSITO para no
+    # contar el mismo dinero dos veces. O sea que el criterio expulsaba
+    # justamente lo que da cohesión al grafo, y el mapa volvía a salir en mil
+    # pedazos pese a tener cero nodos aislados.
+    #
+    # Estas aristas son gratis: van entre nodos que YA están dentro, así que no
+    # traen ningún nodo nuevo ni ensanchan el volcado. Sólo unen lo que ya hay.
+    if ids_set:
+        elegidas_ids = {a["id"] for a in elegidas}
+        for a in store.conn.execute(
+            """
+            SELECT r.id, r.ftm_schema, r.source_entity_id, r.target_entity_id,
+                   r.amount, r.currency, r.confidence, r.status,
+                   r.start_date, r.end_date
+            FROM relationships r
+            WHERE r.status <> 'retracted'
+              AND r.source_entity_id = ANY(%s)
+              AND r.target_entity_id = ANY(%s)
+            """,
+            (list(ids_set), list(ids_set)),
+        ).fetchall():
+            if a["id"] not in elegidas_ids:
+                elegidas.append(a)
+                elegidas_ids.add(a["id"])
+
     ids = list(ids_set)
     aristas = [
         {
