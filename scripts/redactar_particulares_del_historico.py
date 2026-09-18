@@ -293,38 +293,18 @@ def _blobs_afectados() -> list[tuple[str, int, int]]:
 
 
 def _texto_pendiente() -> list[str]:
-    """Patrones de texto que todavía casan en algún sitio del repositorio.
+    """Texto que todavía hay que sustituir en el repositorio.
 
-    La comprobación miraba sólo las entidades dentro de los volcados, así que
-    decía «limpio» mientras quedaban nombres en el texto de los ficheros y en
-    los mensajes de commit. Una comprobación que no cubre lo mismo que el
-    borrado no sirve para autorizar un empujón irreversible.
+    Se apoya en `_ocurrencias_reales()`, que ya descarta lo que coincide con
+    el propio reemplazo. Esa distinción no es un detalle: el reemplazo
+    —«UTE <topónimo> (socios retirados)»— CASA con el patrón que lo encontró.
+
+    Buscando el patrón a secas, la comprobación daba positivo para siempre y
+    se negaba a empujar un repositorio ya limpio. Cinco ejecuciones seguidas.
+    El borrado funcionaba desde hacía cuatro; lo que estaba roto era lo que
+    decidía si había funcionado.
     """
-    pendientes = []
-    for linea in SUSTITUCIONES_TEXTO:
-        patron = linea.split("==>")[0]
-        if not patron.startswith("regex:"):
-            continue
-        rx = re.compile(patron[len("regex:") :])
-
-        mensajes = subprocess.run(
-            ["git", "log", "--all", "--format=%B"],
-            capture_output=True,
-            text=True,
-            check=False,
-        ).stdout
-        if rx.search(mensajes):
-            pendientes.append(f"{patron} (en mensajes de commit)")
-            continue
-
-        for _sha, crudo in _todos_los_blobs_de_texto():
-            try:
-                if rx.search(crudo.decode("utf-8", errors="ignore")):
-                    pendientes.append(f"{patron} (en el contenido de un fichero)")
-                    break
-            except Exception:
-                continue
-    return pendientes
+    return [f"{len(original)} caracteres (no se imprime)" for original, _ in _ocurrencias_reales()]
 
 
 def _todos_los_blobs_de_texto() -> list[tuple[str, bytes]]:
@@ -367,7 +347,7 @@ def comprobar() -> int:
     if pendientes:
         print("Texto pendiente de sustituir:")
         for p in pendientes:
-            print(f"  {p}")
+            print(f"  una ocurrencia de {p}")
         print()
 
     if not afectados:

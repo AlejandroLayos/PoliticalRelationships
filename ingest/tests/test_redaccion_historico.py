@@ -440,3 +440,25 @@ def test_sustituir_texto_funciona_sobre_bytes_y_con_saltos_de_linea():
 def test_sustituir_texto_no_toca_lo_que_no_casa():
     intacto = b"UTE ACCIONA CONSTRUCCION SA Y DRAGADOS SA (CIUDAD DE LA JUSTICIA)"
     assert redaccion.sustituir_texto(intacto) == intacto
+
+
+def test_el_reemplazo_no_se_cuenta_como_pendiente():
+    """El reemplazo CASA con el patrón que lo encontró.
+
+    «UTE <topónimo> (socios retirados)» pasa el filtro de
+    «UTE <topónimo> (cualquier cosa)». Buscando el patrón a secas, la
+    comprobación daba positivo para siempre y se negaba a empujar un
+    repositorio ya limpio: cinco ejecuciones seguidas. El borrado funcionaba
+    desde hacía cuatro; lo roto era lo que decidía si había funcionado.
+    """
+    import re
+
+    for linea in redaccion.SUSTITUCIONES_TEXTO:
+        patron, reemplazo = linea.split("==>")
+        rx = re.compile(patron[len("regex:") :])
+        # La trampa, explícita: el reemplazo casa con su propio patrón.
+        assert rx.search(reemplazo), "este test dejaría de comprobar nada"
+        # Y aun así, aplicarlo dos veces no cambia nada.
+        una = redaccion.sustituir_texto(b"x UTE PERAFITA (socios retirados) y")
+        dos = redaccion.sustituir_texto(una)
+        assert una == dos, "la sustitución no es idempotente"
