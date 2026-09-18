@@ -94,6 +94,45 @@ def _atributo(nodo: ET.Element | None, ruta: str, attr: str) -> str:
     return (hijo.get(attr) or "").strip()
 
 
+# El importe adjudicado no puede superar al presupuesto base de licitación más
+# que por un margen pequeño: la ley lo prohíbe, y en los datos se ve —el 99,5 %
+# de las adjudicaciones ingeridas está en 1,07 veces el presupuesto o por
+# debajo—. Lo que hay por encima no son contratos caros, son erratas del
+# formulario de origen.
+#
+# El caso que obligó a poner esto: un servicio de transporte para una
+# exposición temporal, con un presupuesto de 22.000 €, publicado con un importe
+# adjudicado de 1.954.023.643,40 € — 88.819 veces. Esa sola cifra era el 8 % de
+# todo el dinero del mapa y ponía a la empresa adjudicataria en cabeza del
+# ranking de quien más cobra del Estado, con dos mil millones de euros. Publicar
+# eso es una acusación falsa, y da igual que el número venga de la fuente.
+#
+# El umbral es deliberadamente flojo —diez veces— para no tocar lo que puede
+# tener una explicación legítima: IVA, lotes contados de distinta manera,
+# prórrogas o un presupuesto anualizado frente a un importe por todo el plazo.
+# A diez veces ya no queda ninguna de esas explicaciones.
+#
+# No se descarta la adjudicación: la adjudicación ocurrió y el adjudicatario es
+# real. Lo que no se publica es LA CIFRA. Se deja en `amount` vacío, el valor
+# original queda en las propiedades para quien quiera comprobarlo, y la
+# confianza baja. Es el mismo trato que reciben en el conector del Tribunal de
+# Cuentas las cuantías que no se pueden interpretar.
+VECES_PRESUPUESTO_INVEROSIMIL = 10
+
+
+def _importe_inverosimil(importe: Any, presupuesto: Any) -> bool:
+    """¿El importe adjudicado es imposible frente al presupuesto del contrato?"""
+    if importe is None or presupuesto is None:
+        return False
+    try:
+        if presupuesto <= 0:
+            return False
+        return importe > presupuesto * VECES_PRESUPUESTO_INVEROSIMIL
+    except TypeError:
+        return False
+
+
+
 class PLACSPConnector:
     """Conector de contratación pública."""
 
@@ -390,6 +429,31 @@ class PLACSPConnector:
                     )
 
             importe = adj.get("importe")
+            props_adj: dict[str, Any] = {
+                k: v
+                for k, v in (
+                    ("cpvCode", d.get("cpv")),
+                    ("nutsCode", d.get("nuts")),
+                    ("lotNumber", adj.get("codigo_resultado")),
+                )
+                if v
+            }
+            confianza = 1.0 if nif else 0.7
+            if _importe_inverosimil(importe, d.get("presupuesto")):
+                log.warning(
+                    "placsp: importe inverosímil frente al presupuesto; no se publica la cifra",
+                    entry_id=d["entry_id"],
+                    importe=str(importe),
+                    presupuesto=str(d.get("presupuesto")),
+                )
+                props_adj["importeSinInterpretar"] = str(importe)
+                props_adj["motivoImporteDudoso"] = (
+                    f"supera en más de {VECES_PRESUPUESTO_INVEROSIMIL} veces el presupuesto"
+                    f" base de licitación ({d.get('presupuesto')})"
+                )
+                importe = None
+                confianza = min(confianza, 0.5)
+
             aristas.append(
                 AristaNormalizada(
                     ftm_schema="ContractAward",
@@ -413,16 +477,8 @@ class PLACSPConnector:
                     currency=adj.get("moneda") or ("EUR" if importe is not None else ""),
                     start_date=d.get("actualizado"),
                     status="asserted",
-                    confidence=1.0 if nif else 0.7,
-                    properties={
-                        k: v
-                        for k, v in (
-                            ("cpvCode", d.get("cpv")),
-                            ("nutsCode", d.get("nuts")),
-                            ("lotNumber", adj.get("codigo_resultado")),
-                        )
-                        if v
-                    },
+                    confidence=confianza,
+                    properties=props_adj,
                 )
             )
 

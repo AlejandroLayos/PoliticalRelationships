@@ -16,7 +16,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from sinapsis_ingest.connectors.base import RawDocument
+from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.connectors.placsp import FEEDS, NS, PLACSPConnector
 
 MUESTRA = Path(__file__).parent / "golden" / "placsp_agregadas_muestra.atom"
@@ -410,3 +410,83 @@ def test_dos_particulares_en_el_mismo_contrato_no_pierden_dinero(conector):
     assert len(claves) == 2, "una adjudicación se perdió al agregar a los particulares"
     # Y las dos apuntan al mismo nodo agregado.
     assert len({a.target_key for a in adjudicaciones}) == 1
+
+
+# --- importes inverosímiles -----------------------------------------------
+#
+# El caso real: un transporte de obras para una exposición temporal, con
+# presupuesto de 22.000 €, publicado con un importe adjudicado de
+# 1.954.023.643,40 €. Esa sola cifra era el 8 % del dinero de todo el mapa y
+# ponía a la adjudicataria en cabeza del ranking de quien más cobra del
+# Estado. La adjudicación es real; la cifra, no.
+#
+# Se prueba `normalize` sobre su dict de entrada en vez de retocar el XML de la
+# muestra: lo que se comprueba es la regla, y el camino del XML al dict ya lo
+# cubren los tests de `parse` de más arriba.
+
+
+def _registro(importe: str | None, presupuesto: str | None) -> ParsedRecord:
+    return ParsedRecord(
+        raw_content_hash="x" * 64,
+        extractor_version="test",
+        data={
+            "id_registro": "urn:ejemplo:1",
+            "entry_id": "urn:ejemplo:1",
+            "titulo": "Transporte de una exposición temporal",
+            "actualizado": date(2026, 3, 1),
+            "organo": "Fundación Artium de Álava-Directora",
+            "presupuesto": Decimal(presupuesto) if presupuesto is not None else None,
+            "adjudicaciones": [
+                {
+                    "nombre": "CRISOSTOMO FINE ART SERVICES SL",
+                    "nif": "B86179926",
+                    "importe": Decimal(importe) if importe is not None else None,
+                    "moneda": "EUR",
+                    "codigo_resultado": "8",
+                }
+            ],
+        },
+    )
+
+
+def _adjudicacion(conector, importe, presupuesto):
+    n = conector.normalize(_registro(importe, presupuesto))
+    assert n is not None
+    return next(a for a in n.aristas if a.ftm_schema == "ContractAward")
+
+
+def test_un_importe_imposible_no_se_publica_como_cifra(conector):
+    adj = _adjudicacion(conector, "1954023643.40", "22000")
+    # La adjudicación se conserva: ocurrió, y el adjudicatario es real.
+    assert adj.target_key
+    # Lo que no se publica es la cifra.
+    assert adj.amount is None
+    # Pero no se pierde: queda a la vista de quien quiera comprobarla.
+    assert adj.properties["importeSinInterpretar"] == "1954023643.40"
+    assert "22000" in adj.properties["motivoImporteDudoso"]
+    assert adj.confidence <= 0.5
+
+
+def test_un_importe_algo_por_encima_del_presupuesto_se_respeta(conector):
+    # IVA, lotes contados de otra manera o una prórroga pueden dejar el importe
+    # por encima del presupuesto sin que sea una errata. Sólo se descarta lo que
+    # no tiene ninguna explicación posible. En los datos ingeridos, el 99,5 % de
+    # las adjudicaciones está en 1,07 veces el presupuesto o por debajo.
+    adj = _adjudicacion(conector, "26000", "22000")
+    assert adj.amount == Decimal("26000")
+    assert "importeSinInterpretar" not in adj.properties
+
+
+def test_sin_presupuesto_no_hay_nada_contra_lo_que_comparar(conector):
+    # Sin presupuesto publicado no se puede juzgar el importe, y descartarlo por
+    # las dudas sería inventar un criterio: se publica tal cual.
+    adj = _adjudicacion(conector, "1954023643.40", None)
+    assert adj.amount == Decimal("1954023643.40")
+    assert "importeSinInterpretar" not in adj.properties
+
+
+def test_un_presupuesto_a_cero_no_dispara_la_regla(conector):
+    # Dividir contra cero, o tratarlo como "todo es inverosímil", vaciaría de
+    # importes a todos los contratos que publican el presupuesto como 0.
+    adj = _adjudicacion(conector, "50000", "0")
+    assert adj.amount == Decimal("50000")
