@@ -31,6 +31,15 @@ const emit = defineEmits(['seleccionar', 'volver', 'expandir'])
 
 const resumen = computed(() => resumenEnPalabras(props.area))
 
+/**
+ * ¿Las listas completas nacen abiertas?
+ *
+ * Plegadas cuando el diagrama ya está dibujando las contrapartes —ahí la
+ * lista es el detalle, no el titular— y abiertas cuando no hay diagrama que
+ * mirar: si la entidad no entró en el mapa, la lista es lo único que hay.
+ */
+const abiertas = computed(() => Boolean(props.fueraDelMapa))
+
 const nombresExpediente = computed(() => {
   const m = new Map()
   for (const n of props.crudo?.nodes ?? []) {
@@ -214,82 +223,6 @@ const sinDatos = computed(
         </div>
       </section>
 
-      <!-- De quién recibe ---------------------------------------------- -->
-      <section v-if="area.recibeDe.length" class="bloque">
-        <h3>De quién recibe <span class="cuenta">{{ area.recibeDe.length }}</span></h3>
-        <ul class="lista barras">
-          <li v-for="c in area.recibeDe" :key="c.id">
-            <button class="fila" @click="emit('seleccionar', c.id)">
-              <span class="punto pequeno" :style="{ background: color(c.schema) }" />
-              <span class="nombre">{{ c.caption }}</span>
-              <span class="importe">{{ dineroCorto(c.total) }}</span>
-            </button>
-            <span class="barra"><i class="entra" :style="{ width: pct(c.total, tope(area.recibeDe)) }" /></span>
-            <span class="meta">
-              {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
-              <template v-if="c.expedientes?.length">
-                · {{ c.expedientes.length }}
-                {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
-              </template>
-              <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
-              <span v-if="c.extranjera" class="extranjera">· extranjera</span>
-              <!--
-                Un hueco sin explicar se lee como un cero. Aquí se dice que la
-                cifra existe y que no se publica, y por qué.
-              -->
-              <span
-                v-if="c.sinCifra"
-                class="sin-cifra"
-                :title="c.motivosSinCifra.join(' · ')"
-              >
-                · {{ c.sinCifra }}
-                {{ c.sinCifra === 1 ? 'operación sin cifra publicada' : 'operaciones sin cifra publicada' }}
-                <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
-              </span>
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <!-- A quién paga -------------------------------------------------- -->
-      <section v-if="area.pagaA.length" class="bloque">
-        <h3>A quién paga <span class="cuenta">{{ area.pagaA.length }}</span></h3>
-        <ul class="lista barras">
-          <li v-for="c in area.pagaA" :key="c.id">
-            <button class="fila" @click="emit('seleccionar', c.id)">
-              <span class="punto pequeno" :style="{ background: color(c.schema) }" />
-              <span class="nombre">{{ c.caption }}</span>
-              <span class="importe">{{ dineroCorto(c.total) }}</span>
-            </button>
-            <span class="barra"><i class="sale" :style="{ width: pct(c.total, tope(area.pagaA)) }" /></span>
-            <span class="meta">
-              {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
-              <template v-if="c.expedientes?.length">
-                ·
-                <span :title="c.expedientes.map((e) => nombresExpediente.get(e) ?? e).join(' · ')">
-                  {{ c.expedientes.length }}
-                  {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
-                </span>
-              </template>
-              <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
-              <span v-if="c.extranjera" class="extranjera">· extranjera</span>
-              <!--
-                Un hueco sin explicar se lee como un cero. Aquí se dice que la
-                cifra existe y que no se publica, y por qué.
-              -->
-              <span
-                v-if="c.sinCifra"
-                class="sin-cifra"
-                :title="c.motivosSinCifra.join(' · ')"
-              >
-                · {{ c.sinCifra }}
-                {{ c.sinCifra === 1 ? 'operación sin cifra publicada' : 'operaciones sin cifra publicada' }}
-                <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
-              </span>
-            </span>
-          </li>
-        </ul>
-      </section>
 
       <!--
         Las sanciones van aparte de los pagos a propósito: una multa del
@@ -354,6 +287,101 @@ const sinDatos = computed(
         </ul>
       </section>
 
+      <!--
+        Las listas completas van al final y plegadas, y no por ahorrar sitio.
+        Estaban arriba y repetían fila por fila lo que el diagrama de la
+        izquierda ya estaba dibujando: las mismas doce contrapartes con las
+        mismas cifras, dos veces en la misma pantalla. Lo que el diagrama NO
+        puede enseñar —el capital extranjero, los expedientes sancionadores,
+        quién orbita a los mismos pagadores— quedaba debajo de esa repetición,
+        fuera de la pantalla, y no lo veía nadie.
+        Aquí abajo la lista sigue estando entera, con lo suyo propio: cuántas
+        operaciones, qué expedientes, qué se infirió y qué importe no se pudo
+        publicar.
+      -->
+      <!-- De quién recibe ---------------------------------------------- -->
+      <details v-if="area.recibeDe.length" class="bloque lista-larga" :open="abiertas">
+        <summary>
+          De quién recibe, uno a uno
+          <span class="cuenta">{{ area.recibeDe.length }}</span>
+        </summary>
+        <ul class="lista barras">
+          <li v-for="c in area.recibeDe" :key="c.id">
+            <button class="fila" @click="emit('seleccionar', c.id)">
+              <span class="punto pequeno" :style="{ background: color(c.schema) }" />
+              <span class="nombre">{{ c.caption }}</span>
+              <span class="importe">{{ dineroCorto(c.total) }}</span>
+            </button>
+            <span class="barra"><i class="entra" :style="{ width: pct(c.total, tope(area.recibeDe)) }" /></span>
+            <span class="meta">
+              {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
+              <template v-if="c.expedientes?.length">
+                · {{ c.expedientes.length }}
+                {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
+              </template>
+              <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
+              <span v-if="c.extranjera" class="extranjera">· extranjera</span>
+              <!--
+                Un hueco sin explicar se lee como un cero. Aquí se dice que la
+                cifra existe y que no se publica, y por qué.
+              -->
+              <span
+                v-if="c.sinCifra"
+                class="sin-cifra"
+                :title="c.motivosSinCifra.join(' · ')"
+              >
+                · {{ c.sinCifra }}
+                {{ c.sinCifra === 1 ? 'operación sin cifra publicada' : 'operaciones sin cifra publicada' }}
+                <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
+              </span>
+            </span>
+          </li>
+        </ul>
+      </details>
+
+      <!-- A quién paga -------------------------------------------------- -->
+      <details v-if="area.pagaA.length" class="bloque lista-larga" :open="abiertas">
+        <summary>
+          A quién paga, uno a uno
+          <span class="cuenta">{{ area.pagaA.length }}</span>
+        </summary>
+        <ul class="lista barras">
+          <li v-for="c in area.pagaA" :key="c.id">
+            <button class="fila" @click="emit('seleccionar', c.id)">
+              <span class="punto pequeno" :style="{ background: color(c.schema) }" />
+              <span class="nombre">{{ c.caption }}</span>
+              <span class="importe">{{ dineroCorto(c.total) }}</span>
+            </button>
+            <span class="barra"><i class="sale" :style="{ width: pct(c.total, tope(area.pagaA)) }" /></span>
+            <span class="meta">
+              {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
+              <template v-if="c.expedientes?.length">
+                ·
+                <span :title="c.expedientes.map((e) => nombresExpediente.get(e) ?? e).join(' · ')">
+                  {{ c.expedientes.length }}
+                  {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
+                </span>
+              </template>
+              <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
+              <span v-if="c.extranjera" class="extranjera">· extranjera</span>
+              <!--
+                Un hueco sin explicar se lee como un cero. Aquí se dice que la
+                cifra existe y que no se publica, y por qué.
+              -->
+              <span
+                v-if="c.sinCifra"
+                class="sin-cifra"
+                :title="c.motivosSinCifra.join(' · ')"
+              >
+                · {{ c.sinCifra }}
+                {{ c.sinCifra === 1 ? 'operación sin cifra publicada' : 'operaciones sin cifra publicada' }}
+                <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
+              </span>
+            </span>
+          </li>
+        </ul>
+      </details>
+
       <p v-if="sinDatos" class="matiz hueco">
         De esta entidad no consta ningún movimiento de dinero en la instantánea
         publicada. No significa que no lo haya: significa que las fuentes
@@ -364,6 +392,13 @@ const sinDatos = computed(
 </template>
 
 <style scoped>
+.lista-larga > summary {
+  cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--texto);
+  display: flex; align-items: baseline; gap: 0.4rem;
+}
+.lista-larga > summary::marker { color: var(--texto-tenue); }
+.lista-larga[open] > summary { margin-bottom: 0.5rem; }
+
 .panel {
   overflow-y: auto; padding: 0.9rem 1.15rem 3rem;
   border-left: 1px solid var(--borde); background: var(--fondo-panel);

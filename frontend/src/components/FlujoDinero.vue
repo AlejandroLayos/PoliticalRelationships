@@ -45,8 +45,10 @@ const disposicion = computed(() =>
   disponerFlujo(props.area, {
     ancho: ancho.value,
     alto: alto.value,
-    // En móvil la leyenda ocupa tres líneas y se comía la última ficha.
-    pie: ancho.value < 700 ? 66 : 22,
+    // En móvil la leyenda ocupa tres líneas y se comía la última ficha. En
+    // escritorio el pie guarda sitio para el «+N más»: con 22 px se escribía
+    // encima de la ayuda de la esquina.
+    pie: ancho.value < 700 ? 50 : 36,
     maxPorLado: ancho.value < 700 ? 8 : 12,
   }),
 )

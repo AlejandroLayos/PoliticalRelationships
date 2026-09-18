@@ -108,6 +108,14 @@ const area = computed(() => {
   return grafoEntero.value ? areaDeInfluencia(grafoEntero.value, seleccionId.value) : null
 })
 
+/** ¿Hay alguna contraparte no residente entre las que se dibujan? */
+const hayNoResidente = computed(() =>
+  Boolean(
+    area.value &&
+      [...(area.value.recibeDe ?? []), ...(area.value.pagaA ?? [])].some((c) => c.extranjera),
+  ),
+)
+
 // Se calcula una vez sobre el grafo entero y la ficha filtra lo suyo: recorrer
 // cuatro mil nodos en cada selección no aporta nada y se nota al pulsar.
 const medios = computed(() =>
@@ -378,7 +386,9 @@ onMounted(async () => {
           ← Portada
         </button>
         <button v-if="vista !== 'mapa'" class="volver" @click="verMapa">
-          Mapa de núcleos
+          <!-- En estrecho no caben las tres etiquetas largas en un renglón. -->
+          <span class="ancho">Mapa de núcleos</span>
+          <span class="estrecho">Núcleos</span>
         </button>
 
         <!--
@@ -389,9 +399,15 @@ onMounted(async () => {
         <button
           v-if="vista === 'ficha' && !fueraDelMapa"
           class="volver"
+          title="La red alrededor de esta entidad y el documento del que sale cada dato"
           @click="verProcedencia"
         >
-          Conexiones y procedencia
+          <!--
+            «Conexiones y procedencia» no cabía junto a los otros dos botones y
+            se llevaba un renglón entero de la cabecera en móvil. La vista
+            lleva su propio título dentro.
+          -->
+          Conexiones
         </button>
 
         <template v-if="vista === 'mapa'">
@@ -483,11 +499,16 @@ onMounted(async () => {
           Vista recortada por tamaño: hay más conexiones de las que se muestran.
         </p>
 
+        <!--
+          Cada entrada sólo si su color está en el dibujo. El morado se
+          anunciaba siempre, hubiera o no una contraparte no residente, y una
+          leyenda que nombra colores que no están obliga a buscarlos.
+        -->
         <div v-if="vista === 'ficha'" class="leyenda">
-          <span><i style="background: #4bb47f" />Dinero que entra</span>
-          <span><i style="background: #e8703a" />Dinero que sale</span>
-          <span><i style="background: #b08cd9" />Contraparte no residente</span>
-          <span>El grosor ordena · la cifra exacta va escrita</span>
+          <span v-if="area?.recibeDe?.length"><i style="background: #4bb47f" />Dinero que entra</span>
+          <span v-if="area?.pagaA?.length"><i style="background: #e8703a" />Dinero que sale</span>
+          <span v-if="hayNoResidente"><i style="background: #b08cd9" />Contraparte no residente</span>
+          <span>El grosor es el importe · la cifra exacta va escrita</span>
         </div>
         <div v-else-if="vista === 'vecindario'" class="leyenda">
           <span v-for="(color, esquema) in COLOR_POR_ESQUEMA" :key="esquema">
@@ -694,6 +715,13 @@ main { flex: 1; position: relative; min-height: 0; }
   .buscador { order: 3; flex-basis: 100%; max-width: none; }
   .controles { gap: 0.5rem; }
   .volver, .controles .volver { padding: 0.3rem 0.6rem; font-size: 0.74rem; }
+  .marca h1 { font-size: 0.98rem; }
+}
+
+.estrecho { display: none; }
+@media (max-width: 820px) {
+  .ancho { display: none; }
+  .estrecho { display: inline; }
 }
 
 .controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
