@@ -16,6 +16,8 @@ const props = defineProps({
   area: { type: Object, default: null },
   /** El grafo sin colapsar, para poder nombrar los expedientes puenteados. */
   crudo: { type: Object, default: null },
+  /** Los contratos de publicidad y medios de todo el grafo, ya calculados. */
+  medios: { type: Object, default: null },
 })
 const emit = defineEmits(['seleccionar', 'volver', 'expandir'])
 
@@ -40,6 +42,28 @@ function pct(v, max) {
 function color(schema) {
   return COLOR_POR_ESQUEMA[schema] ?? COLOR_POR_DEFECTO
 }
+
+/**
+ * Los contratos de publicidad de ESTA entidad, la pague o la cobre.
+ *
+ * Es la pregunta «¿qué medios paga este ayuntamiento?» contestada desde la
+ * ficha, sin tener que volver a la portada y buscar el nombre en una lista
+ * general.
+ */
+const publicidad = computed(() => {
+  const id = props.area?.entidad?.id
+  if (!id || !props.medios) return []
+  return props.medios.contratos.filter((c) => c.organoId === id || c.empresaId === id)
+})
+
+const publicidadTotal = computed(() =>
+  publicidad.value.reduce((s, c) => s + c.importe, 0),
+)
+
+/** ¿La entidad es quien paga la publicidad, o quien la cobra? */
+const pagaPublicidad = computed(
+  () => publicidad.value.some((c) => c.organoId === props.area?.entidad?.id),
+)
 
 const sinDatos = computed(
   () => props.area && !props.area.recibeDe.length && !props.area.pagaA.length && !props.area.sanciones.length,
@@ -231,6 +255,33 @@ const sinDatos = computed(
             <span v-if="s.fecha" class="meta">{{ s.fecha }}</span>
           </li>
         </ul>
+      </section>
+
+      <!-- Publicidad institucional ---------------------------------------- -->
+      <section v-if="publicidad.length" class="bloque">
+        <h3>
+          {{ pagaPublicidad ? 'Publicidad y medios que paga' : 'Publicidad institucional que cobra' }}
+          <span class="cuenta">{{ publicidad.length }}</span>
+        </h3>
+        <p class="matiz">
+          Contratos cuyo objeto es publicidad, edición, radio, televisión o
+          relaciones públicas, por el código CPV que el órgano asignó al
+          expediente. Suman {{ dineroCorto(publicidadTotal) }}.
+        </p>
+        <ul class="lista compacta">
+          <li v-for="c in publicidad" :key="c.id">
+            <button @click="emit('seleccionar', pagaPublicidad ? c.empresaId : c.organoId)">
+              {{ pagaPublicidad ? c.empresa : c.organo }}
+            </button>
+            <span class="importe">
+              {{ c.sinImporte ? 'sin cifra' : dineroCorto(c.importe) }}
+            </span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Dice de qué iba el contrato, no qué es quien lo cobra: puede ser un
+          medio, la agencia que compra los espacios o la productora.
+        </p>
       </section>
 
       <!-- Ámbito de interés --------------------------------------------- -->

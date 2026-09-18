@@ -19,6 +19,7 @@ import {
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
 import { areaDeInfluencia } from './influencia.js'
+import { contratosDeMedios } from './medios.js'
 import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
 
 const consulta = ref('')
@@ -94,6 +95,12 @@ const area = computed(() => {
   if (enColapsado?.entidad) return enColapsado
   return grafoEntero.value ? areaDeInfluencia(grafoEntero.value, seleccionId.value) : null
 })
+
+// Se calcula una vez sobre el grafo entero y la ficha filtra lo suyo: recorrer
+// cuatro mil nodos en cada selección no aporta nada y se nota al pulsar.
+const medios = computed(() =>
+  grafoEntero.value ? contratosDeMedios(grafoEntero.value, { limite: 1000 }) : null,
+)
 
 /** Lo que hay que advertir cuando una ficha sale sin dinero por culpa nuestra. */
 const notaDeHueco = computed(() => {
@@ -406,6 +413,7 @@ onMounted(async () => {
         v-if="vista === 'ficha'"
         :area="area"
         :crudo="grafoEntero"
+        :medios="medios"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
       />
