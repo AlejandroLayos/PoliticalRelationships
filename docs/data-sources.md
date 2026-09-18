@@ -161,6 +161,31 @@ UBL (OASIS).
 Hay cinco *feeds* nacionales: licitaciones, contratos menores, plataformas
 agregadas, encargos a medios propios y consultas preliminares de mercado.
 
+**De esos, la ingesta lee tres** (`ingest/sinapsis_ingest/connectors/placsp.py`,
+constante `FEEDS`), cada uno como un conector aparte que comparte `source_id`:
+
+| conector | feed | qué trae |
+|---|---|---|
+| `placsp` | `PlataformasAgregadasSinMenores` | lo que vuelcan las plataformas autonómicas agregadas |
+| `placsp-licitaciones` | `licitacionesPerfilesContratanteCompleto3` | lo publicado directamente en la Plataforma del Estado |
+| `placsp-menores` | `contratosMenoresPerfilesContratantes` | contrato menor |
+
+Hasta el 18/9/2026 sólo se leía el primero. Las URL de los otros dos llevaban
+en la misma constante desde el principio, sin que nada dijera que no se
+usaban, así que todo lo publicado directamente en la Plataforma y todo el
+contrato menor estaban fuera del mapa.
+
+El **contrato menor** merece mención aparte: por debajo del umbral no hay
+licitación pública, así que es a la vez el tramo que menos se mira y donde
+vive el gasto municipal del día a día. También es donde más adjudicatarios son
+personas físicas —autónomos—, y por eso pasa por dos cierres: el conector los
+agrega en un nodo anónimo y el volcado no deja salir un `Person` aunque el
+conector fallara. Ver [spec §12](spec.md).
+
+Los que faltan —encargos a medios propios y consultas preliminares— son los
+dos que menos dinero mueven y los que peor encajan en el modelo de
+adjudicación; quedan pendientes.
+
 **Coste real:** bastante mayor que BDNS. Hay que descargar ZIPs, descomprimir,
 recorrer la cadena de ATOM y parsear XML UBL. Es trabajo de fase 3, no de
 arranque.
