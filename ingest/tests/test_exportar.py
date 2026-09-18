@@ -368,3 +368,90 @@ def test_una_arista_sin_propiedades_no_engorda_el_volcado(store, tmp_path):
     g = _exportado(store, tmp_path)
     arista = next(x for x in g["edges"] if x["source"] == a)
     assert "properties" not in arista
+
+
+# --- ninguna persona física llega al volcado -------------------------------
+#
+# Entre el 3/8/2026 y el 18/9/2026 la instantánea diaria publicó nombres y
+# apellidos de particulares con su DNI. La corrección de los conectores existía
+# y estaba probada desde el primer día: vivía en una rama que no se desplegaba.
+# Seis semanas sin que fallara un solo test.
+#
+# Estos comprueban la ÚLTIMA puerta, por la que pasa todo lo que se publica,
+# venga del conector que venga.
+
+
+def test_una_persona_fisica_no_llega_al_volcado(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    persona = _entidad(store, "NOMBRE APELLIDO APELLIDO", "Person")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, persona, "3000")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert persona not in [n["id"] for n in g["nodes"]]
+    assert "NOMBRE APELLIDO APELLIDO" not in json.dumps(g, ensure_ascii=False)
+    assert "Person" not in {n["schema"] for n in g["nodes"]}
+
+
+def test_la_arista_de_una_persona_fisica_se_va_con_ella(store, tmp_path):
+    # Una arista colgando de un nodo ausente rompe el grafo, y además el par
+    # (organismo, importe) seguiría señalando a la persona aunque su nombre no
+    # estuviera publicado.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    persona = _entidad(store, "OTRO NOMBRE APELLIDO", "Person")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, persona, "3000")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    publicados = {n["id"] for n in g["nodes"]}
+    for a in g["edges"]:
+        assert a["source"] in publicados
+        assert a["target"] in publicados
+    assert persona not in [a["source"] for a in g["edges"]]
+    assert persona not in [a["target"] for a in g["edges"]]
+
+
+def test_la_procedencia_de_una_persona_fisica_tampoco_se_publica(store, tmp_path):
+    # El extracto del documento original lleva el nombre dentro.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    persona = _entidad(store, "TERCER NOMBRE APELLIDO", "Person")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, persona, "3000")
+    _arista(store, organo, empresa, "9000")
+    doc = store.conn.execute(
+        """
+        INSERT INTO raw_documents (source_id, url, content_hash, media_type, retrieved_at, content)
+        VALUES ('test', 'https://ejemplo.test/x', %s, 'application/json', now(), '{}'::bytea)
+        RETURNING id
+        """,
+        ("f" * 64,),
+    ).fetchone()
+    store.conn.execute(
+        """
+        INSERT INTO provenance (entity_id, raw_document_id, extractor_version, excerpt)
+        VALUES (%s, %s, 'test', 'concedido a TERCER NOMBRE APELLIDO')
+        """,
+        (persona, doc["id"]),
+    )
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    assert "TERCER NOMBRE APELLIDO" not in json.dumps(g, ensure_ascii=False)
+
+
+def test_el_agregado_anonimo_de_particulares_si_se_publica(store, tmp_path):
+    # Lo que se retira es la identificación, no el hecho: que esa convocatoria
+    # repartió dinero entre particulares es información pública y es la que
+    # hace que el importe cuadre.
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    agregado = _entidad(store, "Personas físicas (convocatoria 123)", "LegalEntity")
+    _arista(store, organo, agregado, "3000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    captions = {n["caption"] for n in g["nodes"]}
+    assert "Personas físicas (convocatoria 123)" in captions

@@ -27,6 +27,9 @@ from sinapsis_ingest.store import Store
 
 log = structlog.get_logger()
 
+# El esquema FtM de una persona física. Nunca se publica: ver §12 de la spec.
+PERSONALES = "Person"
+
 # Cota del volcado. Por encima de esto el navegador sufre y la vista deja de
 # ser útil: si hace falta más, lo que hace falta es la API, no un JSON mayor.
 MAX_ENTIDADES = 4000
@@ -208,6 +211,33 @@ def exportar(
         else []
     )
 
+    # ÚLTIMA PUERTA ANTES DE PUBLICAR: aquí no pasa ninguna persona física.
+    #
+    # Los conectores ya agregan a los particulares en un nodo anónimo
+    # («Personas físicas (convocatoria X)»), que es donde debe resolverse. Esta
+    # comprobación es redundante a propósito, porque la redundancia es
+    # exactamente lo que faltó: entre el 3 de agosto y el 18 de septiembre de
+    # 2026 la corrección de los conectores existía y estaba probada, pero vivía
+    # en una rama que no se desplegaba, y la instantánea diaria siguió
+    # publicando nombres y apellidos con su DNI durante seis semanas sin que
+    # fallara ni un test.
+    #
+    # Un conector nuevo, una fuente que cambie de formato o una regresión en
+    # `parece_persona_fisica` vuelven a abrir esa puerta. Esta se cierra sola,
+    # y se cierra en el sitio por el que pasa TODO lo que se publica.
+    #
+    # No se lanza excepción: se omite la entidad y se registra. Un volcado sin
+    # una entidad es un hueco; un volcado con el DNI de un particular es una
+    # infracción del RGPD que además no se puede retirar de internet.
+    personales = [f for f in filas if f["ftm_schema"] == PERSONALES]
+    if personales:
+        log.error(
+            "se han omitido personas físicas del volcado; revisa el conector que las creó",
+            cuantas=len(personales),
+            ids=[str(f["id"]) for f in personales][:20],
+        )
+    omitidas = {f["id"] for f in personales}
+
     nodos = [
         {
             "id": str(f["id"]),
@@ -219,7 +249,20 @@ def exportar(
             "degree": int(f["grado"]),
         }
         for f in filas
+        if f["id"] not in omitidas
     ]
+
+    # Y sus aristas con ellas: una arista que cuelga de un nodo ausente rompe
+    # el grafo, y además el par (organismo, importe) seguiría señalando a la
+    # persona aunque su nombre no estuviera.
+    if omitidas:
+        aristas = [
+            a
+            for a in aristas
+            if a["source"] not in {str(i) for i in omitidas}
+            and a["target"] not in {str(i) for i in omitidas}
+        ]
+        ids = [i for i in ids if i not in omitidas]
 
     # Procedencia por entidad: es lo que permite volver al documento original
     # desde la interfaz, y sin ella el dato no debería publicarse.
