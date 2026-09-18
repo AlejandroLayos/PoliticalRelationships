@@ -262,6 +262,13 @@ Reglas:
   arista como `disputed` y se documenta, no se borra en silencio.
 - **Retención.** El crudo se conserva porque es la prueba. Si un dato personal
   debe suprimirse, se suprime lo derivado y se registra la supresión.
+- **Una cifra que no es atribuible no se publica.** Que un importe venga de la
+  fuente no lo hace cierto, ni lo hace imputable a quien aparece al otro lado.
+  «Sin procedencia no se persiste» no significa «con procedencia se publica
+  cualquier cosa». Dos casos concretos —erratas de origen y el valor de un
+  acuerdo marco repetido en cada adjudicatario— se documentan en el
+  [ADR 0005](adr/0005-importes-que-no-se-publican.md); entre los dos suponían
+  el 90 % del dinero que llegó a publicarse.
 
 ## 13. Seguridad
 
