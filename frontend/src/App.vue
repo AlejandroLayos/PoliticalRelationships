@@ -593,9 +593,18 @@ onMounted(async () => {
           </span>
         </div>
         <div v-else class="leyenda">
+          <!--
+            El orden de lectura del mapa ES información y no lo decía nadie:
+            los núcleos van empaquetados por filas de más a menos dinero, así
+            que el de arriba a la izquierda es el que más mueve. Sin esa frase
+            la colocación parece casual, y entonces el mapa entero parece un
+            adorno.
+          -->
           <span>
-            En color, los núcleos con más dinero —los mismos de la lista—;
-            en gris, el resto. El tamaño de cada punto es dinero.
+            De más a menos dinero, empezando arriba a la izquierda.
+            En color, los núcleos de cabeza —los mismos de la lista—; en gris,
+            el resto. El tamaño de cada punto es dinero, y los pagos de un
+            núcleo a otro salen al pasar por encima.
           </span>
         </div>
 

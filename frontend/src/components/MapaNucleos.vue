@@ -21,7 +21,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import Sigma from 'sigma'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { analizarNucleos, colapsarNodosDePaso, FONDO, paletaDeNucleos } from '../nucleos.js'
-import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
+import { dibujarEtiquetaCentrada } from '../etiquetas.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -40,6 +40,8 @@ const calculando = ref(true)
 let sigma = null
 const grafo = shallowRef(null)
 const etiquetados = shallowRef(new Set())
+/** El nodo bajo el ratón: es lo que destapa sus pagos a otros núcleos. */
+const encima = ref('')
 
 /**
  * Los nombres oficiales son larguísimos —"Consejería de Sanidad, Presidencia y
@@ -167,12 +169,25 @@ function construir() {
     })
   })
 
-  g.forEachEdge((e, attrs) => {
+  // Las aristas ENTRE núcleos, mucho más tenues que las de dentro.
+  //
+  // Los núcleos se colocan empaquetados por dinero, no por quién toca con
+  // quién, así que una arista que cruza el lienzo entero no dice «estos dos
+  // grupos están cerca»: sólo dice que existe un pago entre ellos. Pintadas
+  // igual que las de dentro, esas líneas largas eran lo primero que se veía
+  // —una maraña blanca por encima de todo— y tapaban justo lo que el mapa
+  // quiere enseñar, que es la forma de cada grupo.
+  //
+  // No se esconden: un pago entre dos núcleos es un dato, y esconderlo diría
+  // que no lo hay. Se dejan como textura de fondo.
+  g.forEachEdge((e, attrs, _a, _b, orig, dest) => {
     const inferida = attrs.estado === 'inferred'
-    g.mergeEdgeAttributes(e, {
-      color: inferida ? 'rgba(224,163,58,0.30)' : 'rgba(150,170,200,0.16)',
-      size: 0.4 + Math.min(3.2, Math.log10(1 + attrs.importe) * 0.55),
-    })
+    const dentro = orig.nucleo === dest.nucleo
+    const color = inferida
+      ? `rgba(224,163,58,${dentro ? 0.3 : 0.12})`
+      : `rgba(150,170,200,${dentro ? 0.18 : 0.05})`
+    const grosor = 0.4 + Math.min(3.2, Math.log10(1 + attrs.importe) * 0.55)
+    g.mergeEdgeAttributes(e, { color, size: dentro ? grosor : Math.min(grosor, 0.6) })
   })
 
   if (g.order > 1) {
@@ -349,8 +364,15 @@ function pintar() {
   sigma = new Sigma(grafo.value, contenedor.value, {
     renderEdgeLabels: false,
     defaultEdgeType: 'line',
-    labelDensity: 0.12,
-    labelGridCellSize: 220,
+    // Sin la maraña de rectas cruzando el lienzo, los núcleos quedan
+    // separados de verdad y caben más rótulos: con celdas de 220 px sólo
+    // salían tres de los doce con color, y una mancha de color sin nombre no
+    // sirve para llegar a la lista de al lado.
+    labelDensity: 0.6,
+    labelGridCellSize: 155,
+    // Con 7 salían seis rótulos y dos se tocaban; con 11, cuatro o cinco y
+    // ninguno. Gana lo limpio: el nombre de cada núcleo está igualmente en la
+    // lista de al lado, con su mismo color, y pasando el ratón por encima.
     labelRenderedSizeThreshold: 11,
     labelFont: 'system-ui, sans-serif',
     labelColor: { color: '#f2f5fa' },
@@ -360,13 +382,13 @@ function pintar() {
     // —verde, amarillo, turquesa— el blanco no se lee, y encima de dos manchas
     // que se tocan, menos. Con una placa oscura detrás se lee siempre, sobre
     // lo que sea, que es lo que tiene que pasar con el nombre de un organismo.
-    defaultDrawNodeLabel: dibujarEtiquetaConPlaca,
+    defaultDrawNodeLabel: dibujarEtiquetaCentrada,
     // El nodo resaltado usa OTRO pintor, el de hover, que por defecto dibuja
     // una placa blanca con texto oscuro. Al cambiar sólo el de la etiqueta,
     // encima de esa placa blanca se escribía el texto claro del nuestro y el
     // nombre del nodo seleccionado desaparecía: un rectángulo blanco vacío en
     // el centro del grafo. Los dos pintan igual.
-    defaultDrawNodeHover: dibujarEtiquetaConPlaca,
+    defaultDrawNodeHover: dibujarEtiquetaCentrada,
     minCameraRatio: 0.03,
     maxCameraRatio: 12,
     zIndex: true,
@@ -374,14 +396,19 @@ function pintar() {
 
   sigma.on('clickNode', ({ node }) => emit('seleccionar', node))
   sigma.on('enterNode', ({ node }) => {
+    encima.value = node
     // La etiqueta aparece al pasar por encima aunque el nodo no sea de los
     // rotulados: así se puede explorar sin llenar la pantalla de texto.
     sigma.setSetting('nodeReducer', (id, d) =>
       id === node ? { ...d, label: d.etiquetaReal, highlighted: true, zIndex: 3 } : reducirNodo(id, d),
     )
+    sigma.setSetting('edgeReducer', reducirArista)
     sigma.refresh()
   })
-  sigma.on('leaveNode', aplicarReductores)
+  sigma.on('leaveNode', () => {
+    encima.value = ''
+    aplicarReductores()
+  })
 
   aplicarReductores()
 }
@@ -402,11 +429,32 @@ function reducirNodo(id, d) {
   return d
 }
 
+/**
+ * Las aristas ENTRE núcleos no se dibujan en la vista general.
+ *
+ * Los núcleos se empaquetan por dinero, no por quién toca con quién, así que
+ * una arista entre dos de ellos sale como una recta que cruza el lienzo
+ * entero: es larga porque la colocación no refleja la conexión, no porque los
+ * dos grupos estén lejos en ningún sentido. Mil rectas así son lo primero que
+ * se ve —una maraña blanca por encima de todo— y tapan lo único que este mapa
+ * sabe enseñar, que es la forma de cada grupo.
+ *
+ * No se esconde el dato: aparece al pasar por encima de cualquiera de sus dos
+ * extremos, y la leyenda lo dice. Lo que se quita es pintar mil a la vez
+ * cuando no se ha preguntado por ninguna.
+ */
 function reducirArista(id, d) {
   const g = grafo.value
   const foco = props.seleccion
   const nuc = props.nucleoEnfocado
   const [s, t] = g.extremities(id)
+  const entreNucleos = g.getNodeAttribute(s, 'nucleo') !== g.getNodeAttribute(t, 'nucleo')
+  const tocaAlDeEncima = encima.value && (s === encima.value || t === encima.value)
+
+  if (tocaAlDeEncima) {
+    return { ...d, color: 'rgba(210,225,245,0.55)', size: Math.max(d.size, 1), zIndex: 2 }
+  }
+  if (entreNucleos && !foco && nuc === null) return { ...d, hidden: true }
 
   if (nuc !== null) {
     const dentro = g.getNodeAttribute(s, 'nucleo') === nuc && g.getNodeAttribute(t, 'nucleo') === nuc

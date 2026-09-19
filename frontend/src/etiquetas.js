@@ -21,15 +21,24 @@ const RADIO = 4
 /**
  * Firma de Sigma 3: `(contexto, datos, ajustes)`. `datos` trae ya las
  * coordenadas en píxeles de pantalla y el tamaño del nodo.
+ *
+ * `centrada` coloca el rótulo debajo del nodo y no a su derecha. En el mapa de
+ * núcleos el nodo rotulado es el más gordo de su mancha, así que a la derecha
+ * el nombre cae encima de la mancha vecina y parece suyo: «Consejería de
+ * Presidencia» escrito sobre el borrón azul de al lado. Centrado debajo se lee
+ * de quién es. En la vista de conexiones no hace falta, porque ahí los nodos
+ * están sueltos y el rótulo lateral no invade a nadie.
  */
-export function dibujarEtiquetaConPlaca(ctx, datos, ajustes) {
+function pintar(ctx, datos, ajustes, centrada) {
   if (!datos.label) return
 
   ctx.font = `${ajustes.labelWeight} ${ajustes.labelSize}px ${ajustes.labelFont}`
   const ancho = ctx.measureText(datos.label).width
   const alto = ajustes.labelSize + MARGEN_Y * 2
-  const x = datos.x + datos.size + MARGEN_X
-  const y = datos.y + ajustes.labelSize / 3 - alto + MARGEN_Y
+  const x = centrada ? datos.x - ancho / 2 : datos.x + datos.size + MARGEN_X
+  const y = centrada
+    ? datos.y + datos.size + MARGEN_Y * 2
+    : datos.y + ajustes.labelSize / 3 - alto + MARGEN_Y
 
   ctx.beginPath()
   ctx.moveTo(x - MARGEN_X + RADIO, y)
@@ -43,4 +52,12 @@ export function dibujarEtiquetaConPlaca(ctx, datos, ajustes) {
 
   ctx.fillStyle = ajustes.labelColor.color
   ctx.fillText(datos.label, x, y + alto - MARGEN_Y - 1)
+}
+
+export function dibujarEtiquetaConPlaca(ctx, datos, ajustes) {
+  pintar(ctx, datos, ajustes, false)
+}
+
+export function dibujarEtiquetaCentrada(ctx, datos, ajustes) {
+  pintar(ctx, datos, ajustes, true)
 }
