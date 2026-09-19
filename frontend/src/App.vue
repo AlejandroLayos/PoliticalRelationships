@@ -594,6 +594,7 @@ onMounted(async () => {
         v-if="vista === 'ficha'"
         :area="area"
         :crudo="grafoEntero"
+        :fuentes="instantanea?.fuentes ?? []"
         :medios="medios"
         :fuera-del-mapa="fueraDelMapa"
         @seleccionar="enfocar"

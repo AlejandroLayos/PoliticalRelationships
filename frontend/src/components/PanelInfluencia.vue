@@ -11,11 +11,18 @@ import { computed } from 'vue'
 import { dineroCorto } from '../nucleos.js'
 import { resumenEnPalabras } from '../influencia.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
+import { enumerar, fechaCorta, nombreDocumento, nombreFuente } from '../procedencia.js'
 
 const props = defineProps({
   area: { type: Object, default: null },
   /** El grafo sin colapsar, para poder nombrar los expedientes puenteados. */
   crudo: { type: Object, default: null },
+  /**
+   * Las fuentes con su nombre legible. Viven en la cabecera del volcado y no
+   * en el grafo, así que llegan aparte: sin ellas la procedencia diría
+   * «placsp» en vez de «Plataforma de Contratación del Sector Público».
+   */
+  fuentes: { type: Array, default: () => [] },
   /** Los contratos de publicidad y medios de todo el grafo, ya calculados. */
   medios: { type: Object, default: null },
   /**
@@ -39,6 +46,32 @@ const resumen = computed(() => resumenEnPalabras(props.area))
  * mirar: si la entidad no entró en el mapa, la lista es lo único que hay.
  */
 const abiertas = computed(() => Boolean(props.fueraDelMapa))
+
+/** Los documentos de los que sale esta ficha. */
+const procedencia = computed(() => {
+  const id = props.area?.entidad?.id
+  if (!id) return []
+  return props.crudo?.provenance?.[id] ?? []
+})
+
+const fuentesDeLaFicha = computed(() =>
+  enumerar(procedencia.value.map((d) => nombreFuente(props.fuentes, d.source_id))),
+)
+
+/*
+  Un organismo grande sale de decenas de documentos —el Servicio Andaluz de
+  Salud, de 29— y todos del mismo feed y del mismo día. Listarlos enteros es
+  una pared de enlaces idénticos que además tapa el resto del panel.
+  Se enseñan unos pocos y se dice cuántos quedan: lo que hace falta comprobar
+  es que el documento existe y se puede abrir, no abrirlos los 29.
+*/
+const CUANTOS_DOCUMENTOS = 5
+const documentosVisibles = computed(() => procedencia.value.slice(0, CUANTOS_DOCUMENTOS))
+const documentosDeMas = computed(() =>
+  Math.max(0, procedencia.value.length - CUANTOS_DOCUMENTOS),
+)
+
+
 
 const nombresExpediente = computed(() => {
   const m = new Map()
@@ -170,6 +203,55 @@ const sinDatos = computed(
           </span>
         </div>
       </div>
+
+      <!--
+        La procedencia, en la ficha y no a dos clics.
+        «Sin procedencia no se persiste» es la primera invariante del proyecto
+        y la promesa que la portada hace en su primera frase, pero para ver el
+        documento había que cambiar de vista. Una promesa que hay que ir a
+        buscar a otra pantalla es media promesa.
+        Va plegada y en una línea: quien sólo mira las cifras no la nota; quien
+        duda de una tiene el documento ahí, con su huella y la fecha en que se
+        descargó.
+      -->
+      <section v-if="procedencia.length" class="bloque procedencia">
+        <details>
+          <summary>
+            <span class="sello">✓</span>
+            {{ procedencia.length }}
+            {{ procedencia.length === 1 ? 'documento' : 'documentos' }}
+            {{ procedencia.length === 1 ? 'guardado' : 'guardados' }}
+            de {{ fuentesDeLaFicha }}
+          </summary>
+          <ul>
+            <li v-for="(d, i) in documentosVisibles" :key="i">
+              <!--
+                El texto del enlace es el NOMBRE DEL FICHERO, no el de la
+                fuente: los 29 documentos de un organismo grande vienen todos
+                del mismo sitio, así que repetir «Plataforma de Contratación
+                del Sector Público» cinco veces seguidas no distingue nada. El
+                fichero sí — lleva la fecha y el número de página del feed.
+                La fuente ya está dicha una vez, arriba, en el resumen.
+              -->
+              <a :href="d.url" :title="d.url" target="_blank" rel="noopener noreferrer">
+                {{ nombreDocumento(d.url) }}
+              </a>
+              <span class="cuando">leído el {{ fechaCorta(d.retrieved_at) }}</span>
+              <!--
+                La huella es lo que permite comprobar que el documento no ha
+                cambiado desde que se leyó. Sin ella el enlace sólo dice «mira
+                tú»; con ella, «esto es exactamente lo que leí».
+              -->
+              <code :title="d.content_hash">{{ d.content_hash.slice(0, 12) }}…</code>
+              <blockquote v-if="d.excerpt">{{ d.excerpt }}</blockquote>
+            </li>
+            <li v-if="documentosDeMas" class="y-mas">
+              y {{ documentosDeMas }} {{ documentosDeMas === 1 ? 'documento' : 'documentos' }}
+              más, del mismo origen
+            </li>
+          </ul>
+        </details>
+      </section>
 
       <!--
         Exposición a capital extranjero. Se dice de qué son los datos: el NIF
@@ -392,6 +474,28 @@ const sinDatos = computed(
 </template>
 
 <style scoped>
+.procedencia > details > summary {
+  cursor: pointer; font-size: 0.78rem; color: var(--texto-tenue);
+  list-style-position: outside;
+}
+.procedencia .sello { color: #4bb47f; font-weight: 700; }
+.procedencia ul { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+.procedencia li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem;
+  font-size: 0.72rem; padding: 0.3rem 0; border-top: 1px solid var(--borde-suave);
+}
+.procedencia a { color: var(--acento); word-break: break-word; }
+.procedencia .cuando { color: var(--texto-tenue); }
+.procedencia code {
+  font-size: 0.66rem; color: var(--texto-tenue);
+  background: var(--fondo-boton); padding: 0.05rem 0.25rem; border-radius: 3px;
+}
+.procedencia .y-mas { color: var(--texto-tenue); }
+.procedencia blockquote {
+  flex-basis: 100%; margin: 0.25rem 0 0; padding-left: 0.5rem;
+  border-left: 2px solid var(--borde); color: var(--texto-tenue); font-style: italic;
+}
+
 .lista-larga > summary {
   cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--texto);
   display: flex; align-items: baseline; gap: 0.4rem;
