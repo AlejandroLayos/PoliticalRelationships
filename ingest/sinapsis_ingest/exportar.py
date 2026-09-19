@@ -191,6 +191,36 @@ def es_solo_un_nombre(caption: str | None, patron: re.Pattern[str]) -> bool:
     return not patron.sub("", caption).strip(_ADORNOS)
 
 
+# Esquemas cuyo `caption` es un NOMBRE, no prosa.
+#
+# La distinción decide dónde se tapa y dónde no, y la destapó la CI: el test
+# que afirma que «Construcciones Marta Solanes SL» se sigue publicando falló,
+# porque el tapado la dejaba en «CONSTRUCCIONES (nombre retirado) SL». Y
+# «Ana Gil, S.L.» salía como «(nombre retirado), S.L.».
+#
+# Eso no protege a nadie: la razón social de una sociedad es pública, está en
+# el Registro Mercantil, y es el nombre de una parte contratante que hemos
+# decidido publicar. Tacharla dentro de su propio nombre destruye un dato en
+# vez de minimizarlo.
+#
+# El `caption` de un `Contract` es otra cosa: es el objeto del expediente,
+# prosa copiada del pliego, y ahí es exactamente donde apareció el nombre del
+# artista contratado. Ahí sí se tapa.
+ESQUEMAS_CON_NOMBRE = frozenset({"PublicBody", "Company", "Organization", "LegalEntity"})
+
+
+def tapar_nodo(nodo: dict[str, Any], patron: re.Pattern[str], cuenta: list[int]) -> dict[str, Any]:
+    """Tapa los nombres de un nodo, respetando el suyo propio cuando es un nombre.
+
+    Una ficha que pasa las tres puertas de §12 es una que hemos decidido
+    nombrar. Lo que se tapa es lo que la rodea, no cómo se llama.
+    """
+    if nodo.get("schema") not in ESQUEMAS_CON_NOMBRE or "caption" not in nodo:
+        return tapar_nombres(nodo, patron, cuenta)
+    resto = tapar_nombres({k: v for k, v in nodo.items() if k != "caption"}, patron, cuenta)
+    return {**resto, "caption": nodo["caption"]}
+
+
 def tapar_nombres(valor: Any, patron: re.Pattern[str], cuenta: list[int]) -> Any:
     """Sustituye los nombres en cualquier cadena que cuelgue de `valor`.
 
@@ -558,7 +588,7 @@ def exportar(
     # cubre el caption, las propiedades, las aristas y los extractos de
     # procedencia a la vez, y no depende de que cada conector se acuerde.
     if patron is not None:
-        nodos = tapar_nombres(nodos, patron, menciones)
+        nodos = [tapar_nodo(n, patron, menciones) for n in nodos]
         aristas = tapar_nombres(aristas, patron, menciones)
         procedencia = tapar_nombres(procedencia, patron, menciones)
         if menciones[0]:
@@ -744,7 +774,6 @@ def _exportar_indice(
     ).fetchall()
 
     entradas = []
-    tapadas = [0]
     for f in filas:
         # Misma regla que en el grafo: el índice es otra puerta de publicación.
         if es_identificador_personal(f["nif"]):
@@ -758,13 +787,12 @@ def _exportar_indice(
             {
                 "id": str(f["id"]),
                 "schema": f["ftm_schema"],
-                # El caption de una ficha del índice es un nombre, no prosa,
-                # pero es otra puerta y se cierra igual: la UTE que costó el
-                # historial era una `Company` con forma societaria correcta y
-                # los nombres de sus dos socios dentro del nombre.
-                "caption": (
-                    f["caption"] if patron is None else tapar_nombres(f["caption"], patron, tapadas)
-                ),
+                # El caption del índice es un nombre y se publica entero. La
+                # ficha cuyo nombre ERA el de una persona ya se ha ido arriba;
+                # taparlo DENTRO de una razón social sólo destruiría el nombre
+                # de una sociedad que sí se publica: «Ana Gil, S.L.» quedaba en
+                # «(nombre retirado), S.L.».
+                "caption": f["caption"],
                 **({"nif": f["nif"]} if f["nif"] else {}),
                 # Sólo se escriben si no son cero: multiplicado por decenas de
                 # miles de entradas, un `0` de más es peso muerto en un fichero
@@ -818,7 +846,6 @@ def _exportar_indice(
         "indice_entidades": len(entradas),
         "indice_bytes": ruta.stat().st_size,
         "indice_top_bytes": ruta_top.stat().st_size,
-        "indice_menciones_tapadas": tapadas[0],
     }
 
 

@@ -24,6 +24,7 @@ from sinapsis_ingest.exportar import (
     _parece_nombre_de_persona,
     censor,
     es_solo_un_nombre,
+    tapar_nodo,
     tapar_nombres,
 )
 
@@ -218,3 +219,62 @@ def test_una_ficha_con_algo_mas_se_queda(caption):
 
 def test_sin_caption_no_decide_nada():
     assert not es_solo_un_nombre(None, _patron())
+
+
+# --- Qué se tapa y qué no -------------------------------------------------
+#
+# Estos tests existen porque la CI encontró lo que estos tests no cubrían. El
+# tapado se aplicaba a TODO, incluido el nombre propio de la ficha, y dejaba
+# «Ana Gil, S.L.» en «(nombre retirado), S.L.» — el nombre de una sociedad que
+# sí se publica, que es público y está en el Registro Mercantil.
+#
+# La comprobación vivía sólo en `test_exportar.py`, que necesita Postgres y
+# aquí se salta. O sea que fallaba en la CI y pasaba en local, que es la peor
+# forma de tener un test. La regla es pura y se prueba en pura.
+
+
+def test_una_sociedad_conserva_su_razon_social():
+    nodo = {
+        "schema": "Company",
+        "caption": "Ana Gil, S.L.",
+        "properties": {"desc": "obra adjudicada a Ana Gil"},
+    }
+    salida = tapar_nodo(nodo, _patron(), [0])
+    assert salida["caption"] == "Ana Gil, S.L."
+    # Pero la prosa de alrededor sí se tapa.
+    assert "Gil" not in salida["properties"]["desc"]
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ["PublicBody", "Company", "Organization", "LegalEntity"],
+)
+def test_ninguna_ficha_con_nombre_pierde_el_suyo(schema):
+    nodo = {"schema": schema, "caption": "AYUNTAMIENTO DE ANA GIL"}
+    assert tapar_nodo(nodo, _patron(), [0])["caption"] == "AYUNTAMIENTO DE ANA GIL"
+
+
+def test_el_objeto_de_un_expediente_si_se_tapa():
+    """El caption de un `Contract` no es un nombre: es prosa del pliego.
+
+    Y es exactamente donde apareció el nombre del artista contratado.
+    """
+    nodo = {"schema": "Contract", "caption": 'projecte "Veus de Parets" de Queralt Riera'}
+    salida = tapar_nodo(nodo, _patron(), [0])
+    assert "Queralt" not in salida["caption"]
+    assert "Veus de Parets" in salida["caption"]
+
+
+def test_se_cuentan_las_menciones_tapadas_y_no_las_respetadas():
+    cuenta = [0]
+    tapar_nodo(
+        {"schema": "Company", "caption": "Ana Gil, S.L.", "properties": {"x": "de Ana Gil"}},
+        _patron(),
+        cuenta,
+    )
+    assert cuenta[0] == 1
+
+
+def test_un_nodo_sin_caption_no_revienta():
+    salida = tapar_nodo({"schema": "Company", "properties": {}}, _patron(), [0])
+    assert salida == {"schema": "Company", "properties": {}}
