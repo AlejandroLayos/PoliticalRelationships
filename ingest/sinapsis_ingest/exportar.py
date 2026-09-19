@@ -168,6 +168,29 @@ def censor(nombres: Iterable[str]) -> re.Pattern[str] | None:
     return re.compile(r"(?<!\w)(?:" + "|".join(piezas) + r")(?!\w)", re.IGNORECASE)
 
 
+# Lo que queda de un nombre tapado cuando se le quitan los adornos: paréntesis,
+# comillas, guiones, puntos. Si no queda nada más, el nombre ERA la ficha.
+_ADORNOS = " \t-,.;:()[]{}\"'" + "\u2013\u2014\u00b7\u00ab\u00bb\u2019"
+
+
+def es_solo_un_nombre(caption: str | None, patron: re.Pattern[str]) -> bool:
+    """¿El nombre de esta ficha es, entero, el nombre de una persona física?
+
+    Salió en la primera ejecución real del tapado: una `Company` cuyo caption
+    era exactamente el nombre y los apellidos de una persona. Taparlo dejaba
+    en el mapa un nodo titulado «(nombre retirado)» —pinchable, con sus cifras
+    y sin decir de quién—, que es peor que no publicarlo: ni protege a nadie
+    ni informa de nada.
+
+    Una UTE con un topónimo y los socios entre paréntesis NO cae aquí: le
+    queda el topónimo, que es un nombre de lugar y sigue identificando a una
+    parte contratante real.
+    """
+    if not caption:
+        return False
+    return not patron.sub("", caption).strip(_ADORNOS)
+
+
 def tapar_nombres(valor: Any, patron: re.Pattern[str], cuenta: list[int]) -> Any:
     """Sustituye los nombres en cualquier cadena que cuelgue de `valor`.
 
@@ -437,18 +460,40 @@ def exportar(
     # una persona física a efectos de publicar. Se pierde alguna empresa real
     # cuyo NIF vino mal escrito, y es el lado correcto por el que equivocarse:
     # un falso positivo es una acusación falsa, un falso negativo es un hueco.
+    #
+    # Y una tercera, que apareció en la primera ejecución real del tapado de
+    # nombres: una ficha cuyo NOMBRE entero es el de una persona física, sin
+    # DNI y clasificada como `Company`. Taparlo dentro del texto no basta,
+    # porque el texto es todo lo que había: queda un nodo llamado «(nombre
+    # retirado)», con sus cifras y su clic, que no protege a nadie ni informa
+    # de nada.
+    menciones = [0]
+    patron = censor(nombres_de_persona(store))
+
     personales = [f for f in filas if f["ftm_schema"] == PERSONALES]
     con_identificador = [
         f for f in filas if f["ftm_schema"] != PERSONALES and es_identificador_personal(f["nif"])
     ]
-    if personales or con_identificador:
+    solo_nombre = (
+        [
+            f
+            for f in filas
+            if f["ftm_schema"] != PERSONALES
+            and not es_identificador_personal(f["nif"])
+            and es_solo_un_nombre(f["caption"], patron)
+        ]
+        if patron is not None
+        else []
+    )
+    if personales or con_identificador or solo_nombre:
         log.error(
             "se han omitido personas físicas del volcado; revisa el conector que las creó",
             por_esquema=len(personales),
             por_identificador=len(con_identificador),
-            ids=[str(f["id"]) for f in personales + con_identificador][:20],
+            por_nombre=len(solo_nombre),
+            ids=[str(f["id"]) for f in personales + con_identificador + solo_nombre][:20],
         )
-    omitidas = {f["id"] for f in personales + con_identificador}
+    omitidas = {f["id"] for f in personales + con_identificador + solo_nombre}
 
     nodos = [
         {
@@ -512,8 +557,6 @@ def exportar(
     # Se hace aquí, al final, sobre lo que ya está decidido que sale: así
     # cubre el caption, las propiedades, las aristas y los extractos de
     # procedencia a la vez, y no depende de que cada conector se acuerde.
-    menciones = [0]
-    patron = censor(nombres_de_persona(store))
     if patron is not None:
         nodos = tapar_nombres(nodos, patron, menciones)
         aristas = tapar_nombres(aristas, patron, menciones)
@@ -705,6 +748,10 @@ def _exportar_indice(
     for f in filas:
         # Misma regla que en el grafo: el índice es otra puerta de publicación.
         if es_identificador_personal(f["nif"]):
+            continue
+        # Y si su nombre ERA el de una persona, la ficha entera se va: taparlo
+        # dejaría una entrada buscable titulada «(nombre retirado)».
+        if patron is not None and es_solo_un_nombre(f["caption"], patron):
             continue
         props = f["properties"] or {}
         entradas.append(

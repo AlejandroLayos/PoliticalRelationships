@@ -22,7 +22,11 @@ from pathlib import Path
 
 import pytest
 
-from sinapsis_ingest.exportar import _SQL_IDENTIFICADOR_PERSONAL, exportar
+from sinapsis_ingest.exportar import (
+    _SQL_IDENTIFICADOR_PERSONAL,
+    MARCA_NOMBRE_RETIRADO,
+    exportar,
+)
 from sinapsis_ingest.store import Source, Store
 from sinapsis_ingest.util import es_identificador_personal
 
@@ -992,3 +996,65 @@ def test_el_sql_y_el_python_deciden_lo_mismo(store, nif):
         "SELECT (%s ~ %s) AS casa", (nif, _SQL_IDENTIFICADOR_PERSONAL)
     ).fetchone()
     assert bool(fila["casa"]) is es_identificador_personal(nif)
+
+
+def test_una_ficha_que_solo_es_un_nombre_no_se_publica(store, tmp_path):
+    """El caso real de la primera ejecución del tapado.
+
+    Una `Company` sin NIF cuyo caption era, entero, el nombre y los apellidos
+    de una persona. Las dos reglas anteriores la dejaban pasar —ni esquema
+    `Person` ni identificador de persona física— y el tapado la convertía en
+    un nodo llamado «(nombre retirado)»: pinchable, con sus cifras y sin decir
+    de quién. Peor que no publicarla.
+    """
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _entidad(store, "Marta Solanes", "Person")
+    disfrazada = _entidad(store, "Marta Solanes", "Company")
+    _arista(store, organo, empresa, "9000")
+    _arista(store, organo, disfrazada, "4000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    crudo = json.dumps(g, ensure_ascii=False)
+    assert disfrazada not in [n["id"] for n in g["nodes"]]
+    assert "Solanes" not in crudo
+    # Y no queda un nodo mudo en su lugar.
+    assert MARCA_NOMBRE_RETIRADO not in [n["caption"] for n in g["nodes"]]
+    # Su arista se va con ella, como con cualquier otra persona física.
+    publicados = {n["id"] for n in g["nodes"]}
+    for a in g["edges"]:
+        assert a["source"] in publicados
+        assert a["target"] in publicados
+
+
+def test_una_sociedad_con_nombre_de_persona_sigue_publicandose(store, tmp_path):
+    """El falso positivo que habría destrozado el mapa.
+
+    «Construcciones Marta Solanes SL» lleva el nombre de quien la fundó y
+    sigue siendo una sociedad: una parte contratante que hay que poder
+    nombrar. Lo que se retira es la ficha que NO es más que un nombre.
+    """
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "CONSTRUCCIONES MARTA SOLANES SL")
+    _entidad(store, "Marta Solanes", "Person")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    captions = [n["caption"] for n in g["nodes"]]
+    assert "CONSTRUCCIONES MARTA SOLANES SL" in captions
+
+
+def test_tampoco_entra_en_el_indice(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _entidad(store, "Marta Solanes", "Person")
+    disfrazada = _entidad(store, "Marta Solanes", "Company")
+    _arista(store, organo, empresa, "9000")
+    _arista(store, organo, disfrazada, "4000")
+    store.conn.commit()
+
+    _exportado(store, tmp_path)
+    indice = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+    assert "Solanes" not in json.dumps(indice, ensure_ascii=False)

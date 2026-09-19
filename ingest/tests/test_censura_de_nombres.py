@@ -23,6 +23,7 @@ from sinapsis_ingest.exportar import (
     MARCA_NOMBRE_RETIRADO,
     _parece_nombre_de_persona,
     censor,
+    es_solo_un_nombre,
     tapar_nombres,
 )
 
@@ -164,3 +165,56 @@ def test_lo_que_no_casa_sale_igual():
 
 def test_sin_nombres_no_hay_patron():
     assert censor([]) is None
+
+
+# --- Cuando el nombre de la ficha ES el nombre -----------------------------
+#
+# Apareció en la primera ejecución real del tapado, el 18/9/2026: el volcado
+# salió con un nodo `Company` cuyo caption era, entero, «(nombre retirado)».
+# Taparlo dentro del texto no bastaba porque el texto era todo lo que había, y
+# lo que quedaba en el mapa era un nodo pinchable, con sus cifras, que no
+# protege a nadie ni dice nada. Esa ficha se omite entera.
+
+
+def _patron(nombres=("Ana Gil", "Queralt Riera")):
+    p = censor(nombres)
+    assert p is not None
+    return p
+
+
+@pytest.mark.parametrize(
+    "caption",
+    [
+        "Ana Gil",
+        "ANA GIL",
+        "  Ana Gil  ",
+        "«Ana Gil»",
+        "(Ana Gil)",
+        "Ana Gil - Queralt Riera",  # dos personas y nada más
+        "Ana\nGil",
+    ],
+)
+def test_la_ficha_que_es_solo_un_nombre_se_va(caption):
+    assert es_solo_un_nombre(caption, _patron())
+
+
+@pytest.mark.parametrize(
+    "caption",
+    [
+        # Una sociedad que lleva el nombre de quien la fundó sigue siendo una
+        # sociedad, y es una parte contratante que hay que poder nombrar.
+        "Ana Gil, S.L.",
+        "CONSTRUCCIONES ANA GIL",
+        "Ana Gil e Hijos SA",
+        # A la UTE le queda el topónimo, que es un nombre de lugar.
+        "UTE PERAFITA (Ana Gil)",
+        "AYUNTAMIENTO DE MADRID",
+        "",
+    ],
+)
+def test_una_ficha_con_algo_mas_se_queda(caption):
+    assert not es_solo_un_nombre(caption, _patron())
+
+
+def test_sin_caption_no_decide_nada():
+    assert not es_solo_un_nombre(None, _patron())
