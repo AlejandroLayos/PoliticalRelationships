@@ -1,15 +1,40 @@
-/** Colores y etiquetas de los esquemas FollowTheMoney que usamos. */
+/**
+ * Colores y etiquetas de los esquemas FollowTheMoney que usamos.
+ *
+ * Los colores están MEDIDOS. La tabla anterior tenía seis tonos elegidos a
+ * ojo y no pasaba: `#6aa9d9` («persona jurídica») y `#3d8bd4` («empresa»)
+ * estaban a ΔE 9,8 en visión NORMAL —el suelo es 15—, o sea que dos tipos
+ * distintos se veían casi del mismo color sin necesidad de ninguna
+ * deficiencia de visión; con deuteranopia eran el mismo color.
+ *
+ * Ahora son tres, y los tres pasan las seis comprobaciones con todos los
+ * pares en juego, que es el caso de este mapa —se ven todos a la vez—:
+ * peor par ΔE 9,4 con deuteranopia, 20,9 en visión normal, contraste ≥ 3:1.
+ *
+ * Tres y no cinco porque con cuatro o más no hay orden que pase todos los
+ * pares. Las dos fusiones son deliberadas y dicen algo:
+ *
+ * - `LegalEntity` comparte el azul con `Company`: a efectos de este mapa son
+ *   lo mismo, alguien privado que cobra dinero público. La diferencia la dice
+ *   la etiqueta, que es donde tiene que estar.
+ * - `Contract` va en gris porque no es un actor: es el papel que une al
+ *   órgano que adjudica con la empresa que cobra.
+ *
+ * `Person` conserva entrada por si un conector la crea, pero no se publica
+ * nunca (spec §12), así que no gasta un color categórico.
+ */
 
-export const COLOR_POR_DEFECTO = '#8b93a7'
+/** Gris de lo que no es un actor. */
+export const COLOR_POR_DEFECTO = '#6f6f78'
 
 export const COLOR_POR_ESQUEMA = {
-  PublicBody: '#e8703a',    // naranja: dinero público
-  Organization: '#c94f7c',  // magenta: partidos y asociaciones
-  Company: '#3d8bd4',       // azul: empresas
-  LegalEntity: '#6aa9d9',   // azul claro: jurídica sin tipo confirmado
-  Person: '#4bb47f',        // verde: personas físicas
-  Contract: '#b08cd9',      // violeta: expedientes
-  Position: '#d9b04b',      // amarillo: cargos públicos
+  PublicBody: '#d95926', // naranja: dinero público
+  Company: '#3987e5', // azul: quien cobra
+  LegalEntity: '#3987e5', // el mismo azul: también es quien cobra
+  Organization: '#199e70', // verde azulado: partidos y asociaciones
+  Person: '#6f6f78', // no se publica; si aparece, no finge ser una serie
+  Contract: '#6f6f78', // el expediente no es un actor
+  Position: '#6f6f78',
 }
 
 export const NOMBRE_ESQUEMA = {

@@ -679,11 +679,19 @@ onMounted(async () => {
 }
 .banda-demo a { color: inherit; margin-left: 0.4rem; }
 
+/*
+  La banda ya no es azul marino. Con las superficies neutras del sistema, un
+  azul saturado arriba del todo era lo más llamativo de la página y lo que
+  dice es «esto es una instantánea»: información de contexto que no debe
+  competir con el dato.
+*/
 .banda-info {
-  background: #16232e; color: #a9cbe4;
-  padding: 0.35rem 1rem; font-size: 0.78rem; line-height: 1.4;
-  border-bottom: 1px solid #23384a;
+  background: var(--superficie); color: var(--tinta-3);
+  padding: 0.4rem 1.25rem; font-size: var(--t-xs); line-height: 1.45;
+  border-bottom: 1px solid var(--linea);
 }
+.banda-dicho strong { color: var(--tinta-2); }
+.banda-mas summary { color: var(--tinta-2); }
 .banda-linea {
   display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
 }
@@ -698,11 +706,12 @@ onMounted(async () => {
 .banda-detalle p:last-child { margin-bottom: 0; }
 
 .cabecera {
-  display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
-  padding: 0.7rem 1rem; border-bottom: 1px solid var(--borde); background: var(--fondo-panel);
+  display: flex; align-items: center; gap: var(--e5); flex-wrap: wrap;
+  padding: var(--e3) var(--e5); border-bottom: 1px solid var(--linea);
+  background: var(--superficie);
 }
-.marca h1 { font-size: 1.05rem; margin: 0; letter-spacing: -0.01em; }
-.marca p { font-size: 0.74rem; color: var(--texto-tenue); margin: 0.1rem 0 0; }
+.marca h1 { font-size: var(--t-l); margin: 0; letter-spacing: -0.02em; }
+.marca p { font-size: var(--t-xs); color: var(--tinta-3); margin: 0.1rem 0 0; }
 
 .buscador { position: relative; flex: 1; min-width: 240px; max-width: 480px; }
 .buscador input {

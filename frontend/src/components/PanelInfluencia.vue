@@ -547,27 +547,36 @@ header { display: flex; align-items: center; gap: 0.5rem; }
 .punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .punto.pequeno { width: 7px; height: 7px; display: inline-block; }
 .tipo { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-tenue); }
-h2 { font-size: 1.12rem; margin: 0.3rem 0 0.15rem; line-height: 1.3; }
-.nif { font-size: 0.78rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; margin: 0; }
-.resumen { font-size: 0.83rem; color: var(--texto-tenue); line-height: 1.45; margin: 0.5rem 0 0.9rem; }
+h2 { font-size: var(--t-xl); margin: var(--e2) 0 0.15rem; line-height: 1.25; }
+.nif { font-size: var(--t-xs); color: var(--tinta-3); font-variant-numeric: tabular-nums; margin: 0; }
+.resumen { font-size: var(--t-s); color: var(--tinta-2); line-height: 1.5; margin: var(--e3) 0 var(--e4); }
 
-.cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+/*
+  Dos fichas de cifra, con el contrato de siempre: rótulo, valor y qué es.
+  El valor va en TINTA y el color lo lleva el filo de la izquierda. Antes el
+  valor iba pintado de verde o de naranja claro: compite con el dato que el
+  diagrama está dibujando al lado y, sobre fondo oscuro, se lee peor que el
+  blanco.
+*/
+.cifras { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e2); }
 .cifra {
-  background: var(--fondo-boton); border: 1px solid var(--borde);
-  border-radius: 8px; padding: 0.55rem 0.6rem; display: flex; flex-direction: column; gap: 0.1rem;
+  background: var(--superficie-2); border: 1px solid var(--linea);
+  border-radius: var(--radio-s); padding: var(--e3); display: flex;
+  flex-direction: column; gap: 0.15rem;
 }
-.cifra .valor { font-size: 1.02rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.cifra .que { font-size: 0.7rem; color: var(--texto-tenue); }
-.cifra.entra { border-left: 3px solid #4bb47f; }
-.cifra.entra .valor { color: #7fd0a5; }
-.cifra.sale { border-left: 3px solid #e8703a; }
-.cifra.sale .valor { color: #f0956b; }
-.cifra.nada { border-left-color: var(--borde); opacity: 0.6; }
-.cifra.nada .valor { color: var(--texto-tenue); font-size: 0.85rem; font-weight: 600; }
+.cifra .valor {
+  font-size: var(--t-l); font-weight: 650; color: var(--tinta); line-height: 1.15;
+  white-space: nowrap;
+}
+.cifra .que { font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.35; }
+.cifra.entra { border-left: 3px solid var(--entra); }
+.cifra.sale { border-left: 3px solid var(--sale); }
+.cifra.nada { border-left-color: var(--linea-fuerte); }
+.cifra.nada .valor { color: var(--tinta-3); font-size: var(--t-m); font-weight: 600; }
 
-.bloque { margin-top: 1.3rem; }
+.bloque { margin-top: var(--e5); }
 h3 {
-  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--texto-tenue); margin: 0 0 0.5rem;
 }
 .cuenta { font-weight: 400; opacity: 0.7; }

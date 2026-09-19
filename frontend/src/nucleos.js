@@ -236,20 +236,45 @@ export function etiquetaDe(miembros) {
   return miembros[0].caption ?? 'Núcleo'
 }
 
-/** Paleta estable: el mismo núcleo mantiene su color entre repintados. */
-const PALETA = [
-  '#e8703a', '#3d8bd4', '#c94f7c', '#4bb47f', '#d9b04b',
-  '#b08cd9', '#5ec8c0', '#e0685f', '#7f9bd1', '#9fc45a',
-  '#d98cb0', '#69a5a0',
+/**
+ * Paleta de núcleos: OCHO, y medidos.
+ *
+ * Eran doce elegidos a ojo, y doce es pasarse por dos motivos. Uno es que por
+ * encima de ocho no hay hueco: un noveno tono es indistinguible de alguno de
+ * los anteriores para quien tiene una deficiencia de visión del color, y
+ * generarlo sólo sirve para que el mapa PAREZCA que distingue más de lo que
+ * distingue. El otro es que varios de aquellos doce estaban pegados entre sí
+ * —`#7f9bd1` y `#3d8bd4`, por ejemplo— incluso en visión normal.
+ *
+ * Estos ocho pasan las seis comprobaciones sobre el lienzo (`#101012`): peor
+ * par adyacente ΔE 8,4 con protanopia y 19,3 en visión normal, contraste ≥3:1
+ * todos. El par más justo está en la banda 8–10, que sólo es legal con
+ * codificación secundaria — y aquí la hay de sobra: cada mancha lleva su
+ * rótulo, está separada de las demás, y la lista de al lado va en el MISMO
+ * orden, así que el color es una ayuda para saltar de una a otra, no el único
+ * canal que dice cuál es cuál.
+ *
+ * El resto de núcleos —hay más de cien— van en gris, que es lo que son a esta
+ * escala: contexto.
+ */
+export const PALETA_NUCLEOS = [
+  '#3987e5', // azul
+  '#d95926', // naranja
+  '#199e70', // verde azulado
+  '#c98500', // ámbar
+  '#d55181', // magenta
+  '#008300', // verde
+  '#9085e9', // violeta
+  '#e66767', // rojo
 ]
 
 export function colorNucleo(idNucleo) {
   if (idNucleo === undefined || idNucleo === null || idNucleo < 0) return FONDO
-  return PALETA[idNucleo % PALETA.length]
+  return PALETA_NUCLEOS[idNucleo % PALETA_NUCLEOS.length]
 }
 
 /** El gris de lo que no está entre los primeros. No es «sin núcleo»: es fondo. */
-export const FONDO = '#6b7280'
+export const FONDO = '#6f6f78'
 
 /**
  * Colorea sólo los núcleos de cabeza; el resto, gris.
@@ -265,9 +290,9 @@ export const FONDO = '#6b7280'
  *
  * `nucleos` tiene que venir ya ordenado como se presenta en la lista.
  */
-export function paletaDeNucleos(nucleos, cuantos = PALETA.length) {
+export function paletaDeNucleos(nucleos, cuantos = PALETA_NUCLEOS.length) {
   const mapa = new Map()
-  for (const [i, n] of (nucleos ?? []).slice(0, cuantos).entries()) mapa.set(n.id, PALETA[i])
+  for (const [i, n] of (nucleos ?? []).slice(0, cuantos).entries()) mapa.set(n.id, PALETA_NUCLEOS[i])
   return (idNucleo) => mapa.get(idNucleo) ?? FONDO
 }
 

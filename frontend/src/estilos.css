@@ -1,32 +1,150 @@
-/* Paleta oscura: el grafo de fuerzas se lee mucho mejor sobre fondo oscuro,
-   y es lo que hace que la red parezca lo que es, una maraña de conexiones. */
+/*
+ * Sistema visual de Sinapsis.
+ *
+ * Tema oscuro, y no por gusto: el mapa de fuerzas y el diagrama de flujo se
+ * leen mucho mejor sobre fondo oscuro, y es lo que hace que la red parezca lo
+ * que es. Lo que sí cambia respecto a la primera versión es todo lo demás.
+ *
+ * ## Por qué estos colores y no otros
+ *
+ * Los categóricos están MEDIDOS, no elegidos a ojo. La paleta anterior
+ * —seis tonos puestos a mano— falla: `#6aa9d9` (persona jurídica) y `#3d8bd4`
+ * (empresa) están a ΔE 9,8 en visión normal, por debajo del suelo de 15. O
+ * sea que dos tipos de entidad distintos se veían casi del mismo color
+ * incluso sin ninguna deficiencia de visión, y con deuteranopia eran el mismo.
+ *
+ * Los tres de ahora pasan las seis comprobaciones sobre esta superficie, con
+ * TODOS los pares en juego (que es el caso aquí: en el mapa se ven todos a la
+ * vez, no por parejas adyacentes):
+ *
+ *   peor par ΔE 9,4 con deuteranopia · 20,9 en visión normal · contraste ≥ 3:1
+ *
+ * Tres y no cinco. Con cuatro o más no hay orden que pase todos los pares, y
+ * el cuarto tipo —el expediente— no es un actor: es el papel que une a dos, y
+ * va en gris. «Persona jurídica» comparte el azul con «empresa» porque son lo
+ * mismo a efectos de este mapa: alguien privado que cobra. La diferencia la
+ * dice la etiqueta, que es donde debe estar.
+ *
+ * ## Tipografía
+ *
+ * Una sola familia, la del sistema. La escala existe para que haya jerarquía:
+ * antes el título de una sección medía 0,95rem y el cuerpo 0,75rem, así que
+ * todo pesaba lo mismo y la página no decía por dónde empezar.
+ */
 :root {
-  --fondo: #12141a;
-  --fondo-panel: #181b23;
-  --fondo-grafo: #0e1015;
-  --fondo-boton: #1f2330;
-  --borde: #2b3040;
-  --borde-suave: #232733;
-  --texto: #e6e8ef;
-  --texto-tenue: #949bb0;
-  --acento: #5aa9e6;
-  --aviso: #e0a33a;
+  color-scheme: dark;
+
+  /* --- Superficies ------------------------------------------------------ */
+  --plano: #0d0d0d;
+  --superficie: #17171a;
+  --superficie-2: #202024;
+  --lienzo: #101012;
+
+  /* --- Tinta ------------------------------------------------------------ */
+  --tinta: #ffffff;
+  --tinta-2: #c3c2b7;
+  --tinta-3: #898781;
+
+  /* --- Líneas ----------------------------------------------------------- */
+  --linea: rgba(255, 255, 255, 0.09);
+  --linea-fuerte: #34343a;
+
+  /* --- Categóricos: TIPO de entidad ------------------------------------- */
+  --serie-1: #3987e5; /* empresa · persona jurídica */
+  --serie-2: #d95926; /* organismo público */
+  --serie-3: #199e70; /* organización · partido */
+  --neutro: #6f6f78; /* expediente: no es un actor */
+
+  /* --- Flujo: DIRECCIÓN del dinero -------------------------------------- */
+  /* Sólo en el diagrama de la ficha, donde no hay marcas de tipo con las que
+     confundirse y las cabeceras dicen con palabras cuál es cuál. */
+  --entra: #199e70;
+  --sale: #d95926;
+
+  /* --- Estado (reservado: nunca hace de serie) -------------------------- */
+  --aviso: #fab219;
+  --grave: #d03b3b;
+
+  /* --- Escala tipográfica ----------------------------------------------- */
+  --t-hero: 3.25rem;
+  --t-xl: 1.375rem;
+  --t-l: 1.0625rem;
+  --t-m: 0.9375rem;
+  --t-s: 0.8125rem;
+  --t-xs: 0.75rem;
+
+  /* --- Espacio ---------------------------------------------------------- */
+  --e1: 0.25rem;
+  --e2: 0.5rem;
+  --e3: 0.75rem;
+  --e4: 1rem;
+  --e5: 1.5rem;
+  --e6: 2rem;
+  --e7: 3rem;
+
+  --radio: 12px;
+  --radio-s: 8px;
+
+  /* --- Compatibilidad --------------------------------------------------- */
+  /* Los componentes se escribieron contra estos nombres. Se mantienen como
+     alias para no reescribir seis ficheros de una vez; lo nuevo usa los de
+     arriba. */
+  --fondo: var(--plano);
+  --fondo-panel: var(--superficie);
+  --fondo-grafo: var(--lienzo);
+  --fondo-boton: var(--superficie-2);
+  --borde: var(--linea-fuerte);
+  --borde-suave: var(--linea);
+  --texto: var(--tinta);
+  --texto-tenue: var(--tinta-3);
+  --acento: var(--serie-1);
   --aviso-fondo: #3a2e12;
   --aviso-texto: #f0d49a;
   --aviso-borde: #5c4a1e;
-  --aviso-suave: #22262f;
+  --aviso-suave: #202024;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body, #app { height: 100%; margin: 0; }
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
 
 body {
-  background: var(--fondo);
-  color: var(--texto);
+  background: var(--plano);
+  color: var(--tinta-2);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--t-m);
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-button { font-family: inherit; }
-a { color: var(--acento); }
+h1,
+h2,
+h3,
+h4 {
+  color: var(--tinta);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  font-weight: 650;
+}
+
+button {
+  font-family: inherit;
+}
+a {
+  color: var(--serie-1);
+}
+
+/* Las cifras grandes van con las cifras proporcionales de la fuente. Las
+   tabulares sólo donde hay que alinear una columna: a tamaño grande, un «121»
+   con todas las cifras del ancho de un cero se ve suelto. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

@@ -159,13 +159,34 @@ function color(schema) {
         españolas, sacado de los documentos oficiales y con el documento
         siempre a mano.
       </p>
-      <p class="totales">
-        <b>{{ dineroCorto(dir.totales.dineroTotal) }}</b> repartidos ·
-        <b>{{ dir.totales.nActores.toLocaleString('es-ES') }}</b>
-        entidades<template v-if="fueraDelMapa">, de las que
-          <b>{{ (dir.totales.enMapa ?? 0).toLocaleString('es-ES') }}</b>
-          caben en el mapa</template>
-      </p>
+
+      <!--
+        Una cifra grande y tres de apoyo, y no cinco recuadros iguales.
+        La página tiene UNA cosa que decir al entrar —cuánto dinero hay
+        seguido— y antes la decía en el mismo cuerpo de letra que el resto,
+        así que no la decía. La cifra va con las cifras proporcionales de la
+        fuente: a este tamaño, las tabulares dejan huecos entre dígitos.
+      -->
+      <div class="cabecera-cifras">
+        <p class="hero">
+          <span class="valor">{{ dineroCorto(dir.totales.dineroTotal) }}</span>
+          <span class="que">seguidos hasta quien los cobra</span>
+        </p>
+        <dl class="apoyo">
+          <div>
+            <dt>Entidades</dt>
+            <dd class="tabular">{{ dir.totales.nActores.toLocaleString('es-ES') }}</dd>
+          </div>
+          <div v-if="fueraDelMapa">
+            <dt>Caben en el mapa</dt>
+            <dd class="tabular">{{ (dir.totales.enMapa ?? 0).toLocaleString('es-ES') }}</dd>
+          </div>
+          <div v-if="dir.totales.nPartidos">
+            <dt>Formaciones políticas</dt>
+            <dd class="tabular">{{ dir.totales.nPartidos.toLocaleString('es-ES') }}</dd>
+          </div>
+        </dl>
+      </div>
     </section>
 
     <div class="rejilla">
@@ -183,14 +204,14 @@ function color(schema) {
             <button class="fila" @click="emit('seleccionar', f.id)">
               <span
                 class="fondo"
-                :style="{ width: `${proporcion(f, l)}%` }"
+                :style="{ width: `max(6px, calc(${proporcion(f, l)}% - 1rem))` }"
                 aria-hidden="true"
               />
               <span class="puesto">{{ i + 1 }}</span>
               <span class="cuerpo">
                 <span class="nombre">
                   <span class="punto" :style="{ background: color(f.schema) }" />
-                  {{ f.caption }}
+                  <span class="etiqueta" :title="f.caption">{{ f.caption }}</span>
                 </span>
                 <span class="meta">
                   {{ etiquetaEsquema(f.schema) }} ·
@@ -313,44 +334,73 @@ function color(schema) {
 <style scoped>
 .portada { overflow-y: auto; padding: 1.2rem 1.4rem 3rem; height: 100%; }
 
-.intro { max-width: 58rem; }
-.intro h2 { font-size: 1.35rem; margin: 0 0 0.4rem; letter-spacing: -0.015em; }
-.intro p { font-size: 0.88rem; color: var(--texto-tenue); line-height: 1.55; margin: 0 0 0.9rem; max-width: 44rem; }
-
-.lema { max-width: 46rem; }
-
-/* Una línea, no cinco recuadros: orienta y deja sitio a lo que se ha venido a ver. */
-.totales {
-  font-size: 0.86rem; color: var(--texto-tenue);
-  margin: 0 0 0.2rem; max-width: none;
+.intro { max-width: 64rem; }
+.intro h2 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem); margin: 0 0 var(--e2);
+  letter-spacing: -0.03em; font-weight: 680;
 }
-.totales b {
-  color: var(--texto); font-size: 1rem; font-weight: 650;
-  font-variant-numeric: tabular-nums;
-}
+.intro p { line-height: 1.6; margin: 0; max-width: 46rem; }
 
+.lema { max-width: 46rem; font-size: var(--t-m); color: var(--tinta-2); }
+
+.cabecera-cifras {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: var(--e5) var(--e7); margin-top: var(--e5);
+}
+.hero { margin: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.hero .valor {
+  font-size: var(--t-hero); font-weight: 680; color: var(--tinta);
+  line-height: 1; letter-spacing: -0.03em;
+}
+.hero .que { font-size: var(--t-s); color: var(--tinta-3); }
+
+.apoyo { display: flex; flex-wrap: wrap; gap: var(--e5); margin: 0 0 0.3rem; }
+.apoyo div { display: flex; flex-direction: column; gap: 0.1rem; }
+.apoyo dt {
+  font-size: var(--t-xs); color: var(--tinta-3);
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+.apoyo dd { margin: 0; font-size: var(--t-xl); font-weight: 620; color: var(--tinta); line-height: 1.1; }
+
+/*
+  Dos columnas y no tres. Los nombres oficiales de este país son larguísimos
+  —«Consejería de Presidencia, Justicia y Administración Local»— y en una
+  columna de 28rem se parten en tres renglones cada uno: la lista deja de
+  leerse como una lista y pasa a ser un párrafo con cifras.
+*/
 .rejilla {
-  display: grid; gap: 1rem; margin-top: 1.25rem;
-  grid-template-columns: repeat(auto-fit, minmax(23rem, 1fr));
+  display: grid; gap: var(--e4); margin-top: var(--e6);
+  /*
+    `min(31rem, 100%)` y no `31rem` a secas: el mínimo de un `minmax` NO
+    encoge, así que en un móvil de 390 px la columna se quedaba en 496 px y la
+    tarjeta se salía de la pantalla por la derecha, cortando el texto.
+  */
+  grid-template-columns: repeat(auto-fit, minmax(min(31rem, 100%), 1fr));
 }
 
 .tarjeta {
-  background: var(--fondo-panel); border: 1px solid var(--borde);
-  border-radius: 10px; padding: 0.9rem 1rem 0.8rem;
+  background: var(--superficie); border: 1px solid var(--linea);
+  border-radius: var(--radio); padding: var(--e5) var(--e5) var(--e4);
 }
-.tarjeta h3 { font-size: 0.95rem; margin: 0 0 0.3rem; letter-spacing: -0.01em; }
-.que { font-size: 0.75rem; color: var(--texto-tenue); line-height: 1.45; margin: 0 0 0.7rem; }
+.tarjeta h3 { font-size: var(--t-l); margin: 0 0 var(--e2); }
+.que {
+  font-size: var(--t-s); color: var(--tinta-3); line-height: 1.5;
+  margin: 0 0 var(--e4); max-width: 42ch;
+}
 
 .ranking { list-style: none; margin: 0; padding: 0; }
-.ranking li { border-bottom: 1px solid var(--borde-suave); }
-.ranking li:last-child { border-bottom: none; }
+/*
+  Sin línea entre filas: la barra de cada una y el aire de debajo ya las
+  separan, y una línea más a 6 px de la barra se confunde con ella.
+*/
+.ranking li { border-bottom: none; }
 
 .fila {
-  position: relative; width: 100%; display: grid; gap: 0.5rem;
-  grid-template-columns: 1.4rem 1fr auto; align-items: baseline;
+  position: relative; width: 100%; display: grid; gap: var(--e3) var(--e3);
+  grid-template-columns: 1.5rem 1fr auto; align-items: baseline;
   background: none; border: none; color: inherit; font: inherit;
-  padding: 0.45rem 0.4rem; margin: 0 -0.4rem; text-align: left; cursor: pointer;
-  border-radius: 6px;
+  padding: 0.6rem 0.5rem 0.85rem; margin: 0 -0.5rem; text-align: left;
+  cursor: pointer; border-radius: var(--radio-s);
 }
 /*
   El ratón NO pinta fondo, y es a propósito: el fondo ya significa otra cosa
@@ -361,41 +411,75 @@ function color(schema) {
 .fila:hover .nombre, .fila:focus-visible .nombre { color: var(--acento); }
 
 /*
-  La barra va DETRÁS de la fila y no debajo del nombre. Como línea de 3 px
-  entre el nombre y el tipo se leía como un subrayado o un separador: había
-  que saber que era una barra para verla como tal. De fondo, la lista entera
-  dibuja el reparto de un vistazo — si el primero se lo lleva casi todo, se ve
-  sin leer una sola cifra.
+  Una barra, no un bloque de fondo.
+  Ha pasado por las tres formas y las dos primeras fallaban por lo mismo:
+  - Línea de 3 px entre el nombre y el tipo: se leía como un subrayado.
+  - Tinte detrás de la fila entera: con las filas altas —los nombres oficiales
+    ocupan dos renglones— el tinte es un bloque del tamaño de un botón, y la
+    fila más larga parecía seleccionada, no medida.
+  Abajo del todo, a 6 px de alto y separada del texto, se lee como lo que es.
+  Extremo del dato redondeado y base cuadrada: nace del borde izquierdo.
 */
 .fondo {
-  position: absolute; left: 0; top: 2px; bottom: 2px;
-  background: var(--acento); opacity: 0.09; pointer-events: none;
-  border-radius: 4px;
-  /* El filo de la derecha es lo que la hace medir: sin él sólo es un tinte. */
-  border-right: 2px solid var(--acento);
+  position: absolute; left: 0.5rem; bottom: 0.3rem; height: 6px;
+  background: var(--serie-1); pointer-events: none;
+  border-radius: 1px 4px 4px 1px;
 }
-.tarjeta.sancion .fondo { background: #d9635c; border-right-color: #d9635c; }
+.tarjeta.sancion .fondo { background: var(--grave); }
+.fila:hover .fondo { filter: brightness(1.25); }
 
-.puesto { font-size: 0.72rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; text-align: right; }
+.puesto {
+  font-size: var(--t-xs); color: var(--tinta-3);
+  font-variant-numeric: tabular-nums; text-align: right;
+}
 .cuerpo { min-width: 0; display: block; }
 .nombre {
-  color: var(--texto); font-size: 0.84rem; line-height: 1.3;
-  display: flex; align-items: baseline; gap: 0.35rem;
+  color: var(--tinta); font-size: var(--t-m); line-height: 1.35; font-weight: 500;
+  display: flex; align-items: baseline; gap: var(--e2);
 }
-.punto { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-.meta { display: block; font-size: 0.68rem; color: var(--texto-tenue); margin-top: 0.15rem; }
-.meta .marca { color: #b08cd9; }
+/*
+  Dos renglones como mucho. «UTE: OBRASCON HUARTE LAIN, S.A., AZVI, S.A.U. Y
+  ROVER INFRAESTRUCTURAS, S.A. (CIUDAD DE LA JUSTICIA LOTE 1)» ocupaba cuatro
+  y empujaba la fila siguiente fuera de la tarjeta. El nombre entero está en
+  el `title` y en la ficha, a un clic.
+*/
+.nombre .etiqueta {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; min-width: 0;
+}
+.punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.meta {
+  display: block; font-size: var(--t-xs); color: var(--tinta-3); margin-top: 0.2rem;
+}
+.meta .marca { color: var(--tinta-2); }
 .meta .sin-red { color: var(--aviso); }
+/*
+  La cifra en tinta, no en el color de la serie. El punto de color de al lado
+  es el que lleva la identidad; una cifra pintada del color del dato compite
+  con el dato y encima se lee peor —un verde o un ámbar sobre fondo oscuro no
+  dan el contraste que da el blanco—.
+*/
 .cifra {
-  font-size: 0.82rem; font-variant-numeric: tabular-nums; white-space: nowrap;
-  color: var(--texto); font-weight: 600;
+  font-size: var(--t-m); font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: var(--tinta); font-weight: 620;
 }
-.tarjeta.sancion .cifra { color: #e8877f; }
+
+/*
+  En móvil la cifra baja a su propio renglón. Compartiendo renglón con el
+  nombre le dejaba una columna de dos palabras: «Consejería de
+  Presidencia,…» y el resto cortado, en una lista cuyo trabajo es que se lea
+  quién es quién.
+*/
+@media (max-width: 600px) {
+  .fila { grid-template-columns: 1.5rem 1fr; }
+  .cifra { grid-column: 2; justify-self: start; font-size: var(--t-l); }
+  .tarjeta { padding: var(--e4) var(--e4) var(--e3); }
+  .nombre .etiqueta { -webkit-line-clamp: 3; }
+}
 
 .no-es {
-  font-size: 0.7rem; color: var(--texto-tenue); line-height: 1.45;
-  margin: 0.7rem 0 0; padding-top: 0.55rem; border-top: 1px solid var(--borde-suave);
-  font-style: italic;
+  font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.5;
+  margin: var(--e4) 0 0; padding-top: var(--e3); border-top: 1px solid var(--linea);
 }
 
 .medios { margin-top: 1rem; }

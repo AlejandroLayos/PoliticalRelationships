@@ -22,9 +22,14 @@ const props = defineProps({
 })
 const emit = defineEmits(['seleccionar'])
 
-const ENTRA = '#4bb47f'
-const SALE = '#e8703a'
-const EXTRANJERO = '#b08cd9'
+// Los mismos de la hoja de estilos, medidos: entra/sale pasan las seis
+// comprobaciones con todos los pares (peor ΔE 9,4 con deuteranopia, 24,6 en
+// visión normal). Aquí el color dice DIRECCIÓN y no tipo, y puede hacerlo
+// porque en este dibujo no hay ninguna marca de tipo con la que confundirse y
+// las cabeceras de columna lo dicen además con palabras.
+const ENTRA = '#199e70'
+const SALE = '#d95926'
+const EXTRANJERO = '#9085e9'
 
 const caja = ref(null)
 const ancho = ref(0)
@@ -128,36 +133,53 @@ const sinFlujo = computed(
       -->
       <defs>
         <linearGradient id="cinta-entra" x1="0" x2="1">
-          <stop offset="0" :stop-color="ENTRA" stop-opacity="0.42" />
-          <stop offset="1" :stop-color="ENTRA" stop-opacity="0.1" />
+          <stop offset="0" :stop-color="ENTRA" stop-opacity="0.22" />
+          <stop offset="1" :stop-color="ENTRA" stop-opacity="0.05" />
         </linearGradient>
         <linearGradient id="cinta-sale" x1="0" x2="1">
-          <stop offset="0" :stop-color="SALE" stop-opacity="0.1" />
-          <stop offset="1" :stop-color="SALE" stop-opacity="0.42" />
+          <stop offset="0" :stop-color="SALE" stop-opacity="0.05" />
+          <stop offset="1" :stop-color="SALE" stop-opacity="0.22" />
         </linearGradient>
         <linearGradient id="cinta-entra-ext" x1="0" x2="1">
-          <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.55" />
-          <stop offset="1" :stop-color="EXTRANJERO" stop-opacity="0.16" />
+          <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.26" />
+          <stop offset="1" :stop-color="EXTRANJERO" stop-opacity="0.06" />
         </linearGradient>
         <linearGradient id="cinta-sale-ext" x1="0" x2="1">
-          <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.16" />
-          <stop offset="1" :stop-color="EXTRANJERO" stop-opacity="0.55" />
+          <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.06" />
+          <stop offset="1" :stop-color="EXTRANJERO" stop-opacity="0.26" />
         </linearGradient>
       </defs>
       <!-- Cabeceras de columna: el papel de cada lado, dicho con palabras. -->
-      <text v-if="disposicion.izquierda.length" :x="disposicion.izquierda[0].x" y="18" class="cabecera" :fill="ENTRA">
-        DE QUIÉN RECIBE · {{ dineroCorto(area.totalRecibido) }}
-      </text>
-      <text
-        v-if="disposicion.derecha.length"
-        :x="disposicion.derecha[0].x + disposicion.derecha[0].w"
-        y="18"
-        text-anchor="end"
-        class="cabecera"
-        :fill="SALE"
-      >
-        A QUIÉN PAGA · {{ dineroCorto(area.totalPagado) }}
-      </text>
+      <!--
+        El texto de la cabecera va en TINTA, no del color de la serie, y la
+        identidad la lleva el cuadrito de color de al lado. Un rótulo pintado
+        del color del dato compite con el dato y encima se lee peor: un verde
+        o un naranja sobre fondo oscuro no dan el contraste que da el blanco.
+      -->
+      <template v-if="disposicion.izquierda.length">
+        <rect :x="disposicion.izquierda[0].x" y="9" width="9" height="9" rx="2" :fill="ENTRA" />
+        <text :x="disposicion.izquierda[0].x + 14" y="18" class="cabecera">
+          DE QUIÉN RECIBE · {{ dineroCorto(area.totalRecibido) }}
+        </text>
+      </template>
+      <template v-if="disposicion.derecha.length">
+        <text
+          :x="disposicion.derecha[0].x + disposicion.derecha[0].w - 14"
+          y="18"
+          text-anchor="end"
+          class="cabecera"
+        >
+          A QUIÉN PAGA · {{ dineroCorto(area.totalPagado) }}
+        </text>
+        <rect
+          :x="disposicion.derecha[0].x + disposicion.derecha[0].w - 9"
+          y="9"
+          width="9"
+          height="9"
+          rx="2"
+          :fill="SALE"
+        />
+      </template>
 
       <!-- Cintas primero, para que las fichas queden encima. -->
       <g>
@@ -196,12 +218,12 @@ const sinFlujo = computed(
         <text :x="c.x + 9" :y="c.y + (esAlta(c) ? 17 : c.h / 2 + 4)" class="nombre">
           {{ recortar(c.caption, c.w, esAlta(c) ? 0 : anchoCifra(c.total)) }}
         </text>
-        <text v-if="esAlta(c)" :x="c.x + 9" :y="c.y + 33" class="cifra" :fill="colorDe(c)">
+        <text v-if="esAlta(c)" :x="c.x + 9" :y="c.y + 33" class="cifra">
           {{ dineroCorto(c.total) }}
           <tspan v-if="c.extranjera" class="marca">· extranjera</tspan>
           <tspan v-if="c.inferido" class="marca inferida">· inferido</tspan>
         </text>
-        <text v-else :x="c.x + c.w - 9" :y="c.y + c.h / 2 + 4" text-anchor="end" class="cifra" :fill="colorDe(c)">
+        <text v-else :x="c.x + c.w - 9" :y="c.y + c.h / 2 + 4" text-anchor="end" class="cifra">
           {{ dineroCorto(c.total) }}
         </text>
       </g>
@@ -303,28 +325,40 @@ const sinFlujo = computed(
 .lienzo { position: absolute; inset: 0; background: var(--fondo-grafo); overflow: hidden; }
 .flujo { display: block; }
 
-.cabecera { font-size: 10.5px; letter-spacing: 0.08em; font-weight: 700; opacity: 0.85; }
+.cabecera {
+  font-size: 10.5px; letter-spacing: 0.09em; font-weight: 700;
+  fill: var(--tinta-3);
+}
 
 /* El filo marca dónde acaba cada cinta cuando dos van pegadas. */
-.cinta { transition: opacity 0.15s; stroke-width: 1; stroke-opacity: 0.35; }
+/*
+  El relleno es un lavado y el FILO es quien lleva la forma. Con el relleno
+  cargado, doce cintas juntas se funden en un bloque marrón que ocupa media
+  pantalla y no deja ver ninguna; con el filo marcado se distinguen las doce y
+  el dibujo respira.
+*/
+.cinta { transition: opacity 0.15s; stroke-width: 1.25; stroke-opacity: 0.5; }
 .cinta.apagada { opacity: 0.12; }
 .cinta.inferida { opacity: 0.45; }
 
 .ficha { cursor: pointer; transition: opacity 0.15s; }
 .ficha.apagada { opacity: 0.3; }
-.caja-ficha { fill: #1b2029; stroke: #2b3040; }
+.caja-ficha { fill: var(--superficie); stroke: var(--linea); }
 .ficha:hover .caja-ficha { stroke: var(--acento); }
 
-.nombre { font-size: 11.5px; fill: var(--texto); }
-.cifra { font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.nombre { font-size: 11.5px; fill: var(--tinta-2); }
+.cifra {
+  font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 650;
+  fill: var(--tinta);
+}
 .marca { font-size: 9.5px; font-weight: 400; fill: var(--texto-tenue); }
 .marca.inferida { fill: var(--aviso); }
 
-.caja-centro { fill: #1d2430; stroke-width: 2; }
+.caja-centro { fill: var(--superficie); stroke-width: 2; }
 .tipo-centro { font-size: 9.5px; letter-spacing: 0.1em; fill: var(--texto-tenue); }
 .cuerpo-centro { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
 .titulo {
-  margin: 0; font-size: 13px; line-height: 1.25; font-weight: 600; color: var(--texto);
+  margin: 0; font-size: 14px; line-height: 1.3; font-weight: 650; color: var(--tinta);
   font-family: system-ui, sans-serif;
 }
 .sancion {

@@ -6,6 +6,7 @@ import {
   colorNucleo,
   paletaDeNucleos,
   FONDO,
+  PALETA_NUCLEOS,
   dineroCorto,
   etiquetaDe,
   peso,
@@ -170,8 +171,11 @@ describe('colorNucleo', () => {
   })
 
   it('los sueltos van en gris, no en un color de núcleo', () => {
-    expect(colorNucleo(-1)).toBe('#6b7280')
-    expect(colorNucleo(undefined)).toBe('#6b7280')
+    // Contra la constante, no contra un literal: el gris es del sistema y si
+    // cambia el sistema este test no tiene nada que decir.
+    expect(colorNucleo(-1)).toBe(FONDO)
+    expect(colorNucleo(undefined)).toBe(FONDO)
+    expect(PALETA_NUCLEOS).not.toContain(FONDO)
   })
 })
 
