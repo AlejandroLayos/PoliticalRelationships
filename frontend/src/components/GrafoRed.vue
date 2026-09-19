@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Graph from 'graphology'
 import Sigma from 'sigma'
+import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { COLOR_POR_ESQUEMA, COLOR_POR_DEFECTO } from '../esquemas.js'
 
@@ -93,9 +94,24 @@ function pintar() {
   sigma = new Sigma(grafo, contenedor.value, {
     renderEdgeLabels: false,
     defaultEdgeType: 'line',
-    labelDensity: 0.6,
-    labelGridCellSize: 70,
-    labelRenderedSizeThreshold: 7,
+    // Rotular tiene presupuesto. Con celdas de 70 px y umbral 7, un organismo
+    // con treinta vecinos dejaba treinta nombres largos apiñados unos encima
+    // de otros: una mancha de letras de la que no se leía ninguna. La rejilla
+    // más grande deja pasar menos, y la placa hace legibles las que pasan.
+    labelDensity: 0.5,
+    labelGridCellSize: 180,
+    labelRenderedSizeThreshold: 9,
+    labelFont: 'system-ui, sans-serif',
+    labelColor: { color: '#f2f5fa' },
+    labelSize: 12,
+    labelWeight: '600',
+    defaultDrawNodeLabel: dibujarEtiquetaConPlaca,
+    // El nodo resaltado usa OTRO pintor, el de hover, que por defecto dibuja
+    // una placa blanca con texto oscuro. Al cambiar sólo el de la etiqueta,
+    // encima de esa placa blanca se escribía el texto claro del nuestro y el
+    // nombre del nodo seleccionado desaparecía: un rectángulo blanco vacío en
+    // el centro del grafo. Los dos pintan igual.
+    defaultDrawNodeHover: dibujarEtiquetaConPlaca,
     minCameraRatio: 0.08,
     maxCameraRatio: 8,
   })

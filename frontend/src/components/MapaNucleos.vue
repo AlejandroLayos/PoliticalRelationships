@@ -21,6 +21,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import Sigma from 'sigma'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { analizarNucleos, colapsarNodosDePaso, FONDO, paletaDeNucleos } from '../nucleos.js'
+import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -336,36 +337,6 @@ function separarNucleos(g) {
   })
 }
 
-/**
- * Etiqueta con placa: rectángulo oscuro redondeado y el texto encima.
- *
- * Firma de Sigma 3: `(contexto, datos, ajustes)`, donde `datos` trae ya las
- * coordenadas en píxeles de pantalla y el tamaño del nodo.
- */
-function dibujarEtiqueta(ctx, datos, ajustes) {
-  if (!datos.label) return
-  const fuente = `${ajustes.labelWeight} ${ajustes.labelSize}px ${ajustes.labelFont}`
-  ctx.font = fuente
-  const ancho = ctx.measureText(datos.label).width
-  const alto = ajustes.labelSize + 6
-  const x = datos.x + datos.size + 4
-  const y = datos.y + ajustes.labelSize / 3 - alto + 3
-  const r = 4
-
-  ctx.beginPath()
-  ctx.moveTo(x - 4 + r, y)
-  ctx.arcTo(x + ancho + 4, y, x + ancho + 4, y + alto, r)
-  ctx.arcTo(x + ancho + 4, y + alto, x - 4, y + alto, r)
-  ctx.arcTo(x - 4, y + alto, x - 4, y, r)
-  ctx.arcTo(x - 4, y, x + ancho + 4, y, r)
-  ctx.closePath()
-  ctx.fillStyle = 'rgba(9, 13, 19, 0.82)'
-  ctx.fill()
-
-  ctx.fillStyle = ajustes.labelColor.color
-  ctx.fillText(datos.label, x, y + alto - 6)
-}
-
 function pintar() {
   if (!contenedor.value) return
   if (sigma) {
@@ -389,7 +360,13 @@ function pintar() {
     // —verde, amarillo, turquesa— el blanco no se lee, y encima de dos manchas
     // que se tocan, menos. Con una placa oscura detrás se lee siempre, sobre
     // lo que sea, que es lo que tiene que pasar con el nombre de un organismo.
-    defaultDrawNodeLabel: dibujarEtiqueta,
+    defaultDrawNodeLabel: dibujarEtiquetaConPlaca,
+    // El nodo resaltado usa OTRO pintor, el de hover, que por defecto dibuja
+    // una placa blanca con texto oscuro. Al cambiar sólo el de la etiqueta,
+    // encima de esa placa blanca se escribía el texto claro del nuestro y el
+    // nombre del nodo seleccionado desaparecía: un rectángulo blanco vacío en
+    // el centro del grafo. Los dos pintan igual.
+    defaultDrawNodeHover: dibujarEtiquetaConPlaca,
     minCameraRatio: 0.03,
     maxCameraRatio: 12,
     zIndex: true,

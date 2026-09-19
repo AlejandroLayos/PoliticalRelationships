@@ -33,6 +33,28 @@ const conexiones = computed(() => {
     .sort((x, y) => Number(y.arista.amount ?? 0) - Number(x.arista.amount ?? 0))
 })
 
+
+/** La fecha en corto; si no se puede leer, nada. */
+function dia(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-ES')
+}
+
+/**
+ * El concepto de la operación: la convocatoria en BDNS, el objeto en PLACSP.
+ * Recortado, con el entero en el `title`.
+ */
+function conceptoEntero(arista) {
+  const p = arista?.properties ?? {}
+  return p.convocatoria ?? p.objeto ?? ''
+}
+
+function concepto(arista) {
+  const t = conceptoEntero(arista).trim()
+  return t.length > 64 ? `${t.slice(0, 63)}…` : t
+}
+
 function importe(a) {
   if (!a.amount) return null
   const n = Number(a.amount)
@@ -78,6 +100,24 @@ function importe(a) {
                 {{ c.saliente ? '→' : '←' }} {{ etiquetaArista(c.arista.schema) }}
               </span>
               <span v-if="importe(c.arista)" class="importe">{{ importe(c.arista) }}</span>
+            </div>
+            <!--
+              La fecha y el concepto, que es lo único que distingue una fila de
+              otra cuando se repiten.
+
+              En la ficha del PSOE salían DOCE renglones idénticos —«AYUNTAMIENTO
+              DE BASAURI · pago/subvención · 1.092,50 € · 100%»— y once más de
+              Amurrio y once de Santander. Parecen datos duplicados y no lo son:
+              son las transferencias MENSUALES al grupo municipal, cada una con
+              su fecha y su convocatoria («…GRUPOS POLÍTICOS MARZO 2025»). Sin
+              enseñar eso, el lector sólo puede concluir que la web repite
+              filas.
+            -->
+            <div v-if="c.arista.start_date || concepto(c.arista)" class="cuando-que">
+              <span v-if="c.arista.start_date" class="fecha">{{ dia(c.arista.start_date) }}</span>
+              <span v-if="concepto(c.arista)" class="concepto" :title="conceptoEntero(c.arista)">
+                {{ concepto(c.arista) }}
+              </span>
             </div>
             <!--
               La confianza y el estado se muestran SIEMPRE, no sólo cuando son
@@ -168,5 +208,11 @@ h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; colo
 .procedencia li { font-size: 0.76rem; padding: 0.4rem 0; border-bottom: 1px solid var(--borde-suave); display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
 .procedencia code { font-size: 0.7rem; color: var(--texto-tenue); }
 .extractor { color: var(--texto-tenue); }
+.cuando-que {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: baseline;
+  font-size: 0.7rem; color: var(--texto-tenue); margin-top: 0.1rem;
+}
+.cuando-que .fecha { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cuando-que .concepto { min-width: 0; }
 .procedencia blockquote { flex-basis: 100%; margin: 0.3rem 0 0; padding-left: 0.55rem; border-left: 2px solid var(--borde); color: var(--texto-tenue); font-style: italic; }
 </style>

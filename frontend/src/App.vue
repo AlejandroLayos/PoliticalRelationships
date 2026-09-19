@@ -19,7 +19,7 @@ import {
   vecinos,
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
-import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
+import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
 import { areaDeInfluencia } from './influencia.js'
 import { contratosDeMedios } from './medios.js'
 import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
@@ -125,6 +125,16 @@ function quitarFiltros() {
   soloPartidos.value = false
   minImporte.value = 0
 }
+
+/** Los tipos de entidad que hay ahora mismo en el grafo del vecindario. */
+const esquemasEnPantalla = computed(() => {
+  const vistos = new Set((datos.value?.nodes ?? []).map((n) => n.schema))
+  return Object.keys(COLOR_POR_ESQUEMA).filter((e) => vistos.has(e))
+})
+
+const hayInferidas = computed(() =>
+  (datos.value?.edges ?? []).some((a) => a.status === 'inferred'),
+)
 
 /** ¿Hay alguna contraparte no residente entre las que se dibujan? */
 const hayNoResidente = computed(() =>
@@ -566,11 +576,21 @@ onMounted(async () => {
           <span v-if="hayNoResidente"><i style="background: #b08cd9" />Contraparte no residente</span>
           <span>El grosor es el importe · la cifra exacta va escrita</span>
         </div>
+        <!--
+          Sólo los tipos que hay en pantalla. La leyenda enumeraba los siete
+          esquemas siempre, incluidos «Persona» y «Cargo público», que nunca
+          aparecen —las personas físicas no se publican (§12)—. Anunciar un
+          color que no está obliga a buscarlo, y en este caso además sugería
+          que la web publica personas.
+        -->
         <div v-else-if="vista === 'vecindario'" class="leyenda">
-          <span v-for="(color, esquema) in COLOR_POR_ESQUEMA" :key="esquema">
-            <i :style="{ background: color }" />{{ NOMBRE_ESQUEMA[esquema] ?? esquema }}
+          <span v-for="esquema in esquemasEnPantalla" :key="esquema">
+            <i :style="{ background: COLOR_POR_ESQUEMA[esquema] ?? COLOR_POR_DEFECTO }" />
+            {{ NOMBRE_ESQUEMA[esquema] ?? esquema }}
           </span>
-          <span class="leyenda-inferido"><i class="linea-inferida" />Conexión inferida (fina y ámbar)</span>
+          <span v-if="hayInferidas" class="leyenda-inferido">
+            <i class="linea-inferida" />Conexión inferida (fina y ámbar)
+          </span>
         </div>
         <div v-else class="leyenda">
           <span>
