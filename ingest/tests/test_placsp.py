@@ -730,3 +730,34 @@ def test_un_feed_ilegible_dice_que_llego_y_no_solo_donde_falla(conector, capsys)
     salida = capsys.readouterr().out
     assert "Sin cerrar" in salida
     assert "atom" in salida
+
+
+def test_el_codigo_de_resultado_no_se_publica_como_numero_de_lote(conector):
+    """Se publicaba `lotNumber` y es el código de resultado de la adjudicación.
+
+    El propio documento lo dice: el elemento trae
+    `listURI=".../TenderResultCode-2.02.gc"`. Y se notaba en los datos sin
+    abrir el XML — 1.860 adjudicaciones publicadas y sólo DOS valores
+    distintos de «lote», 8 y 9. Ningún expediente real se lotea así.
+
+    Va en crudo y sin traducir: la lista de valores es de CODICE y no se ha
+    podido comprobar contra la especificación, así que escribir «adjudicado»
+    sería inventarse el significado de un dato público.
+    """
+    n = _normalizar_feed(conector, _feed_con_adjudicatarios(("A11111111", "EMPRESA UNA, S.L.")))
+    assert n is not None
+    adjudicaciones = [a for a in n.aristas if a.ftm_schema == "ContractAward"]
+    assert adjudicaciones
+    for a in adjudicaciones:
+        assert "lotNumber" not in a.properties
+        assert a.properties.get("resultCode") == "8"
+
+
+def test_la_muestra_real_confirma_que_es_un_codigo_de_resultado():
+    """La prueba de que no es un lote está en la muestra guardada, no en mi memoria."""
+    from pathlib import Path
+
+    muestra = Path(__file__).parent / "golden" / "placsp_agregadas_muestra.atom"
+    texto = muestra.read_text(encoding="utf-8")
+    assert "TenderResultCode" in texto
+    assert "cbc:ResultCode" in texto

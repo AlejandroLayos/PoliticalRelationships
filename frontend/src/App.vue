@@ -108,6 +108,24 @@ const area = computed(() => {
   return grafoEntero.value ? areaDeInfluencia(grafoEntero.value, seleccionId.value) : null
 })
 
+/** Los filtros que recortan el mapa ahora mismo, dichos con palabras. */
+const filtrosPuestos = computed(() => {
+  const puestos = []
+  if (soloExtranjero.value) puestos.push('capital extranjero')
+  if (soloPartidos.value) puestos.push('partidos')
+  if (minImporte.value > 0) {
+    const e = ESCALONES.find((x) => x.v === minImporte.value)
+    puestos.push(`importe mínimo ${e ? e.t : minImporte.value}`)
+  }
+  return puestos
+})
+
+function quitarFiltros() {
+  soloExtranjero.value = false
+  soloPartidos.value = false
+  minImporte.value = 0
+}
+
 /** ¿Hay alguna contraparte no residente entre las que se dibujan? */
 const hayNoResidente = computed(() =>
   Boolean(
@@ -410,29 +428,54 @@ onMounted(async () => {
           Conexiones
         </button>
 
+        <!--
+          Cinco controles en fila, todos con el mismo peso y ninguno diciendo
+          qué hace. «Desde» ¿desde cuándo? —era el importe—. «Relaciones
+          sueltas» no significa nada si no sabes que el mapa esconde los
+          grupos de menos de tres. Y no había forma de saber si estabas
+          mirando el mapa entero o uno filtrado.
+
+          Ahora van en dos grupos con su rótulo —lo que AÑADE al mapa y lo que
+          lo RECORTA—, cada uno con su explicación al pasar por encima, y con
+          un aviso aparte cuando hay algo puesto.
+        -->
         <template v-if="vista === 'mapa'">
-          <label class="control">
-            Desde
+          <label class="control" title="Oculta las relaciones por debajo de este importe">
+            Importe mínimo
             <select v-model.number="minImporte">
               <option v-for="e in ESCALONES" :key="e.v" :value="e.v">{{ e.t }}</option>
             </select>
           </label>
-          <label class="control check">
-            <input v-model="mostrarExpedientes" type="checkbox" />
-            Ver expedientes
-          </label>
-          <label class="control check">
-            <input v-model="mostrarSueltos" type="checkbox" />
-            Relaciones sueltas
-          </label>
-          <label class="control check" title="Entidades no residentes y quien les paga">
-            <input v-model="soloExtranjero" type="checkbox" />
-            Capital extranjero
-          </label>
-          <label class="control check" title="Formaciones políticas y quien les paga">
-            <input v-model="soloPartidos" type="checkbox" />
-            Sólo partidos
-          </label>
+
+          <span class="grupo">
+            <span class="rotulo">Añadir</span>
+            <label
+              class="control check"
+              title="Dibuja también el expediente de contratación entre el órgano y la empresa. Por defecto se puentea: no es un actor, es el papel que los une."
+            >
+              <input v-model="mostrarExpedientes" type="checkbox" />
+              expedientes
+            </label>
+            <label
+              class="control check"
+              title="Dibuja también los grupos de menos de tres entidades. Son parejas y tríos sueltos: mucho punto y poca estructura."
+            >
+              <input v-model="mostrarSueltos" type="checkbox" />
+              grupos pequeños
+            </label>
+          </span>
+
+          <span class="grupo">
+            <span class="rotulo">Sólo</span>
+            <label class="control check" title="Entidades no residentes y quien les paga">
+              <input v-model="soloExtranjero" type="checkbox" />
+              capital extranjero
+            </label>
+            <label class="control check" title="Formaciones políticas y quien les paga">
+              <input v-model="soloPartidos" type="checkbox" />
+              partidos
+            </label>
+          </span>
         </template>
 
         <label v-else-if="vista === 'vecindario'" class="control">
@@ -491,9 +534,22 @@ onMounted(async () => {
           Busca una entidad para empezar.
         </p>
 
+        <!--
+          Un mapa filtrado y uno entero se ven igual de plausibles: el
+          recuento baja y ya está. Si hay filtros puestos se dice, con el
+          nombre de los que están, y con un botón para quitarlos — porque
+          volver al mapa completo era acordarse de cuáles habías tocado.
+        -->
         <p v-if="vista === 'mapa' && nucleos.length" class="recuento">
           {{ nucleos.length }} núcleos · {{ visiblesEnMapa }} entidades ·
           {{ dineroCorto(totalDinero) }} en juego
+          <template v-if="filtrosPuestos.length">
+            <br />
+            <span class="filtrado">
+              Filtrado por {{ filtrosPuestos.join(' y ') }}.
+              <button class="quitar-filtros" @click="quitarFiltros">Ver el mapa entero</button>
+            </span>
+          </template>
         </p>
         <p v-else-if="vista === 'vecindario' && datos.truncated" class="recorte">
           Vista recortada por tamaño: hay más conexiones de las que se muestran.
@@ -728,6 +784,14 @@ main { flex: 1; position: relative; min-height: 0; }
 }
 
 .controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
+.grupo {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding-left: 0.6rem; border-left: 1px solid var(--borde);
+}
+.rotulo {
+  font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--texto-tenue);
+}
 .control { font-size: 0.78rem; color: var(--texto-tenue); display: flex; align-items: center; gap: 0.4rem; }
 .control select {
   background: var(--fondo-boton); color: var(--texto);
@@ -743,6 +807,12 @@ main { flex: 1; position: relative; min-height: 0; }
   display: block;
   margin-top: 0.3rem;
   color: #e8c37a;
+}
+.filtrado { color: var(--aviso); }
+.quitar-filtros {
+  background: none; border: none; padding: 0; margin-left: 0.3rem;
+  color: var(--acento); font: inherit; cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .recuento {
   position: absolute; top: 0.6rem; left: 0.9rem; margin: 0;

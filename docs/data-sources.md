@@ -216,6 +216,18 @@ arranque.
 | Adjudicatario | `cac:TenderResult/cac:WinningParty/cac:PartyName/cbc:Name` |
 | NIF adjudicatario | `cac:TenderResult/cac:WinningParty/cac:PartyIdentification/cbc:ID` |
 | Importe adjudicado | `cac:TenderResult/cac:AwardedTenderedProject/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount` |
+| Resultado | `cac:TenderResult/cbc:ResultCode` |
+
+El resultado se publica **en crudo, sin traducir**, en la propiedad
+`resultCode` de la arista. Es un código de la lista CODICE
+`TenderResultCode-2.02`, cuya URI viene en el propio elemento
+(`listURI="http://contrataciondelestado.es/codice/cl/2.02/TenderResultCode-2.02.gc"`).
+En la instantánea del 18/9/2026 sólo aparecen dos valores, `8` y `9`.
+
+No se traducen a palabras porque no se ha podido comprobar la lista contra la
+especificación: el entorno de desarrollo no alcanza `contrataciondelestado.es`
+(ver «Estado de verificación» más abajo). Poner «adjudicado» o «formalizado»
+de memoria sería inventarse el significado de un dato público.
 
 **Tres trampas que muerden:**
 

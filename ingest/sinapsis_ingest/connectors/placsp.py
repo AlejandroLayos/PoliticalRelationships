@@ -509,7 +509,23 @@ class PLACSPConnector:
                 for k, v in (
                     ("cpvCode", d.get("cpv")),
                     ("nutsCode", d.get("nuts")),
-                    ("lotNumber", adj.get("codigo_resultado")),
+                    # `resultCode`, no `lotNumber`. Se publicó como número de
+                    # lote y no lo es: el propio documento lo dice en el
+                    # atributo del elemento,
+                    # `listURI=".../TenderResultCode-2.02.gc"`. Es el código de
+                    # resultado de la adjudicación.
+                    #
+                    # Se notaba en los datos sin abrir el XML: 1.860
+                    # adjudicaciones publicadas y sólo DOS valores distintos de
+                    # «lote», 8 y 9. Ningún expediente real se lotea así.
+                    #
+                    # El código va en crudo y sin traducir. La lista de
+                    # valores es de CODICE y no la he podido comprobar contra
+                    # la especificación —el proxy de este entorno deniega
+                    # contrataciondelestado.es—, así que poner «adjudicado» o
+                    # «formalizado» sería inventarme el significado de un dato
+                    # público. La lista está citada en docs/data-sources.md.
+                    ("resultCode", adj.get("codigo_resultado")),
                 )
                 if v
             }
