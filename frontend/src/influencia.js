@@ -47,6 +47,7 @@ function vacio(entidad = null) {
     totalSancionado: 0,
     extranjero: { contrapartes: [], total: 0, porcentaje: 0, indicios: [], totalIndicios: 0 },
     comparten: [],
+    compartenPor: [],
     red: { nodes: [], edges: [] },
   }
 }
@@ -208,6 +209,44 @@ export function areaDeInfluencia(datos, id) {
     .sort((x, y) => y.pagadoresComunes - x.pagadoresComunes || y.total - x.total)
     .slice(0, 15)
 
+  // POR QUÉ orbitan, y a cuántos alcanza ese pagador.
+  //
+  // Sin esto el bloque insinúa. En la ficha del PSOE salían listados el PP,
+  // VOX, Podemos y once partidos más, cada uno con su cifra, bajo el título
+  // «orbitan a sus mismos pagadores». Es verdad y no dice absolutamente nada:
+  // lo que comparten es la Dirección General de Política Interior, que es
+  // quien paga la subvención electoral a todos los partidos. Descubrir que
+  // los partidos cobran de quien paga a los partidos no es un hallazgo, y
+  // presentarlo como una órbita común sí parece uno.
+  //
+  // Así que se dice cuál es el pagador compartido y a cuántos reparte. Con
+  // «reparte entre 93 entidades» al lado, el lector ve solo que la
+  // coincidencia no significa nada. Y cuando el pagador común sí es estrecho,
+  // la misma frase lo deja claro en el otro sentido.
+  const cuantasPorPagador = new Map()
+  for (const c of comparten.values()) {
+    for (const p of c.pagadores ?? []) {
+      cuantasPorPagador.set(p, (cuantasPorPagador.get(p) ?? 0) + 1)
+    }
+  }
+  const alcanceDe = new Map()
+  for (const a of aristas) {
+    if (!ESQUEMAS_DINERO.has(a.schema)) continue
+    if (!cuantasPorPagador.has(a.source)) continue
+    if (!alcanceDe.has(a.source)) alcanceDe.set(a.source, new Set())
+    alcanceDe.get(a.source).add(a.target)
+  }
+  const compartenPor = [...cuantasPorPagador.entries()]
+    .map(([idPagador, cuantos]) => ({
+      id: idPagador,
+      caption: porId.get(idPagador)?.caption ?? '',
+      cuantos,
+      alcance: alcanceDe.get(idPagador)?.size ?? 0,
+    }))
+    .filter((x) => x.caption)
+    .sort((x, y) => y.cuantos - x.cuantos || y.alcance - x.alcance)
+    .slice(0, 2)
+
   return {
     entidad,
     recibeDe,
@@ -224,6 +263,7 @@ export function areaDeInfluencia(datos, id) {
       totalIndicios: contrapartesIndicio.reduce((s, x) => s + x.total, 0),
     },
     comparten: compartenLista,
+    compartenPor,
     red: redDeFlujo(datos, id, recibeDe, pagaA),
   }
 }

@@ -65,6 +65,24 @@ const fuentesDeLaFicha = computed(() =>
   Se enseñan unos pocos y se dice cuántos quedan: lo que hace falta comprobar
   es que el documento existe y se puede abrir, no abrirlos los 29.
 */
+/**
+ * «Sobre todo por X, que reparte entre N entidades.»
+ *
+ * Se arma en JavaScript y no en la plantilla. Con `<template v-for>` y
+ * `<button>` por medio, Vue colapsaba los espacios donde no tocaba —«Sobre
+ * todo porD.G. DE POLÍTICA INTERIOR»— y la coma se iba sola al renglón
+ * siguiente. El nombre pierde el clic, y no importa: el pagador ya está en la
+ * lista de «de quién recibe», que es donde se pulsa.
+ */
+const fraseDelPagadorComun = computed(() => {
+  const via = props.area?.compartenPor ?? []
+  if (!via.length) return ''
+  const trozos = via.map(
+    (v) => `${v.caption}, que reparte entre ${v.alcance} ${v.alcance === 1 ? 'entidad' : 'entidades'}`,
+  )
+  return `Sobre todo por ${trozos.join('; y por ')}.`
+})
+
 const CUANTOS_DOCUMENTOS = 5
 const documentosVisibles = computed(() => procedencia.value.slice(0, CUANTOS_DOCUMENTOS))
 const documentosDeMas = computed(() =>
@@ -358,6 +376,15 @@ const sinDatos = computed(
           Cobran de los mismos organismos que esta entidad. Es una coincidencia
           de pagador, no una relación entre ellas.
         </p>
+        <!--
+          Y CUÁL es el pagador compartido, con su alcance. Sin esta frase el
+          bloque insinúa: en la ficha del PSOE salían el PP, VOX, Podemos y
+          once partidos más, cada uno con su cifra, bajo el título «orbitan a
+          sus mismos pagadores». Es verdad y no dice nada — lo que comparten es
+          quien paga la subvención electoral a todos los partidos. Con «reparte
+          entre 93 entidades» al lado, se ve solo.
+        -->
+        <p v-if="fraseDelPagadorComun" class="matiz via">{{ fraseDelPagadorComun }}</p>
         <ul class="lista compacta">
           <li v-for="c in area.comparten" :key="c.id">
             <button @click="emit('seleccionar', c.id)">

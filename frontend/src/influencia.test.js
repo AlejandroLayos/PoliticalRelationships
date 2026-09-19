@@ -241,3 +241,60 @@ describe('indicio de capital extranjero', () => {
     expect(a.extranjero.indicios.map((x) => x.caption)).not.toContain('FOREIGN MEDIA BV')
   })
 })
+
+describe('por qué orbitan', () => {
+  /**
+   * El bloque «orbitan a sus mismos pagadores» insinuaba.
+   *
+   * En la ficha del PSOE salían listados el PP, VOX, Podemos y once partidos
+   * más, cada uno con su cifra. Es verdad y no dice nada: lo que comparten es
+   * la Dirección General de Política Interior, que es quien paga la subvención
+   * electoral a todos los partidos. Descubrir que los partidos cobran de quien
+   * paga a los partidos no es un hallazgo, y presentarlo como una órbita común
+   * sí lo parece.
+   */
+  function grafoDeSubvencionElectoral(cuantosPartidos) {
+    const nodes = [{ id: 'dgpi', caption: 'D.G. DE POLÍTICA INTERIOR', schema: 'PublicBody', properties: {} }]
+    const edges = []
+    for (let i = 0; i < cuantosPartidos; i += 1) {
+      nodes.push({ id: `p${i}`, caption: `PARTIDO ${i}`, schema: 'Organization', properties: {} })
+      edges.push({
+        id: `a${i}`, source: 'dgpi', target: `p${i}`, amount: `${1000 * (i + 1)}`,
+        schema: 'Payment', confidence: 1, status: 'asserted',
+      })
+    }
+    return { nodes, edges }
+  }
+
+  it('dice cuál es el pagador compartido y a cuántos reparte', () => {
+    const area = areaDeInfluencia(grafoDeSubvencionElectoral(14), 'p0')
+    expect(area.comparten.length).toBe(13)
+    expect(area.compartenPor).toHaveLength(1)
+    expect(area.compartenPor[0].caption).toBe('D.G. DE POLÍTICA INTERIOR')
+    // El alcance es lo que desactiva la insinuación: reparte entre los 14.
+    expect(area.compartenPor[0].alcance).toBe(14)
+    expect(area.compartenPor[0].cuantos).toBe(13)
+  })
+
+  it('un pagador estrecho se distingue de uno que paga a todos', () => {
+    const { nodes, edges } = grafoDeSubvencionElectoral(14)
+    nodes.push({ id: 'dip', caption: 'DIPUTACIÓN DE SORIA', schema: 'PublicBody', properties: {} })
+    nodes.push({ id: 'emp', caption: 'EMPRESA SL', schema: 'Company', properties: {} })
+    edges.push({ id: 'x1', source: 'dip', target: 'p0', amount: '500', schema: 'Payment', confidence: 1, status: 'asserted' })
+    edges.push({ id: 'x2', source: 'dip', target: 'emp', amount: '500', schema: 'Payment', confidence: 1, status: 'asserted' })
+
+    const area = areaDeInfluencia({ nodes, edges }, 'p0')
+    const porNombre = Object.fromEntries(area.compartenPor.map((v) => [v.caption, v]))
+    expect(porNombre['DIPUTACIÓN DE SORIA'].alcance).toBe(2)
+    expect(porNombre['D.G. DE POLÍTICA INTERIOR'].alcance).toBe(14)
+  })
+
+  it('sin pagadores compartidos no hay nada que explicar', () => {
+    const nodes = [
+      { id: 'o', caption: 'ORGANISMO', schema: 'PublicBody', properties: {} },
+      { id: 'e', caption: 'EMPRESA', schema: 'Company', properties: {} },
+    ]
+    const edges = [{ id: 'a', source: 'o', target: 'e', amount: '100', schema: 'Payment', confidence: 1, status: 'asserted' }]
+    expect(areaDeInfluencia({ nodes, edges }, 'e').compartenPor).toEqual([])
+  })
+})
