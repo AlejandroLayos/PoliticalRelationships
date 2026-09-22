@@ -23,6 +23,8 @@ import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { analizarNucleos, colapsarNodosDePaso, FONDO, paletaDeNucleos } from '../nucleos.js'
 import { dibujarEtiquetaCentrada } from '../etiquetas.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA } from '../esquemas.js'
+import { aclarar, apagar, sobreFondo } from '../color.js'
+import { cercania, medidorDeFluidez, posicionEnDeriva, puntosDeReposo } from '../vida.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -33,12 +35,53 @@ const props = defineProps({
   mostrarSueltos: { type: Boolean, default: false },
   soloExtranjero: { type: Boolean, default: false },
   soloPartidos: { type: Boolean, default: false },
+  /** ¿Es ésta la vista de delante? Si no, el dibujo se para: no lo ve nadie. */
+  activo: { type: Boolean, default: true },
 })
 const emit = defineEmits(['seleccionar', 'analizado'])
 
 const contenedor = ref(null)
 const calculando = ref(true)
 let sigma = null
+
+/* ---------------------------------------------------------------------------
+   El dibujo se mueve.
+
+   Un grafo de fuerzas quieto es una foto de un proceso: se ve el resultado y
+   no se ve que los nodos se empujan, que es de donde sale la forma. Aquí la
+   colocación se calcula A LA VISTA —el grupo se despliega en algo más de un
+   segundo— y después los puntos siguen respirando, muy poco, cada uno a su
+   ritmo. No es adorno: el movimiento es lo que hace que un montón de círculos
+   se lea como una red y no como confeti.
+
+   Y responde al ratón. Lo que hay alrededor del cursor se aclara y sus
+   aristas se encienden, con caída suave, así que recorrer el dibujo con el
+   ratón va enseñando vecindarios. Los puntos NO se apartan: un nodo que huye
+   del cursor es bonito una vez y molesto siempre, porque hay que pulsarlo.
+
+   Se para solo cuando la pestaña no se ve, cuando el mapa no es la vista de
+   delante, y cuando el sistema pide menos movimiento.
+--------------------------------------------------------------------------- */
+
+/** Quien tenga puesto «reducir movimiento» ve el resultado, no el proceso. */
+const menosMovimiento =
+  typeof window !== 'undefined' &&
+  Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)
+
+let animacion = null
+let ajustesFuerza = null
+let iteracionesPendientes = 0
+let inicioDeriva = 0
+let ultimoRefresco = 0
+/** El cursor tal y como estaba en el último repintado. */
+let ratonPintado = null
+const fluidez = medidorDeFluidez()
+/** Posición de reposo y fase de cada nodo. La deriva oscila alrededor. */
+const reposo = new Map()
+/** Radio de influencia del cursor, en unidades del grafo. */
+let radioRaton = 0
+/** Dónde está el cursor, en coordenadas del grafo. `null` si está fuera. */
+let raton = null
 const grafo = shallowRef(null)
 const etiquetados = shallowRef(new Set())
 /** El nodo bajo el ratón: es lo que destapa sus pagos a otros núcleos. */
@@ -246,32 +289,41 @@ function construir() {
   g.forEachEdge((e, attrs, _a, _b, orig, dest) => {
     const inferida = attrs.estado === 'inferred'
     const dentro = orig.nucleo === dest.nucleo
+    /*
+      Opaco, calculado sobre el fondo, y no `rgba`.
+
+      El programa de aristas de Sigma IGNORA el alfa: una arista a 0,05 se
+      dibujaba igual que una a 1. Todos los ajustes de opacidad que se
+      hicieron aquí para que la telaraña dejara ver los nodos —de 0,18 a 0,11
+      y luego a 0,05— no hicieron nada, y la maraña blanca seguía tapando el
+      dibujo por eso. Ver `color.js`.
+    */
     const color = inferida
-      ? `rgba(224,163,58,${dentro ? 0.26 : 0.1})`
-      // Más tenues que antes porque ahora se ven. Con los puntos pequeños,
-      // un organismo que paga a sesenta empresas dibuja un abanico de sesenta
-      // rectas que salen del mismo sitio: apiladas a 0,18 se suman hasta el
-      // blanco y el abanico tapa el núcleo entero. A 0,11 la forma se sigue
-      // leyendo y no se come lo que hay debajo.
-      // Dentro de un grupo la cámara acerca, así que la misma opacidad cubre
-      // muchos más píxeles y la telaraña se come los puntos. Más tenue ahí.
-      : `rgba(150,170,200,${dentro ? (soloUnNucleo ? 0.07 : 0.11) : 0.045})`
+      ? sobreFondo([224, 163, 58], dentro ? 0.26 : 0.1)
+      : sobreFondo([150, 170, 200], dentro ? (soloUnNucleo ? 0.18 : 0.3) : 0.1)
     const grosor = 0.35 + Math.min(2.2, Math.log10(1 + attrs.importe) * 0.4)
     g.mergeEdgeAttributes(e, { color, size: dentro ? grosor : Math.min(grosor, 0.6) })
   })
 
   if (g.order > 1) {
-    forceAtlas2.assign(g, {
-      iterations: g.order > 1500 ? 120 : 260,
-      settings: {
-        ...forceAtlas2.inferSettings(g),
-        gravity: 0.8,
-        scalingRatio: 18,
-        outboundAttractionDistribution: true,
-        barnesHutOptimize: g.order > 300,
-      },
-    })
-    separarNucleos(g, aspectoDelLienzo())
+    const total = g.order > 1500 ? 120 : 260
+    ajustesFuerza = {
+      ...forceAtlas2.inferSettings(g),
+      gravity: 0.8,
+      scalingRatio: 18,
+      outboundAttractionDistribution: true,
+      barnesHutOptimize: g.order > 300,
+    }
+    /*
+      Sólo una parte de las iteraciones aquí; el resto se reparten entre los
+      primeros fotogramas. De golpe, el grupo aparece ya colocado y parece un
+      dibujo; repartidas, se ve desplegarse. Estas primeras sí van de golpe
+      porque los primeros empujones son un revoltijo y enseñarlo no aporta.
+    */
+    const deGolpe = menosMovimiento || !soloUnNucleo ? total : Math.round(total * 0.25)
+    forceAtlas2.assign(g, { iterations: deGolpe, settings: ajustesFuerza })
+    iteracionesPendientes = total - deGolpe
+    if (!soloUnNucleo) separarNucleos(g, aspectoDelLienzo())
   }
 
   grafo.value = g
@@ -443,7 +495,10 @@ function separarNucleos(g, aspecto = 1) {
 
 function pintar() {
   if (!contenedor.value) return
+  pararAnimacion()
   if (sigma) {
+    contenedor.value.removeEventListener('mousemove', seguirAlRaton)
+    contenedor.value.removeEventListener('mouseleave', soltarElRaton)
     sigma.kill()
     sigma = null
   }
@@ -501,7 +556,13 @@ function pintar() {
     aplicarReductores()
   })
 
+  contenedor.value.addEventListener('mousemove', seguirAlRaton)
+  contenedor.value.addEventListener('mouseleave', soltarElRaton)
+
   aplicarReductores()
+  reposo.clear()
+  raton = null
+  arrancarAnimacion()
 }
 
 function reducirNodo(id, d) {
@@ -510,14 +571,35 @@ function reducirNodo(id, d) {
   const nuc = props.nucleoEnfocado
 
   if (nuc !== null && g.getNodeAttribute(id, 'nucleo') !== nuc) {
-    return { ...d, color: 'rgba(120,126,140,0.18)', label: '', zIndex: 0 }
+    return { ...d, color: sobreFondo([120, 126, 140], 0.3), label: '', zIndex: 0 }
   }
   if (foco && g.hasNode(foco)) {
     if (id === foco) return { ...d, label: d.etiquetaReal, highlighted: true, zIndex: 3 }
     if (g.areNeighbors(foco, id)) return { ...d, label: d.etiquetaReal, zIndex: 2 }
-    return { ...d, color: 'rgba(120,126,140,0.15)', label: '', zIndex: 0 }
+    return { ...d, color: sobreFondo([120, 126, 140], 0.26), label: '', zIndex: 0 }
   }
-  return d
+
+  /*
+    El foco del cursor.
+
+    No basta con aclarar lo de cerca: con quinientas aristas encendidas por
+    todas partes, un poco más de brillo en una esquina no se ve. Lo que lo
+    hace evidente es que el RESTO se aleja —se apaga hacia el fondo— mientras
+    el vecindario se aclara y crece. Es el mismo gesto de acercar la cara a
+    una parte del dibujo.
+
+    Los puntos no se apartan del cursor, y es a propósito: un nodo que huye
+    es bonito una vez y molesto siempre, porque hay que pulsarlo.
+  */
+  if (!raton) return d
+  const cerca = cercaniaAlRaton(d.x, d.y)
+  if (cerca <= 0.02) return { ...d, color: apagar(d.color, 0.55), zIndex: 0 }
+  return {
+    ...d,
+    color: aclarar(d.color, cerca * 0.5),
+    size: d.size * (1 + cerca * 0.55),
+    zIndex: 1,
+  }
 }
 
 /**
@@ -543,19 +625,121 @@ function reducirArista(id, d) {
   const tocaAlDeEncima = encima.value && (s === encima.value || t === encima.value)
 
   if (tocaAlDeEncima) {
-    return { ...d, color: 'rgba(210,225,245,0.55)', size: Math.max(d.size, 1), zIndex: 2 }
+    return { ...d, color: sobreFondo([210, 225, 245], 0.9), size: Math.max(d.size, 1), zIndex: 2 }
   }
   if (entreNucleos && !foco && nuc === null) return { ...d, hidden: true }
 
   if (nuc !== null) {
     const dentro = g.getNodeAttribute(s, 'nucleo') === nuc && g.getNodeAttribute(t, 'nucleo') === nuc
-    if (!dentro) return { ...d, color: 'rgba(120,126,140,0.05)', zIndex: 0 }
+    if (!dentro) return { ...d, color: sobreFondo([120, 126, 140], 0.12), zIndex: 0 }
   }
   if (foco && g.hasNode(foco)) {
-    if (s === foco || t === foco) return { ...d, color: 'rgba(210,225,245,0.55)', size: d.size * 1.6, zIndex: 2 }
-    return { ...d, color: 'rgba(120,126,140,0.05)', zIndex: 0 }
+    if (s === foco || t === foco) return { ...d, color: sobreFondo([210, 225, 245], 0.9), size: d.size * 1.6, zIndex: 2 }
+    return { ...d, color: sobreFondo([120, 126, 140], 0.12), zIndex: 0 }
   }
-  return d
+
+  // Una arista se enciende con el extremo que más cerca esté del cursor. Con
+  // la media, las que salen del halo hacia fuera se apagaban justo donde más
+  // dicen: adónde va lo que pasa por aquí.
+  if (!raton) return d
+  const cerca = Math.max(
+    cercaniaAlRaton(g.getNodeAttribute(s, 'x'), g.getNodeAttribute(s, 'y')),
+    cercaniaAlRaton(g.getNodeAttribute(t, 'x'), g.getNodeAttribute(t, 'y')),
+  )
+  if (cerca <= 0.02) return { ...d, color: sobreFondo([150, 170, 200], 0.07), zIndex: 0 }
+  return { ...d, color: sobreFondo([200, 222, 250], 0.12 + cerca * 0.75), zIndex: 1 }
+}
+
+/* --- La animación -------------------------------------------------------- */
+
+/** Fija el punto de reposo de cada nodo y cuánto puede alejarse de él. */
+function prepararDeriva(g) {
+  const nodos = g.mapNodes((id, a) => ({ id, x: a.x, y: a.y, size: a.size }))
+  const calculado = puntosDeReposo(nodos)
+  reposo.clear()
+  for (const [id, base] of calculado.reposo) reposo.set(id, base)
+  radioRaton = calculado.radio
+  inicioDeriva = performance.now()
+}
+
+function unFotograma(ahora) {
+  animacion = requestAnimationFrame(unFotograma)
+  if (!sigma || !grafo.value || !props.activo || document.hidden) return
+  const g = grafo.value
+
+  // Primero, terminar de colocar: se ve cómo se despliega el grupo.
+  if (iteracionesPendientes > 0) {
+    const paso = Math.min(4, iteracionesPendientes)
+    forceAtlas2.assign(g, { iterations: paso, settings: ajustesFuerza })
+    iteracionesPendientes -= paso
+    if (iteracionesPendientes <= 0) prepararDeriva(g)
+    sigma.refresh()
+    return
+  }
+
+  if (menosMovimiento) return
+  if (!reposo.size) prepararDeriva(g)
+
+  /*
+    Y después, respirar. Dos senos de periodo distinto para que no se note el
+    ciclo: con uno solo, el dibujo entero late a la vez y parece un corazón.
+
+    Pero respirar es un lujo condicional. Un repintado completo de Sigma
+    cuesta lo que cueste la máquina: tres o cuatro milisegundos con GPU, más
+    de cincuenta por software —se midieron 60 imágenes por segundo quieto
+    contra 19 animado—. Lo que hay que decidir no es a qué ritmo animar sino
+    SI animar, y eso sólo se sabe midiendo en la máquina de quien mira:
+    `medidorDeFluidez` cronometra el hueco entre fotogramas y la respiración
+    se apaga sola donde deje la página pegajosa. Medir lo que cuesta
+    `refresh()` no vale: daba 1,8 ms mientras la página iba a 19, porque
+    `refresh()` sólo prepara los búferes y lo caro es pintarlos después.
+
+    El foco del cursor sí se repinta siempre que el ratón se mueva: eso es
+    respuesta a un gesto, no adorno, y sin ello el dibujo parecería roto.
+  */
+  const ratonMovido = raton !== ratonPintado
+  if (!fluidez.viable && !ratonMovido) return
+  if (ahora - ultimoRefresco < 33) return
+  ultimoRefresco = ahora
+  ratonPintado = raton
+
+  if (fluidez.viable) {
+    const t = (ahora - inicioDeriva) / 1000
+    g.forEachNode((id) => {
+      const b = reposo.get(id)
+      if (!b) return
+      const pos = posicionEnDeriva(b, t)
+      g.setNodeAttribute(id, 'x', pos.x)
+      g.setNodeAttribute(id, 'y', pos.y)
+    })
+  }
+  fluidez.anota(ahora)
+  sigma.refresh({ skipIndexation: true })
+}
+
+function arrancarAnimacion() {
+  if (animacion !== null) return
+  animacion = requestAnimationFrame(unFotograma)
+}
+
+function pararAnimacion() {
+  if (animacion === null) return
+  cancelAnimationFrame(animacion)
+  animacion = null
+}
+
+const cercaniaAlRaton = (x, y) => cercania(x, y, raton, radioRaton)
+
+
+
+function seguirAlRaton(e) {
+  if (!sigma || !contenedor.value) return
+  const caja = contenedor.value.getBoundingClientRect()
+  raton = sigma.viewportToGraph({ x: e.clientX - caja.left, y: e.clientY - caja.top })
+}
+
+function soltarElRaton() {
+  raton = null
 }
 
 function aplicarReductores() {
@@ -595,15 +779,24 @@ watch(
   pintar,
 )
 watch(() => props.seleccion, aplicarReductores)
+/*
+  Cambiar de grupo REPINTA, no sólo reenfoca.
+
+  Desde que el dibujo se recorta al grupo abierto, `nucleoEnfocado` decide qué
+  nodos hay en el grafo, no sólo cuáles se resaltan: pasar del grupo A al B
+  desde la lista lateral dejaba en pantalla el A con la cámara puesta en un
+  sitio vacío.
+*/
+watch(() => props.nucleoEnfocado, pintar)
 watch(
-  () => props.nucleoEnfocado,
-  (n) => {
-    aplicarReductores()
-    enfocarNucleo(n)
-  },
+  () => props.activo,
+  (activo) => (activo ? arrancarAnimacion() : pararAnimacion()),
 )
 
 onBeforeUnmount(() => {
+  pararAnimacion()
+  contenedor.value?.removeEventListener('mousemove', seguirAlRaton)
+  contenedor.value?.removeEventListener('mouseleave', soltarElRaton)
   if (sigma) sigma.kill()
 })
 

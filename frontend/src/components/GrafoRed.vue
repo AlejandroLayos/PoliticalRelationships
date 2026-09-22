@@ -3,6 +3,8 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Graph from 'graphology'
 import Sigma from 'sigma'
 import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
+import { aclarar, apagar, sobreFondo } from '../color.js'
+import { cercania, medidorDeFluidez, posicionEnDeriva, puntosDeReposo } from '../vida.js'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { COLOR_POR_ESQUEMA, COLOR_POR_DEFECTO } from '../esquemas.js'
 
@@ -15,6 +17,26 @@ const emit = defineEmits(['seleccionar', 'expandir'])
 const contenedor = ref(null)
 let sigma = null
 let grafo = null
+
+/*
+  Aquí se mueve lo mismo que en el mapa: la colocación se calcula a la vista y
+  después los puntos respiran. La lógica está en `vida.js`, con tests; lo de
+  aquí es el bucle de fotogramas, que es Sigma y navegador.
+*/
+const menosMovimiento =
+  typeof window !== 'undefined' &&
+  Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)
+
+let animacion = null
+let ajustesFuerza = null
+let iteracionesPendientes = 0
+let inicioDeriva = 0
+let ultimoRefresco = 0
+let ratonPintado = null
+const fluidez = medidorDeFluidez()
+const reposo = new Map()
+let radioRaton = 0
+let raton = null
 
 /**
  * El tamaño del nodo crece con su grado: los nodos muy conectados son los que
@@ -76,8 +98,11 @@ function construir() {
       // (Sigma v3 no trae programa de línea discontinua, así que la distinción
       // va por color y grosor, no por trazo.)
       color: inferida
-        ? 'rgba(224,163,58,0.45)'
-        : `rgba(120,150,190,${0.3 + 0.5 * (a.confidence ?? 1)})`,
+        // Opaco sobre el fondo, no `rgba`: el programa de aristas de Sigma
+        // ignora el alfa y todas estas opacidades se dibujaban a 1. Ver
+        // `color.js`.
+        ? sobreFondo([224, 163, 58], 0.45)
+        : sobreFondo([120, 150, 190], 0.3 + 0.5 * (a.confidence ?? 1)),
       size: inferida ? 0.8 : 1.2 + 2.2 * (a.confidence ?? 1),
     })
   }
@@ -86,25 +111,90 @@ function construir() {
     grafo.setNodeAttribute(id, 'size', tamano(grafo.degree(id)))
   })
 
-  // ForceAtlas2 es lo que produce el aspecto orgánico de red neuronal. Se
-  // ejecuta un número fijo de iteraciones en vez de en bucle: es una vista de
-  // vecindario pequeña, no hace falta animación continua.
+  // ForceAtlas2 es lo que produce el aspecto orgánico de red. Una parte de
+  // las iteraciones aquí y el resto repartidas entre los primeros fotogramas:
+  // así se ve el vecindario desplegarse en vez de aparecer ya colocado.
   if (grafo.order > 1) {
-    forceAtlas2.assign(grafo, {
-      iterations: 220,
-      settings: {
-        ...forceAtlas2.inferSettings(grafo),
-        gravity: 1.4,
-        scalingRatio: 12,
-        barnesHutOptimize: grafo.order > 120,
-      },
+    const total = 220
+    ajustesFuerza = {
+      ...forceAtlas2.inferSettings(grafo),
+      gravity: 1.4,
+      scalingRatio: 12,
+      barnesHutOptimize: grafo.order > 120,
+    }
+    const deGolpe = menosMovimiento ? total : Math.round(total * 0.25)
+    forceAtlas2.assign(grafo, { iterations: deGolpe, settings: ajustesFuerza })
+    iteracionesPendientes = total - deGolpe
+  }
+}
+
+function prepararDeriva() {
+  const nodos = grafo.mapNodes((id, a) => ({ id, x: a.x, y: a.y, size: a.size }))
+  const calculado = puntosDeReposo(nodos)
+  reposo.clear()
+  for (const [id, base] of calculado.reposo) reposo.set(id, base)
+  radioRaton = calculado.radio
+  inicioDeriva = performance.now()
+}
+
+function unFotograma(ahora) {
+  animacion = requestAnimationFrame(unFotograma)
+  if (!sigma || !grafo || document.hidden) return
+
+  if (iteracionesPendientes > 0) {
+    const paso = Math.min(4, iteracionesPendientes)
+    forceAtlas2.assign(grafo, { iterations: paso, settings: ajustesFuerza })
+    iteracionesPendientes -= paso
+    if (iteracionesPendientes <= 0) prepararDeriva()
+    sigma.refresh()
+    return
+  }
+
+  if (menosMovimiento) return
+  if (!reposo.size) prepararDeriva()
+
+  // Mismo trato que en el mapa: la respiración se apaga sola donde repintar
+  // salga caro; el foco del cursor se repinta siempre que el ratón se mueva.
+  // Ver `medidorDeFluidez` en `vida.js`.
+  const ratonMovido = raton !== ratonPintado
+  if (!fluidez.viable && !ratonMovido) return
+  if (ahora - ultimoRefresco < 33) return
+  ultimoRefresco = ahora
+  ratonPintado = raton
+
+  if (fluidez.viable) {
+    const t = (ahora - inicioDeriva) / 1000
+    grafo.forEachNode((id) => {
+      const b = reposo.get(id)
+      if (!b) return
+      const pos = posicionEnDeriva(b, t)
+      grafo.setNodeAttribute(id, 'x', pos.x)
+      grafo.setNodeAttribute(id, 'y', pos.y)
     })
   }
+  fluidez.anota(ahora)
+  sigma.refresh({ skipIndexation: true })
+}
+
+function seguirAlRaton(e) {
+  if (!sigma || !contenedor.value) return
+  const caja = contenedor.value.getBoundingClientRect()
+  raton = sigma.viewportToGraph({ x: e.clientX - caja.left, y: e.clientY - caja.top })
+}
+
+function soltarElRaton() {
+  raton = null
 }
 
 function pintar() {
   if (!contenedor.value) return
+  if (animacion !== null) {
+    cancelAnimationFrame(animacion)
+    animacion = null
+  }
   if (sigma) {
+    contenedor.value.removeEventListener('mousemove', seguirAlRaton)
+    contenedor.value.removeEventListener('mouseleave', soltarElRaton)
     sigma.kill()
     sigma = null
   }
@@ -143,7 +233,13 @@ function pintar() {
     emit('expandir', node)
   })
 
+  contenedor.value.addEventListener('mousemove', seguirAlRaton)
+  contenedor.value.addEventListener('mouseleave', soltarElRaton)
+
   resaltar()
+  reposo.clear()
+  raton = null
+  animacion = requestAnimationFrame(unFotograma)
 }
 
 /** Atenúa lo que no toca al nodo seleccionado, para poder leer el vecindario. */
@@ -151,20 +247,39 @@ function resaltar() {
   if (!sigma || !grafo) return
   const foco = props.seleccion
   sigma.setSetting('nodeReducer', (id, datos) => {
-    if (!foco || !grafo.hasNode(foco)) return datos
-    // El del foco, con su nombre entero: es UNO, no se cruza con nada y es
-    // justo el que se está mirando.
-    if (id === foco) {
-      return { ...datos, label: datos.etiquetaReal ?? datos.label, highlighted: true, zIndex: 2 }
+    if (foco && grafo.hasNode(foco)) {
+      // El del foco, con su nombre entero: es UNO, no se cruza con nada y es
+      // justo el que se está mirando.
+      if (id === foco) {
+        return { ...datos, label: datos.etiquetaReal ?? datos.label, highlighted: true, zIndex: 2 }
+      }
+      if (grafo.areNeighbors(foco, id)) return { ...datos, zIndex: 1 }
+      return { ...datos, color: sobreFondo([160, 165, 180], 0.28), label: '', zIndex: 0 }
     }
-    if (grafo.areNeighbors(foco, id)) return { ...datos, zIndex: 1 }
-    return { ...datos, color: 'rgba(160,165,180,0.28)', label: '', zIndex: 0 }
+    // El foco del cursor: el vecindario se aclara y crece, el resto se aleja.
+    if (!raton) return datos
+    const cerca = cercania(datos.x, datos.y, raton, radioRaton)
+    if (cerca <= 0.02) return { ...datos, color: apagar(datos.color, 0.55), zIndex: 0 }
+    return {
+      ...datos,
+      color: aclarar(datos.color, cerca * 0.5),
+      size: datos.size * (1 + cerca * 0.55),
+      zIndex: 1,
+    }
   })
   sigma.setSetting('edgeReducer', (id, datos) => {
-    if (!foco || !grafo.hasNode(foco)) return datos
     const extremos = grafo.extremities(id)
-    if (extremos.includes(foco)) return { ...datos, zIndex: 1 }
-    return { ...datos, color: 'rgba(190,193,203,0.16)', zIndex: 0 }
+    if (foco && grafo.hasNode(foco)) {
+      if (extremos.includes(foco)) return { ...datos, zIndex: 1 }
+      return { ...datos, color: sobreFondo([190, 193, 203], 0.16), zIndex: 0 }
+    }
+    if (!raton) return datos
+    const cerca = Math.max(
+      cercania(grafo.getNodeAttribute(extremos[0], 'x'), grafo.getNodeAttribute(extremos[0], 'y'), raton, radioRaton),
+      cercania(grafo.getNodeAttribute(extremos[1], 'x'), grafo.getNodeAttribute(extremos[1], 'y'), raton, radioRaton),
+    )
+    if (cerca <= 0.02) return { ...datos, color: sobreFondo([150, 170, 200], 0.1), zIndex: 0 }
+    return { ...datos, color: sobreFondo([200, 222, 250], 0.15 + cerca * 0.75), zIndex: 1 }
   })
   sigma.refresh()
 }
@@ -174,6 +289,9 @@ watch(() => props.datos, pintar, { deep: false })
 watch(() => props.seleccion, resaltar)
 
 onBeforeUnmount(() => {
+  if (animacion !== null) cancelAnimationFrame(animacion)
+  contenedor.value?.removeEventListener('mousemove', seguirAlRaton)
+  contenedor.value?.removeEventListener('mouseleave', soltarElRaton)
   if (sigma) sigma.kill()
 })
 </script>

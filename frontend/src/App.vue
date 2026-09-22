@@ -782,6 +782,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :mostrar-sueltos="mostrarSueltos"
           :solo-extranjero="soloExtranjero"
           :solo-partidos="soloPartidos"
+          :activo="vista === 'mapa'"
           @seleccionar="enfocar"
           @analizado="alAnalizar"
         />
