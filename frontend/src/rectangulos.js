@@ -111,3 +111,56 @@ export function repartirRectangulo(valores, marco) {
 
   return salida.sort((a, b) => a.i - b.i)
 }
+
+/**
+ * Como `repartirRectangulo`, pero junta la cola en un bloque «y N más».
+ *
+ * Un treemap de cien bloques termina en una esquina de rectángulos de seis
+ * píxeles: no caben ni el nombre ni la cifra, así que son cajas negras que no
+ * dicen nada y encima se pueden pulsar sin querer. Y no se pueden quitar sin
+ * más, porque entonces el dibujo afirmaría que ese dinero no existe.
+ *
+ * Se juntan en uno solo, rotulado con cuántos son y cuánto suman. El área
+ * sigue siendo exacta: el bloque del resto mide lo que miden todos juntos.
+ *
+ * El corte no es por número de bloques sino por TAMAÑO DIBUJADO, que es lo
+ * que decide si cabe un nombre, y depende del lienzo: en una pantalla ancha
+ * caben cuarenta y en un teléfono, ocho.
+ *
+ * El mínimo va por ancho y alto por separado, y no por «lado menor», porque
+ * un rótulo no es cuadrado: un bloque de 45x120 tiene sitio de sobra por
+ * abajo y ninguno por los lados. Con un solo número, la mitad de los bloques
+ * pasaban el corte y salían igualmente mudos.
+ *
+ * @param {number[]} valores de mayor a menor.
+ * @param {{x,y,ancho,alto}} marco
+ * @param {{minAncho?: number, minAlto?: number, minimos?: number}} opciones
+ * @returns {{cajas: Array, resto: {desde: number, cuantos: number, valor: number}|null}}
+ */
+export function repartirConResto(valores, marco, { minAncho = 86, minAlto = 40, minimos = 6 } = {}) {
+  const lista = (valores ?? []).map(Number).filter((v) => Number.isFinite(v) && v > 0)
+  if (!lista.length) return { cajas: [], resto: null }
+
+  const pequena = (c) => c.ancho < minAncho || c.alto < minAlto
+  let corte = lista.length
+  let cajas = repartirRectangulo(lista, marco)
+
+  // De uno en uno desde el final: cada vuelta recoloca, así que no vale
+  // predecir cuántos sobran — hay que volver a mirar.
+  while (corte > minimos && cajas.some(pequena)) {
+    corte -= 1
+    const cola = lista.slice(corte)
+    const suma = cola.reduce((s, v) => s + v, 0)
+    cajas = repartirRectangulo([...lista.slice(0, corte), suma], marco)
+  }
+
+  if (corte === lista.length) return { cajas, resto: null }
+  return {
+    cajas,
+    resto: {
+      desde: corte,
+      cuantos: lista.length - corte,
+      valor: lista.slice(corte).reduce((s, v) => s + v, 0),
+    },
+  }
+}

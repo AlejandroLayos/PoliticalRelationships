@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { repartirRectangulo } from './rectangulos.js'
+import { repartirConResto, repartirRectangulo } from './rectangulos.js'
 
 const MARCO = { x: 0, y: 0, ancho: 800, alto: 500 }
 
@@ -75,5 +75,76 @@ describe('repartirRectangulo', () => {
     expect(repartirRectangulo([], MARCO)).toEqual([])
     expect(repartirRectangulo(null, MARCO)).toEqual([])
     expect(repartirRectangulo([1, 2], { x: 0, y: 0, ancho: 0, alto: 100 })).toEqual([])
+  })
+})
+
+describe('repartirConResto', () => {
+  const marco = { x: 0, y: 0, ancho: 900, alto: 600 }
+  /** Cien grupos con una cola larguísima, como los de verdad. */
+  const muchos = Array.from({ length: 100 }, (_, i) => 1000 / (i + 1) ** 1.6)
+
+  it('todo lo que se dibuja tiene tamaño para llevar su nombre', () => {
+    const { cajas } = repartirConResto(muchos, marco, { minAncho: 86, minAlto: 40 })
+    for (const c of cajas) {
+      expect(c.ancho).toBeGreaterThanOrEqual(86)
+      expect(c.alto).toBeGreaterThanOrEqual(40)
+    }
+  })
+
+  it('el mínimo va por ancho y alto, no por lado menor', () => {
+    // Un rótulo no es cuadrado: 45x120 tiene sitio por abajo y ninguno por
+    // los lados. Con un solo número, la mitad de los bloques pasaban el corte
+    // y salían igualmente mudos.
+    const parejos = Array.from({ length: 30 }, (_, i) => 100 - i * 2)
+    const marcoAncho = { x: 0, y: 0, ancho: 1200, alto: 300 }
+    const { cajas, resto } = repartirConResto(parejos, marcoAncho, { minAncho: 100, minAlto: 30 })
+    expect(resto).not.toBe(null)
+    for (const c of cajas) expect(c.ancho).toBeGreaterThanOrEqual(100)
+    // Y con el criterio de «lado menor» a 30 no se habría juntado nada, que
+    // es el fallo: bloques estrechos y altos pasaban el corte y salían mudos.
+    const porLadoMenor = repartirConResto(parejos, marcoAncho, { minAncho: 30, minAlto: 30 })
+    expect(porLadoMenor.cajas.some((c) => c.ancho < 100)).toBe(true)
+  })
+
+  it('dice cuántos ha juntado y cuánto suman', () => {
+    const { resto } = repartirConResto(muchos, marco, { minAncho: 86, minAlto: 40 })
+    expect(resto.cuantos).toBeGreaterThan(0)
+    expect(resto.desde + resto.cuantos).toBe(100)
+    expect(resto.valor).toBeCloseTo(muchos.slice(resto.desde).reduce((s, v) => s + v, 0), 6)
+  })
+
+  it('el área sigue siendo exacta: el resto mide lo que miden todos juntos', () => {
+    // Quitar la cola sin más haría que el dibujo afirmara que ese dinero no
+    // existe. Juntarla conserva la proporción.
+    const { cajas, resto } = repartirConResto(muchos, marco, { minAncho: 86, minAlto: 40 })
+    const total = muchos.reduce((s, v) => s + v, 0)
+    const superficie = marco.ancho * marco.alto
+    const ultima = cajas[cajas.length - 1]
+    expect(ultima.ancho * ultima.alto).toBeCloseTo((resto.valor / total) * superficie, 2)
+  })
+
+  it('en un lienzo pequeño junta más, y sigue cumpliendo el mínimo', () => {
+    const grande = repartirConResto(muchos, marco, { minAncho: 86, minAlto: 40 })
+    const movil = repartirConResto(muchos, { x: 0, y: 0, ancho: 360, alto: 420 }, { minAncho: 86, minAlto: 40 })
+    expect(movil.resto.cuantos).toBeGreaterThan(grande.resto.cuantos)
+    for (const c of movil.cajas) expect(Math.min(c.ancho, c.alto)).toBeGreaterThanOrEqual(26)
+  })
+
+  it('si todo cabe, no inventa un resto', () => {
+    const { cajas, resto } = repartirConResto([50, 30, 20], marco, { minAncho: 86, minAlto: 40 })
+    expect(resto).toBe(null)
+    expect(cajas).toHaveLength(3)
+  })
+
+  it('nunca baja de un mínimo de bloques, aunque no quepan', () => {
+    // Con un lienzo diminuto, juntarlo todo en uno dejaría un rectángulo sin
+    // información. Antes de eso, se aceptan bloques pequeños.
+    const { cajas } = repartirConResto(muchos, { x: 0, y: 0, ancho: 60, alto: 40 }, { minAncho: 86, minAlto: 40, minimos: 6 })
+    expect(cajas.length).toBeGreaterThanOrEqual(6)
+  })
+
+  it('sin valores no revienta', () => {
+    expect(repartirConResto([], marco)).toEqual({ cajas: [], resto: null })
+    expect(repartirConResto(null, marco)).toEqual({ cajas: [], resto: null })
   })
 })

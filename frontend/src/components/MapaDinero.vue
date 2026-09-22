@@ -33,7 +33,7 @@ import {
   MINIMO_NUCLEO,
   paletaDeNucleos,
 } from '../nucleos.js'
-import { repartirRectangulo } from '../rectangulos.js'
+import { repartirConResto } from '../rectangulos.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -144,14 +144,48 @@ const color = computed(() => paletaDeNucleos(analisis.value.nucleos))
 
 const MARGEN = 10
 
-const bloques = computed(() => {
-  if (!ancho.value || !alto.value) return []
-  const lista = dibujables.value
-  const cajas = repartirRectangulo(
-    lista.map((n) => n.dinero),
+/*
+  La cola se junta en un bloque «y N más».
+
+  Cien grupos terminan en una esquina de rectángulos de seis píxeles: no cabe
+  ni el nombre ni la cifra, así que son cajas negras que no dicen nada y
+  encima se pueden pulsar sin querer. Quitarlas sin más haría que el dibujo
+  afirmara que ese dinero no existe, así que se juntan en una sola con su
+  cuenta y su suma. El corte es por tamaño DIBUJADO y depende del lienzo: en
+  una pantalla ancha se rotulan cuarenta y en un teléfono, ocho.
+*/
+const reparto = computed(() => {
+  if (!ancho.value || !alto.value) return { cajas: [], resto: null }
+  return repartirConResto(
+    dibujables.value.map((n) => n.dinero),
     { x: MARGEN, y: MARGEN, ancho: ancho.value - MARGEN * 2, alto: alto.value - MARGEN * 2 },
+    { minAncho: 90, minAlto: 44 },
   )
+})
+
+/** Los grupos que el reparto ha juntado al final, si ha juntado alguno. */
+const juntados = computed(() => {
+  const r = reparto.value.resto
+  if (!r) return null
+  return { cuantos: r.cuantos, dinero: r.valor }
+})
+
+const bloques = computed(() => {
+  const lista = dibujables.value
+  const { cajas, resto } = reparto.value
   return cajas.map((c) => {
+    if (resto && c.i === resto.desde) {
+      return {
+        ...c,
+        nucleo: null,
+        color: FONDO,
+        destacado: false,
+        cabeNombre: c.ancho > 86 && c.alto > 40,
+        cabeCifra: c.ancho > 86 && c.alto > 58,
+        cabeDetalle: false,
+        juntados: resto,
+      }
+    }
     const n = lista[c.i]
     const tono = color.value(n.id)
     return {
@@ -165,6 +199,7 @@ const bloques = computed(() => {
       cabeNombre: c.ancho > 86 && c.alto > 40,
       cabeCifra: c.ancho > 86 && c.alto > 58,
       cabeDetalle: c.ancho > 150 && c.alto > 86,
+      juntados: null,
     }
   })
 })
@@ -196,14 +231,21 @@ function titulo(n) {
       <title>Dónde se concentra el dinero público, por grupos</title>
       <g
         v-for="b in bloques"
-        :key="b.nucleo.id"
+        :key="b.juntados ? 'resto' : b.nucleo.id"
         class="bloque"
-        :class="{ destacado: b.destacado, apagado: encima !== null && encima !== b.nucleo.id }"
-        @mouseenter="encima = b.nucleo.id"
+        :class="{
+          destacado: b.destacado,
+          resto: Boolean(b.juntados),
+          apagado: encima !== null && encima !== (b.nucleo?.id ?? 'resto'),
+        }"
+        @mouseenter="encima = b.nucleo?.id ?? 'resto'"
         @mouseleave="encima = null"
-        @click="emit('abrir', b.nucleo.id)"
+        @click="b.nucleo && emit('abrir', b.nucleo.id)"
       >
-        <title>{{ titulo(b.nucleo) }}</title>
+        <title v-if="b.juntados">
+          {{ b.juntados.cuantos }} grupos más pequeños · {{ dineroCorto(b.juntados.valor) }}
+        </title>
+        <title v-else>{{ titulo(b.nucleo) }}</title>
         <rect
           :x="b.x"
           :y="b.y"
@@ -235,7 +277,11 @@ function titulo(n) {
           :width="Math.max(0, b.ancho - 16)"
           :height="Math.max(0, b.alto - 14)"
         >
-          <div class="rotulo">
+          <div v-if="b.juntados" class="rotulo">
+            <p class="nombre tenue">y {{ b.juntados.cuantos }} grupos más</p>
+            <p v-if="b.cabeCifra" class="cifra tenue">{{ dineroCorto(b.juntados.valor) }}</p>
+          </div>
+          <div v-else class="rotulo">
             <p class="nombre">{{ b.nucleo.etiqueta }}</p>
             <p v-if="b.cabeCifra" class="cifra">{{ dineroCorto(b.nucleo.dinero) }}</p>
             <p v-if="b.cabeDetalle" class="detalle">{{ b.nucleo.tamano }} entidades</p>
@@ -251,6 +297,10 @@ function titulo(n) {
 .mapa-dinero { position: relative; width: 100%; height: 100%; overflow: hidden; }
 
 .bloque { cursor: pointer; transition: opacity 0.12s; }
+/* El bloque del resto no lleva a ninguna parte: no se puede pulsar. */
+.bloque.resto { cursor: default; }
+.bloque.resto:hover rect { fill-opacity: 0.16; }
+.tenue { color: var(--tinta-3) !important; }
 .bloque.apagado { opacity: 0.45; }
 .bloque:hover rect { fill-opacity: 0.6; }
 

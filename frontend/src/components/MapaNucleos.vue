@@ -149,6 +149,8 @@ function construir() {
     hacer, y sólo a ese tamaño.
   */
   const soloUnNucleo = props.nucleoEnfocado !== null
+  /** ¿Lienzo de teléfono? Cambia cuántos nombres caben, no qué se dibuja. */
+  const estrecho = (contenedor.value?.clientWidth ?? 0) < 620
   if (soloUnNucleo) {
     g.forEachNode((id, attrs) => {
       if (attrs.nucleo !== props.nucleoEnfocado) fuera.add(id)
@@ -239,12 +241,24 @@ function construir() {
       rejilla de Sigma, que enseña las que caben mientras se hace zoom.
     */
     const TOPE_TODOS = 45
-    if (g.order <= TOPE_TODOS) {
+    if (!estrecho && g.order <= TOPE_TODOS) {
       g.forEachNode((id) => conEtiqueta.add(id))
-    } else {
+    } else if (!estrecho) {
       const suyo = visible.nucleos.find((n) => n.id === props.nucleoEnfocado)
       for (const m of suyo?.principales ?? []) if (g.hasNode(m.id)) conEtiqueta.add(m.id)
     }
+    /*
+      En un teléfono no se fuerza ninguno, y ahí está el matiz.
+
+      Un rótulo mide lo que mide —«Demarcación de Carreteras del Estado en…»
+      son doscientos píxeles— y en un lienzo de 390 los de tres nodos vecinos
+      se apilan: salía un bloque de texto ilegible encima del dibujo, con las
+      puntas fuera de la pantalla. Forzar MENOS no lo arregla, porque forzar
+      es precisamente saltarse el reparto por rejilla de Sigma, que es lo
+      único que impide que dos caigan encima. Así que en estrecho se le da el
+      nombre a todos y se deja que reparta él: enseña los que caben y ninguno
+      se pisa. Para el resto está tocar el punto, que abre su ficha.
+    */
   } else {
     for (const n of visible.nucleos) {
       if (color(n.id) === FONDO) continue
@@ -256,13 +270,13 @@ function construir() {
 
   g.forEachNode((id, attrs) => {
     g.mergeNodeAttributes(id, {
-      label: conEtiqueta.has(id) ? recortar(attrs.label) : '',
+      label: estrecho || conEtiqueta.has(id) ? recortar(attrs.label) : '',
       // Forzada: si el núcleo lleva color, lleva nombre, y no depende de que
       // su cabeza gane la celda de la rejilla de rótulos de Sigma. Con el
       // reparto automático salían con nombre cuatro de los siete de color y
       // los otros tres eran manchas mudas — y el color está precisamente
       // para poder ir de la mancha a su fila en la lista de al lado.
-      forceLabel: conEtiqueta.has(id),
+      forceLabel: !estrecho && conEtiqueta.has(id),
       etiquetaReal: attrs.label,
       // Dentro de un grupo, el color del grupo lo llevan todos y no distingue
       // nada; ahí vuelve a decir el tipo de entidad, que es lo que separa al
@@ -513,7 +527,10 @@ function pintar() {
     // salían tres de los doce con color, y una mancha de color sin nombre no
     // sirve para llegar a la lista de al lado.
     labelDensity: 0.6,
-    labelGridCellSize: 155,
+    // Celdas más grandes en pantalla estrecha: la rejilla de Sigma evita que
+    // dos rótulos caigan en la misma celda, no que se solapen, y en 390 px un
+    // nombre oficial ocupa media pantalla.
+    labelGridCellSize: (contenedor.value?.clientWidth ?? 0) < 620 ? 260 : 155,
     // El umbral es de tamaño DIBUJADO, así que va atado al rango de `tamano`.
     // Al bajar los puntos de 8-26 px a 3-14, un umbral de 11 dejaba mudos la
     // mitad de los núcleos de color: el de Aena, el de Metro de Madrid y dos

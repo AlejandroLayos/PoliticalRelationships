@@ -823,7 +823,13 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         -->
         <div v-if="vista === 'mapa' && nucleoEnfocado !== null" class="dentro-de">
           <button class="salir" @click="nucleoEnfocado = null">← Todos los grupos</button>
-          <span v-if="nucleoAbierto" class="nombre-grupo">
+          <!--
+            El nombre del grupo, sólo en pantalla ancha: en un teléfono la
+            barra se iba a dos renglones y tapaba la fila de arriba del
+            dibujo, y ese mismo nombre con su cifra está justo debajo, en la
+            cabecera de la columna.
+          -->
+          <span v-if="nucleoAbierto" class="nombre-grupo ancho">
             {{ nucleoAbierto.etiqueta }}
             <span class="cifra">{{ dineroCorto(nucleoAbierto.dinero) }} · {{ nucleoAbierto.tamano }} entidades</span>
           </span>
@@ -1133,7 +1139,15 @@ main { flex: 1; position: relative; min-height: 0; }
 */
 .leyenda > span { display: flex; align-items: center; gap: 0.3rem; }
 .leyenda > span.corrida { display: block; }
-.leyenda-texto { max-width: min(78ch, calc(100% - 1.4rem)); line-height: 1.45; }
+/*
+  La explicación va sobre placa también en pantalla ancha: cae encima del
+  bloque de abajo a la izquierda —que es grande y lleva su nombre escrito— y
+  sin fondo se leían los dos textos mezclados.
+*/
+.leyenda-texto {
+  max-width: min(78ch, calc(100% - 1.4rem)); line-height: 1.45;
+  background: var(--plano); padding: 0.35rem 0.5rem; border-radius: var(--radio-s);
+}
 .leyenda-texto b { color: var(--tinta-2); }
 .leyenda i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .leyenda i.linea-inferida {
