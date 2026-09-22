@@ -103,6 +103,32 @@ const fraseDelPagadorComun = computed(() => {
   return `Sobre todo por ${trozos.join('; y por ')}.`
 })
 
+/** Las dos concentraciones que haya —lo que paga y lo que recibe—, con su frase. */
+const reparto = computed(() => {
+  const a = props.area
+  if (!a) return []
+  const filas = []
+  if (a.concentracionPagaA) {
+    filas.push({
+      clave: 'paga',
+      c: a.concentracionPagaA,
+      verbo: 'reparte',
+      preposicion: 'va a',
+      plural: 'receptores',
+    })
+  }
+  if (a.concentracionRecibeDe) {
+    filas.push({
+      clave: 'recibe',
+      c: a.concentracionRecibeDe,
+      verbo: 'recibe',
+      preposicion: 'viene de',
+      plural: 'pagadores',
+    })
+  }
+  return filas
+})
+
 const CUANTOS_DOCUMENTOS = 5
 const documentosVisibles = computed(() => procedencia.value.slice(0, CUANTOS_DOCUMENTOS))
 const documentosDeMas = computed(() =>
@@ -263,6 +289,52 @@ const sinDatos = computed(
           </span>
         </div>
       </div>
+
+      <!--
+        Cómo se reparte el dinero.
+
+        La ficha decía «reparte 224 M € entre 77 receptores» y ahí se quedaba.
+        Setenta y siete receptores suena a mucho reparto, y puede que los
+        cinco primeros se lleven la mitad: es una diferencia grande y el
+        número de receptores no la enseña. Y el panel tenía media pantalla en
+        blanco justo debajo.
+      -->
+      <section v-if="reparto.length" class="bloque">
+        <h3>Cómo se reparte</h3>
+        <ul class="reparto">
+          <li v-for="r in reparto" :key="r.clave">
+            <p class="frase">
+              El <b>{{ r.c.primero }} %</b> de lo que {{ r.verbo }} {{ r.preposicion }}
+              <button class="enlace" @click="emit('seleccionar', r.c.idPrimero)">
+                {{ r.c.nombrePrimero }}</button><!--
+              La razón social ya acaba muchas veces en punto —«S.A.U.»— y
+              añadirle otro deja «S.A.U..».
+              --><template v-if="!r.c.nombrePrimero.endsWith('.')">.</template>
+              <template v-if="r.c.deCuantos > r.c.cuantos">
+                Los {{ r.c.cuantos }} primeros se llevan el
+                <b>{{ r.c.cabeza }} %</b>, de {{ r.c.deCuantos }}
+                {{ r.plural }} con cifra.
+              </template>
+            </p>
+            <span class="barra-reparto" aria-hidden="true">
+              <i :style="{ width: `${r.c.primero}%` }" />
+            </span>
+          </li>
+        </ul>
+        <p v-if="area.periodo" class="matiz">
+          Operaciones fechadas entre el {{ fechaCorta(area.periodo.desde) }} y el
+          {{ fechaCorta(area.periodo.hasta) }}.
+        </p>
+        <!--
+          Y el matiz de siempre, que aquí hace falta: una concentración alta
+          no es irregular por sí misma. Hay mercados con tres proveedores en
+          toda España, y una obra grande se adjudica entera a una empresa.
+        -->
+        <p class="matiz">
+          Una parte alta no indica nada irregular por sí misma: hay mercados
+          con muy pocos proveedores, y una obra grande se adjudica entera.
+        </p>
+      </section>
 
       <!--
         La procedencia, en la ficha y no a dos clics.
@@ -543,6 +615,21 @@ const sinDatos = computed(
 </template>
 
 <style scoped>
+.reparto { list-style: none; margin: 0 0 var(--e3); padding: 0; }
+.reparto li + li { margin-top: var(--e3); }
+.frase { margin: 0 0 var(--e2); font-size: var(--t-s); color: var(--tinta-2); line-height: 1.5; }
+.frase b { color: var(--tinta); font-weight: 650; }
+.frase .enlace {
+  background: none; border: none; padding: 0; font: inherit;
+  color: var(--serie-1); cursor: pointer; text-align: left;
+}
+/* Barra de una sola serie: la parte del primero sobre el total. */
+.barra-reparto {
+  display: block; height: 6px; background: var(--superficie-2);
+  border-radius: 3px; overflow: hidden;
+}
+.barra-reparto i { display: block; height: 100%; background: var(--serie-1); border-radius: 1px 3px 3px 1px; }
+
 .acciones { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e2); }
 .copiar { color: var(--tinta-3); }
 .copiar:hover { color: var(--tinta); }

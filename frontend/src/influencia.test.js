@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { areaDeInfluencia, redDeFlujo, resumenEnPalabras } from './influencia.js'
+import { areaDeInfluencia, concentracion, redDeFlujo, resumenEnPalabras } from './influencia.js'
 
 /**
  * Un caso con las tres clases de arista a la vez, porque lo que hay que
@@ -296,5 +296,82 @@ describe('por qué orbitan', () => {
     ]
     const edges = [{ id: 'a', source: 'o', target: 'e', amount: '100', schema: 'Payment', confidence: 1, status: 'asserted' }]
     expect(areaDeInfluencia({ nodes, edges }, 'e').compartenPor).toEqual([])
+  })
+})
+
+describe('concentración', () => {
+  /**
+   * «Reparte 224 M € entre 77 receptores» suena a mucho reparto, y puede que
+   * los cinco primeros se lleven la mitad. El número de receptores no lo dice.
+   */
+  it('mide la parte del primero y la de los cinco primeros', () => {
+    const lista = [
+      { id: 'a', caption: 'GRANDE', total: 50 },
+      { id: 'b', caption: 'B', total: 20 },
+      { id: 'c', caption: 'C', total: 15 },
+      { id: 'd', caption: 'D', total: 10 },
+      { id: 'e', caption: 'E', total: 4 },
+      { id: 'f', caption: 'F', total: 1 },
+    ]
+    const c = concentracion(lista)
+    expect(c.primero).toBe(50)
+    expect(c.nombrePrimero).toBe('GRANDE')
+    expect(c.cabeza).toBe(99)
+    expect(c.deCuantos).toBe(6)
+    expect(c.cuantos).toBe(5)
+  })
+
+  it('con una sola contraparte no hay reparto del que hablar', () => {
+    expect(concentracion([{ id: 'a', caption: 'A', total: 100 }])).toBeNull()
+    expect(concentracion([])).toBeNull()
+    expect(concentracion(null)).toBeNull()
+  })
+
+  it('sin dinero tampoco', () => {
+    expect(concentracion([
+      { id: 'a', caption: 'A', total: 0 },
+      { id: 'b', caption: 'B', total: 0 },
+    ])).toBeNull()
+  })
+
+  it('las contrapartes sin cifra no cuentan en el reparto', () => {
+    // Si contaran como cero, bajarían el porcentaje del primero e inventarían
+    // un reparto más amplio del que consta.
+    const c = concentracion([
+      { id: 'a', caption: 'A', total: 80 },
+      { id: 'b', caption: 'B', total: 20 },
+      { id: 'c', caption: 'SIN CIFRA', total: 0 },
+    ])
+    expect(c.primero).toBe(80)
+    expect(c.deCuantos).toBe(2)
+  })
+})
+
+describe('periodo', () => {
+  const nodes = [
+    { id: 'o', caption: 'ORGANISMO', schema: 'PublicBody', properties: {} },
+    { id: 'e', caption: 'EMPRESA', schema: 'Company', properties: {} },
+  ]
+  const arista = (id, fecha) => ({
+    id, source: 'o', target: 'e', amount: '100', schema: 'Payment',
+    confidence: 1, status: 'asserted', start_date: fecha,
+  })
+
+  it('el primer y el último día con operaciones fechadas', () => {
+    const area = areaDeInfluencia(
+      { nodes, edges: [arista('a', '2025-03-06'), arista('b', '2025-12-04'), arista('c', '2025-07-04')] },
+      'o',
+    )
+    expect(area.periodo).toEqual({ desde: '2025-03-06', hasta: '2025-12-04' })
+  })
+
+  it('sin fechas, no se inventa ninguna', () => {
+    const area = areaDeInfluencia({ nodes, edges: [arista('a', undefined)] }, 'o')
+    expect(area.periodo).toBeNull()
+  })
+
+  it('una sola operación tiene principio y fin el mismo día', () => {
+    const area = areaDeInfluencia({ nodes, edges: [arista('a', '2025-05-05')] }, 'o')
+    expect(area.periodo).toEqual({ desde: '2025-05-05', hasta: '2025-05-05' })
   })
 })

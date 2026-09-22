@@ -48,6 +48,9 @@ function vacio(entidad = null) {
     extranjero: { contrapartes: [], total: 0, porcentaje: 0, indicios: [], totalIndicios: 0 },
     comparten: [],
     compartenPor: [],
+    concentracionPagaA: null,
+    concentracionRecibeDe: null,
+    periodo: null,
     red: { nodes: [], edges: [] },
   }
 }
@@ -67,6 +70,56 @@ function esExtranjera(n) {
  */
 function indicioExtranjera(n) {
   return Boolean(n?.properties?.entidad_extranjera_indicio)
+}
+
+/**
+ * Cómo de repartido está el dinero de una lista de contrapartes.
+ *
+ * La ficha de un organismo decía «reparte 224 M € entre 77 receptores» y ahí
+ * se quedaba. Setenta y siete receptores suena a mucho reparto, y puede que
+ * los cinco primeros se lleven la mitad: es una diferencia grande y el número
+ * de receptores no la enseña.
+ *
+ * Devuelve la parte del primero y la de los cinco primeros, en tanto por
+ * ciento, más el nombre del primero. `null` cuando no hay dinero que repartir
+ * o hay una sola contraparte, porque entonces no hay reparto del que hablar.
+ */
+export function concentracion(lista, cuantos = 5) {
+  const filas = (lista ?? []).filter((c) => aNumero(c.total) > 0)
+  if (filas.length < 2) return null
+  const total = filas.reduce((s, c) => s + aNumero(c.total), 0)
+  if (total <= 0) return null
+  const ordenadas = [...filas].sort((a, b) => aNumero(b.total) - aNumero(a.total))
+  const cabeza = ordenadas.slice(0, cuantos).reduce((s, c) => s + aNumero(c.total), 0)
+  return {
+    primero: Math.round((aNumero(ordenadas[0].total) / total) * 100),
+    nombrePrimero: ordenadas[0].caption,
+    idPrimero: ordenadas[0].id,
+    cabeza: Math.round((cabeza / total) * 100),
+    deCuantos: filas.length,
+    cuantos: Math.min(cuantos, filas.length),
+  }
+}
+
+/**
+ * El primer y el último día con operaciones fechadas.
+ *
+ * Las cifras de una ficha no dicen de cuándo son. «224 M €» es una cosa si
+ * son de un año y otra si son de cinco, y el volcado trae la fecha de cada
+ * operación sin que nadie la mirara.
+ */
+export function periodoDe(aristas, id) {
+  let desde = ''
+  let hasta = ''
+  for (const a of aristas ?? []) {
+    if (a.source !== id && a.target !== id) continue
+    if (!ESQUEMAS_DINERO.has(a.schema)) continue
+    const f = a.start_date
+    if (!f) continue
+    if (!desde || f < desde) desde = f
+    if (!hasta || f > hasta) hasta = f
+  }
+  return desde ? { desde, hasta } : null
 }
 
 /**
@@ -264,6 +317,9 @@ export function areaDeInfluencia(datos, id) {
     },
     comparten: compartenLista,
     compartenPor,
+    concentracionPagaA: concentracion(pagaA),
+    concentracionRecibeDe: concentracion(recibeDe),
+    periodo: periodoDe(aristas, id),
     red: redDeFlujo(datos, id, recibeDe, pagaA),
   }
 }
