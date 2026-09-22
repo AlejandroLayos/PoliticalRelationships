@@ -30,7 +30,11 @@
  * Que una empresa aparezca aquí no la convierte en un medio de comunicación:
  * puede ser la agencia que compra los espacios, la productora o la imprenta.
  * Lo que afirma el dato es el objeto del contrato, no la naturaleza del
- * adjudicatario, y así hay que enseñarlo.
+ * adjudicatario, y así hay que enseñarlo. Por eso el bloque de la portada se
+ * titula «gasto en publicidad institucional» y no «publicidad y medios»: con
+ * los datos del 22/9 los cuatro contratos de cabeza los cobran dos
+ * aerolíneas, un club de fútbol y un obrador. El filtro acierta; el título
+ * anterior prometía otra cosa.
  */
 
 import { aNumero } from './nucleos.js'

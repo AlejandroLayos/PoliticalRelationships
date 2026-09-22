@@ -247,15 +247,27 @@ function color(schema) {
       Publicidad institucional. Se enseña el objeto del contrato, no una
       etiqueta sobre la empresa: el dato dice para qué era el contrato, y de
       ahí no se sigue que el adjudicatario sea un medio de comunicación.
+
+      El título decía «y medios» y prometía algo que el dato no dice. Los
+      cuatro contratos de cabeza de la instantánea del 22/9 los cobran dos
+      aerolíneas (promoción del turismo navarro y extremeño), un club de
+      fútbol (patrocinio para publicitar una marca de ciudad), un obrador y
+      una agencia de medios vasca. El filtro CPV es correcto —todos son
+      contratos de publicidad— pero ninguno de los cuatro primeros es un
+      medio de comunicación. El desmentido estaba al pie, después de la
+      lista: llegaba tarde. Ahora el título no lo afirma y el matiz va en la
+      entradilla.
     -->
     <section v-if="medios.contratos.length" class="tarjeta medios">
-      <h3>Publicidad institucional y medios</h3>
+      <h3>Gasto en publicidad institucional</h3>
       <p class="que">
-        Contratos cuyo objeto es publicidad, edición, radio, televisión o
-        relaciones públicas, según el código CPV que el propio órgano de
-        contratación asignó al expediente.
         <b>{{ dinero(medios.total) }}</b> en {{ medios.contratos.length }}
-        {{ medios.contratos.length === 1 ? 'adjudicación' : 'adjudicaciones' }}.
+        {{ medios.contratos.length === 1 ? 'adjudicación' : 'adjudicaciones' }}
+        cuyo objeto es publicidad, edición, radio, televisión o relaciones
+        públicas, según el código CPV que el propio órgano de contratación
+        asignó al expediente. Es de qué iba el contrato, no qué es quien lo
+        cobra: puede ser un medio, y puede ser la agencia que compra los
+        espacios, la productora o la imprenta.
       </p>
 
       <div class="dos-columnas">
@@ -298,11 +310,6 @@ function color(schema) {
         </ul>
       </details>
 
-      <p class="no-es">
-        Aparecer aquí no convierte a una empresa en un medio de comunicación:
-        puede ser la agencia que compra los espacios, la productora o la
-        imprenta. El dato dice de qué iba el contrato, no qué es quien lo cobra.
-      </p>
     </section>
 
     <p class="pie">

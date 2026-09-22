@@ -459,7 +459,7 @@ const sinDatos = computed(
       <!-- Publicidad institucional ---------------------------------------- -->
       <section v-if="publicidad.length" class="bloque">
         <h3>
-          {{ pagaPublicidad ? 'Publicidad y medios que paga' : 'Publicidad institucional que cobra' }}
+          {{ pagaPublicidad ? 'Publicidad institucional que paga' : 'Publicidad institucional que cobra' }}
           <span class="cuenta">{{ publicidad.length }}</span>
         </h3>
         <p class="matiz">
