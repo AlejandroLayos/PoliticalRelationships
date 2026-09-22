@@ -121,17 +121,35 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } 
   const vacio = { centro: null, izquierda: [], derecha: [], cintas: [], recortado: { izquierda: 0, derecha: 0 } }
   if (!area?.entidad || !ancho || !alto) return vacio
 
-  const anchoColumna = ancla(ancho * 0.27, 130, 270)
-  const anchoCentro = ancla(ancho * 0.22, 150, 260)
+  const izq = area.recibeDe.slice(0, maxPorLado)
+  const der = area.pagaA.slice(0, maxPorLado)
+
+  /*
+    El ancho de la columna depende de si hay uno o dos lados, y eso es lo que
+    salva el diagrama en un móvil.
+
+    Con una sola proporción del ancho total, en 390 px la columna se quedaba
+    en su mínimo de 130 px y los nombres salían así: «SERVEO SERVICI…»,
+    «NOV…», «MODE…», «SERAN…». Cuatro letras y puntos suspensivos no
+    identifican a nadie, y el nombre de la contraparte es justamente lo que
+    la ficha tiene que decir.
+
+    Cuando sólo hay un lado —que es lo habitual: un organismo que sólo
+    adjudica, un partido del que sólo consta una sanción— sobra la mitad del
+    lienzo, así que la columna se lleva bastante más y el recuadro de la
+    entidad, que sólo lleva un nombre, se conforma con menos.
+  */
+  const unLado = !izq.length || !der.length
+  const anchoColumna = unLado
+    ? ancla(ancho * 0.46, Math.min(150, ancho * 0.4), 270)
+    : ancla(ancho * 0.27, Math.min(130, ancho * 0.28), 270)
+  const anchoCentro = ancla(ancho * 0.22, Math.min(150, ancho * 0.28), 260)
   const xIzq = MARGEN
   const xDer = ancho - MARGEN - anchoColumna
 
   const arriba = CABECERA
   const abajo = alto - MARGEN - pie
   const util = abajo - arriba
-
-  const izq = area.recibeDe.slice(0, maxPorLado)
-  const der = area.pagaA.slice(0, maxPorLado)
 
   const altosIzq = repartirAlto(izq.map((x) => x.total), util)
   const altosDer = repartirAlto(der.map((x) => x.total), util)

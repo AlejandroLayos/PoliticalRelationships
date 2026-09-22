@@ -50,10 +50,12 @@ const disposicion = computed(() =>
   disponerFlujo(props.area, {
     ancho: ancho.value,
     alto: alto.value,
-    // En móvil la leyenda ocupa tres líneas y se comía la última ficha. En
-    // escritorio el pie guarda sitio para el «+N más»: con 22 px se escribía
-    // encima de la ayuda de la esquina.
-    pie: ancho.value < 700 ? 50 : 36,
+    // El pie guarda sitio para dos cosas que se pintan por debajo de la
+    // última ficha: el «+N más, en la lista» y la leyenda. En escritorio, con
+    // 22 px el «+N» caía encima de la ayuda de la esquina; en móvil la
+    // leyenda pasa a dos renglones sobre una placa opaca y con 50 px se
+    // tragaba el «+N», que salía apagado debajo del recuadro.
+    pie: ancho.value < 700 ? 78 : 36,
     // Doce contrapartes dejaban media pantalla en negro: con el tope de alto
     // de la ficha puesto, doce cajas de 68 px ocupan 890 px de los 900 que
     // hay, pero como las de abajo son pequeñas el dibujo se queda corto por
@@ -103,6 +105,26 @@ function recortar(texto, w, reservado = 0) {
 function anchoCifra(total) {
   return anchoDe(dineroCorto(total), FUENTE_CIFRA) + AIRE
 }
+
+const FUENTE_TIPO = '9.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+/** `measureText` no sabe del `letter-spacing` del CSS; se suma aparte. */
+const ESPACIADO_TIPO = 0.95
+
+/**
+ * El tipo de la entidad, o nada si no cabe en el recuadro.
+ *
+ * Va centrado sobre la caja y no se recorta solo: en un móvil, «ORGANISMO
+ * PÚBLICO» es más ancho que el recuadro y se salía por los dos lados, encima
+ * de las cintas. Antes que un rótulo pisando el dibujo, ninguno — el tipo
+ * está también en el panel de al lado, en su cabecera.
+ */
+const tipoCentro = computed(() => {
+  const caja = disposicion.value.centro
+  const texto = etiquetaEsquema(props.area?.entidad?.schema ?? '').toUpperCase()
+  if (!caja || !texto) return ''
+  const mide = anchoDe(texto, FUENTE_TIPO) + texto.length * ESPACIADO_TIPO
+  return mide <= caja.w - 12 ? texto : ''
+})
 
 /** Dos renglones si la ficha da de sí; si no, nombre y cifra en el mismo. */
 function esAlta(c) {
@@ -272,7 +294,7 @@ const sinFlujo = computed(
           text-anchor="middle"
           class="tipo-centro"
         >
-          {{ etiquetaEsquema(area.entidad.schema).toUpperCase() }}
+          {{ tipoCentro }}
         </text>
         <foreignObject
           :x="disposicion.centro.x + 8"
@@ -327,10 +349,16 @@ const sinFlujo = computed(
       >
         +{{ disposicion.recortado.izquierda }} pagadores más, en la lista
       </text>
+      <!--
+        Anclado por la derecha: escrito desde el borde izquierdo de la
+        columna, en un móvil se salía del lienzo y el texto acababa cortado
+        («+68 receptores más, en la lis»).
+      -->
       <text
         v-if="disposicion.recortado.derecha"
-        :x="ultima(disposicion.derecha).x"
+        :x="ultima(disposicion.derecha).x + ultima(disposicion.derecha).w"
         :y="piePara(disposicion.derecha)"
+        text-anchor="end"
         class="recorte"
       >
         +{{ disposicion.recortado.derecha }} receptores más, en la lista
