@@ -9,7 +9,8 @@
  */
 
 import { buscarDemo, entidadDemo, vecinosDemo } from './demo.js'
-import { crearGrafoLocal, normaliza } from './grafoLocal.js'
+import { crearGrafoLocal } from './grafoLocal.js'
+import { analizarConsulta, gradoDeCoincidencia, rotuloRelajado } from './buscador.js'
 import { sanearImportes } from './saneado.js'
 
 // Por defecto se habla con la API del mismo dominio (`/api/...`), que es lo
@@ -237,8 +238,14 @@ export function ordenarResultados(filas) {
   // red entera y de lo demás sólo cifras, así que mandar a la gente a la
   // ficha más pobre teniendo la buena sería un mal desempate.
   const enMapa = (r) => (r.soloIndice ? 1 : 0)
+  // El grado manda sobre el dinero: lo que lleva la frase entera va antes que
+  // lo que sólo comparte el topónimo, por mucho que el segundo mueva más. Sin
+  // eso, buscar el ayuntamiento de un pueblo devolvía primero el hospital de
+  // ese pueblo, que mueve cien veces más y no es lo que se pidió.
+  const cerca = (r) => -(r.grado ?? 3)
   return [...filas].sort(
     (a, b) =>
+      cerca(a) - cerca(b) ||
       mueve(b) - mueve(a) ||
       enMapa(a) - enMapa(b) ||
       (a.caption?.length ?? 0) - (b.caption?.length ?? 0) ||
@@ -254,14 +261,28 @@ export async function buscarTodo(q, limite = 25) {
   const idx = await cargarIndice()
   if (!idx.entidades.length) return { results: resultados, soloIndice: 0 }
 
-  const aguja = normaliza(q)
+  /*
+    La búsqueda se relaja por grados en vez de exigir la frase entera.
+
+    La contratación pública no se publica por ayuntamiento sino por ÓRGANO de
+    contratación, así que «ayuntamiento de Móstoles» encontraba una sola
+    entrada —la Junta de Gobierno— y dejaba fuera el Hospital Universitario de
+    Móstoles y las empresas de allí, que están en la base y son lo que se
+    estaba buscando. Ver `buscador.js`.
+  */
+  const consulta = analizarConsulta(q)
   const yaEstan = new Set(resultados.map((r) => r.id))
   const extra = []
   for (const e of idx.entidades) {
-    if (extra.length >= limite) break
+    if (extra.length >= limite * 2) break
     if (yaEstan.has(e.id)) continue
-    if (!normaliza(e.caption).includes(aguja)) continue
-    extra.push({ ...e, soloIndice: true })
+    const grado = gradoDeCoincidencia(e.caption, consulta)
+    if (!grado) continue
+    // `soloIndice` según lo que diga el índice, no por venir de él: con la
+    // búsqueda relajada llegan aquí entidades que SÍ están en el mapa —no
+    // llevaban la frase entera, nada más— y marcarlas «sin red» sería
+    // mentir sobre lo que se puede enseñar de ellas.
+    extra.push({ ...e, soloIndice: e.enMapa !== true, grado })
   }
 
   // Las filas del grafo no traen cifras y las del índice sí. Se las pega el
@@ -271,12 +292,17 @@ export async function buscarTodo(q, limite = 25) {
   const porId = new Map(idx.entidades.map((e) => [e.id, e]))
   const conCifras = resultados.map((r) => {
     const e = porId.get(r.id)
-    return e ? { ...r, recibido: e.recibido, pagado: e.pagado, clave: e.clave ?? r.clave } : r
+    const base = e ? { ...r, recibido: e.recibido, pagado: e.pagado, clave: e.clave ?? r.clave } : r
+    return { ...base, grado: gradoDeCoincidencia(r.caption, consulta) || 1 }
   })
 
+  const todas = ordenarResultados([...conCifras, ...extra]).slice(0, limite)
   return {
-    results: ordenarResultados([...conCifras, ...extra]),
-    soloIndice: extra.length,
+    results: todas,
+    soloIndice: todas.filter((r) => r.soloIndice).length,
+    // Los del grado flojo no son lo que se pidió: son lo que hay alrededor, y
+    // la interfaz los separa con su rótulo en vez de mezclarlos.
+    rotuloRelajado: todas.some((r) => r.grado === 1) ? rotuloRelajado(consulta) : '',
     totalIndice: idx.total,
   }
 }

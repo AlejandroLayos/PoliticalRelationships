@@ -32,6 +32,10 @@ const buscando = ref(false)
 // Cuántos resultados vienen sólo del índice: existen en la base pero no
 // caben en el mapa publicado, así que de ellos sólo hay cifras.
 const soloIndice = ref(0)
+/** El rótulo del grupo relajado, si la búsqueda ha tenido que relajarse. */
+const rotuloRelajado = ref('')
+/** Dónde empieza ese grupo, para poner el rótulo una sola vez. */
+const primeroRelajado = computed(() => resultados.value.findIndex((r) => r.grado === 1))
 /** La fila del índice cuando lo seleccionado no está en el grafo publicado. */
 const fueraDelMapa = ref(null)
 const datos = ref({ nodes: [], edges: [], truncated: false })
@@ -229,6 +233,7 @@ watch(consulta, (q) => {
       const r = await buscarTodo(q.trim())
       resultados.value = r.results ?? []
       soloIndice.value = r.soloIndice ?? 0
+      rotuloRelajado.value = r.rotuloRelajado ?? ''
     } finally {
       buscando.value = false
       esDemo.value = estado.esDemo
@@ -533,7 +538,20 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           @keydown.esc="resultados = []"
         />
         <ul v-if="resultados.length" class="sugerencias">
-          <li v-for="(r, i) in resultados" :id="`sug-${i}`" :key="r.id">
+          <template v-for="(r, i) in resultados" :key="r.id">
+            <!--
+              El grupo flojo va separado y con su rótulo. La contratación se
+              publica por ÓRGANO, no por ayuntamiento, así que «ayuntamiento
+              de Móstoles» encuentra una junta de gobierno y nada más; al
+              relajar la búsqueda salen también el hospital de allí y las
+              empresas de allí. Mezclados sin avisar, quien busca piensa que
+              el buscador se ha equivocado, no que le están enseñando lo que
+              hay alrededor.
+            -->
+            <li v-if="rotuloRelajado && r.grado === 1 && primeroRelajado === i" class="separador">
+              {{ rotuloRelajado }}
+            </li>
+            <li :id="`sug-${i}`">
             <button :class="{ resaltada: i === resaltado }" @click="elegir(r.id)">
               <span class="punto" :style="{ background: COLOR_POR_ESQUEMA[r.schema] ?? COLOR_POR_DEFECTO }" />
               <span class="nombre">{{ r.caption }}</span>
@@ -553,7 +571,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
                 <template v-if="r.soloIndice">· sin red</template>
               </span>
             </button>
-          </li>
+            </li>
+          </template>
           <!--
             El índice cubre toda la base; el mapa, sólo lo que cabe. Quien
             busca su ayuntamiento y lo encuentra marcado «sin red» tiene que
@@ -996,6 +1015,11 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
   display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.45rem 0.5rem;
   background: none; border: none; color: var(--texto); cursor: pointer; text-align: left; font: inherit;
   border-radius: 5px;
+}
+.separador {
+  padding: 0.45rem 0.5rem 0.2rem; font-size: var(--t-xs); color: var(--tinta-3);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  border-top: 1px solid var(--linea); margin-top: 0.25rem;
 }
 .sugerencias button:hover,
 .sugerencias button.resaltada { background: var(--superficie-2); }
