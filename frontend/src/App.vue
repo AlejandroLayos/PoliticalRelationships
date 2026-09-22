@@ -170,6 +170,18 @@ const esquemasEnPantalla = computed(() => {
   return Object.keys(COLOR_POR_ESQUEMA).filter((e) => vistos.has(e))
 })
 
+/**
+ * ¿La instantánea lleva algún vínculo que no sea dinero?
+ *
+ * Propiedad, cargos y participaciones vendrían del Registro Mercantil, que
+ * todavía no está ingerido. Se comprueba mirando los esquemas de verdad y no
+ * con una constante, para que el aviso desaparezca solo el día que entren.
+ */
+const ESQUEMAS_DE_CONTROL = new Set(['Ownership', 'Directorship', 'Membership', 'Associate'])
+const hayVinculosDeControl = computed(() =>
+  (grafoEntero.value?.edges ?? []).some((a) => ESQUEMAS_DE_CONTROL.has(a.schema)),
+)
+
 const hayInferidas = computed(() =>
   (datos.value?.edges ?? []).some((a) => a.status === 'inferred'),
 )
@@ -490,10 +502,41 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
               descargados y enlazados por la ingesta automática. Cada cifra
               lleva el documento del que salió.
             </p>
+            <!--
+              «La base entera tiene 23.892 entidades y la búsqueda las cubre
+              todas» era falso, y encima contradecía la cifra de la portada.
+              Las 23.892 son todo lo ingerido, expedientes de contratación
+              incluidos —que son papeles, no actores—; el buscador cubre el
+              índice, que son las entidades que mueven dinero. Dos números
+              distintos para lo mismo en la misma pantalla, y el que se
+              afirmaba era el que no valía.
+            -->
             <p v-if="instantanea.truncado">
-              El mapa se recorta a la parte con más dinero para que el
-              navegador pueda con él. La base entera tiene
-              {{ instantanea.total }} entidades y la búsqueda las cubre todas.
+              El mapa dibuja
+              {{ (indice?.enMapa ?? 0).toLocaleString('es-ES') }}
+              entidades, las de más dinero, para que el navegador pueda con él.
+              El buscador cubre las
+              {{ (indice?.total ?? 0).toLocaleString('es-ES') }} que mueven
+              dinero público en esta instantánea.
+            </p>
+            <!--
+              Lo que NO hay, y dicho con el dato delante.
+
+              Un hueco que el lector no conoce se lee como un hecho: quien
+              busca una empresa y no ve ningún vínculo con un partido puede
+              concluir que no lo hay, cuando lo que pasa es que esta
+              instantánea no lleva propiedad ni cargos — el Registro Mercantil
+              no está ingerido todavía. Lo que se publica es dinero público
+              yendo de un sitio a otro, y nada más. La frase sale de mirar los
+              esquemas que hay de verdad en la instantánea, no de una lista
+              escrita a mano que podría quedarse vieja.
+            -->
+            <p v-if="!hayVinculosDeControl">
+              <strong>Lo que no hay:</strong> esta instantánea sólo lleva
+              dinero público —adjudicaciones, subvenciones y expedientes del
+              Tribunal de Cuentas—. No lleva propiedad de empresas, cargos ni
+              consejos de administración, así que no ver un vínculo aquí no
+              significa que no exista: significa que esta fuente no lo publica.
             </p>
           </div>
         </details>
