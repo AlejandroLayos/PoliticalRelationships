@@ -139,3 +139,75 @@ export function medidorDeFluidez(minimoPorSegundo = 24, calentamiento = 20) {
     },
   }
 }
+
+/**
+ * El realce al pasar por encima, con transición.
+ *
+ * Sin transición, apuntar a un nodo es un corte: todo el dibujo cambia de
+ * golpe y el ojo pierde dónde estaba. Con doscientos milisegundos de fundido,
+ * lo que se ve es que el vecindario SALE de la masa, y eso es lo que hace que
+ * el gesto parezca una lupa y no un parpadeo.
+ *
+ * Esto lleva la cuenta del avance: a dónde va (1 si hay algo bajo el cursor,
+ * 0 si no) y por dónde va. El dibujo lo hacen los reductores, que interpolan
+ * con este número.
+ */
+export function realce(duracionMs = 200) {
+  let destino = 0
+  let valor = 0
+  let quien = ''
+  return {
+    /** Apunta a un nodo, o a ninguno con cadena vacía. */
+    apunta(id) {
+      if (id) quien = id
+      destino = id ? 1 : 0
+    },
+    /**
+     * Avanza `ms` milisegundos. Devuelve `true` mientras siga moviéndose,
+     * que es lo que dice si hace falta repintar.
+     */
+    avanza(ms) {
+      if (valor === destino) return false
+      const paso = Math.min(1, Math.max(0, ms) / duracionMs)
+      valor += (destino - valor) * Math.min(1, paso * 3)
+      if (Math.abs(destino - valor) < 0.01) valor = destino
+      if (valor === 0) quien = ''
+      return true
+    },
+    /** Cuánto realce hay ahora mismo, de 0 a 1. */
+    get intensidad() {
+      return valor
+    },
+    /** Quién lo lleva. Sigue valiendo mientras se apaga, para no cortar. */
+    get id() {
+      return quien
+    },
+    get activo() {
+      return valor > 0.001
+    },
+  }
+}
+
+/** Interpola dos números. Para tamaños y grosores. */
+export function entre(a, b, t) {
+  return a + (b - a) * Math.min(1, Math.max(0, t))
+}
+
+/**
+ * Una posición inicial estable para un nodo, dentro del cuadrado unidad.
+ *
+ * ForceAtlas2 es determinista si se le da el mismo punto de partida, pero el
+ * punto de partida era `Math.random()`: la misma instantánea salía dibujada
+ * distinta en cada visita —girada, del revés, con los haces hacia otro lado—.
+ * Es el mismo problema que tenía el agrupamiento y por el mismo motivo: quien
+ * se lleva una captura y quien abre el enlace ven dibujos distintos del mismo
+ * día, y no se puede decir «el de la izquierda».
+ *
+ * Dos valores de la misma familia que la fase de la deriva, desfasados para
+ * que no salgan todos en la diagonal.
+ */
+export function semillaDePosicion(id) {
+  const a = faseDe(id)
+  const b = faseDe(`${id}·y`)
+  return { x: a / (Math.PI * 2), y: b / (Math.PI * 2) }
+}

@@ -42,12 +42,23 @@ export function hexSobreFondo(hex, alfa, fondo = FONDO_LIENZO) {
   return rgb ? sobreFondo(rgb, alfa, fondo) : hex
 }
 
-/** `#rrggbb` → `[r,g,b]`, o `null` si no lo es. */
-export function aRgb(hex) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex ?? '')
-  if (!m) return null
-  const v = Number.parseInt(m[1], 16)
-  return [(v >> 16) & 255, (v >> 8) & 255, v & 255]
+/**
+ * Un color a `[r,g,b]`, o `null` si no se sabe leer.
+ *
+ * Entiende `#rrggbb` y `rgb(r,g,b)`, y esto último no es un capricho: lo que
+ * sale de `sobreFondo` es `rgb(...)`, así que en cuanto una arista ya
+ * atenuada pasaba por `aclarar` para realzarla, se devolvía sin tocar y el
+ * realce no se veía. El realce trabaja siempre sobre colores ya calculados.
+ */
+export function aRgb(color) {
+  const hex = /^#?([0-9a-f]{6})$/i.exec(color ?? '')
+  if (hex) {
+    const v = Number.parseInt(hex[1], 16)
+    return [(v >> 16) & 255, (v >> 8) & 255, v & 255]
+  }
+  const fn = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(color ?? '')
+  if (fn) return [Number(fn[1]), Number(fn[2]), Number(fn[3])]
+  return null
 }
 
 /** Mezcla un `#rrggbb` con un color, `k` de 0 a 1. Devuelve `rgb(...)`. */

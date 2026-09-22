@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { cercania, faseDe, medidorDeFluidez, posicionEnDeriva, puntosDeReposo } from './vida.js'
+import {
+  cercania,
+  entre,
+  faseDe,
+  medidorDeFluidez,
+  posicionEnDeriva,
+  puntosDeReposo,
+  realce,
+  semillaDePosicion,
+} from './vida.js'
 
 const NODOS = [
   { id: 'a', x: 0, y: 0, size: 4 },
@@ -149,5 +158,114 @@ describe('medidorDeFluidez', () => {
     const m = medidorDeFluidez()
     correr(m, 60, 8)
     expect(m.viable).toBe(true)
+  })
+})
+
+describe('realce', () => {
+  const correr = (r, ms, veces) => {
+    let sigue = false
+    for (let i = 0; i < veces; i += 1) sigue = r.avanza(ms)
+    return sigue
+  }
+
+  it('nace apagado y no pide repintar', () => {
+    const r = realce()
+    expect(r.intensidad).toBe(0)
+    expect(r.activo).toBe(false)
+    expect(r.avanza(16)).toBe(false)
+  })
+
+  it('al apuntar sube hasta el tope y se para', () => {
+    const r = realce(200)
+    r.apunta('a')
+    expect(correr(r, 16, 60)).toBe(false)
+    expect(r.intensidad).toBe(1)
+    expect(r.id).toBe('a')
+  })
+
+  it('no salta de golpe: a mitad de camino va a mitad', () => {
+    // Sin transición, apuntar a un nodo es un corte y el ojo pierde dónde
+    // estaba. Lo que se quiere ver es el vecindario saliendo de la masa.
+    const r = realce(200)
+    r.apunta('a')
+    r.avanza(16)
+    expect(r.intensidad).toBeGreaterThan(0)
+    expect(r.intensidad).toBeLessThan(0.6)
+  })
+
+  it('al soltar baja hasta cero y suelta a quién realzaba', () => {
+    const r = realce(200)
+    r.apunta('a')
+    correr(r, 16, 60)
+    r.apunta('')
+    expect(correr(r, 16, 60)).toBe(false)
+    expect(r.intensidad).toBe(0)
+    expect(r.id).toBe('')
+  })
+
+  it('mientras se apaga sigue sabiendo a quién, para no cortar el fundido', () => {
+    const r = realce(200)
+    r.apunta('a')
+    correr(r, 16, 60)
+    r.apunta('')
+    r.avanza(16)
+    expect(r.id).toBe('a')
+    expect(r.activo).toBe(true)
+  })
+
+  it('cambiar de nodo a mitad del fundido apunta al nuevo', () => {
+    const r = realce(200)
+    r.apunta('a')
+    r.avanza(16)
+    r.apunta('b')
+    expect(r.id).toBe('b')
+  })
+
+  it('un fotograma enorme no se pasa del tope', () => {
+    const r = realce(200)
+    r.apunta('a')
+    r.avanza(5000)
+    expect(r.intensidad).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('entre', () => {
+  it('interpola y no se sale de los extremos', () => {
+    expect(entre(10, 20, 0)).toBe(10)
+    expect(entre(10, 20, 1)).toBe(20)
+    expect(entre(10, 20, 0.5)).toBe(15)
+    expect(entre(10, 20, -3)).toBe(10)
+    expect(entre(10, 20, 9)).toBe(20)
+  })
+})
+
+describe('semillaDePosicion', () => {
+  it('la misma entidad arranca siempre en el mismo sitio', () => {
+    // ForceAtlas2 es determinista si el punto de partida lo es. Con
+    // `Math.random()` la misma instantánea salía dibujada distinta en cada
+    // visita: girada, del revés, con los haces hacia otro lado.
+    expect(semillaDePosicion('nif:B123')).toEqual(semillaDePosicion('nif:B123'))
+  })
+
+  it('cae dentro del cuadrado unidad', () => {
+    for (const id of ['a', 'bb', 'placsp:organo:x-1234', '']) {
+      const p = semillaDePosicion(id)
+      expect(p.x).toBeGreaterThanOrEqual(0)
+      expect(p.x).toBeLessThanOrEqual(1)
+      expect(p.y).toBeGreaterThanOrEqual(0)
+      expect(p.y).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('no las pone todas en la diagonal', () => {
+    const puntos = Array.from({ length: 40 }, (_, i) => semillaDePosicion(`n${i}`))
+    const enLaDiagonal = puntos.filter((p) => Math.abs(p.x - p.y) < 0.02).length
+    expect(enLaDiagonal).toBeLessThan(5)
+  })
+
+  it('reparte, no amontona', () => {
+    const puntos = Array.from({ length: 200 }, (_, i) => semillaDePosicion(`e${i}`))
+    const cuadrantes = new Set(puntos.map((p) => `${p.x < 0.5}${p.y < 0.5}`))
+    expect(cuadrantes.size).toBe(4)
   })
 })

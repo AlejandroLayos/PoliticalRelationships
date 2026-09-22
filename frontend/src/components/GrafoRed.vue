@@ -2,9 +2,18 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Graph from 'graphology'
 import Sigma from 'sigma'
+import EdgeCurveProgram from '@sigma/edge-curve'
 import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
 import { aclarar, apagar, sobreFondo } from '../color.js'
-import { cercania, medidorDeFluidez, posicionEnDeriva, puntosDeReposo } from '../vida.js'
+import {
+  cercania,
+  entre,
+  medidorDeFluidez,
+  posicionEnDeriva,
+  puntosDeReposo,
+  realce,
+  semillaDePosicion,
+} from '../vida.js'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { COLOR_POR_ESQUEMA, COLOR_POR_DEFECTO } from '../esquemas.js'
 
@@ -33,10 +42,15 @@ let iteracionesPendientes = 0
 let inicioDeriva = 0
 let ultimoRefresco = 0
 let ratonPintado = null
+let ultimoFotograma = 0
 const fluidez = medidorDeFluidez()
 const reposo = new Map()
 let radioRaton = 0
 let raton = null
+/* Mismo realce que el mapa: al apuntar un nodo, su vecindario sale de la masa
+   y sus caminos se encienden. Ver `realce` en `vida.js`. */
+const realzado = realce(200)
+let vecindario = new Set()
 let pendiente = false
 let observador = null
 
@@ -77,9 +91,9 @@ function construir() {
       esquema: n.schema,
       profundidad: n.depth ?? 0,
       color: COLOR_POR_ESQUEMA[n.schema] ?? COLOR_POR_DEFECTO,
-      // Posición inicial aleatoria: ForceAtlas2 la reordena.
-      x: Math.random(),
-      y: Math.random(),
+      // Punto de partida estable, no aleatorio: ForceAtlas2 es determinista
+      // si lo es su semilla. Ver `semillaDePosicion`.
+      ...semillaDePosicion(n.id),
       size: 6,
     })
   }
@@ -106,6 +120,8 @@ function construir() {
         ? sobreFondo([224, 163, 58], 0.45)
         : sobreFondo([120, 150, 190], 0.3 + 0.5 * (a.confidence ?? 1)),
       size: inferida ? 0.8 : 1.2 + 2.2 * (a.confidence ?? 1),
+      // Curvatura repartida para que dos aristas del mismo par no se pisen.
+      curvature: 0.15 + ((a.id?.length ?? 3) % 5) * 0.035,
     })
   }
 
@@ -152,15 +168,27 @@ function unFotograma(ahora) {
     return
   }
 
-  if (menosMovimiento) return
+  // El realce va siempre, incluso con «reducir movimiento»: es respuesta a un
+  // gesto. Lo que se le quita a quien lo pide es el fundido y la respiración.
+  const dt = ahora - (ultimoFotograma || ahora)
+  ultimoFotograma = ahora
+  const fundiendo = realzado.avanza(menosMovimiento ? 1e4 : dt)
+
+  if (menosMovimiento) {
+    if (!fundiendo && raton === ratonPintado) return
+    ratonPintado = raton
+    sigma.refresh({ skipIndexation: true })
+    return
+  }
+
   if (!reposo.size) prepararDeriva()
 
   // Mismo trato que en el mapa: la respiración se apaga sola donde repintar
   // salga caro; el foco del cursor se repinta siempre que el ratón se mueva.
   // Ver `medidorDeFluidez` en `vida.js`.
   const ratonMovido = raton !== ratonPintado
-  if (!fluidez.viable && !ratonMovido) return
-  if (ahora - ultimoRefresco < 33) return
+  if (!fluidez.viable && !ratonMovido && !fundiendo) return
+  if (!fundiendo && ahora - ultimoRefresco < 33) return
   ultimoRefresco = ahora
   ratonPintado = raton
 
@@ -174,7 +202,7 @@ function unFotograma(ahora) {
       grafo.setNodeAttribute(id, 'y', pos.y)
     })
   }
-  fluidez.anota(ahora)
+  if (!fundiendo) fluidez.anota(ahora)
   sigma.refresh({ skipIndexation: true })
 }
 
@@ -219,7 +247,10 @@ function pintar() {
 
   sigma = new Sigma(grafo, contenedor.value, {
     renderEdgeLabels: false,
-    defaultEdgeType: 'line',
+    // Curvas: con rectas, el vecindario de un organismo sale como un abanico
+    // de agujas que se cortan en ángulo. Ver el mismo ajuste en `MapaNucleos`.
+    defaultEdgeType: 'curva',
+    edgeProgramClasses: { curva: EdgeCurveProgram },
     // Rotular tiene presupuesto. Con celdas de 70 px y umbral 7, un organismo
     // con treinta vecinos dejaba treinta nombres largos apiñados unos encima
     // de otros: una mancha de letras de la que no se leía ninguna. La rejilla
@@ -242,6 +273,11 @@ function pintar() {
     maxCameraRatio: 8,
   })
 
+  sigma.on('enterNode', ({ node }) => {
+    vecindario = new Set(grafo.neighbors(node))
+    realzado.apunta(node)
+  })
+  sigma.on('leaveNode', () => realzado.apunta(''))
   sigma.on('clickNode', ({ node }) => emit('seleccionar', node))
   sigma.on('doubleClickNode', ({ node, event }) => {
     // Doble clic expande el vecindario desde ese nodo: es el gesto natural
@@ -273,7 +309,33 @@ function resaltar() {
       if (grafo.areNeighbors(foco, id)) return { ...datos, zIndex: 1 }
       return { ...datos, color: sobreFondo([160, 165, 180], 0.28), label: '', zIndex: 0 }
     }
-    // El foco del cursor: el vecindario se aclara y crece, el resto se aleja.
+    // Apuntar un nodo enciende su vecindario y apaga el resto, con fundido.
+    const i = realzado.intensidad
+    if (i > 0.001 && realzado.id && grafo.hasNode(realzado.id)) {
+      if (id === realzado.id) {
+        return {
+          ...datos,
+          label: datos.etiquetaReal ?? datos.label,
+          forceLabel: true,
+          color: aclarar(datos.color, entre(0, 0.45, i)),
+          size: datos.size * entre(1, 1.7, i),
+          zIndex: 3,
+        }
+      }
+      if (vecindario.has(id)) {
+        return {
+          ...datos,
+          label: datos.etiquetaReal ?? datos.label,
+          forceLabel: vecindario.size <= 12 && i > 0.55,
+          color: aclarar(datos.color, entre(0, 0.34, i)),
+          size: datos.size * entre(1, 1.3, i),
+          zIndex: 2,
+        }
+      }
+      return { ...datos, color: apagar(datos.color, entre(0, 0.88, i)), label: '', zIndex: 0 }
+    }
+
+    // Y si no, el foco del cursor: lo de alrededor se aclara, el resto se aleja.
     if (!raton) return datos
     const cerca = cercania(datos.x, datos.y, raton, radioRaton)
     if (cerca <= 0.02) return { ...datos, color: apagar(datos.color, 0.55), zIndex: 0 }
@@ -290,6 +352,27 @@ function resaltar() {
       if (extremos.includes(foco)) return { ...datos, zIndex: 1 }
       return { ...datos, color: sobreFondo([190, 193, 203], 0.16), zIndex: 0 }
     }
+    // Los caminos del nodo apuntado: los suyos se encienden y engordan, los
+    // de vecino a vecino quedan a media luz y el resto casi al fondo.
+    const i = realzado.intensidad
+    if (i > 0.001 && realzado.id) {
+      if (extremos.includes(realzado.id)) {
+        const grueso = vecindario.size > 24 ? 1.5 : vecindario.size > 8 ? 2 : 2.6
+        return {
+          ...datos,
+          color: aclarar(datos.color, entre(0, 0.85, i)),
+          size: datos.size * entre(1, grueso, i),
+          zIndex: 3,
+        }
+      }
+      const entreVecinos = vecindario.has(extremos[0]) && vecindario.has(extremos[1])
+      return {
+        ...datos,
+        color: apagar(datos.color, entre(0, entreVecinos ? 0.55 : 0.92, i)),
+        zIndex: 0,
+      }
+    }
+
     if (!raton) return datos
     const cerca = Math.max(
       cercania(grafo.getNodeAttribute(extremos[0], 'x'), grafo.getNodeAttribute(extremos[0], 'y'), raton, radioRaton),

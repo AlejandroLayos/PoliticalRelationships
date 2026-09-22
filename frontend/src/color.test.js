@@ -39,9 +39,16 @@ describe('aRgb', () => {
     expect(aRgb('3987e5')).toEqual([0x39, 0x87, 0xe5])
   })
 
-  it('lo que no es un hexadecimal de seis no lo es', () => {
-    expect(aRgb('rgb(1,2,3)')).toBe(null)
+  it('también lee `rgb(...)`, que es lo que devuelve `sobreFondo`', () => {
+    // Sin esto, realzar una arista ya atenuada no hacía nada: `aclarar`
+    // recibía un `rgb(...)`, no sabía leerlo y lo devolvía igual.
+    expect(aRgb('rgb(1,2,3)')).toEqual([1, 2, 3])
+    expect(aRgb('rgba(10, 20, 30, 0.5)')).toEqual([10, 20, 30])
+  })
+
+  it('lo que no es un color no lo es', () => {
     expect(aRgb('#abc')).toBe(null)
+    expect(aRgb('azulete')).toBe(null)
     expect(aRgb(null)).toBe(null)
   })
 })
@@ -56,7 +63,11 @@ describe('aclarar y apagar', () => {
     expect(aclarar('#3987e5', 0)).toBe('rgb(57,135,229)')
   })
 
-  it('lo que no es hexadecimal se devuelve tal cual', () => {
-    expect(aclarar('rgb(1,2,3)', 0.5)).toBe('rgb(1,2,3)')
+  it('aclarar un `rgb(...)` también funciona', () => {
+    expect(aclarar('rgb(0,0,0)', 0.5)).toBe('rgb(128,128,128)')
+  })
+
+  it('lo que no es un color se devuelve tal cual', () => {
+    expect(aclarar('azulete', 0.5)).toBe('azulete')
   })
 })

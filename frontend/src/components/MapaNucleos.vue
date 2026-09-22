@@ -19,12 +19,21 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import Sigma from 'sigma'
+import EdgeCurveProgram from '@sigma/edge-curve'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { analizarNucleos, colapsarNodosDePaso, FONDO, paletaDeNucleos } from '../nucleos.js'
 import { dibujarEtiquetaCentrada } from '../etiquetas.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA } from '../esquemas.js'
 import { aclarar, apagar, sobreFondo } from '../color.js'
-import { cercania, medidorDeFluidez, posicionEnDeriva, puntosDeReposo } from '../vida.js'
+import {
+  cercania,
+  entre,
+  medidorDeFluidez,
+  posicionEnDeriva,
+  puntosDeReposo,
+  realce,
+  semillaDePosicion,
+} from '../vida.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -75,6 +84,7 @@ let inicioDeriva = 0
 let ultimoRefresco = 0
 /** El cursor tal y como estaba en el último repintado. */
 let ratonPintado = null
+let ultimoFotograma = 0
 const fluidez = medidorDeFluidez()
 /** Posición de reposo y fase de cada nodo. La deriva oscila alrededor. */
 const reposo = new Map()
@@ -89,6 +99,19 @@ const grafo = shallowRef(null)
 const etiquetados = shallowRef(new Set())
 /** El nodo bajo el ratón: es lo que destapa sus pagos a otros núcleos. */
 const encima = ref('')
+/*
+  El realce al pasar por encima, con fundido.
+
+  Antes era un corte: el nodo se encendía, sus aristas también, y el resto se
+  quedaba igual. Dos problemas. Uno, que sin atenuar lo demás el realce no se
+  ve —quinientas aristas encendidas por todas partes y un puñado un poco más—;
+  y dos, que un cambio instantáneo hace perder dónde estabas. Con doscientos
+  milisegundos de fundido, lo que se ve es el vecindario SALIENDO de la masa,
+  que es lo que hace que el gesto parezca una lupa y no un parpadeo.
+*/
+const realzado = realce(200)
+/** Los vecinos del nodo realzado, para no recorrer el grafo en cada arista. */
+let vecindario = new Set()
 
 /**
  * Los nombres oficiales son larguísimos —"Consejería de Sanidad, Presidencia y
@@ -287,8 +310,10 @@ function construir() {
       color: soloUnNucleo ? (COLOR_POR_ESQUEMA[attrs.esquema] ?? COLOR_POR_DEFECTO) : color(attrs.nucleo),
       extranjera: Boolean(nodosPorId.get(id)?.properties?.entidad_extranjera),
       size: tamano(attrs.dinero, attrs.grado),
-      x: Math.random(),
-      y: Math.random(),
+      // Punto de partida estable, no aleatorio: ForceAtlas2 es determinista
+      // si lo es su semilla, y con `Math.random()` la misma instantánea salía
+      // dibujada distinta en cada visita. Ver `semillaDePosicion`.
+      ...semillaDePosicion(id),
     })
   })
 
@@ -315,11 +340,31 @@ function construir() {
       y luego a 0,05— no hicieron nada, y la maraña blanca seguía tapando el
       dibujo por eso. Ver `color.js`.
     */
+    /*
+      El color de la arista lo pone QUIEN PAGA.
+
+      Dentro de un grupo el color del nodo dice el tipo —naranja organismo,
+      azul empresa—, y una arista gris entre los dos no decía nada. Tomando el
+      tono del origen, el dibujo se lee como corrientes: lo naranja es dinero
+      saliendo de una administración. Muy apagado, que la línea es contexto y
+      el nodo es el dato.
+    */
+    const deQuienPaga = soloUnNucleo
+      ? (COLOR_POR_ESQUEMA[orig.esquema] ?? COLOR_POR_DEFECTO)
+      : null
     const color = inferida
       ? sobreFondo([224, 163, 58], dentro ? 0.26 : 0.1)
-      : sobreFondo([150, 170, 200], dentro ? (soloUnNucleo ? 0.18 : 0.3) : 0.1)
+      : deQuienPaga
+        ? apagar(deQuienPaga, 0.72)
+        : sobreFondo([150, 170, 200], dentro ? 0.3 : 0.1)
     const grosor = 0.35 + Math.min(2.2, Math.log10(1 + attrs.importe) * 0.4)
-    g.mergeEdgeAttributes(e, { color, size: dentro ? grosor : Math.min(grosor, 0.6) })
+    g.mergeEdgeAttributes(e, {
+      color,
+      size: dentro ? grosor : Math.min(grosor, 0.6),
+      // Una curvatura por arista, estable y repartida: con todas iguales, dos
+      // aristas entre los mismos dos nodos vuelven a superponerse.
+      curvature: 0.15 + ((e.length * 7) % 5) * 0.035,
+    })
   })
 
   if (g.order > 1) {
@@ -539,7 +584,18 @@ function pintar() {
 
   sigma = new Sigma(grafo.value, contenedor.value, {
     renderEdgeLabels: false,
-    defaultEdgeType: 'line',
+    /*
+      Aristas curvas y no rectas.
+
+      Es la diferencia entre un diagrama y un dibujo. Con rectas, un organismo
+      con cuarenta adjudicatarios sale como un abanico de agujas que se cortan
+      unas a otras en ángulo; con curvas, los haces se separan al salir del
+      nodo, se ve cuál va a dónde y el conjunto se lee como corrientes en vez
+      de como una maraña. Además dos aristas entre los mismos dos puntos dejan
+      de superponerse.
+    */
+    defaultEdgeType: 'curva',
+    edgeProgramClasses: { curva: EdgeCurveProgram },
     // Sin la maraña de rectas cruzando el lienzo, los núcleos quedan
     // separados de verdad y caben más rótulos: con celdas de 220 px sólo
     // salían tres de los doce con color, y una mancha de color sin nombre no
@@ -578,17 +634,14 @@ function pintar() {
   sigma.on('clickNode', ({ node }) => emit('seleccionar', node))
   sigma.on('enterNode', ({ node }) => {
     encima.value = node
-    // La etiqueta aparece al pasar por encima aunque el nodo no sea de los
-    // rotulados: así se puede explorar sin llenar la pantalla de texto.
-    sigma.setSetting('nodeReducer', (id, d) =>
-      id === node ? { ...d, label: d.etiquetaReal, highlighted: true, zIndex: 3 } : reducirNodo(id, d),
-    )
-    sigma.setSetting('edgeReducer', reducirArista)
-    sigma.refresh()
+    // Los vecinos se calculan UNA vez al entrar, no en cada arista: el
+    // reductor de aristas se llama quinientas veces por fotograma.
+    vecindario = new Set(grafo.value.neighbors(node))
+    realzado.apunta(node)
   })
   sigma.on('leaveNode', () => {
     encima.value = ''
-    aplicarReductores()
+    realzado.apunta('')
   })
 
   contenedor.value.addEventListener('mousemove', seguirAlRaton)
@@ -615,13 +668,49 @@ function reducirNodo(id, d) {
   }
 
   /*
-    El foco del cursor.
+    Apuntar a un nodo enciende su vecindario y apaga lo demás.
 
-    No basta con aclarar lo de cerca: con quinientas aristas encendidas por
-    todas partes, un poco más de brillo en una esquina no se ve. Lo que lo
-    hace evidente es que el RESTO se aleja —se apaga hacia el fondo— mientras
-    el vecindario se aclara y crece. Es el mismo gesto de acercar la cara a
-    una parte del dibujo.
+    Las tres cosas a la vez, y las tres hacen falta: el apuntado crece y se
+    aclara, sus vecinos conservan color y sacan su nombre, y el resto se va
+    hacia el fondo. Sin lo tercero el realce no se ve —quinientas aristas
+    encendidas por todas partes y un puñado un poco más—; sin lo segundo no
+    se sabe QUIÉNES son, que es la pregunta.
+
+    Todo interpolado con la intensidad del fundido, así que soltar el ratón
+    deshace el camino en vez de cortarlo.
+  */
+  const t = realzado.intensidad
+  if (t > 0.001 && realzado.id && g.hasNode(realzado.id)) {
+    if (id === realzado.id) {
+      return {
+        ...d,
+        label: d.etiquetaReal,
+        forceLabel: true,
+        color: aclarar(d.color, entre(0, 0.45, t)),
+        size: d.size * entre(1, 1.7, t),
+        zIndex: 3,
+      }
+    }
+    if (vecindario.has(id)) {
+      return {
+        ...d,
+        label: d.etiquetaReal,
+        // Los nombres de los vecinos sólo si son pocos. Un organismo con
+        // cuarenta adjudicatarios sacaría cuarenta rótulos de golpe y el
+        // realce se convertiría en la maraña de texto que se quitó.
+        forceLabel: vecindario.size <= 12 && t > 0.55,
+        color: aclarar(d.color, entre(0, 0.34, t)),
+        size: d.size * entre(1, 1.3, t),
+        zIndex: 2,
+      }
+    }
+    return { ...d, color: apagar(d.color, entre(0, 0.88, t)), label: '', zIndex: 0 }
+  }
+
+  /*
+    Y si no se apunta a nada, el foco del cursor: lo de alrededor se aclara y
+    crece, el resto se aleja. Recorrer el dibujo con el ratón va enseñando
+    vecindarios sin tener que pulsar.
 
     Los puntos no se apartan del cursor, y es a propósito: un nodo que huye
     es bonito una vez y molesto siempre, porque hay que pulsarlo.
@@ -657,11 +746,6 @@ function reducirArista(id, d) {
   const nuc = props.nucleoEnfocado
   const [s, t] = g.extremities(id)
   const entreNucleos = g.getNodeAttribute(s, 'nucleo') !== g.getNodeAttribute(t, 'nucleo')
-  const tocaAlDeEncima = encima.value && (s === encima.value || t === encima.value)
-
-  if (tocaAlDeEncima) {
-    return { ...d, color: sobreFondo([210, 225, 245], 0.9), size: Math.max(d.size, 1), zIndex: 2 }
-  }
   if (entreNucleos && !foco && nuc === null) return { ...d, hidden: true }
 
   if (nuc !== null) {
@@ -673,16 +757,47 @@ function reducirArista(id, d) {
     return { ...d, color: sobreFondo([120, 126, 140], 0.12), zIndex: 0 }
   }
 
-  // Una arista se enciende con el extremo que más cerca esté del cursor. Con
-  // la media, las que salen del halo hacia fuera se apagaban justo donde más
-  // dicen: adónde va lo que pasa por aquí.
+  /*
+    Los caminos del nodo apuntado.
+
+    Las que salen o llegan al nodo se encienden y engordan: ése es el camino
+    que sigue su dinero, y es lo que se viene a ver. Las que van de un vecino
+    a otro se quedan a media luz —completan la forma del vecindario— y todo
+    lo demás se va casi al fondo.
+  */
+  const intensidad = realzado.intensidad
+  if (intensidad > 0.001 && realzado.id) {
+    if (s === realzado.id || t === realzado.id) {
+      // El engorde depende de cuántas salen. En un nodo con dos contrapartes,
+      // multiplicar por 2,6 dibuja dos trazos claros; en uno con sesenta, un
+      // abanico macizo donde no se distingue ninguna. El realce está para
+      // poder seguir una línea con la vista, no para hacer bulto.
+      const grueso = vecindario.size > 24 ? 1.5 : vecindario.size > 8 ? 2 : 2.6
+      return {
+        ...d,
+        color: aclarar(d.color, entre(0, 0.85, intensidad)),
+        size: d.size * entre(1, grueso, intensidad),
+        zIndex: 3,
+      }
+    }
+    const entreVecinos = vecindario.has(s) && vecindario.has(t)
+    return {
+      ...d,
+      color: apagar(d.color, entre(0, entreVecinos ? 0.55 : 0.92, intensidad)),
+      zIndex: 0,
+    }
+  }
+
+  // Y si no se apunta a nada, el foco del cursor: una arista se enciende con
+  // el extremo que más cerca esté. Con la media, las que salen del halo hacia
+  // fuera se apagaban justo donde más dicen: adónde va lo que pasa por aquí.
   if (!raton) return d
   const cerca = Math.max(
     cercaniaAlRaton(g.getNodeAttribute(s, 'x'), g.getNodeAttribute(s, 'y')),
     cercaniaAlRaton(g.getNodeAttribute(t, 'x'), g.getNodeAttribute(t, 'y')),
   )
-  if (cerca <= 0.02) return { ...d, color: sobreFondo([150, 170, 200], 0.07), zIndex: 0 }
-  return { ...d, color: sobreFondo([200, 222, 250], 0.12 + cerca * 0.75), zIndex: 1 }
+  if (cerca <= 0.02) return { ...d, color: apagar(d.color, 0.6), zIndex: 0 }
+  return { ...d, color: aclarar(d.color, cerca * 0.55), zIndex: 1 }
 }
 
 /* --- La animación -------------------------------------------------------- */
@@ -712,7 +827,24 @@ function unFotograma(ahora) {
     return
   }
 
-  if (menosMovimiento) return
+  /*
+    El realce va SIEMPRE, incluso con «reducir movimiento» puesto.
+
+    Es respuesta a un gesto, no ambiente: quien pide menos movimiento no está
+    pidiendo que apuntar a un nodo no haga nada. Lo que se le quita es el
+    fundido —el cambio se aplica de golpe— y la respiración.
+  */
+  const dt = ahora - (ultimoFotograma || ahora)
+  ultimoFotograma = ahora
+  const fundiendo = realzado.avanza(menosMovimiento ? 1e4 : dt)
+
+  if (menosMovimiento) {
+    if (!fundiendo && raton === ratonPintado) return
+    ratonPintado = raton
+    sigma.refresh({ skipIndexation: true })
+    return
+  }
+
   if (!reposo.size) prepararDeriva(g)
 
   /*
@@ -731,10 +863,14 @@ function unFotograma(ahora) {
 
     El foco del cursor sí se repinta siempre que el ratón se mueva: eso es
     respuesta a un gesto, no adorno, y sin ello el dibujo parecería roto.
+
+    Y el fundido del realce se pinta aunque la respiración esté apagada: dura
+    doscientos milisegundos, y si se saltara en una máquina lenta apuntar a un
+    nodo volvería a ser un corte, que es lo que se estaba arreglando.
   */
   const ratonMovido = raton !== ratonPintado
-  if (!fluidez.viable && !ratonMovido) return
-  if (ahora - ultimoRefresco < 33) return
+  if (!fluidez.viable && !ratonMovido && !fundiendo) return
+  if (!fundiendo && ahora - ultimoRefresco < 33) return
   ultimoRefresco = ahora
   ratonPintado = raton
 
@@ -748,7 +884,9 @@ function unFotograma(ahora) {
       g.setNodeAttribute(id, 'y', pos.y)
     })
   }
-  fluidez.anota(ahora)
+  // El fundido no cuenta para la medida: es un tramo corto y obligatorio, y
+  // si contara, apuntar a un nodo apagaría la respiración para siempre.
+  if (!fundiendo) fluidez.anota(ahora)
   sigma.refresh({ skipIndexation: true })
 }
 
