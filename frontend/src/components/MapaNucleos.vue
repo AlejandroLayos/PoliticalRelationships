@@ -27,6 +27,7 @@ import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA } from '../esquemas.js'
 import { aclarar, apagar, sobreFondo } from '../color.js'
 import {
   cercania,
+  despliegue,
   entre,
   medidorDeFluidez,
   posicionEnDeriva,
@@ -79,7 +80,10 @@ const menosMovimiento =
 
 let animacion = null
 let ajustesFuerza = null
-let iteracionesPendientes = 0
+/** El viaje desde la semilla hasta la colocación final. Ver `despliegue`. */
+let viaje = null
+/** De dónde sale cada nodo y dónde acaba, mientras dura el viaje. */
+const trayecto = new Map()
 let inicioDeriva = 0
 let ultimoRefresco = 0
 /** El cursor tal y como estaba en el último repintado. */
@@ -377,15 +381,22 @@ function construir() {
       barnesHutOptimize: g.order > 300,
     }
     /*
-      Sólo una parte de las iteraciones aquí; el resto se reparten entre los
-      primeros fotogramas. De golpe, el grupo aparece ya colocado y parece un
-      dibujo; repartidas, se ve desplegarse. Estas primeras sí van de golpe
-      porque los primeros empujones son un revoltijo y enseñarlo no aporta.
+      La colocación se calcula ENTERA y de una vez, que es lo que la hace
+      determinista, y lo que se anima es el viaje hasta ella. Ver `despliegue`
+      en `vida.js`, donde está explicado por qué no lo lleva el worker de
+      ForceAtlas2 aunque exista y esté instalado.
     */
-    const deGolpe = menosMovimiento || !soloUnNucleo ? total : Math.round(total * 0.25)
-    forceAtlas2.assign(g, { iterations: deGolpe, settings: ajustesFuerza })
-    iteracionesPendientes = total - deGolpe
+    const desde = new Map(g.mapNodes((id, a) => [id, { x: a.x, y: a.y }]))
+    forceAtlas2.assign(g, { iterations: total, settings: ajustesFuerza })
     if (!soloUnNucleo) separarNucleos(g, aspectoDelLienzo())
+
+    trayecto.clear()
+    if (soloUnNucleo && !menosMovimiento) {
+      g.forEachNode((id, a) => {
+        trayecto.set(id, { desde: desde.get(id), hasta: { x: a.x, y: a.y } })
+      })
+      viaje = despliegue(1100)
+    }
   }
 
   grafo.value = g
@@ -557,6 +568,8 @@ function separarNucleos(g, aspecto = 1) {
 
 function pintar() {
   if (!contenedor.value) return
+  viaje = null
+  trayecto.clear()
   /*
     Un contenedor sin ancho no se puede dibujar.
 
@@ -817,13 +830,21 @@ function unFotograma(ahora) {
   if (!sigma || !grafo.value || !props.activo || document.hidden) return
   const g = grafo.value
 
-  // Primero, terminar de colocar: se ve cómo se despliega el grupo.
-  if (iteracionesPendientes > 0) {
-    const paso = Math.min(4, iteracionesPendientes)
-    forceAtlas2.assign(g, { iterations: paso, settings: ajustesFuerza })
-    iteracionesPendientes -= paso
-    if (iteracionesPendientes <= 0) prepararDeriva(g)
+  // El despliegue: cada nodo viaja de su semilla a su sitio definitivo.
+  if (viaje && viaje.avanza(ahora - (ultimoFotograma || ahora))) {
+    ultimoFotograma = ahora
+    const avance = viaje.avance
+    for (const [id, t] of trayecto) {
+      if (!g.hasNode(id)) continue
+      g.setNodeAttribute(id, 'x', entre(t.desde.x, t.hasta.x, avance))
+      g.setNodeAttribute(id, 'y', entre(t.desde.y, t.hasta.y, avance))
+    }
     sigma.refresh()
+    if (viaje.acabado) {
+      viaje = null
+      trayecto.clear()
+      prepararDeriva(g)
+    }
     return
   }
 

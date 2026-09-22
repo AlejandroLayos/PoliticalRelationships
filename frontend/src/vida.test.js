@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   cercania,
+  despliegue,
   entre,
   faseDe,
   medidorDeFluidez,
@@ -267,5 +268,43 @@ describe('semillaDePosicion', () => {
     const puntos = Array.from({ length: 200 }, (_, i) => semillaDePosicion(`e${i}`))
     const cuadrantes = new Set(puntos.map((p) => `${p.x < 0.5}${p.y < 0.5}`))
     expect(cuadrantes.size).toBe(4)
+  })
+})
+
+describe('despliegue', () => {
+  it('empieza a cero y acaba en uno', () => {
+    const d = despliegue(1000)
+    expect(d.avance).toBe(0)
+    expect(d.acabado).toBe(false)
+    while (d.avanza(16)) { /* hasta el final */ }
+    expect(d.avance).toBe(1)
+    expect(d.acabado).toBe(true)
+  })
+
+  it('frena al llegar, no va a velocidad constante', () => {
+    // Lineal parece una cinta transportadora; algo que se coloca arranca
+    // deprisa y frena.
+    const d = despliegue(1000)
+    d.avanza(500)
+    expect(d.avance).toBeGreaterThan(0.8)
+  })
+
+  it('deja de pedir fotogramas cuando acaba', () => {
+    const d = despliegue(100)
+    d.avanza(200)
+    expect(d.avanza(16)).toBe(false)
+  })
+
+  it('se puede mandar al final de golpe', () => {
+    const d = despliegue(1000)
+    d.termina()
+    expect(d.acabado).toBe(true)
+    expect(d.avance).toBe(1)
+  })
+
+  it('un fotograma enorme no se pasa', () => {
+    const d = despliegue(1000)
+    d.avanza(1e6)
+    expect(d.avance).toBe(1)
   })
 })

@@ -211,3 +211,53 @@ export function semillaDePosicion(id) {
   const b = faseDe(`${id}·y`)
   return { x: a / (Math.PI * 2), y: b / (Math.PI * 2) }
 }
+
+/**
+ * El despliegue: de dónde arranca cada nodo a dónde acaba.
+ *
+ * ## Por qué no lo lleva el worker de ForceAtlas2
+ *
+ * `graphology-layout-forceatlas2/worker` existe, está instalado —viene con la
+ * misma dependencia que se usa para colocar— y hace justo esto: correr la
+ * simulación en un hilo aparte mientras el dibujo la va enseñando. Se probó y
+ * se ve muy bien.
+ *
+ * Pero se para por RELOJ, y eso devuelve un problema que acababa de
+ * arreglarse: en dos segundos, una máquina rápida hace muchas más iteraciones
+ * que una lenta, así que el dibujo final vuelve a depender de dónde se mire.
+ * Aquí eso importa —quien se lleva una captura y quien abre el enlace tienen
+ * que ver lo mismo— y no hay manera de pedirle al supervisor «para a la
+ * iteración 260».
+ *
+ * Así que la colocación se calcula entera y de una vez, que es determinista,
+ * y lo que se anima es el VIAJE hasta ella. Sale igual de vivo, cuesta menos
+ * —durante el despliegue no hay simulación, sólo interpolar— y acaba siempre
+ * en el mismo sitio.
+ */
+export function despliegue(duracionMs = 1100) {
+  let t = 0
+  return {
+    /** Avanza y devuelve `true` mientras queden fotogramas por dar. */
+    avanza(ms) {
+      if (t >= 1) return false
+      t = Math.min(1, t + Math.max(0, ms) / duracionMs)
+      return true
+    },
+    /** De golpe al final. Para quien pide menos movimiento. */
+    termina() {
+      t = 1
+    },
+    get acabado() {
+      return t >= 1
+    },
+    /**
+     * Cuánto camino se lleva hecho, suavizado.
+     *
+     * Cúbica de salida: arranca deprisa y frena al llegar, que es como se
+     * mueve algo que se coloca. Lineal parece una cinta transportadora.
+     */
+    get avance() {
+      return 1 - (1 - t) ** 3
+    },
+  }
+}

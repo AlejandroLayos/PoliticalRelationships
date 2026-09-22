@@ -7,6 +7,7 @@ import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
 import { aclarar, apagar, sobreFondo } from '../color.js'
 import {
   cercania,
+  despliegue,
   entre,
   medidorDeFluidez,
   posicionEnDeriva,
@@ -38,7 +39,8 @@ const menosMovimiento =
 
 let animacion = null
 let ajustesFuerza = null
-let iteracionesPendientes = 0
+let viaje = null
+const trayecto = new Map()
 let inicioDeriva = 0
 let ultimoRefresco = 0
 let ratonPintado = null
@@ -140,9 +142,17 @@ function construir() {
       scalingRatio: 12,
       barnesHutOptimize: grafo.order > 120,
     }
-    const deGolpe = menosMovimiento ? total : Math.round(total * 0.25)
-    forceAtlas2.assign(grafo, { iterations: deGolpe, settings: ajustesFuerza })
-    iteracionesPendientes = total - deGolpe
+    // Colocación entera y de una vez —determinista— y lo que se anima es el
+    // viaje hasta ella. Ver `despliegue` en `vida.js`.
+    const desde = new Map(grafo.mapNodes((id, a) => [id, { x: a.x, y: a.y }]))
+    forceAtlas2.assign(grafo, { iterations: total, settings: ajustesFuerza })
+    trayecto.clear()
+    if (!menosMovimiento) {
+      grafo.forEachNode((id, a) => {
+        trayecto.set(id, { desde: desde.get(id), hasta: { x: a.x, y: a.y } })
+      })
+      viaje = despliegue(1100)
+    }
   }
 }
 
@@ -159,12 +169,20 @@ function unFotograma(ahora) {
   animacion = requestAnimationFrame(unFotograma)
   if (!sigma || !grafo || document.hidden) return
 
-  if (iteracionesPendientes > 0) {
-    const paso = Math.min(4, iteracionesPendientes)
-    forceAtlas2.assign(grafo, { iterations: paso, settings: ajustesFuerza })
-    iteracionesPendientes -= paso
-    if (iteracionesPendientes <= 0) prepararDeriva()
+  if (viaje && viaje.avanza(ahora - (ultimoFotograma || ahora))) {
+    ultimoFotograma = ahora
+    const avance = viaje.avance
+    for (const [id, t] of trayecto) {
+      if (!grafo.hasNode(id)) continue
+      grafo.setNodeAttribute(id, 'x', entre(t.desde.x, t.hasta.x, avance))
+      grafo.setNodeAttribute(id, 'y', entre(t.desde.y, t.hasta.y, avance))
+    }
     sigma.refresh()
+    if (viaje.acabado) {
+      viaje = null
+      trayecto.clear()
+      prepararDeriva()
+    }
     return
   }
 
@@ -233,6 +251,8 @@ function pintar() {
     return
   }
   pendiente = false
+  viaje = null
+  trayecto.clear()
   if (animacion !== null) {
     cancelAnimationFrame(animacion)
     animacion = null
