@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "humo": "vite build && (vite preview --port 4190 --strictPort & echo $! > /tmp/sinapsis-humo.pid) && sleep 5 && node e2e/humo.mjs; c=$?; kill \"$(cat /tmp/sinapsis-humo.pid)\" 2>/dev/null; exit $c"
   },
   "dependencies": {
     "graphology": "^0.26.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.0",
+    "playwright-core": "^1.63.0",
     "vite": "^6.0.0",
     "vitest": "^2.1.0"
   }

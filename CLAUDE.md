@@ -57,9 +57,21 @@ make help        # el resto
 Sin Docker:
 
 ```bash
-cd backend && go test ./...
-cd ingest  && pytest        # requiere pkg-config y libicu-dev en el sistema
+cd backend  && go test ./...
+cd ingest   && pytest       # requiere pkg-config y libicu-dev en el sistema
+cd frontend && npm test     # unidades, lo que corre en la CI
+cd frontend && npm run humo # los caminos de la web, en un navegador de verdad
 ```
+
+`npm run humo` compila, levanta la vista previa, recorre los diez caminos por
+los que pasa la gente —portada, ficha, conexiones, mapa, entrar en un grupo y
+volver, atrás del navegador, buscador con teclado— y apaga el servidor. **No
+está en la CI a propósito**: esperar a que el mapa agrupe cuatro mil nodos son
+diez segundos por paso, y una CI intermitente no la mira nadie. Está para
+pasarla a mano antes de dar por buena una tanda de cambios de interfaz, que es
+donde se rompen las cosas sin que ningún test unitario se entere: `?v=mapa`
+dejó de llevar al mapa y no lo dijo nadie. Si la máquina no trae un Chromium
+que Playwright encuentre, `SINAPSIS_NAVEGADOR=/ruta/a/chromium npm run humo`.
 
 **`pytest` a secas se salta más de sesenta tests**, que son los que tocan
 Postgres — y son los únicos que comprueban el volcado de verdad. Se saltan en

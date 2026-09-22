@@ -82,6 +82,9 @@ const reposo = new Map()
 let radioRaton = 0
 /** Dónde está el cursor, en coordenadas del grafo. `null` si está fuera. */
 let raton = null
+/** Había que pintar y el contenedor no tenía tamaño: se pinta al tenerlo. */
+let pendiente = false
+let observador = null
 const grafo = shallowRef(null)
 const etiquetados = shallowRef(new Set())
 /** El nodo bajo el ratón: es lo que destapa sus pagos a otros núcleos. */
@@ -509,6 +512,21 @@ function separarNucleos(g, aspecto = 1) {
 
 function pintar() {
   if (!contenedor.value) return
+  /*
+    Un contenedor sin ancho no se puede dibujar.
+
+    Sigma lo dice por la consola —«Container has no width»— y se queda con un
+    lienzo de cero. Pasa porque la vista del grafo se esconde con
+    `display: none` cuando la portada está delante: si algo manda repintar en
+    ese momento, se pinta contra la nada y al volver el dibujo está vacío sin
+    que nadie haya fallado. Se apunta y se pinta cuando el contenedor tenga
+    tamaño, que es lo que avisa el observador.
+  */
+  if (!contenedor.value.clientWidth || !contenedor.value.clientHeight) {
+    pendiente = true
+    return
+  }
+  pendiente = false
   pararAnimacion()
   if (sigma) {
     contenedor.value.removeEventListener('mousemove', seguirAlRaton)
@@ -783,7 +801,15 @@ function enfocarNucleo(idNucleo) {
 
 const hayAlgo = computed(() => (props.datos?.nodes?.length ?? 0) > 0)
 
-onMounted(pintar)
+onMounted(() => {
+  observador = new ResizeObserver(() => {
+    // Sólo cuando había algo pendiente: repintar en cada cambio de tamaño
+    // recalcularía el layout de fuerzas al arrastrar el borde de la ventana.
+    if (pendiente && contenedor.value?.clientWidth) pintar()
+  })
+  observador.observe(contenedor.value)
+  pintar()
+})
 watch(() => props.datos, pintar)
 watch(
   () => [
@@ -811,6 +837,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
+  observador?.disconnect()
   pararAnimacion()
   contenedor.value?.removeEventListener('mousemove', seguirAlRaton)
   contenedor.value?.removeEventListener('mouseleave', soltarElRaton)

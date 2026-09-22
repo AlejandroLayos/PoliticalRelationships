@@ -37,6 +37,8 @@ const fluidez = medidorDeFluidez()
 const reposo = new Map()
 let radioRaton = 0
 let raton = null
+let pendiente = false
+let observador = null
 
 /**
  * El tamaño del nodo crece con su grado: los nodos muy conectados son los que
@@ -188,6 +190,21 @@ function soltarElRaton() {
 
 function pintar() {
   if (!contenedor.value) return
+  /*
+    Un contenedor sin ancho no se puede dibujar.
+
+    Sigma lo dice por la consola —«Container has no width»— y se queda con un
+    lienzo de cero. Pasa porque la vista del grafo se esconde con
+    `display: none` cuando la portada está delante: si algo manda repintar en
+    ese momento, se pinta contra la nada y al volver el dibujo está vacío sin
+    que nadie haya fallado. Se apunta y se pinta cuando el contenedor tenga
+    tamaño, que es lo que avisa el observador.
+  */
+  if (!contenedor.value.clientWidth || !contenedor.value.clientHeight) {
+    pendiente = true
+    return
+  }
+  pendiente = false
   if (animacion !== null) {
     cancelAnimationFrame(animacion)
     animacion = null
@@ -284,11 +301,18 @@ function resaltar() {
   sigma.refresh()
 }
 
-onMounted(pintar)
+onMounted(() => {
+  observador = new ResizeObserver(() => {
+    if (pendiente && contenedor.value?.clientWidth) pintar()
+  })
+  observador.observe(contenedor.value)
+  pintar()
+})
 watch(() => props.datos, pintar, { deep: false })
 watch(() => props.seleccion, resaltar)
 
 onBeforeUnmount(() => {
+  observador?.disconnect()
   if (animacion !== null) cancelAnimationFrame(animacion)
   contenedor.value?.removeEventListener('mousemove', seguirAlRaton)
   contenedor.value?.removeEventListener('mouseleave', soltarElRaton)
