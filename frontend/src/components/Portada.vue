@@ -10,7 +10,7 @@
  * por euros se lee sola como una lista de sospechosos, y aquí encabezarla sólo
  * quiere decir que se compra mucho.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { construirDirectorio, construirDirectorioDesdeIndice } from '../directorio.js'
 import { contratosDeMedios } from '../medios.js'
 import { dineroCorto } from '../nucleos.js'
@@ -139,6 +139,34 @@ function proporcion(f, lista) {
 function color(schema) {
   return COLOR_POR_ESQUEMA[schema] ?? COLOR_POR_DEFECTO
 }
+
+/*
+  Diez filas por lista, y el resto detrás de un botón.
+
+  Cada lista traía veinticinco. Cinco listas de veinticinco son ciento
+  veinticinco renglones, casi siete mil píxeles de alto: quien entra no ve
+  cinco respuestas, ve un volcado. Y la cola no se lee —el puesto 23 de «quién
+  más cobra» no le dice nada a nadie— pero sí empuja hacia abajo lo siguiente,
+  que sí importa.
+
+  Diez es donde deja de haber salto: en los rankings de esta instantánea, del
+  1 al 10 hay un orden de magnitud y del 10 al 25 hay una meseta. Quien quiera
+  la meseta la tiene a un clic, y las veinticinco siguen contando para la
+  barra, así que desplegar no cambia las proporciones.
+*/
+const VISIBLES = 10
+const desplegadas = ref(new Set())
+
+function alternar(clave) {
+  const s = new Set(desplegadas.value)
+  if (s.has(clave)) s.delete(clave)
+  else s.add(clave)
+  desplegadas.value = s
+}
+
+function filasVisibles(l) {
+  return desplegadas.value.has(l.clave) ? l.filas : l.filas.slice(0, VISIBLES)
+}
 </script>
 
 <template>
@@ -200,7 +228,7 @@ function color(schema) {
             pulsarlo, y había que explicar en un párrafo de la entradilla que
             se podía pulsar. Si hay que decirlo, es que no se ve.
           -->
-          <li v-for="(f, i) in l.filas" :key="f.id">
+          <li v-for="(f, i) in filasVisibles(l)" :key="f.id">
             <button class="fila" @click="emit('seleccionar', f.id)">
               <span
                 class="fondo"
@@ -239,9 +267,19 @@ function color(schema) {
             </button>
           </li>
         </ol>
+        <button
+          v-if="l.filas.length > VISIBLES"
+          class="mas"
+          @click="alternar(l.clave)"
+        >
+          {{
+            desplegadas.has(l.clave)
+              ? 'Ver sólo las diez primeras'
+              : `Ver las ${l.filas.length} de la lista`
+          }}
+        </button>
         <p class="no-es">{{ l.noEs }}</p>
       </section>
-    </div>
 
     <!--
       Publicidad institucional. Se enseña el objeto del contrato, no una
@@ -311,6 +349,7 @@ function color(schema) {
       </details>
 
     </section>
+    </div>
 
     <p class="pie">
       <template v-if="fueraDelMapa">
@@ -459,7 +498,21 @@ function color(schema) {
   display: block; font-size: var(--t-xs); color: var(--tinta-3); margin-top: 0.2rem;
 }
 .meta .marca { color: var(--tinta-2); }
-.meta .sin-red { color: var(--aviso); }
+/*
+  En el color del resto de la línea, no en ámbar. Es un dato de cobertura
+  —esta entidad está en la base pero no cabe en el grafo—, no un aviso, y en
+  «capital extranjero» lo llevan casi todas las filas: en ámbar, lo más
+  llamativo de la lista era una nota al margen repetida veinte veces.
+*/
+.meta .sin-red { color: inherit; }
+
+.mas {
+  display: block; width: 100%; margin: var(--e3) 0 0; padding: var(--e3);
+  background: none; border: 1px solid var(--linea); border-radius: var(--radio-s);
+  color: var(--tinta-2); font: inherit; font-size: var(--t-s); cursor: pointer;
+}
+.mas:hover { background: var(--superficie-2); color: var(--tinta); }
+.mas:focus-visible { outline: 2px solid var(--serie-1); outline-offset: 2px; }
 /*
   La cifra en tinta, no en el color de la serie. El punto de color de al lado
   es el que lleva la identidad; una cifra pintada del color del dato compite
@@ -489,7 +542,15 @@ function color(schema) {
   margin: var(--e4) 0 0; padding-top: var(--e3); border-top: 1px solid var(--linea);
 }
 
-.medios { margin-top: 1rem; }
+/*
+  La publicidad institucional es una tarjeta más de la rejilla.
+
+  Iba suelta y a todo el ancho, debajo. Dos efectos, los dos malos: las cinco
+  listas dejaban una celda vacía a la derecha de la última —media pantalla de
+  negro— y esta tarjeta, con el párrafo a 44rem dentro de una caja de 1400 px,
+  quedaba con un hueco en forma de L. Como sexta celda, la rejilla cierra y la
+  tarjeta se lee a su ancho.
+*/
 .dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.5rem; }
 .medios h4 {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;

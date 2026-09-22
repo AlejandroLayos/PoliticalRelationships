@@ -108,10 +108,18 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  height: 100%;
+}
+
+/*
+  `min-height`, no `height`: la portada desplaza el documento y su contenido
+  mide más que la ventana. Con `height: 100%` la caja quedaba clavada al alto
+  de la ventana y el resto se salía por debajo.
+*/
 body,
 #app {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
 }
 

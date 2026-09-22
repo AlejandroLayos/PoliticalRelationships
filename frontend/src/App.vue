@@ -424,7 +424,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" :class="{ desplaza: vista === 'portada' }">
     <!--
       El aviso es permanente y no se puede cerrar mientras se estén enseñando
       datos que no vienen de una fuente real. Publicar un mapa de dinero
@@ -801,7 +801,31 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 </template>
 
 <style scoped>
-.app { display: flex; flex-direction: column; height: 100vh; }
+/*
+  La portada desplaza el DOCUMENTO; el mapa no.
+
+  Todo iba dentro de un `height: 100vh` con la portada haciendo scroll en un
+  div suyo. En un ordenador se nota poco; en un móvil es media pantalla
+  perdida. La barra de direcciones del navegador sólo se retrae cuando lo que
+  se desplaza es el documento, así que se quedaba fija arriba todo el rato, y
+  además `100vh` en iOS mide MÁS que lo visible: el final del div no se podía
+  alcanzar ni desplazándolo del todo. Los últimos párrafos —de dónde salen los
+  datos, qué no dice esta lista— quedaban bajo la barra, sin manera de leerlos.
+
+  Tampoco funcionaba la barra espaciadora: el foco está en el `body`, que no
+  tiene nada que desplazar, y la página no se movía.
+
+  En el mapa sí hace falta alto fijo: el lienzo ocupa lo que queda y no debe
+  crecer. Por eso la altura fija se quita sólo en la portada.
+*/
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.app.desplaza { height: auto; min-height: 100vh; min-height: 100dvh; }
+.app.desplaza main { position: static; flex: none; }
+.app.desplaza .vista-grafo { display: none; }
+.app.desplaza .portada-encima { position: static; }
+.app.desplaza :deep(.portada) { height: auto; overflow: visible; }
+/* Buscador y vuelta al mapa siempre a mano, aunque la página sea larga. */
+.app.desplaza .cabecera { position: sticky; top: 0; z-index: 30; }
 
 .banda-demo {
   background: var(--aviso-fondo); color: var(--aviso-texto);
