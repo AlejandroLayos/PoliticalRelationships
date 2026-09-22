@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FlujoDinero from './components/FlujoDinero.vue'
 import GrafoRed from './components/GrafoRed.vue'
+import MapaDinero from './components/MapaDinero.vue'
 import MapaNucleos from './components/MapaNucleos.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
 import PanelInfluencia from './components/PanelInfluencia.vue'
@@ -60,6 +61,10 @@ const grafoEntero = ref(null)
 const mapaPedido = ref(false)
 const nucleos = ref([])
 const nucleoEnfocado = ref(null)
+/** En estrecho los filtros del mapa nacen plegados; en ancho no se pliegan. */
+const filtrosAbiertos = ref(false)
+/** Los grupos que el mapa de bloques no dibuja por pequeños. */
+const gruposPequenos = ref(null)
 const totalDinero = ref(0)
 const visiblesEnMapa = ref(0)
 const minImporte = ref(0)
@@ -76,13 +81,41 @@ const ESCALONES = [
   { v: 10_000_000, t: '10 M €' },
 ]
 
-function alAnalizar({ nucleos: n, totalDinero: d, visibles }) {
+function alAnalizar({ nucleos: n, totalDinero: d, visibles, entidades, pequenos }) {
   nucleos.value = n
   totalDinero.value = d
-  visiblesEnMapa.value = visibles
+  visiblesEnMapa.value = visibles ?? entidades ?? 0
+  gruposPequenos.value = pequenos ?? null
 }
 
 const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
+
+/**
+ * Los tipos de entidad que hay dentro del grupo abierto, de más a menos.
+ *
+ * Agrupados POR COLOR, no por esquema: «Empresa» y «Persona jurídica»
+ * comparten el azul a propósito —son lo mismo para quien mira un mapa de
+ * dinero—, y enumerarlos por separado ponía dos entradas del mismo color en
+ * la leyenda, que es justo lo que una leyenda no puede hacer.
+ */
+const tiposDelGrupo = computed(() => {
+  const porColor = new Map()
+  const tipos = Object.entries(nucleoAbierto.value?.tipos ?? {}).sort((a, b) => b[1] - a[1])
+  for (const [esquema] of tipos) {
+    const tono = COLOR_POR_ESQUEMA[esquema] ?? COLOR_POR_DEFECTO
+    if (!porColor.has(tono)) porColor.set(tono, [])
+    porColor.get(tono).push(NOMBRE_ESQUEMA[esquema] ?? esquema)
+  }
+  return [...porColor.entries()].map(([color, nombres]) => ({
+    color,
+    nombre: nombres.join(' o ').toLowerCase().replace(/^./, (c) => c.toUpperCase()),
+  }))
+})
+
+/** El grupo que se está mirando por dentro, si se ha entrado en alguno. */
+const nucleoAbierto = computed(() =>
+  nucleoEnfocado.value === null ? null : (nucleos.value.find((n) => n.id === nucleoEnfocado.value) ?? null),
+)
 
 // --- ficha de influencia --------------------------------------------------
 // El grafo se colapsa ANTES de calcular la ficha, y eso no es un detalle de
@@ -543,8 +576,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         </button>
         <button v-if="vista !== 'mapa'" class="volver" @click="verMapa">
           <!-- En estrecho no caben las tres etiquetas largas en un renglón. -->
-          <span class="ancho">Mapa de núcleos</span>
-          <span class="estrecho">Núcleos</span>
+          <span class="ancho">Mapa del dinero</span>
+          <span class="estrecho">Mapa</span>
         </button>
 
         <!--
@@ -577,7 +610,24 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           lo RECORTA—, cada uno con su explicación al pasar por encima, y con
           un aviso aparte cuando hay algo puesto.
         -->
+        <!--
+          En un teléfono los cinco controles ocupaban tres renglones de los
+          seis que tiene la cabecera, y el mapa se quedaba con menos de media
+          pantalla. Son ajustes, no la puerta: quien entra quiere ver el mapa,
+          y el que quiera filtrar abre esto. En pantalla ancha siguen a la
+          vista, que ahí no le quitan sitio a nada.
+        -->
+        <button
+          v-if="vista === 'mapa'"
+          class="mas-filtros estrecho"
+          :class="{ puesto: filtrosPuestos.length }"
+          :aria-expanded="filtrosAbiertos"
+          @click="filtrosAbiertos = !filtrosAbiertos"
+        >
+          Filtros<span v-if="filtrosPuestos.length"> ({{ filtrosPuestos.length }})</span>
+        </button>
         <template v-if="vista === 'mapa'">
+          <div class="filtros" :class="{ plegados: !filtrosAbiertos }">
           <label class="control" title="Oculta las relaciones por debajo de este importe">
             Importe mínimo
             <select v-model.number="minImporte">
@@ -614,6 +664,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
               partidos
             </label>
           </span>
+          </div>
         </template>
 
         <label v-else-if="vista === 'vecindario'" class="control">
@@ -636,8 +687,31 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           ser instantáneo o la gente deja de entrar a las fichas. Las demás
           vistas se dibujan ENCIMA.
         -->
+        <!--
+          Dos mapas, y el orden importa.
+
+          La puerta es el de bloques: un bloque por grupo, el área es el
+          dinero, el nombre va escrito dentro. El de nodos dibujaba las 2.428
+          entidades a la vez, y un diagrama de nodos se lee hasta unos cien —
+          se afinaron tamaños, opacidades y rótulos tres veces y seguía siendo
+          una mancha, porque el problema no era el ajuste sino la cantidad.
+
+          El de nodos no se va: se entra en él al pulsar un bloque, y entonces
+          dibuja UN grupo —cincuenta entidades— que es donde sí se lee y donde
+          la pregunta «quién está conectado con quién» tiene respuesta.
+        -->
+        <MapaDinero
+          v-if="hayMapa && mapaPedido && nucleoEnfocado === null"
+          :datos="grafoEntero"
+          :min-importe="minImporte"
+          :mostrar-expedientes="mostrarExpedientes"
+          :solo-extranjero="soloExtranjero"
+          :solo-partidos="soloPartidos"
+          @abrir="(n) => (nucleoEnfocado = n)"
+          @analizado="alAnalizar"
+        />
         <MapaNucleos
-          v-if="hayMapa && mapaPedido"
+          v-else-if="hayMapa && mapaPedido"
           :datos="grafoEntero"
           :seleccion="seleccionId"
           :nucleo-enfocado="nucleoEnfocado"
@@ -678,16 +752,29 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           nombre de los que están, y con un botón para quitarlos — porque
           volver al mapa completo era acordarse de cuáles habías tocado.
         -->
-        <p v-if="vista === 'mapa' && nucleos.length" class="recuento">
-          {{ nucleos.length }} núcleos · {{ visiblesEnMapa }} entidades ·
-          {{ dineroCorto(totalDinero) }} en juego
-          <template v-if="filtrosPuestos.length">
-            <br />
-            <span class="filtrado">
-              Filtrado por {{ filtrosPuestos.join(' y ') }}.
-              <button class="quitar-filtros" @click="quitarFiltros">Ver el mapa entero</button>
-            </span>
-          </template>
+        <!--
+          Dentro de un grupo, lo primero es poder salir. Un botón, con el
+          nombre del grupo al lado: sin él, entrar en un bloque era un viaje
+          de ida — el botón «Portada» de la cabecera saca de la vista entera,
+          no del grupo.
+        -->
+        <div v-if="vista === 'mapa' && nucleoEnfocado !== null" class="dentro-de">
+          <button class="salir" @click="nucleoEnfocado = null">← Todos los grupos</button>
+          <span v-if="nucleoAbierto" class="nombre-grupo">
+            {{ nucleoAbierto.etiqueta }}
+            <span class="cifra">{{ dineroCorto(nucleoAbierto.dinero) }} · {{ nucleoAbierto.tamano }} entidades</span>
+          </span>
+        </div>
+        <!--
+          El recuento se va al pie en la vista de bloques: arriba a la
+          izquierda se escribía encima del nombre del bloque más grande, que
+          es justo el que ocupa esa esquina.
+        -->
+        <p v-else-if="vista === 'mapa' && nucleos.length && filtrosPuestos.length" class="recuento">
+          <span class="filtrado">
+            Filtrado por {{ filtrosPuestos.join(' y ') }}.
+            <button class="quitar-filtros" @click="quitarFiltros">Ver el mapa entero</button>
+          </span>
         </p>
         <p v-else-if="vista === 'vecindario' && datos.truncated" class="recorte">
           Vista recortada por tamaño: hay más conexiones de las que se muestran.
@@ -720,26 +807,53 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
             <i class="linea-inferida" />Conexión inferida (fina y ámbar)
           </span>
         </div>
-        <div v-else class="leyenda">
+        <!--
+          Dentro de un grupo manda el tipo de entidad, no el grupo: todos son
+          del mismo. Los tipos salen del recuento del propio grupo, no de
+          `esquemasEnPantalla`, que mira los datos del vecindario y en esta
+          vista viene vacío — la leyenda no salía.
+        -->
+        <div v-else-if="nucleoEnfocado !== null" class="leyenda">
+          <span v-for="t in tiposDelGrupo" :key="t.color">
+            <i :style="{ background: t.color }" />
+            {{ t.nombre }}
+          </span>
+          <span>El tamaño es el dinero</span>
+        </div>
+        <div v-else class="leyenda leyenda-texto">
           <!--
-            El orden de lectura del mapa ES información y no lo decía nadie:
-            los núcleos van empaquetados por filas de más a menos dinero, así
-            que el de arriba a la izquierda es el que más mueve. Sin esa frase
-            la colocación parece casual, y entonces el mapa entero parece un
-            adorno.
+            `span` de texto corrido, no de leyenda: `.leyenda span` es un
+            contenedor flex —lo necesitan las entradas con su cuadrito de
+            color— y dentro de un flex cada trozo de texto suelto se convierte
+            en un elemento aparte. La frase salía partida en tres columnas.
           -->
-          <span>
-            De más a menos dinero, empezando arriba a la izquierda.
-            En color, los núcleos de cabeza —los mismos de la lista—; en gris,
-            el resto. El tamaño de cada punto es dinero, y los pagos de un
-            núcleo a otro salen al pasar por encima.
+          <!--
+            En un teléfono, la frase entera son seis renglones sobre una
+            pantalla en la que el mapa ya sólo tiene media: la explicación
+            tapaba lo explicado. Ahí se queda lo imprescindible —qué es un
+            bloque y que se puede pulsar— y el detalle se lee en la columna
+            de al lado, que en estrecho va justo debajo.
+          -->
+          <span class="corrida">
+            Cada bloque es un grupo de organismos y empresas que se pagan
+            entre ellos más que con el resto. El tamaño es el dinero.
+            <b>Pulsa un bloque para ver quién está dentro.</b>
+            <span class="ancho">
+              Son {{ nucleos.length }} grupos, {{ visiblesEnMapa }} entidades y
+              {{ dineroCorto(totalDinero) }} en juego.
+              <template v-if="gruposPequenos?.cuantos">
+                No se dibujan {{ gruposPequenos.cuantos }} grupos de menos de seis
+                entidades ({{ dineroCorto(gruposPequenos.dinero) }}): con dos o tres
+                no hay grupo que enseñar, y se pueden buscar por su nombre.
+              </template>
+            </span>
           </span>
         </div>
 
-        <p class="ayuda">
+        <p v-if="vista !== 'mapa' || nucleoEnfocado !== null" class="ayuda">
           {{
             vista === 'mapa'
-              ? 'Clic en un nodo para abrir su ficha de influencia'
+              ? 'Clic en una entidad para abrir su ficha'
               : vista === 'ficha'
                 ? 'Clic en una contraparte para seguir el rastro'
                 : 'Clic para ver · doble clic para expandir'
@@ -942,7 +1056,17 @@ main { flex: 1; position: relative; min-height: 0; }
   display: flex; flex-wrap: wrap; gap: 0.55rem 0.9rem; max-width: 70%;
   font-size: 0.7rem; color: var(--texto-tenue);
 }
-.leyenda span { display: flex; align-items: center; gap: 0.3rem; }
+/*
+  `>` y no descendiente: las entradas con cuadrito de color son flex, pero la
+  regla alcanzaba también a los `span` de dentro del texto corrido — y un
+  `display: flex` de (0,1,1) le ganaba al `display: none` de `.ancho`, que es
+  (0,1,0). El detalle que sólo debía verse en pantalla ancha salía también en
+  el teléfono, y ahí son cuatro renglones encima del mapa.
+*/
+.leyenda > span { display: flex; align-items: center; gap: 0.3rem; }
+.leyenda > span.corrida { display: block; }
+.leyenda-texto { max-width: min(78ch, calc(100% - 1.4rem)); line-height: 1.45; }
+.leyenda-texto b { color: var(--tinta-2); }
 .leyenda i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .leyenda i.linea-inferida {
   width: 18px; height: 2px; border-radius: 1px;
@@ -962,8 +1086,9 @@ main { flex: 1; position: relative; min-height: 0; }
   .ayuda { display: none; }
   .leyenda {
     max-width: calc(100% - 1.4rem);
-    background: rgba(10, 14, 20, 0.85);
-    padding: 0.3rem 0.45rem;
+    /* Opaca del todo: translúcida, el texto se leía sobre los bloques. */
+    background: var(--plano);
+    padding: 0.35rem 0.5rem;
     border-radius: 6px;
   }
   .banda-info, .banda-demo { font-size: 0.72rem; padding: 0.35rem 0.7rem; }
@@ -987,9 +1112,22 @@ main { flex: 1; position: relative; min-height: 0; }
 @media (max-width: 820px) {
   .ancho { display: none; }
   .estrecho { display: inline; }
+  /*
+    `display: contents` hace que los controles sean hijos directos de la
+    cabecera y se coloquen ellos solos; plegados, desaparecen enteros. En
+    ancho la clase `plegados` no existe, así que no hay nada que abrir.
+  */
+  .filtros.plegados { display: none; }
+  .filtros { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; width: 100%; }
 }
 
 .controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
+.filtros { display: contents; }
+.mas-filtros {
+  background: var(--fondo-boton); border: 1px solid var(--borde); color: var(--texto);
+  font: inherit; font-size: 0.82rem; padding: 0.35rem 0.7rem; border-radius: 7px; cursor: pointer;
+}
+.mas-filtros.puesto { border-color: var(--serie-1); color: var(--tinta); }
 .grupo {
   display: flex; align-items: center; gap: 0.55rem;
   padding-left: 0.6rem; border-left: 1px solid var(--borde);
@@ -1025,4 +1163,21 @@ main { flex: 1; position: relative; min-height: 0; }
   font-size: 0.75rem; color: var(--texto-tenue);
   background: rgba(10, 14, 20, 0.72); padding: 0.25rem 0.55rem; border-radius: 6px;
 }
+
+.dentro-de {
+  position: absolute; top: 0.6rem; left: 0.9rem; right: 0.9rem;
+  display: flex; align-items: center; gap: var(--e3); flex-wrap: wrap;
+  background: rgba(13, 13, 13, 0.86); padding: 0.3rem 0.4rem; border-radius: var(--radio-s);
+}
+.salir {
+  background: var(--superficie-2); border: 1px solid var(--linea-fuerte);
+  color: var(--tinta); font: inherit; font-size: var(--t-s);
+  padding: 0.3rem 0.6rem; border-radius: var(--radio-s); cursor: pointer; white-space: nowrap;
+}
+.salir:hover { background: var(--superficie); }
+.salir:focus-visible { outline: 2px solid var(--serie-1); outline-offset: 2px; }
+.nombre-grupo {
+  font-size: var(--t-s); color: var(--tinta); font-weight: 600; min-width: 0;
+}
+.nombre-grupo .cifra { color: var(--tinta-3); font-weight: 400; }
 </style>

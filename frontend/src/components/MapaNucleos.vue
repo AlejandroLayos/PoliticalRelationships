@@ -22,6 +22,7 @@ import Sigma from 'sigma'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { analizarNucleos, colapsarNodosDePaso, FONDO, paletaDeNucleos } from '../nucleos.js'
 import { dibujarEtiquetaCentrada } from '../etiquetas.js'
+import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA } from '../esquemas.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -94,6 +95,23 @@ function construir() {
     if (props.minImporte > 0 && attrs.dinero < props.minImporte) fuera.add(id)
   })
 
+  /*
+    Dentro de un grupo se dibuja SÓLO ese grupo.
+
+    Antes el grupo enfocado se atenuaba y el resto seguía ahí, así que el
+    dibujo era el mismo mapa de dos mil puntos con una mancha algo más viva en
+    alguna esquina: no se veía mejor, se veía igual con menos luz. Quitando lo
+    demás, el layout se calcula sobre cincuenta entidades, la cámara las
+    encuadra y se leen los nombres. Que es lo que un diagrama de nodos sabe
+    hacer, y sólo a ese tamaño.
+  */
+  const soloUnNucleo = props.nucleoEnfocado !== null
+  if (soloUnNucleo) {
+    g.forEachNode((id, attrs) => {
+      if (attrs.nucleo !== props.nucleoEnfocado) fuera.add(id)
+    })
+  }
+
   /**
    * Filtros de «esto y su entorno inmediato».
    *
@@ -165,10 +183,31 @@ function construir() {
   // de la lista hay grises. Cortando en el primero, los de color que venían
   // detrás se quedaban sin nombre.
   const conEtiqueta = new Set()
-  for (const n of visible.nucleos) {
-    if (color(n.id) === FONDO) continue
-    const cabeza = n.principales.find((m) => g.hasNode(m.id))
-    if (cabeza) conEtiqueta.add(cabeza.id)
+  if (soloUnNucleo) {
+    /*
+      Dentro de un grupo pequeño o mediano caben todos los nombres, y es el
+      caso en el que un diagrama de nodos contesta algo —quién está conectado
+      con quién—: sin nombres no contesta nada.
+
+      Pero hay grupos de casi doscientas entidades, y ahí forzar los nombres
+      devuelve el problema de antes a menor escala: ciento noventa y cinco
+      rótulos pisándose. A partir del tope se fuerzan sólo las cabezas —las
+      que salen listadas en el panel— y del resto se encarga el reparto por
+      rejilla de Sigma, que enseña las que caben mientras se hace zoom.
+    */
+    const TOPE_TODOS = 45
+    if (g.order <= TOPE_TODOS) {
+      g.forEachNode((id) => conEtiqueta.add(id))
+    } else {
+      const suyo = visible.nucleos.find((n) => n.id === props.nucleoEnfocado)
+      for (const m of suyo?.principales ?? []) if (g.hasNode(m.id)) conEtiqueta.add(m.id)
+    }
+  } else {
+    for (const n of visible.nucleos) {
+      if (color(n.id) === FONDO) continue
+      const cabeza = n.principales.find((m) => g.hasNode(m.id))
+      if (cabeza) conEtiqueta.add(cabeza.id)
+    }
   }
   etiquetados.value = conEtiqueta
 
@@ -182,7 +221,10 @@ function construir() {
       // para poder ir de la mancha a su fila en la lista de al lado.
       forceLabel: conEtiqueta.has(id),
       etiquetaReal: attrs.label,
-      color: color(attrs.nucleo),
+      // Dentro de un grupo, el color del grupo lo llevan todos y no distingue
+      // nada; ahí vuelve a decir el tipo de entidad, que es lo que separa al
+      // organismo que paga de las empresas que cobran.
+      color: soloUnNucleo ? (COLOR_POR_ESQUEMA[attrs.esquema] ?? COLOR_POR_DEFECTO) : color(attrs.nucleo),
       extranjera: Boolean(nodosPorId.get(id)?.properties?.entidad_extranjera),
       size: tamano(attrs.dinero, attrs.grado),
       x: Math.random(),
@@ -211,7 +253,9 @@ function construir() {
       // rectas que salen del mismo sitio: apiladas a 0,18 se suman hasta el
       // blanco y el abanico tapa el núcleo entero. A 0,11 la forma se sigue
       // leyendo y no se come lo que hay debajo.
-      : `rgba(150,170,200,${dentro ? 0.11 : 0.045})`
+      // Dentro de un grupo la cámara acerca, así que la misma opacidad cubre
+      // muchos más píxeles y la telaraña se come los puntos. Más tenue ahí.
+      : `rgba(150,170,200,${dentro ? (soloUnNucleo ? 0.07 : 0.11) : 0.045})`
     const grosor = 0.35 + Math.min(2.2, Math.log10(1 + attrs.importe) * 0.4)
     g.mergeEdgeAttributes(e, { color, size: dentro ? grosor : Math.min(grosor, 0.6) })
   })

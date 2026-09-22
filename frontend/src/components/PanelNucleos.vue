@@ -47,16 +47,22 @@ function resumenTipos(tipos) {
 <template>
   <aside class="panel">
     <div class="cabecera">
-      <h2>Núcleos de financiación</h2>
+      <!--
+        «Núcleo de financiación» era jerga nuestra. Quien entra a saber de
+        dónde sale el dinero de una decisión no tiene por qué traducirla, y si
+        el título de la columna hay que traducirlo, la columna no se lee.
+      -->
+      <h2>Grupos de dinero público</h2>
       <p class="que-es">
-        Grupos de organismos, empresas y partidos <strong>más conectados entre sí
-        que con el resto</strong> del mapa. Es una observación sobre la forma de
-        la red, no una acusación: no implica irregularidad ni connivencia.
+        Organismos y empresas que <strong>se pagan entre ellos mucho más que
+        con el resto</strong>. Sale de mirar la forma de la red, no de ninguna
+        investigación: estar en el mismo grupo no implica irregularidad ni
+        connivencia.
       </p>
     </div>
 
     <p v-if="!conCuerpo.length" class="vacio">
-      Todavía no se ha encontrado ningún núcleo con estructura.
+      Todavía no se ha encontrado ningún grupo con estructura.
     </p>
 
     <ul v-else class="lista">
@@ -92,7 +98,7 @@ function resumenTipos(tipos) {
     <p v-if="pequenos" class="nota-pequenos">
       Hay además {{ pequenos }} grupos de menos de {{ MINIMO }} entidades. No se
       listan porque casi siempre son una empresa con sus contratos, no un
-      núcleo; se ven en el mapa activando «relaciones sueltas».
+      grupo; se pueden buscar por su nombre.
     </p>
   </aside>
 </template>
