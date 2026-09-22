@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FlujoDinero from './components/FlujoDinero.vue'
 import GrafoRed from './components/GrafoRed.vue'
 import MapaNucleos from './components/MapaNucleos.vue'
@@ -20,6 +20,7 @@ import {
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
+import { direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
 import { areaDeInfluencia } from './influencia.js'
 import { contratosDeMedios } from './medios.js'
 import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
@@ -159,7 +160,31 @@ const notaDeHueco = computed(() => {
 })
 
 let temporizador = null
+/* --- Teclado en el buscador -------------------------------------------- */
+/*
+  Se escribía el nombre, salía la lista y había que soltar el teclado y coger
+  el ratón para entrar. Con la lista abierta, Intro entra en la primera —que
+  ahora es además la que más dinero mueve— y las flechas recorren.
+*/
+const resaltado = ref(-1)
+
+function mueve(r) {
+  return Number(r.recibido ?? 0) + Number(r.pagado ?? 0)
+}
+
+function mover(paso) {
+  if (!resultados.value.length) return
+  const n = resultados.value.length
+  resaltado.value = (resaltado.value + paso + n) % n
+}
+
+function abrirResaltado() {
+  const r = resultados.value[resaltado.value >= 0 ? resaltado.value : 0]
+  if (r) elegir(r.id)
+}
+
 watch(consulta, (q) => {
+  resaltado.value = -1
   clearTimeout(temporizador)
   if (q.trim().length < 3) {
     resultados.value = []
@@ -273,6 +298,86 @@ function verProcedencia() {
   if (seleccionId.value) abrir(seleccionId.value)
 }
 
+/* -------------------------------------------------------------------------
+   El estado de la vista, en la URL.
+
+   Toda la web vivía en la misma dirección: daba igual dónde estuvieras, la
+   barra del navegador decía lo mismo. En un proyecto cuyo sentido es que
+   alguien encuentre algo y se lo pase a otro, eso quiere decir que lo único
+   que se puede mandar es una captura de pantalla. Y además el botón de atrás
+   salía de la web, y recargar te devolvía a la portada.
+   ------------------------------------------------------------------------- */
+
+/** La clave estable de una entidad; el UUID sólo como último recurso. */
+function claveDe(nodo) {
+  return nodo?.clave || nodo?.id || ''
+}
+
+function nodoDeClave(clave) {
+  if (!clave) return null
+  const enGrafo = (grafoEntero.value?.nodes ?? []).find((n) => claveDe(n) === clave)
+  if (enGrafo) return enGrafo
+  const enIndice =
+    (indice.value?.entidades ?? []).find((e) => claveDe(e) === clave) ??
+    indiceCargado()?.entidades?.find((e) => claveDe(e) === clave)
+  return enIndice ?? null
+}
+
+const claveSeleccionada = computed(() => {
+  if (!seleccionId.value) return ''
+  const n =
+    (grafoEntero.value?.nodes ?? []).find((x) => x.id === seleccionId.value) ??
+    fueraDelMapa.value ??
+    seleccionado.value
+  return claveDe(n) || seleccionId.value
+})
+
+const estadoDeVista = computed(() => ({ vista: vista.value, clave: claveSeleccionada.value }))
+
+/** Evita apilar una entrada de historial por el estado que acabamos de leer. */
+let estadoPintado = { vista: 'portada', clave: '' }
+let restaurando = false
+
+watch(estadoDeVista, (ahora) => {
+  if (restaurando || arrancando.value) return
+  if (mismoEstado(ahora, estadoPintado)) return
+  estadoPintado = { ...ahora }
+  history.pushState({ ...ahora }, '', direccionDeVista(ahora, location.pathname))
+})
+
+async function irAEstado({ vista: v, clave }) {
+  restaurando = true
+  try {
+    if (v === 'portada') {
+      volverAlMapa()
+      return
+    }
+    const nodo = clave ? nodoDeClave(clave) : null
+    if (!nodo) {
+      // Un enlace a algo que ya no está en esta instantánea. La portada dice
+      // más que una ficha vacía, y el buscador queda a mano.
+      volverAlMapa()
+      return
+    }
+    if (v === 'mapa') {
+      verMapa()
+      return
+    }
+    if (v === 'vecindario') {
+      await abrir(nodo.id)
+      return
+    }
+    await enfocar(nodo.id)
+  } finally {
+    estadoPintado = { vista: vista.value, clave: claveSeleccionada.value }
+    restaurando = false
+  }
+}
+
+function alVolverAtras(e) {
+  irAEstado(e.state ?? vistaDeParametros(location.search))
+}
+
 watch(profundidad, () => {
   if (seleccionId.value && vista.value === 'vecindario') abrir(seleccionId.value)
 })
@@ -302,10 +407,20 @@ onMounted(async () => {
     cargarIndiceTop().then((i) => {
       indice.value = i
     })
+
+    // Y si la dirección pedía algo concreto, se va allí. Después de tener el
+    // grafo: hace falta para resolver la clave.
+    const pedido = vistaDeParametros(location.search)
+    if (pedido.vista !== 'portada') await irAEstado(pedido)
+    estadoPintado = { vista: vista.value, clave: claveSeleccionada.value }
+    history.replaceState({ ...estadoPintado }, '', direccionDeVista(estadoPintado, location.pathname))
   } else {
     await abrir(ENTIDAD_INICIAL) // demostración, y se anuncia como tal
   }
+  window.addEventListener('popstate', alVolverAtras)
 })
+
+onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 </script>
 
 <template>
@@ -379,18 +494,34 @@ onMounted(async () => {
         <input
           v-model="consulta"
           type="search"
-          placeholder="Buscar empresa, organismo, partido o persona…"
+          placeholder="Busca tu ayuntamiento, una empresa o un partido…"
           aria-label="Buscar entidad"
+          :aria-activedescendant="resaltado >= 0 ? `sug-${resaltado}` : undefined"
+          @keydown.down.prevent="mover(1)"
+          @keydown.up.prevent="mover(-1)"
+          @keydown.enter.prevent="abrirResaltado"
+          @keydown.esc="resultados = []"
         />
         <ul v-if="resultados.length" class="sugerencias">
-          <li v-for="r in resultados" :key="r.id">
-            <button @click="elegir(r.id)">
-              <span class="punto" :style="{ background: COLOR_POR_ESQUEMA[r.schema] ?? '#8b93a7' }" />
+          <li v-for="(r, i) in resultados" :id="`sug-${i}`" :key="r.id">
+            <button :class="{ resaltada: i === resaltado }" @click="elegir(r.id)">
+              <span class="punto" :style="{ background: COLOR_POR_ESQUEMA[r.schema] ?? COLOR_POR_DEFECTO }" />
               <span class="nombre">{{ r.caption }}</span>
-              <span v-if="r.soloIndice" class="fuera" title="Consta en la base pero no cabe en el mapa publicado: sólo hay cifras">
-                sin red
+              <!--
+                La cifra, aquí. Sin ella, buscar «ayuntamiento de» devuelve
+                cuarenta nombres casi iguales y hay que abrirlos uno a uno
+                para saber cuál es el que mueve dinero.
+              -->
+              <span v-if="mueve(r)" class="mueve">{{ dineroCorto(mueve(r)) }}</span>
+              <span class="tipo">
+                {{ NOMBRE_ESQUEMA[r.schema] ?? r.schema }}
+                <!--
+                  «Sin red» va aquí y en gris, no en un recuadro ámbar al lado
+                  del nombre. Era lo más llamativo de cada fila y no es una
+                  advertencia: es un matiz sobre lo que se puede enseñar.
+                -->
+                <template v-if="r.soloIndice">· sin red</template>
               </span>
-              <span class="tipo">{{ NOMBRE_ESQUEMA[r.schema] ?? r.schema }}</span>
             </button>
           </li>
           <!--
@@ -731,10 +862,25 @@ onMounted(async () => {
   background: none; border: none; color: var(--texto); cursor: pointer; text-align: left; font: inherit;
   border-radius: 5px;
 }
-.sugerencias button:hover { background: var(--fondo-boton); }
+.sugerencias button:hover,
+.sugerencias button.resaltada { background: var(--superficie-2); }
+.sugerencias button.resaltada { box-shadow: inset 0 0 0 1px var(--serie-1); }
 .punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.nombre { flex: 1; font-size: 0.86rem; }
-.tipo { font-size: 0.7rem; color: var(--texto-tenue); white-space: nowrap; }
+/*
+  Dos renglones como mucho. «Área de Gobierno de Políticas Sociales, Familia e
+  Igualdad del Ayuntamiento de Madrid» ocupaba CINCO en el desplegable, así
+  que tres sugerencias llenaban la pantalla y no se podían comparar.
+*/
+.nombre {
+  flex: 1; font-size: var(--t-m); min-width: 0; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mueve {
+  font-size: var(--t-s); color: var(--tinta); font-weight: 620;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.tipo { font-size: var(--t-xs); color: var(--tinta-3); white-space: nowrap; }
 .sin-resultados { position: absolute; top: calc(100% + 6px); font-size: 0.8rem; color: var(--texto-tenue); }
 .pie-sugerencias {
   font-size: 0.7rem; color: var(--texto-tenue); line-height: 1.35;

@@ -7,7 +7,7 @@
  * contrapartes completas (el dibujo recorta, la lista no) y el rastro hasta el
  * documento del que sale cada cosa.
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
 import { resumenEnPalabras } from '../influencia.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
@@ -46,6 +46,26 @@ const resumen = computed(() => resumenEnPalabras(props.area))
  * mirar: si la entidad no entró en el mapa, la lista es lo único que hay.
  */
 const abiertas = computed(() => Boolean(props.fueraDelMapa))
+
+/**
+ * Copia la dirección de esta ficha.
+ *
+ * `navigator.clipboard` no existe fuera de un contexto seguro y puede estar
+ * denegado; el respaldo es enseñar la dirección para copiarla a mano, que es
+ * peor pero no es nada.
+ */
+const copiado = ref(false)
+async function copiarEnlace() {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    copiado.value = true
+    setTimeout(() => {
+      copiado.value = false
+    }, 2000)
+  } catch {
+    window.prompt('Copia la dirección de esta ficha:', window.location.href)
+  }
+}
 
 /** Los documentos de los que sale esta ficha. */
 const procedencia = computed(() => {
@@ -142,7 +162,18 @@ const sinDatos = computed(
   <aside class="panel">
     <!-- Sólo en el índice: las cifras que hay, y por qué no hay más. -->
     <template v-if="fueraDelMapa">
-      <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+      <div class="acciones">
+        <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+        <!--
+          El botón existe para que se sepa que el enlace significa algo. Ahora
+          cada ficha tiene su dirección, pero nadie mira la barra del
+          navegador: sin un botón que lo diga, la función está y no la usa
+          nadie.
+        -->
+        <button class="volver copiar" @click="copiarEnlace">
+          {{ copiado ? '✓ Copiado' : 'Copiar enlace' }}
+        </button>
+      </div>
       <header>
         <span class="punto" :style="{ background: color(fueraDelMapa.schema) }" />
         <span class="tipo">{{ etiquetaEsquema(fueraDelMapa.schema) }}</span>
@@ -187,7 +218,18 @@ const sinDatos = computed(
     <p v-else-if="!area?.entidad" class="vacio">Pulsa una entidad del mapa.</p>
 
     <template v-else>
-      <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+      <div class="acciones">
+        <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+        <!--
+          El botón existe para que se sepa que el enlace significa algo. Ahora
+          cada ficha tiene su dirección, pero nadie mira la barra del
+          navegador: sin un botón que lo diga, la función está y no la usa
+          nadie.
+        -->
+        <button class="volver copiar" @click="copiarEnlace">
+          {{ copiado ? '✓ Copiado' : 'Copiar enlace' }}
+        </button>
+      </div>
 
       <header>
         <span class="punto" :style="{ background: color(area.entidad.schema) }" />
@@ -501,6 +543,10 @@ const sinDatos = computed(
 </template>
 
 <style scoped>
+.acciones { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e2); }
+.copiar { color: var(--tinta-3); }
+.copiar:hover { color: var(--tinta); }
+
 .procedencia > details > summary {
   cursor: pointer; font-size: 0.78rem; color: var(--texto-tenue);
   list-style-position: outside;

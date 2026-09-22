@@ -1058,3 +1058,88 @@ def test_tampoco_entra_en_el_indice(store, tmp_path):
     _exportado(store, tmp_path)
     indice = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
     assert "Solanes" not in json.dumps(indice, ensure_ascii=False)
+
+
+# --- la clave estable: un enlace tiene que valer mañana --------------------
+#
+# El `id` de una entidad es un UUID que se genera en cada ingesta, y la base se
+# levanta de cero todas las noches: el identificador de una entidad cambia a
+# diario. Un enlace a una ficha dejaba de funcionar al día siguiente, y en un
+# proyecto cuyo sentido es que alguien encuentre algo y lo pueda mandar, eso no
+# es un detalle de implementación.
+
+
+def test_cada_ficha_publica_su_clave_estable(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    for n in g["nodes"]:
+        assert n["clave"], f"{n['caption']} sale sin clave"
+        assert n["clave"] != n["id"], "la clave no puede ser el UUID, que cambia cada noche"
+
+
+def test_la_clave_sobrevive_a_una_reingesta(store, tmp_path):
+    """Lo que de verdad se comprueba: el UUID cambia y la clave no.
+
+    Se simula la noche siguiente borrando las entidades y volviéndolas a crear
+    con la misma `dedupe_key`, que es lo que hace el conector al reingerir.
+    """
+    claves = []
+    for _ in range(2):
+        store.conn.execute("TRUNCATE relationships, entities CASCADE")
+        fila = store.conn.execute(
+            """
+            INSERT INTO entities (ftm_schema, caption, dedupe_key, properties)
+            VALUES ('PublicBody', 'AYUNTAMIENTO', 'bdns:organo:1234', '{}'::jsonb)
+            RETURNING id
+            """
+        ).fetchone()
+        otra = _entidad(store, "EMPRESA SL")
+        _arista(store, str(fila["id"]), otra, "9000")
+        store.conn.commit()
+
+        g = _exportado(store, tmp_path)
+        ficha = next(n for n in g["nodes"] if n["caption"] == "AYUNTAMIENTO")
+        claves.append((ficha["clave"], ficha["id"]))
+
+    (clave1, id1), (clave2, id2) = claves
+    assert clave1 == clave2 == "bdns:organo:1234"
+    assert id1 != id2, "el escenario no vale si el UUID no cambia"
+
+
+def test_el_indice_tambien_lleva_la_clave(store, tmp_path):
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    _exportado(store, tmp_path)
+    indice = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+    assert indice["entidades"]
+    for e in indice["entidades"]:
+        assert e["clave"]
+
+
+def test_ninguna_clave_de_persona_fisica_se_publica(store, tmp_path):
+    """La clave de una persona física sería `nif:12345678Z`.
+
+    No llega aquí —la ficha se retira tres pasos antes— pero conviene que
+    alguien lo afirme, porque publicar la clave es publicar el DNI.
+    """
+    organo = _entidad(store, "AYUNTAMIENTO", "PublicBody")
+    empresa = _entidad(store, "EMPRESA SL")
+    store.conn.execute(
+        """
+        INSERT INTO entities (ftm_schema, caption, nif, dedupe_key, properties)
+        VALUES ('Person', 'NOMBRE APELLIDO', '12345678Z', 'nif:12345678Z', '{}'::jsonb)
+        """
+    )
+    _arista(store, organo, empresa, "9000")
+    store.conn.commit()
+
+    g = _exportado(store, tmp_path)
+    crudo = json.dumps(g, ensure_ascii=False)
+    assert "12345678Z" not in crudo

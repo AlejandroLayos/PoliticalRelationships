@@ -219,6 +219,33 @@ export function buscar(q, limite = 25) {
  * sólo hay cifras. Nunca al revés: sería enviar a la gente a la ficha más
  * pobre teniendo la buena.
  */
+/**
+ * Ordena lo encontrado por dinero, y a igualdad, por nombre más corto.
+ *
+ * Antes salía primero lo que estaba en el mapa y luego lo del índice, cada
+ * bloque por su cuenta. Buscando «ayuntamiento de madrid» eso deja arriba
+ * cualquier organismo suyo con muchas conexiones y el Ayuntamiento en medio
+ * de la lista. Quien busca un nombre casi siempre busca al grande.
+ *
+ * El nombre más corto desempata porque «AYUNTAMIENTO DE BURGOS» es lo que se
+ * buscaba y «AYUNTAMIENTO DE BURGOS - SERVICIO DE PARQUES Y JARDINES» es una
+ * de sus partes.
+ */
+export function ordenarResultados(filas) {
+  const mueve = (r) => Number(r.recibido ?? 0) + Number(r.pagado ?? 0)
+  // A igualdad de dinero, lo que está en el mapa: de eso se puede enseñar la
+  // red entera y de lo demás sólo cifras, así que mandar a la gente a la
+  // ficha más pobre teniendo la buena sería un mal desempate.
+  const enMapa = (r) => (r.soloIndice ? 1 : 0)
+  return [...filas].sort(
+    (a, b) =>
+      mueve(b) - mueve(a) ||
+      enMapa(a) - enMapa(b) ||
+      (a.caption?.length ?? 0) - (b.caption?.length ?? 0) ||
+      (a.caption ?? '').localeCompare(b.caption ?? '', 'es'),
+  )
+}
+
 export async function buscarTodo(q, limite = 25) {
   const enMapa = await buscar(q, limite)
   const resultados = enMapa.results ?? []
@@ -236,7 +263,22 @@ export async function buscarTodo(q, limite = 25) {
     if (!normaliza(e.caption).includes(aguja)) continue
     extra.push({ ...e, soloIndice: true })
   }
-  return { results: [...resultados, ...extra], soloIndice: extra.length, totalIndice: idx.total }
+
+  // Las filas del grafo no traen cifras y las del índice sí. Se las pega el
+  // índice, que ya está cargado: sin cifra, buscar «ayuntamiento de» devuelve
+  // cuarenta nombres iguales y hay que abrirlos uno a uno para saber cuál es
+  // el que mueve dinero.
+  const porId = new Map(idx.entidades.map((e) => [e.id, e]))
+  const conCifras = resultados.map((r) => {
+    const e = porId.get(r.id)
+    return e ? { ...r, recibido: e.recibido, pagado: e.pagado, clave: e.clave ?? r.clave } : r
+  })
+
+  return {
+    results: ordenarResultados([...conCifras, ...extra]),
+    soloIndice: extra.length,
+    totalIndice: idx.total,
+  }
 }
 
 export function entidad(id) {

@@ -446,7 +446,7 @@ def exportar(
         store.conn.execute(
             """
         SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif,
-               COALESCE(e.country,'') AS country, e.properties,
+               e.dedupe_key, COALESCE(e.country,'') AS country, e.properties,
                (SELECT count(*) FROM relationships r
                  WHERE (r.source_entity_id = e.id OR r.target_entity_id = e.id)
                    AND r.status <> 'retracted') AS grado
@@ -528,6 +528,19 @@ def exportar(
     nodos = [
         {
             "id": str(f["id"]),
+            # La clave ESTABLE, que es la que puede ir en un enlace.
+            #
+            # El `id` es un UUID que se genera en cada ingesta: la base se
+            # levanta de cero todas las noches, así que el identificador de
+            # una entidad cambia a diario. Un enlace a una ficha dejaba de
+            # funcionar al día siguiente, y en un proyecto cuyo sentido es que
+            # alguien encuentre algo y lo pueda mandar, eso no es un detalle.
+            #
+            # `dedupe_key` sí es estable —es lo que hace idempotente la
+            # ingesta: `nif:B12345678` o `bdns:organo:1234`— y no revela nada
+            # que no esté ya publicado: las fichas de personas físicas no
+            # llegan hasta aquí, se han ido tres pasos antes.
+            "clave": f["dedupe_key"],
             "schema": f["ftm_schema"],
             "caption": f["caption"],
             **({"nif": f["nif"]} if f["nif"] else {}),
@@ -759,7 +772,8 @@ def _exportar_indice(
             WHERE a.ftm_schema = 'ContractAward'
             GROUP BY a.target_entity_id
         )
-        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif, e.properties,
+        SELECT e.id, e.ftm_schema, e.caption, COALESCE(e.nif,'') AS nif,
+               e.dedupe_key, e.properties,
                d.recibido,
                d.pagado + coalesce(p.pagado, 0) AS pagado,
                d.pagadores + coalesce(pi.pagadores, 0) AS pagadores,
@@ -786,6 +800,9 @@ def _exportar_indice(
         entradas.append(
             {
                 "id": str(f["id"]),
+                # La misma clave estable que en el grafo: un enlace al
+                # buscador tiene que seguir valiendo mañana.
+                "clave": f["dedupe_key"],
                 "schema": f["ftm_schema"],
                 # El caption del índice es un nombre y se publica entero. La
                 # ficha cuyo nombre ERA el de una persona ya se ha ido arriba;
