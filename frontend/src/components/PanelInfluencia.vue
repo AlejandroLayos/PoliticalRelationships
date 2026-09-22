@@ -138,13 +138,48 @@ const documentosDeMas = computed(() =>
 
 
 
-const nombresExpediente = computed(() => {
+/**
+ * Los expedientes, con su nombre y con la dirección del expediente REAL.
+ *
+ * Y ésa es la diferencia que importa. La procedencia que se guarda de cada
+ * dato es el fichero del que salió —un ATOM de sindicación de veinte megas—,
+ * que sirve para reproducir la ingesta y no le sirve de nada a quien quiere
+ * comprobar un contrato: se descarga un XML enorme y ahí se acaba el viaje.
+ *
+ * Pero el propio expediente trae en `sourceUrl` la ficha pública de la
+ * plataforma, que es la página que una persona puede leer. Estaba guardada y
+ * no se enseñaba en ningún sitio salvo en el bloque de publicidad de la
+ * portada. «Cada cifra lleva el documento del que salió» sólo es verdad de
+ * verdad si ese documento se puede abrir y entender.
+ */
+const expedientes = computed(() => {
   const m = new Map()
   for (const n of props.crudo?.nodes ?? []) {
-    if (n.schema === 'Contract') m.set(n.id, n.caption)
+    if (n.schema !== 'Contract') continue
+    m.set(n.id, { nombre: n.caption, url: n.properties?.sourceUrl ?? '' })
   }
   return m
 })
+
+/** La contraparte cuyos expedientes están desplegados, si hay alguna. */
+const expedientesAbiertos = ref('')
+
+function alternarExpedientes(id) {
+  expedientesAbiertos.value = expedientesAbiertos.value === id ? '' : id
+}
+
+/** Los expedientes de una contraparte, con nombre y enlace, sin repetir. */
+function expedientesDe(c) {
+  const vistos = new Set()
+  const salida = []
+  for (const id of c.expedientes ?? []) {
+    if (vistos.has(id)) continue
+    vistos.add(id)
+    const e = expedientes.value.get(id)
+    salida.push({ id, nombre: e?.nombre ?? id, url: e?.url ?? '' })
+  }
+  return salida
+}
 
 function tope(lista) {
   return Math.max(1, ...lista.map((x) => x.total))
@@ -575,8 +610,11 @@ const sinDatos = computed(
             <span class="meta">
               {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
               <template v-if="c.expedientes?.length">
-                · {{ c.expedientes.length }}
-                {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
+                ·
+                <button class="enlace-expedientes" @click="alternarExpedientes(c.id)">
+                  {{ c.expedientes.length }}
+                  {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
+                </button>
               </template>
               <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
               <span v-if="c.extranjera" class="extranjera">· extranjera</span>
@@ -594,6 +632,19 @@ const sinDatos = computed(
                 <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
               </span>
             </span>
+            <!--
+              Los expedientes, desplegables y con enlace a la ficha pública de
+              la plataforma. Es el paso que faltaba para que «cada cifra lleva
+              el documento del que salió» sirva de algo: la procedencia que se
+              guarda es el ATOM de sindicación del que se leyó, que reproduce
+              la ingesta pero no se puede leer.
+            -->
+            <ul v-if="expedientesAbiertos === c.id" class="expedientes-de">
+              <li v-for="e in expedientesDe(c)" :key="e.id">
+                <a v-if="e.url" :href="e.url" target="_blank" rel="noopener noreferrer">{{ e.nombre }}</a>
+                <span v-else :title="'Este expediente no trae dirección pública'">{{ e.nombre }}</span>
+              </li>
+            </ul>
           </li>
         </ul>
       </details>
@@ -616,10 +667,10 @@ const sinDatos = computed(
               {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
               <template v-if="c.expedientes?.length">
                 ·
-                <span :title="c.expedientes.map((e) => nombresExpediente.get(e) ?? e).join(' · ')">
+                <button class="enlace-expedientes" @click="alternarExpedientes(c.id)">
                   {{ c.expedientes.length }}
                   {{ c.expedientes.length === 1 ? 'expediente' : 'expedientes' }}
-                </span>
+                </button>
               </template>
               <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
               <span v-if="c.extranjera" class="extranjera">· extranjera</span>
@@ -637,6 +688,19 @@ const sinDatos = computed(
                 <template v-if="c.motivosSinCifra.length">(importe no verosímil)</template>
               </span>
             </span>
+            <!--
+              Los expedientes, desplegables y con enlace a la ficha pública de
+              la plataforma. Es el paso que faltaba para que «cada cifra lleva
+              el documento del que salió» sirva de algo: la procedencia que se
+              guarda es el ATOM de sindicación del que se leyó, que reproduce
+              la ingesta pero no se puede leer.
+            -->
+            <ul v-if="expedientesAbiertos === c.id" class="expedientes-de">
+              <li v-for="e in expedientesDe(c)" :key="e.id">
+                <a v-if="e.url" :href="e.url" target="_blank" rel="noopener noreferrer">{{ e.nombre }}</a>
+                <span v-else :title="'Este expediente no trae dirección pública'">{{ e.nombre }}</span>
+              </li>
+            </ul>
           </li>
         </ul>
       </details>
@@ -681,6 +745,18 @@ const sinDatos = computed(
 .via-cabecera {
   margin: 0 0 var(--e2); font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.4;
 }
+
+.enlace-expedientes {
+  background: none; border: none; padding: 0; font: inherit;
+  color: var(--serie-1); cursor: pointer; text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.expedientes-de {
+  list-style: none; margin: 0.3rem 0 0; padding: 0 0 0 0.6rem;
+  border-left: 2px solid var(--linea-fuerte);
+}
+.expedientes-de li { font-size: var(--t-xs); line-height: 1.4; margin-bottom: 0.25rem; }
+.expedientes-de a { color: var(--serie-1); }
 
 .acciones { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e2); }
 .copiar { color: var(--tinta-3); }

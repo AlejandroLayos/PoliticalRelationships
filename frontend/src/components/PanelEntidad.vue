@@ -87,6 +87,21 @@ function importe(a) {
       <h2>{{ entidad.caption }}</h2>
       <p v-if="entidad.nif" class="nif">NIF {{ entidad.nif }}</p>
 
+      <!--
+        La ficha pública del expediente, arriba del todo.
+
+        Un expediente es un papel, no un actor: lo que alguien quiere de él es
+        leerlo. La dirección estaba guardada en `sourceUrl` desde la primera
+        ingesta y no se enseñaba en ninguna parte; lo que se ofrecía era la
+        procedencia, que es el ATOM de sindicación del que se leyó —sirve para
+        reproducir la ingesta y no para comprobar nada—.
+      -->
+      <p v-if="entidad.properties?.sourceUrl" class="expediente-publico">
+        <a :href="entidad.properties.sourceUrl" target="_blank" rel="noopener noreferrer">
+          Ver el expediente en la plataforma oficial
+        </a>
+      </p>
+
       <p v-if="entidad.merged_into" class="aviso-fusion">
         Esta ficha quedó absorbida por otra entidad en una fusión.
         <button class="enlace" @click="emit('ir', entidad.merged_into)">Ver la vigente</button>
@@ -200,6 +215,8 @@ header { display: flex; align-items: center; gap: 0.5rem; }
 .punto.pequeno { width: 7px; height: 7px; }
 .tipo { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-tenue); }
 h2 { font-size: 1.1rem; margin: 0.35rem 0 0.2rem; line-height: 1.3; }
+.expediente-publico { margin: 0.35rem 0 0.6rem; font-size: 0.82rem; }
+.expediente-publico a { color: var(--serie-1); }
 .nif { font-size: 0.8rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; margin: 0 0 0.6rem; }
 
 .aviso-fusion {
