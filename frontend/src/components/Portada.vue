@@ -66,27 +66,33 @@ function dinero(v) {
   return dineroCorto(v)
 }
 
+/*
+  El espacio entre la cifra y su unidad es duro (`\u00a0`). «368 receptores»
+  es una sola cosa: partido en dos renglones deja un «receptores» huérfano
+  debajo del importe y la fila parece descuadrada. Con el espacio duro el
+  renglón se corta por el separador, que es donde hay que cortarlo.
+*/
 const LISTAS = [
   {
     clave: 'pagadores',
     titulo: 'Quién reparte más dinero público',
     que: 'Organismos y entidades por el total que sale de ellos hacia empresas y beneficiarios.',
     noEs: 'Encabezar esta lista no indica nada irregular: un servicio de salud compra para una comunidad entera.',
-    unidad: (x) => `${x.n} ${x.n === 1 ? 'receptor' : 'receptores'}`,
+    unidad: (x) => `${x.n}\u00a0${x.n === 1 ? 'receptor' : 'receptores'}`,
   },
   {
     clave: 'receptores',
     titulo: 'Quién más cobra',
     que: 'Empresas y entidades por el total que reciben de administraciones públicas.',
     noEs: 'Facturar mucho es lo normal en sectores concentrados, como el farmacéutico o la obra civil.',
-    unidad: (x) => `${x.n} ${x.n === 1 ? 'pagador' : 'pagadores'}`,
+    unidad: (x) => `${x.n}\u00a0${x.n === 1 ? 'pagador' : 'pagadores'}`,
   },
   {
     clave: 'transversales',
     titulo: 'Cobran de más administraciones distintas',
     que: 'Ordenado por número de pagadores diferentes, no por dinero: quien aparece en muchas administraciones ha hecho un recorrido que el importe no enseña.',
     noEs: 'Puede ser simplemente un proveedor de un servicio que todas necesitan.',
-    unidad: (x) => `${x.n} administraciones`,
+    unidad: (x) => `${x.n}\u00a0administraciones`,
     destacar: 'n',
   },
   {
@@ -94,14 +100,14 @@ const LISTAS = [
     titulo: 'Capital extranjero',
     que: 'Entidades con NIF de no residente (letras N y W) o NIE que cobran de administraciones españolas.',
     noEs: 'El NIF dice dónde tributan, no quién las controla. Una filial española de una matriz extranjera no aparece aquí.',
-    unidad: (x) => `${x.n} ${x.n === 1 ? 'contraparte' : 'contrapartes'}`,
+    unidad: (x) => `${x.n}\u00a0${x.n === 1 ? 'contraparte' : 'contrapartes'}`,
   },
   {
     clave: 'sancionados',
     titulo: 'Expedientes del Tribunal de Cuentas',
     que: 'Formaciones políticas con expedientes sancionadores del Tribunal de Cuentas y su cuantía.',
     noEs: 'Es una deuda con el Estado, no un pago a nadie: no es financiación en ningún sentido.',
-    unidad: (x) => `${x.expedientes ?? x.n} ${(x.expedientes ?? x.n) === 1 ? 'expediente' : 'expedientes'}`,
+    unidad: (x) => `${x.expedientes ?? x.n}\u00a0${(x.expedientes ?? x.n) === 1 ? 'expediente' : 'expedientes'}`,
     tono: 'sancion',
   },
 ]
@@ -236,24 +242,9 @@ function filasVisibles(l) {
                 aria-hidden="true"
               />
               <span class="puesto">{{ i + 1 }}</span>
-              <span class="cuerpo">
-                <span class="nombre">
-                  <span class="punto" :style="{ background: color(f.schema) }" />
-                  <span class="etiqueta" :title="f.caption">{{ f.caption }}</span>
-                </span>
-                <span class="meta">
-                  {{ etiquetaEsquema(f.schema) }} ·
-                  <!-- La otra magnitud, la que no encabeza la fila. -->
-                  <template v-if="l.destacar === 'n'">{{ dineroCorto(f.total) }}</template>
-                  <template v-else>{{ l.unidad(f) }}</template>
-                  <span v-if="f.extranjera && l.clave !== 'extranjeras'" class="marca">· no residente</span>
-                  <!--
-                    Está en la base pero no en el grafo publicado: se puede
-                    abrir su ficha y ver sus cifras, no su red. Decirlo aquí
-                    evita que el clic parezca roto.
-                  -->
-                  <span v-if="f.enMapa === false" class="sin-red">· sin red en el mapa</span>
-                </span>
+              <span class="nombre">
+                <span class="punto" :style="{ background: color(f.schema) }" />
+                <span class="etiqueta" :title="f.caption">{{ f.caption }}</span>
               </span>
               <!--
                 La cifra grande es SIEMPRE la magnitud por la que está
@@ -264,6 +255,19 @@ function filasVisibles(l) {
                 era una comparación de dos cosas distintas.
               -->
               <span class="cifra">{{ cifraCabeza(f, l) }}</span>
+              <span class="meta">
+                {{ etiquetaEsquema(f.schema) }} ·
+                <!-- La otra magnitud, la que no encabeza la fila. -->
+                <template v-if="l.destacar === 'n'">{{ dineroCorto(f.total) }}</template>
+                <template v-else>{{ l.unidad(f) }}</template>
+                <span v-if="f.extranjera && l.clave !== 'extranjeras'" class="marca">· no residente</span>
+                <!--
+                  Está en la base pero no en el grafo publicado: se puede
+                  abrir su ficha y ver sus cifras, no su red. Decirlo aquí
+                  evita que el clic parezca roto.
+                -->
+                <span v-if="f.enMapa === false" class="sin-red">· sin red en el mapa</span>
+              </span>
             </button>
           </li>
         </ol>
@@ -441,9 +445,19 @@ function filasVisibles(l) {
 */
 .ranking li { border-bottom: none; }
 
+/*
+  Rejilla con áreas y no tres columnas a secas: la cifra tiene que poder
+  cambiar de renglón sin cambiar el HTML. En ancho de sobremesa va a la
+  derecha del nombre; en móvil baja a compartir renglón con el tipo y los
+  receptores, que van sobrados de sitio.
+*/
 .fila {
-  position: relative; width: 100%; display: grid; gap: var(--e3) var(--e3);
-  grid-template-columns: 1.5rem 1fr auto; align-items: baseline;
+  position: relative; width: 100%; display: grid; gap: 0 var(--e3);
+  grid-template-columns: 1.5rem 1fr auto;
+  grid-template-areas:
+    "puesto nombre cifra"
+    "hueco  meta   meta";
+  align-items: baseline;
   background: none; border: none; color: inherit; font: inherit;
   padding: 0.6rem 0.5rem 0.85rem; margin: 0 -0.5rem; text-align: left;
   cursor: pointer; border-radius: var(--radio-s);
@@ -475,11 +489,11 @@ function filasVisibles(l) {
 .fila:hover .fondo { filter: brightness(1.25); }
 
 .puesto {
-  font-size: var(--t-xs); color: var(--tinta-3);
+  grid-area: puesto; font-size: var(--t-xs); color: var(--tinta-3);
   font-variant-numeric: tabular-nums; text-align: right;
 }
-.cuerpo { min-width: 0; display: block; }
 .nombre {
+  grid-area: nombre;
   color: var(--tinta); font-size: var(--t-m); line-height: 1.35; font-weight: 500;
   display: flex; align-items: baseline; gap: var(--e2);
 }
@@ -495,7 +509,8 @@ function filasVisibles(l) {
 }
 .punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .meta {
-  display: block; font-size: var(--t-xs); color: var(--tinta-3); margin-top: 0.2rem;
+  grid-area: meta; display: block; min-width: 0;
+  font-size: var(--t-xs); color: var(--tinta-3); margin-top: 0.2rem;
 }
 .meta .marca { color: var(--tinta-2); }
 /*
@@ -520,19 +535,25 @@ function filasVisibles(l) {
   dan el contraste que da el blanco—.
 */
 .cifra {
-  font-size: var(--t-m); font-variant-numeric: tabular-nums; white-space: nowrap;
-  color: var(--tinta); font-weight: 620;
+  grid-area: cifra; font-size: var(--t-m); font-variant-numeric: tabular-nums;
+  white-space: nowrap; color: var(--tinta); font-weight: 620;
 }
 
 /*
-  En móvil la cifra baja a su propio renglón. Compartiendo renglón con el
-  nombre le dejaba una columna de dos palabras: «Consejería de
-  Presidencia,…» y el resto cortado, en una lista cuyo trabajo es que se lea
-  quién es quién.
+  En móvil el nombre se queda el renglón entero —compartiéndolo con la cifra
+  le tocaba una columna de dos palabras, y la lista está para que se lea quién
+  es quién— pero la cifra NO se lleva un renglón para ella sola: se va al
+  final del de abajo, donde «Organismo público · 31 receptores» deja sitio de
+  sobra. Con renglón propio cada fila medía 200 px y diez filas eran dos
+  pantallas y media de un teléfono; ahora son seis renglones menos por lista.
 */
 @media (max-width: 600px) {
-  .fila { grid-template-columns: 1.5rem 1fr; }
-  .cifra { grid-column: 2; justify-self: start; font-size: var(--t-l); }
+  .fila {
+    grid-template-areas:
+      "puesto nombre nombre"
+      "hueco  meta   cifra";
+  }
+  .cifra { justify-self: end; }
   .tarjeta { padding: var(--e4) var(--e4) var(--e3); }
   .nombre .etiqueta { -webkit-line-clamp: 3; }
 }
