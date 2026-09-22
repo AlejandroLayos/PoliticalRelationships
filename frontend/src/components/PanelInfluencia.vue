@@ -39,6 +39,24 @@ const emit = defineEmits(['seleccionar', 'volver', 'expandir'])
 const resumen = computed(() => resumenEnPalabras(props.area))
 
 /**
+ * Las entidades que comparten pagador, agrupadas por ese pagador.
+ *
+ * El orden de los grupos es el de la lista, que ya viene ordenada por cuántos
+ * pagadores se comparten y por dinero: así el grupo de arriba es el más
+ * poblado, no el del organismo con el nombre más corto.
+ */
+const gruposComparten = computed(() => {
+  const grupos = new Map()
+  for (const c of props.area?.comparten ?? []) {
+    const via = c.via
+    if (!via) continue
+    if (!grupos.has(via.id)) grupos.set(via.id, { ...via, entidades: [] })
+    grupos.get(via.id).entidades.push(c)
+  }
+  return [...grupos.values()]
+})
+
+/**
  * ¿Las listas completas nacen abiertas?
  *
  * Plegadas cuando el diagrama ya está dibujando las contrapartes —ahí la
@@ -85,23 +103,6 @@ const fuentesDeLaFicha = computed(() =>
   Se enseñan unos pocos y se dice cuántos quedan: lo que hace falta comprobar
   es que el documento existe y se puede abrir, no abrirlos los 29.
 */
-/**
- * «Sobre todo por X, que reparte entre N entidades.»
- *
- * Se arma en JavaScript y no en la plantilla. Con `<template v-for>` y
- * `<button>` por medio, Vue colapsaba los espacios donde no tocaba —«Sobre
- * todo porD.G. DE POLÍTICA INTERIOR»— y la coma se iba sola al renglón
- * siguiente. El nombre pierde el clic, y no importa: el pagador ya está en la
- * lista de «de quién recibe», que es donde se pulsa.
- */
-const fraseDelPagadorComun = computed(() => {
-  const via = props.area?.compartenPor ?? []
-  if (!via.length) return ''
-  const trozos = via.map(
-    (v) => `${v.caption}, que reparte entre ${v.alcance} ${v.alcance === 1 ? 'entidad' : 'entidades'}`,
-  )
-  return `Sobre todo por ${trozos.join('; y por ')}.`
-})
 
 /** Las dos concentraciones que haya —lo que paga y lo que recibe—, con su frase. */
 const reparto = computed(() => {
@@ -484,30 +485,65 @@ const sinDatos = computed(
       </section>
 
       <!-- Ámbito de interés --------------------------------------------- -->
-      <section v-if="area.comparten.length" class="bloque">
-        <h3>Orbitan a sus mismos pagadores</h3>
+      <!--
+        Cuando el único pagador que se comparte reparte entre veinte, no hay
+        lista: hay una frase. En la ficha del PP salían el PSOE, VOX, ERC,
+        Podemos y doce partidos más, cada uno con su cifra, bajo un título que
+        decía «orbitan a sus mismos pagadores». Es verdad y no dice nada —lo
+        que comparten es quien paga la subvención electoral a todos— y el
+        matiz llegaba después de haber leído quince nombres de partidos
+        juntos. Un falso positivo aquí es una acusación falsa (spec §12).
+      -->
+      <section v-if="area.compartenDeProgramaGeneral" class="bloque">
+        <h3>Cobran de los mismos organismos</h3>
+        <p class="matiz">
+          Hay {{ area.compartenDeProgramaGeneral.entidades }} entidades que
+          cobran de algún pagador de ésta, pero no se listan: el que comparten
+          es
+          <button class="enlace" @click="emit('seleccionar', area.compartenDeProgramaGeneral.id)">
+            {{ area.compartenDeProgramaGeneral.caption }}</button>, que reparte
+          entre {{ area.compartenDeProgramaGeneral.alcance }}. Coincidir en un
+          reparto general no es una relación entre ellas, y enseñarlo como una
+          lista lo parecería.
+        </p>
+      </section>
+      <section v-else-if="area.comparten.length" class="bloque">
+        <h3>Cobran de los mismos organismos</h3>
         <p class="matiz">
           Cobran de los mismos organismos que esta entidad. Es una coincidencia
           de pagador, no una relación entre ellas.
         </p>
         <!--
-          Y CUÁL es el pagador compartido, con su alcance. Sin esta frase el
-          bloque insinúa: en la ficha del PSOE salían el PP, VOX, Podemos y
-          once partidos más, cada uno con su cifra, bajo el título «orbitan a
-          sus mismos pagadores». Es verdad y no dice nada — lo que comparten es
-          quien paga la subvención electoral a todos los partidos. Con «reparte
-          entre 93 entidades» al lado, se ve solo.
+          La frase de «sobre todo por X, que reparte entre N» se ha ido: ahora
+          cada grupo lleva su pagador en la cabecera, y aquella frase nombraba
+          además al pagador más amplio, que es precisamente el que ya no forma
+          grupo. Decía el nombre de un organismo que no aparecía debajo.
         -->
-        <p v-if="fraseDelPagadorComun" class="matiz via">{{ fraseDelPagadorComun }}</p>
-        <ul class="lista compacta">
-          <li v-for="c in area.comparten" :key="c.id">
-            <button @click="emit('seleccionar', c.id)">
-              <span class="punto pequeno" :style="{ background: color(c.schema) }" />
-              {{ c.caption }}
-            </button>
-            <span class="importe">{{ dineroCorto(c.total) }}</span>
-          </li>
-        </ul>
+        <!--
+          Agrupadas POR EL PAGADOR que comparten, no en una lista corrida.
+
+          «PSOE · 16,4 M €» debajo de un título sobre pagadores comunes se lee
+          como un vínculo. Bajo un encabezado que dice «vía Departament de
+          Justícia i Qualitat Democràtica, que reparte entre 6» se lee como lo
+          que es. Repetir esa coletilla en cada fila decía lo mismo y ocupaba
+          cinco renglones por entidad.
+        -->
+        <div v-for="g in gruposComparten" :key="g.id" class="grupo-via">
+          <p class="via-cabecera">
+            Vía
+            <button class="enlace" @click="emit('seleccionar', g.id)">{{ g.caption }}</button>,
+            que reparte entre {{ g.alcance }}
+          </p>
+          <ul class="lista compacta">
+            <li v-for="c in g.entidades" :key="c.id">
+              <button @click="emit('seleccionar', c.id)">
+                <span class="punto pequeno" :style="{ background: color(c.schema) }" />
+                {{ c.caption }}
+              </button>
+              <span class="importe">{{ dineroCorto(c.total) }}</span>
+            </li>
+          </ul>
+        </div>
       </section>
 
       <!--
@@ -619,16 +655,32 @@ const sinDatos = computed(
 .reparto li + li { margin-top: var(--e3); }
 .frase { margin: 0 0 var(--e2); font-size: var(--t-s); color: var(--tinta-2); line-height: 1.5; }
 .frase b { color: var(--tinta); font-weight: 650; }
-.frase .enlace {
-  background: none; border: none; padding: 0; font: inherit;
+/*
+  Un `button` sin estilo propio hereda el del navegador: fondo gris, texto
+  centrado y caja de bloque. Dentro de una frase eso no es un enlace, es un
+  botón gordo en medio del párrafo — y así salió el nombre del organismo en
+  la cabecera de cada grupo.
+*/
+.frase .enlace,
+.matiz .enlace,
+.via-cabecera .enlace {
+  display: inline; background: none; border: none; padding: 0; font: inherit;
   color: var(--serie-1); cursor: pointer; text-align: left;
 }
+.frase .enlace:hover,
+.matiz .enlace:hover,
+.via-cabecera .enlace:hover { text-decoration: underline; }
 /* Barra de una sola serie: la parte del primero sobre el total. */
 .barra-reparto {
   display: block; height: 6px; background: var(--superficie-2);
   border-radius: 3px; overflow: hidden;
 }
 .barra-reparto i { display: block; height: 100%; background: var(--serie-1); border-radius: 1px 3px 3px 1px; }
+
+.grupo-via + .grupo-via { margin-top: var(--e4); }
+.via-cabecera {
+  margin: 0 0 var(--e2); font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.4;
+}
 
 .acciones { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e2); }
 .copiar { color: var(--tinta-3); }

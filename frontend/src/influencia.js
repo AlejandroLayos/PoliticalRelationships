@@ -36,6 +36,16 @@ const ESQUEMAS_DINERO = new Set(['Payment', 'ContractAward'])
 /** Una multa no es financiación. Va aparte. */
 const ESQUEMAS_SANCION = new Set(['Debt'])
 
+/**
+ * A partir de cuántos receptores un pagador deja de distinguir a nadie.
+ *
+ * Diez es donde está la diferencia entre «este ayuntamiento paga a estas
+ * cuatro empresas» —que dice algo— y «esta dirección general reparte una
+ * convocatoria entre veintiuno», que no dice nada sobre ninguno de los
+ * veintiuno.
+ */
+export const ALCANCE_AMPLIO = 10
+
 function vacio(entidad = null) {
   return {
     entidad,
@@ -48,6 +58,7 @@ function vacio(entidad = null) {
     extranjero: { contrapartes: [], total: 0, porcentaje: 0, indicios: [], totalIndicios: 0 },
     comparten: [],
     compartenPor: [],
+    compartenDeProgramaGeneral: null,
     concentracionPagaA: null,
     concentracionRecibeDe: null,
     periodo: null,
@@ -257,10 +268,85 @@ export function areaDeInfluencia(datos, id) {
     c.pagadores.add(a.source)
   }
 
+  /*
+    Cuánto abarca cada uno de mis pagadores. Hace falta ANTES de la lista,
+    porque es lo que decide si la coincidencia significa algo.
+  */
+  const alcanceDe = new Map()
+  for (const a of aristas) {
+    if (!ESQUEMAS_DINERO.has(a.schema)) continue
+    if (!misPagadores.has(a.source)) continue
+    if (!alcanceDe.has(a.source)) alcanceDe.set(a.source, new Set())
+    alcanceDe.get(a.source).add(a.target)
+  }
+  const esEstrecho = (idPagador) => (alcanceDe.get(idPagador)?.size ?? 0) <= ALCANCE_AMPLIO
+
+  /*
+    Compartir un pagador que reparte entre veinte no es compartir nada.
+
+    En la ficha del PP salían listados el PSOE, VOX, ERC, Podemos y doce
+    partidos más, cada uno con su cifra. Es verdad y no dice absolutamente
+    nada: lo que comparten es la Dirección General de Política Interior, que
+    es quien paga la subvención electoral a TODOS los partidos. Descubrir que
+    los partidos cobran de quien paga a los partidos no es un hallazgo, y
+    presentarlo como una órbita común sí parece uno — que es exactamente el
+    falso positivo que este proyecto no se puede permitir (spec §12).
+
+    Se decía al lado a cuántos reparte el pagador, y no basta: el matiz llega
+    después de haber leído quince nombres de partidos juntos. Si NINGÚN
+    pagador compartido es estrecho, la lista no se enseña; se dice en una
+    frase que la coincidencia es un programa general, que es lo que es.
+  */
+  /**
+   * De los pagadores que comparten dos entidades, el que menos reparte.
+   *
+   * Es el que hace falta enseñar. «PSOE · 16,4 M €» debajo de un título que
+   * habla de pagadores comunes se lee como un vínculo; «PSOE · vía Departament
+   * de Justícia, que reparte entre 6» se lee como lo que es. El dato ya
+   * estaba calculado y no se enseñaba, y sin él la lista insinúa.
+   */
+  function pagadorMasEstrecho(pagadores) {
+    let mejor = null
+    for (const idPagador of pagadores ?? []) {
+      const alcance = alcanceDe.get(idPagador)?.size ?? 0
+      if (!mejor || alcance < mejor.alcance) {
+        mejor = { id: idPagador, caption: porId.get(idPagador)?.caption ?? '', alcance }
+      }
+    }
+    return mejor?.caption ? mejor : null
+  }
+
   const compartenLista = [...comparten.values()]
-    .map((c) => ({ ...c, pagadoresComunes: c.pagadores.size, pagadores: undefined }))
+    .filter((c) => [...(c.pagadores ?? [])].some(esEstrecho))
+    .map((c) => ({
+      ...c,
+      pagadoresComunes: c.pagadores.size,
+      via: pagadorMasEstrecho(c.pagadores),
+      pagadores: undefined,
+    }))
     .sort((x, y) => y.pagadoresComunes - x.pagadoresComunes || y.total - x.total)
     .slice(0, 15)
+
+  /**
+   * Lo que se dice en vez de la lista cuando no queda nada que decir.
+   *
+   * `null` si la lista tiene contenido o si no había coincidencias de
+   * entrada; si no, el pagador más amplio de los compartidos y cuántas
+   * entidades se han dejado fuera por esto.
+   */
+  const compartenDeProgramaGeneral = (() => {
+    if (compartenLista.length || !comparten.size) return null
+    let mayor = null
+    for (const c of comparten.values()) {
+      for (const idPagador of c.pagadores ?? []) {
+        const alcance = alcanceDe.get(idPagador)?.size ?? 0
+        if (!mayor || alcance > mayor.alcance) {
+          mayor = { id: idPagador, caption: porId.get(idPagador)?.caption ?? '', alcance }
+        }
+      }
+    }
+    return mayor?.caption ? { ...mayor, entidades: comparten.size } : null
+  })()
 
   // POR QUÉ orbitan, y a cuántos alcanza ese pagador.
   //
@@ -277,17 +363,10 @@ export function areaDeInfluencia(datos, id) {
   // coincidencia no significa nada. Y cuando el pagador común sí es estrecho,
   // la misma frase lo deja claro en el otro sentido.
   const cuantasPorPagador = new Map()
-  for (const c of comparten.values()) {
+  for (const c of compartenLista.length ? comparten.values() : []) {
     for (const p of c.pagadores ?? []) {
       cuantasPorPagador.set(p, (cuantasPorPagador.get(p) ?? 0) + 1)
     }
-  }
-  const alcanceDe = new Map()
-  for (const a of aristas) {
-    if (!ESQUEMAS_DINERO.has(a.schema)) continue
-    if (!cuantasPorPagador.has(a.source)) continue
-    if (!alcanceDe.has(a.source)) alcanceDe.set(a.source, new Set())
-    alcanceDe.get(a.source).add(a.target)
   }
   const compartenPor = [...cuantasPorPagador.entries()]
     .map(([idPagador, cuantos]) => ({
@@ -317,6 +396,7 @@ export function areaDeInfluencia(datos, id) {
     },
     comparten: compartenLista,
     compartenPor,
+    compartenDeProgramaGeneral,
     concentracionPagaA: concentracion(pagaA),
     concentracionRecibeDe: concentracion(recibeDe),
     periodo: periodoDe(aristas, id),

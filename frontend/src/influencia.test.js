@@ -266,17 +266,20 @@ describe('por qué orbitan', () => {
     return { nodes, edges }
   }
 
-  it('dice cuál es el pagador compartido y a cuántos reparte', () => {
+  it('con un pagador que reparte entre catorce, no se lista a nadie', () => {
+    // Decir al lado «reparte entre catorce» no bastaba: el matiz llega
+    // después de haber leído trece nombres de partidos juntos. Si ningún
+    // pagador compartido es estrecho, no hay lista, hay una frase.
     const area = areaDeInfluencia(grafoDeSubvencionElectoral(14), 'p0')
-    expect(area.comparten.length).toBe(13)
-    expect(area.compartenPor).toHaveLength(1)
-    expect(area.compartenPor[0].caption).toBe('D.G. DE POLÍTICA INTERIOR')
-    // El alcance es lo que desactiva la insinuación: reparte entre los 14.
-    expect(area.compartenPor[0].alcance).toBe(14)
-    expect(area.compartenPor[0].cuantos).toBe(13)
+    expect(area.comparten).toEqual([])
+    expect(area.compartenDeProgramaGeneral).toMatchObject({
+      caption: 'D.G. DE POLÍTICA INTERIOR',
+      alcance: 14,
+      entidades: 13,
+    })
   })
 
-  it('un pagador estrecho se distingue de uno que paga a todos', () => {
+  it('con un pagador estrecho sí se lista, y sólo lo que ese pagador toca', () => {
     const { nodes, edges } = grafoDeSubvencionElectoral(14)
     nodes.push({ id: 'dip', caption: 'DIPUTACIÓN DE SORIA', schema: 'PublicBody', properties: {} })
     nodes.push({ id: 'emp', caption: 'EMPRESA SL', schema: 'Company', properties: {} })
@@ -284,9 +287,18 @@ describe('por qué orbitan', () => {
     edges.push({ id: 'x2', source: 'dip', target: 'emp', amount: '500', schema: 'Payment', confidence: 1, status: 'asserted' })
 
     const area = areaDeInfluencia({ nodes, edges }, 'p0')
+    // La empresa comparte la Diputación, que reparte entre dos: eso sí dice
+    // algo. Los trece partidos siguen fuera, que comparten sólo la D.G.
+    expect(area.comparten.map((c) => c.caption)).toEqual(['EMPRESA SL'])
+    expect(area.compartenDeProgramaGeneral).toBe(null)
     const porNombre = Object.fromEntries(area.compartenPor.map((v) => [v.caption, v]))
     expect(porNombre['DIPUTACIÓN DE SORIA'].alcance).toBe(2)
-    expect(porNombre['D.G. DE POLÍTICA INTERIOR'].alcance).toBe(14)
+  })
+
+  it('justo en el umbral se sigue listando', () => {
+    // Diez receptores es el límite de «este paga a unos pocos»; once ya no.
+    expect(areaDeInfluencia(grafoDeSubvencionElectoral(10), 'p0').comparten.length).toBe(9)
+    expect(areaDeInfluencia(grafoDeSubvencionElectoral(11), 'p0').comparten).toEqual([])
   })
 
   it('sin pagadores compartidos no hay nada que explicar', () => {
@@ -295,7 +307,9 @@ describe('por qué orbitan', () => {
       { id: 'e', caption: 'EMPRESA', schema: 'Company', properties: {} },
     ]
     const edges = [{ id: 'a', source: 'o', target: 'e', amount: '100', schema: 'Payment', confidence: 1, status: 'asserted' }]
-    expect(areaDeInfluencia({ nodes, edges }, 'e').compartenPor).toEqual([])
+    const area = areaDeInfluencia({ nodes, edges }, 'e')
+    expect(area.compartenPor).toEqual([])
+    expect(area.compartenDeProgramaGeneral).toBe(null)
   })
 })
 
