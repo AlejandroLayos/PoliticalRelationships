@@ -50,6 +50,16 @@ function conceptoEntero(arista) {
   return p.convocatoria ?? p.objeto ?? ''
 }
 
+/**
+ * ¿Es el caso normal? Afirmado por la fuente y sin ninguna duda.
+ *
+ * Se dice igualmente, pero en una línea y sin barra: la barra está para
+ * marcar lo que NO es rutina.
+ */
+function esRutina(arista) {
+  return arista.status === 'asserted' && (arista.confidence ?? 1) >= 1
+}
+
 function concepto(arista) {
   const t = conceptoEntero(arista).trim()
   return t.length > 64 ? `${t.slice(0, 63)}…` : t
@@ -91,9 +101,19 @@ function importe(a) {
         <h3>Conexiones <span class="cuenta">{{ conexiones.length }}</span></h3>
         <ul class="conexiones">
           <li v-for="c in conexiones" :key="c.arista.id">
-            <button class="otro" @click="emit('ir', c.otro.id)">
+            <!--
+              El nombre, a tres renglones como mucho. Aquí los vecinos no son
+              sólo entidades: son también contratos, y el nombre de un
+              contrato es su objeto entero. Una fila ocupaba siete renglones
+              —«pa 82/2024 (sevilla) servicio de limpieza, logística de
+              gestión interna de residuos, suministro y reposición del
+              material de higiene consumible y otros servicios
+              complementarios…»— y setenta y cinco filas así son un muro. El
+              texto entero está en el `title` y en la procedencia.
+            -->
+            <button class="otro" :title="c.otro.caption" @click="emit('ir', c.otro.id)">
               <span class="punto pequeno" :style="{ background: COLOR_POR_ESQUEMA[c.otro.schema] ?? COLOR_POR_DEFECTO }" />
-              {{ c.otro.caption }}
+              <span class="nombre-otro">{{ c.otro.caption }}</span>
             </button>
             <div class="meta">
               <span class="rel">
@@ -123,13 +143,25 @@ function importe(a) {
               La confianza y el estado se muestran SIEMPRE, no sólo cuando son
               malos. Es la invariante 5: nada inferido puede presentarse igual
               que un hecho afirmado por la fuente.
+
+              Pero el caso normal —afirmado por la fuente, 100 %— no necesita
+              una barra: era lo más llamativo de cada fila, repetido setenta y
+              cinco veces, y justo lo que menos dice. En una línea pequeña y
+              sin barra, el contraste con lo inferido es MAYOR que antes, que
+              es lo que la invariante pide: la barra ámbar de una conexión
+              inferida ahora salta a la vista en medio de una lista sobria.
             -->
-            <div class="fiabilidad" :class="{ inferido: c.arista.status !== 'asserted' }">
+            <div
+              class="fiabilidad"
+              :class="{ inferido: c.arista.status !== 'asserted', rutina: esRutina(c.arista) }"
+            >
               <span class="estado">{{ NOMBRE_ESTADO[c.arista.status] ?? c.arista.status }}</span>
-              <span class="barra" :title="`Confianza ${(c.arista.confidence * 100).toFixed(0)}%`">
-                <span class="relleno" :style="{ width: `${(c.arista.confidence ?? 0) * 100}%` }" />
-              </span>
-              <span class="pct">{{ ((c.arista.confidence ?? 0) * 100).toFixed(0) }}%</span>
+              <template v-if="!esRutina(c.arista)">
+                <span class="barra" :title="`Confianza ${(c.arista.confidence * 100).toFixed(0)}%`">
+                  <span class="relleno" :style="{ width: `${(c.arista.confidence ?? 0) * 100}%` }" />
+                </span>
+                <span class="pct">{{ ((c.arista.confidence ?? 0) * 100).toFixed(0) }}%</span>
+              </template>
             </div>
           </li>
         </ul>
@@ -188,6 +220,11 @@ h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; colo
 
 .conexiones, .procedencia { list-style: none; padding: 0; margin: 0; }
 .conexiones li { padding: 0.55rem 0; border-bottom: 1px solid var(--borde-suave); }
+.nombre-otro {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden; min-width: 0;
+}
+.fiabilidad.rutina { color: var(--tinta-3); font-size: var(--t-xs); }
 .otro {
   display: flex; align-items: center; gap: 0.45rem; background: none; border: none;
   color: var(--texto); cursor: pointer; padding: 0; font: inherit; font-size: 0.88rem;

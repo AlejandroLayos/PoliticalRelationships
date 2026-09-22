@@ -24,13 +24,32 @@ function tamano(grado) {
   return 5 + Math.min(14, Math.sqrt(grado) * 3.5)
 }
 
+/**
+ * Los nombres de los expedientes, recortados.
+ *
+ * Aquí los nodos no son sólo entidades: son también contratos, y el `caption`
+ * de un contrato es su objeto entero. «huelva 1º cbam-am 2204/2025 (nº siglo
+ * 578/2025); c.c.a.+6.i+e9q8j-acuerdo marco con una única empresa, por lotes,
+ * para el suministro…» se escribía completo, cruzaba el lienzo de lado a lado
+ * y se cruzaba con los otros cuatro rótulos largos que había alrededor. La
+ * pantalla era una maraña de letras de la que no se leía ninguna.
+ *
+ * El texto entero sigue estando: en el panel de al lado y al pasar por
+ * encima.
+ */
+function recortar(texto, max = 44) {
+  if (!texto || texto.length <= max) return texto ?? ''
+  return `${texto.slice(0, max - 1).trimEnd()}…`
+}
+
 function construir() {
   grafo = new Graph({ multi: false, type: 'undirected' })
 
   for (const n of props.datos.nodes ?? []) {
     if (grafo.hasNode(n.id)) continue
     grafo.addNode(n.id, {
-      label: n.caption,
+      label: recortar(n.caption),
+      etiquetaReal: n.caption,
       esquema: n.schema,
       profundidad: n.depth ?? 0,
       color: COLOR_POR_ESQUEMA[n.schema] ?? COLOR_POR_DEFECTO,
@@ -133,7 +152,11 @@ function resaltar() {
   const foco = props.seleccion
   sigma.setSetting('nodeReducer', (id, datos) => {
     if (!foco || !grafo.hasNode(foco)) return datos
-    if (id === foco) return { ...datos, highlighted: true, zIndex: 2 }
+    // El del foco, con su nombre entero: es UNO, no se cruza con nada y es
+    // justo el que se está mirando.
+    if (id === foco) {
+      return { ...datos, label: datos.etiquetaReal ?? datos.label, highlighted: true, zIndex: 2 }
+    }
     if (grafo.areNeighbors(foco, id)) return { ...datos, zIndex: 1 }
     return { ...datos, color: 'rgba(160,165,180,0.28)', label: '', zIndex: 0 }
   })
