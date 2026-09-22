@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { disponerFlujo, repartirAlto } from './flujo.js'
+import { disponerFlujo, recortarAAncho, repartirAlto } from './flujo.js'
 import { areaDeInfluencia } from './influencia.js'
 
 function grafo(nReceptores = 3) {
@@ -28,9 +28,16 @@ describe('repartirAlto', () => {
     expect(grande).toBeGreaterThan(pequeno)
   })
 
-  it('reparte a partes iguales cuando no caben los mínimos', () => {
+  it('apretadísimo sigue conservando el orden', () => {
+    // Antes, cuando no cabían los mínimos, se repartía a partes iguales: una
+    // lista de ocho bandas idénticas que afirma que todas cobran lo mismo.
+    // Con el mínimo relativo siempre queda sitio con el que ordenar, y ocho
+    // bandas de cinco píxeles en orden dicen más que ocho de siete iguales.
     const altos = repartirAlto([1, 2, 3, 4, 5, 6, 7, 8], 100)
-    expect(new Set(altos.map((h) => h.toFixed(4))).size).toBe(1)
+    expect(altos[7]).toBeGreaterThan(altos[0])
+    expect(Math.min(...altos)).toBeGreaterThan(0)
+    const ocupa = altos.reduce((s, h) => s + h, 0) + 6 * 7
+    expect(ocupa).toBeLessThanOrEqual(100.001)
   })
 
   it('no ocupa más de lo disponible', () => {
@@ -41,6 +48,22 @@ describe('repartirAlto', () => {
 
   it('con una lista vacía devuelve una lista vacía', () => {
     expect(repartirAlto([], 300)).toEqual([])
+  })
+
+  it('con muchas contrapartes el mínimo cede y la proporción se conserva', () => {
+    // Un suelo fijo se come el reparto en cuanto la lista crece: con
+    // dieciocho bandas en 850 px, 26 px de mínimo son 468 y dejan 278 para
+    // decir algo. La banda de 40,6 M € salía 1,7 veces la de 3,0 M € cuando
+    // por raíz le tocan 3,7. El suelo está para que nadie desaparezca, no
+    // para aplanar la comparación.
+    const valores = [40_600_000, ...Array.from({ length: 17 }, () => 3_000_000)]
+    const altos = repartirAlto(valores, 850)
+    const razon = altos[0] / altos[altos.length - 1]
+    expect(razon).toBeGreaterThan(1.9)
+    // Y nadie se queda en nada: sigue habiendo suelo, más bajo.
+    expect(Math.min(...altos)).toBeGreaterThan(12)
+    const ocupa = altos.reduce((s, h) => s + h, 0) + 6 * (altos.length - 1)
+    expect(ocupa).toBeLessThanOrEqual(850.001)
   })
 })
 
@@ -152,5 +175,29 @@ describe('tamaños y hueco', () => {
 
     const soloEntrada = disponerFlujo(areaDeInfluencia({ nodes, edges }, 'e'), { ancho: 1000, alto: 600 })
     expect(soloEntrada.centro.x).toBeGreaterThan(1000 / 2)
+  })
+})
+
+describe('recortarAAncho', () => {
+  // Una medida de mentira pero exacta: siete píxeles por carácter.
+  const medir = (t) => t.length * 7
+
+  it('lo que cabe se deja entero', () => {
+    expect(recortarAAncho('ROCHE FARMA SA', 200, medir)).toBe('ROCHE FARMA SA')
+  })
+
+  it('lo que no cabe se corta y lo cortado CABE', () => {
+    const corto = recortarAAncho('VERTEX PHARMACEUTICALS (SPAIN) SL', 100, medir)
+    expect(corto.endsWith('…')).toBe(true)
+    expect(medir(corto)).toBeLessThanOrEqual(100)
+  })
+
+  it('no deja un espacio colgando antes de los puntos', () => {
+    expect(recortarAAncho('UTE SSG DIGAMAR', 7 * 5, medir)).toBe('UTE…')
+  })
+
+  it('sin sitio no escribe nada, y sin texto tampoco', () => {
+    expect(recortarAAncho('LO QUE SEA', 0, medir)).toBe('')
+    expect(recortarAAncho('', 100, medir)).toBe('')
   })
 })

@@ -9,7 +9,7 @@
  * La geometría vive en `flujo.js` y está probada aparte; aquí sólo se pinta.
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { disponerFlujo } from '../flujo.js'
+import { disponerFlujo, recortarAAncho } from '../flujo.js'
 import { dineroCorto } from '../nucleos.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
 
@@ -54,7 +54,12 @@ const disposicion = computed(() =>
     // escritorio el pie guarda sitio para el «+N más»: con 22 px se escribía
     // encima de la ayuda de la esquina.
     pie: ancho.value < 700 ? 50 : 36,
-    maxPorLado: ancho.value < 700 ? 8 : 12,
+    // Doce contrapartes dejaban media pantalla en negro: con el tope de alto
+    // de la ficha puesto, doce cajas de 68 px ocupan 890 px de los 900 que
+    // hay, pero como las de abajo son pequeñas el dibujo se queda corto por
+    // arriba y sobra sitio. A dieciocho cabe todo y cada caja sigue teniendo
+    // sitio de sobra para el nombre y el importe.
+    maxPorLado: ancho.value < 700 ? 9 : 18,
   }),
 )
 
@@ -66,15 +71,37 @@ const disposicion = computed(() =>
  * bajas el nombre y la cifra comparten renglón, y sin reservarlo se pisaban:
  * "CONSEJERÍA DE DESREGULACIÓN, FAMILIA Y…" con "11 mil €" encima.
  */
-function recortar(texto, w, reservado = 0) {
-  const cabe = Math.max(4, Math.floor((w - 18 - reservado) / 6.4))
-  if (!texto) return ''
-  return texto.length <= cabe ? texto : `${texto.slice(0, cabe - 1).trimEnd()}…`
+/*
+  Se mide con un lienzo en vez de contar caracteres.
+
+  La cuenta era «6,4 px por carácter», y los nombres de empresa van casi todos
+  en mayúsculas, que son más anchas: el recorte se quedaba corto y en las
+  fichas de un solo renglón el nombre acababa pegado al importe, sin espacio
+  —«VERTEX PHARMACEUTICALS (SPAI…4,3 M €»—.
+*/
+let medidor = null
+function anchoDe(texto, fuente) {
+  if (medidor === null) {
+    const lienzo = typeof document === 'undefined' ? null : document.createElement('canvas')
+    medidor = lienzo?.getContext('2d') ?? false
+  }
+  if (!medidor) return texto.length * 7
+  medidor.font = fuente
+  return medidor.measureText(texto).width
 }
 
-/** Ancho aproximado de la cifra, para no escribir el nombre debajo. */
+const FUENTE_NOMBRE = '11.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+const FUENTE_CIFRA = '650 12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+/** Aire entre el nombre y la cifra cuando comparten renglón. */
+const AIRE = 12
+
+function recortar(texto, w, reservado = 0) {
+  return recortarAAncho(texto, w - 18 - reservado, (t) => anchoDe(t, FUENTE_NOMBRE))
+}
+
+/** Lo que ocupa la cifra, para no escribir el nombre debajo. */
 function anchoCifra(total) {
-  return dineroCorto(total).length * 6.6 + 20
+  return anchoDe(dineroCorto(total), FUENTE_CIFRA) + AIRE
 }
 
 /** Dos renglones si la ficha da de sí; si no, nombre y cifra en el mismo. */

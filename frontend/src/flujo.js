@@ -57,21 +57,37 @@ function ancla(valor, min, max) {
  * Reparte el alto disponible entre las contrapartes.
  *
  * Todas reciben un mínimo legible; el resto se reparte por raíz del importe.
- * Si no cabe ni el mínimo para todas, se reparte a partes iguales: más vale
- * una lista apretada que una banda de cero píxeles.
+ * El mínimo es relativo al sitio que hay y a cuántas son, nunca más de la
+ * mitad del total: está para que nadie salga en cero píxeles —una banda de
+ * cero afirma que esa contraparte no existe— y no para aplanar la
+ * comparación entre las que sí caben.
  */
 export function repartirAlto(valores, disponible) {
   const n = valores.length
   if (!n) return []
   const libre = disponible - HUECO * (n - 1)
   if (libre <= 0) return valores.map(() => 0)
-  if (n * ALTO_MIN_FICHA >= libre) return valores.map(() => libre / n)
+
+  // El mínimo cede cuando hay muchas contrapartes.
+  //
+  // Es un suelo, y un suelo fijo se come el reparto en cuanto la lista
+  // crece: con dieciocho contrapartes en 850 px, 26 px de mínimo son 468 y
+  // sólo quedan 278 para decir algo — la banda de 40,6 M € salía 1,7 veces
+  // la de 3,0 M €, cuando por raíz le tocan 3,7. El suelo está para que
+  // nadie desaparezca, no para aplanar la comparación; con más filas, baja.
+  //
+  // Al ser relativo, además, ya no hace falta el reparto de emergencia a
+  // partes iguales que había para cuando no cabían los mínimos: el mínimo
+  // nunca pide más de la mitad del sitio, así que siempre queda con qué
+  // ordenar. Y una lista apretada con las bandas en su orden dice más que la
+  // misma lista con todas iguales.
+  const minimo = Math.min(ALTO_MIN_FICHA, libre / (n * 2.2))
 
   const pesos = valores.map((v) => Math.sqrt(Math.max(0, aNumero(v))))
   const suma = pesos.reduce((s, p) => s + p, 0)
-  const extra = libre - n * ALTO_MIN_FICHA
+  const extra = libre - n * minimo
   if (suma <= 0) return valores.map(() => libre / n)
-  return pesos.map((p) => ALTO_MIN_FICHA + (extra * p) / suma)
+  return pesos.map((p) => minimo + (extra * p) / suma)
 }
 
 function apilar(altos, desde) {
@@ -230,4 +246,34 @@ export function disponerFlujo(area, { ancho, alto, maxPorLado = 12, pie = PIE } 
       derecha: area.pagaA.length - der.length,
     },
   }
+}
+
+/**
+ * Recorta un texto a lo que quepa en `maxAncho`, midiéndolo de verdad.
+ *
+ * Antes se calculaba a ojo: «cada carácter ocupa 6,4 px». Los nombres de
+ * empresa van casi todos en mayúsculas, que son más anchas, así que la cuenta
+ * se quedaba corta y «VERTEX PHARMACEUTICALS (SPAI…» acababa pegado al
+ * importe, sin un espacio entre los dos. El ancho de un texto no se adivina:
+ * se mide.
+ *
+ * La medida se inyecta porque medir necesita un lienzo y esto tiene que poder
+ * probarse sin navegador.
+ *
+ * @param {string} texto
+ * @param {number} maxAncho en píxeles.
+ * @param {(t: string) => number} medir devuelve el ancho de un texto.
+ */
+export function recortarAAncho(texto, maxAncho, medir) {
+  if (!texto) return ''
+  if (maxAncho <= 0) return ''
+  if (medir(texto) <= maxAncho) return texto
+  let bajo = 0
+  let alto = texto.length
+  while (bajo < alto) {
+    const medio = Math.ceil((bajo + alto) / 2)
+    if (medir(`${texto.slice(0, medio).trimEnd()}…`) <= maxAncho) bajo = medio
+    else alto = medio - 1
+  }
+  return bajo > 0 ? `${texto.slice(0, bajo).trimEnd()}…` : ''
 }
