@@ -5,6 +5,8 @@ import {
   colapsarNodosDePaso,
   colorNucleo,
   paletaDeNucleos,
+  conEstructura,
+  MINIMO_NUCLEO,
   FONDO,
   PALETA_NUCLEOS,
   dineroCorto,
@@ -60,7 +62,97 @@ describe('peso', () => {
   })
 })
 
+/** Una secuencia pseudoaleatoria con semilla: el test no puede variar él. */
+function secuencia(semilla) {
+  let x = semilla
+  return () => {
+    x = (x * 1103515245 + 12345) % 2147483648
+    return x / 2147483648
+  }
+}
+
+/**
+ * Un grafo AMBIGUO: ocho grupos medio densos y noventa puentes entre ellos.
+ *
+ * La ambigüedad es el punto. Con dos grupos limpios Louvain acierta siempre y
+ * el orden de recorrido da igual; con esta forma, no: sin semilla, siete
+ * recorridos distintos dan dos agrupamientos distintos, que es exactamente lo
+ * que se veía en la web al recargar.
+ */
+function grafoAmbiguo() {
+  const s = secuencia(999)
+  const nodes = []
+  const edges = []
+  const GRUPOS = 8
+  const POR_GRUPO = 14
+  for (let g = 0; g < GRUPOS; g++) {
+    for (let i = 0; i < POR_GRUPO; i++) {
+      nodes.push({
+        id: `g${g}-${i}`,
+        caption: `ENTIDAD ${g}-${i}`,
+        schema: i === 0 ? 'PublicBody' : 'Company',
+      })
+    }
+  }
+  for (let g = 0; g < GRUPOS; g++) {
+    for (let i = 0; i < POR_GRUPO; i++) {
+      for (let j = i + 1; j < POR_GRUPO; j++) {
+        if (s() < 0.35) {
+          edges.push({ source: `g${g}-${i}`, target: `g${g}-${j}`, amount: String(Math.round(s() * 1e6)), schema: 'Payment' })
+        }
+      }
+    }
+  }
+  for (let k = 0; k < 90; k++) {
+    const a = Math.floor(s() * GRUPOS)
+    const b = Math.floor(s() * GRUPOS)
+    if (a === b) continue
+    edges.push({
+      source: `g${a}-${Math.floor(s() * POR_GRUPO)}`,
+      target: `g${b}-${Math.floor(s() * POR_GRUPO)}`,
+      amount: String(Math.round(s() * 1e6)),
+      schema: 'Payment',
+    })
+  }
+  return { nodes, edges }
+}
+
+function huella(datos) {
+  return analizarNucleos(datos)
+    .nucleos.map((n) => `${n.etiqueta}|${n.tamano}|${n.dinero}`)
+    .join('\n')
+}
+
 describe('analizarNucleos', () => {
+  /*
+    Louvain recorre los nodos en orden aleatorio y el reparto depende de ese
+    orden. Con el `Math.random` que trae por defecto, la misma instantánea
+    daba un mapa distinto en cada visita: el primer núcleo salía con 740,5 M €
+    y 59 entidades en una carga y con 1,1 MM € y 87 en la siguiente. Dos
+    personas mirando el mismo día leían cifras distintas, y ninguna
+    comprobable.
+  */
+  it('el mismo grafo da siempre el mismo agrupamiento', () => {
+    const datos = grafoAmbiguo()
+    const primera = huella(datos)
+    expect(huella(datos)).toBe(primera)
+  })
+
+  it('y no depende del azar global: cambiar Math.random no lo mueve', () => {
+    const datos = grafoAmbiguo()
+    const original = Math.random
+    try {
+      const huellas = new Set()
+      for (const semilla of [1, 7, 42, 1234, 99999, 555, 8]) {
+        Math.random = secuencia(semilla)
+        huellas.add(huella(datos))
+      }
+      expect(huellas.size).toBe(1)
+    } finally {
+      Math.random = original
+    }
+  })
+
   it('separa los dos grupos densos', () => {
     const { nucleos } = analizarNucleos(grafoDeDosNucleos())
     expect(nucleos.length).toBe(2)
@@ -336,7 +428,7 @@ describe('el puente conserva el porqué de un hueco', () => {
 
 describe('paletaDeNucleos', () => {
   it('colorea la cabeza y deja el resto en gris', () => {
-    const nucleos = Array.from({ length: 30 }, (_, i) => ({ id: i }))
+    const nucleos = Array.from({ length: 30 }, (_, i) => ({ id: i, tamano: 20 }))
     const color = paletaDeNucleos(nucleos, 3)
     const cabeza = [color(0), color(1), color(2)]
     expect(new Set(cabeza).size).toBe(3)
@@ -345,8 +437,24 @@ describe('paletaDeNucleos', () => {
     expect(color(29)).toBe(FONDO)
   })
 
+  it('los grupos sin cuerpo no gastan color, aunque muevan mucho dinero', () => {
+    // El mapa pintaba y rotulaba de violeta un grupo de cinco entidades que
+    // la lista de al lado no enseña por pequeño: un color sin fila a la que
+    // ir, y un color menos para un núcleo que sí estaba en la lista.
+    const nucleos = [
+      { id: 'grande', tamano: 40 },
+      { id: 'enano', tamano: MINIMO_NUCLEO - 1 },
+      { id: 'otro', tamano: 12 },
+    ]
+    const color = paletaDeNucleos(nucleos)
+    expect(color('enano')).toBe(FONDO)
+    expect(color('grande')).toBe(PALETA_NUCLEOS[0])
+    // Y el siguiente con cuerpo se queda el color que el enano habría gastado.
+    expect(color('otro')).toBe(PALETA_NUCLEOS[1])
+  })
+
   it('un núcleo que no existe también es fondo', () => {
-    expect(paletaDeNucleos([{ id: 7 }])(99)).toBe(FONDO)
+    expect(paletaDeNucleos([{ id: 7, tamano: 20 }])(99)).toBe(FONDO)
     expect(paletaDeNucleos([])(0)).toBe(FONDO)
     expect(paletaDeNucleos(null)(0)).toBe(FONDO)
   })
@@ -356,5 +464,20 @@ describe('paletaDeNucleos', () => {
     const b = paletaDeNucleos([{ id: 9 }, { id: 5 }])
     expect(a(5)).toBe(b(9))
     expect(a(9)).toBe(b(5))
+  })
+})
+
+describe('conEstructura', () => {
+  it('deja fuera los grupos de menos de seis entidades y conserva el orden', () => {
+    const nucleos = [
+      { id: 'a', tamano: 30 },
+      { id: 'b', tamano: MINIMO_NUCLEO - 1 },
+      { id: 'c', tamano: MINIMO_NUCLEO },
+    ]
+    expect(conEstructura(nucleos).map((n) => n.id)).toEqual(['a', 'c'])
+  })
+
+  it('sin lista no revienta', () => {
+    expect(conEstructura(null)).toEqual([])
   })
 })

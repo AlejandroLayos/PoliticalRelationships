@@ -59,3 +59,26 @@ export function vistaDeParametros(busqueda) {
 export function mismoEstado(a, b) {
   return a.vista === b.vista && (a.clave ?? '') === (b.clave ?? '')
 }
+
+/**
+ * Qué hay que pintar para un estado pedido, sabiendo si su entidad existe.
+ *
+ * Vive aquí y no en el componente porque el orden de las comprobaciones se
+ * equivocó una vez y no se notó: `?v=mapa` no lleva ninguna entidad, la
+ * comprobación de «¿existe la clave?» iba por delante, y el enlace al mapa
+ * caía siempre en la rama de enlace roto y abría la portada. El enlace al
+ * mapa no llevaba al mapa, y ningún test lo decía porque esto estaba dentro
+ * de un `<script setup>`, que no exporta nada.
+ *
+ * @param {{vista: string, clave?: string}} estado lo que pide la dirección.
+ * @param {boolean} existe si la clave corresponde a algo de esta instantánea.
+ * @returns {'portada'|'mapa'|'vecindario'|'ficha'}
+ */
+export function accionDeEstado({ vista, clave }, existe) {
+  if (vista === 'mapa') return 'mapa'
+  if (vista === 'portada') return 'portada'
+  // Un enlace a algo que ya no está en esta instantánea: la portada dice más
+  // que una ficha vacía, y el buscador queda a mano.
+  if (!clave || !existe) return 'portada'
+  return vista === 'vecindario' ? 'vecindario' : 'ficha'
+}

@@ -125,6 +125,35 @@ const TIPOS_CABECERA = ['PublicBody', 'Organization', 'Company', 'LegalEntity']
  * Devuelve `{ grafo, nucleos, porNodo, totalDinero }`. `nucleos` va ordenado
  * por dinero descendente: lo primero que se ve es donde más dinero hay.
  */
+/**
+ * Un generador pseudoaleatorio con semilla fija (mulberry32).
+ *
+ * Louvain recorre los nodos en orden aleatorio y el reparto en comunidades
+ * depende de ese orden. Con el `Math.random` que trae por defecto, la misma
+ * instantánea daba un mapa distinto en cada visita: «Consejería de
+ * Presidencia» salía con 740,5 M € y 59 entidades en una carga, con 830,8 M €
+ * y 76 en la siguiente, y con 1,1 MM € y 87 en la tercera. Los tres números
+ * son ciertos para su agrupamiento y ninguno es comprobable: quien se lleva
+ * una captura y quien abre el enlace ven cifras distintas del mismo día.
+ *
+ * Con semilla fija, una instantánea da siempre el mismo mapa. No hace el
+ * agrupamiento más correcto —Louvain sigue siendo heurístico— pero sí
+ * reproducible, que es lo que aquí hace falta para poder señalar algo.
+ */
+function generadorConSemilla(semilla) {
+  let a = semilla >>> 0
+  return function siguiente() {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** La semilla. Cualquier valor sirve mientras no cambie. */
+const SEMILLA_NUCLEOS = 0x51_4e_45_53
+
 export function analizarNucleos(datos, { resolucion = 1 } = {}) {
   const grafo = new Graph({ multi: false, type: 'undirected' })
 
@@ -173,7 +202,12 @@ export function analizarNucleos(datos, { resolucion = 1 } = {}) {
   // cada nodo en su propia comunidad, que es lo correcto pero conviene no
   // llamarlo siquiera.
   if (grafo.size > 0) {
-    louvain.assign(grafo, { nodeCommunityAttribute: 'nucleo', resolution: resolucion, weighted: true })
+    louvain.assign(grafo, {
+      nodeCommunityAttribute: 'nucleo',
+      resolution: resolucion,
+      weighted: true,
+      rng: generadorConSemilla(SEMILLA_NUCLEOS),
+    })
   } else {
     grafo.forEachNode((id, attrs) => grafo.setNodeAttribute(id, 'nucleo', attrs.grado === 0 ? -1 : 0))
   }
@@ -290,9 +324,33 @@ export const FONDO = '#6f6f78'
  *
  * `nucleos` tiene que venir ya ordenado como se presenta en la lista.
  */
+/**
+ * Cuántas entidades hace falta para llamar núcleo a un grupo.
+ *
+ * Un puñado de entidades alrededor de una empresa y sus contratos no es un
+ * núcleo: es una relación con adornos, y ordenando por dinero se cuelan
+ * arriba y tapan lo que sí tiene estructura.
+ */
+export const MINIMO_NUCLEO = 6
+
+/** Los que pasan el corte, en el mismo orden que venían. */
+export function conEstructura(nucleos) {
+  return (nucleos ?? []).filter((n) => (n.tamano ?? 0) >= MINIMO_NUCLEO)
+}
+
+/*
+  Se colorea sobre la lista YA filtrada, y esto importa: el mapa pintaba y
+  rotulaba «Institut Municipal de Serveis Socials» de violeta, un núcleo de
+  cinco entidades que la lista de al lado no enseña por pequeño. La leyenda
+  dice «en color, los núcleos de cabeza —los mismos de la lista—» y no era
+  verdad: había un color en el mapa sin fila a la que ir, y un color menos
+  para un núcleo que sí estaba en la lista.
+*/
 export function paletaDeNucleos(nucleos, cuantos = PALETA_NUCLEOS.length) {
   const mapa = new Map()
-  for (const [i, n] of (nucleos ?? []).slice(0, cuantos).entries()) mapa.set(n.id, PALETA_NUCLEOS[i])
+  for (const [i, n] of conEstructura(nucleos).slice(0, cuantos).entries()) {
+    mapa.set(n.id, PALETA_NUCLEOS[i])
+  }
   return (idNucleo) => mapa.get(idNucleo) ?? FONDO
 }
 

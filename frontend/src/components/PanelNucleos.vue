@@ -12,7 +12,7 @@
  * (spec §12).
  */
 import { computed } from 'vue'
-import { dineroCorto, paletaDeNucleos } from '../nucleos.js'
+import { MINIMO_NUCLEO, conEstructura, dineroCorto, paletaDeNucleos } from '../nucleos.js'
 import { etiquetaEsquemaPlural } from '../esquemas.js'
 
 const props = defineProps({
@@ -28,13 +28,12 @@ const emit = defineEmits(['enfocar', 'seleccionar'])
 */
 const color = computed(() => paletaDeNucleos(props.nucleos))
 
-// Un puñado de entidades alrededor de una empresa y sus contratos no es un
-// núcleo: es una relación con adornos, y ordenando por dinero se cuelan
-// arriba y tapan lo que sí tiene estructura. Se pide cuerpo de verdad.
-const MINIMO = 6
-defineExpose({ MINIMO })
-const conEstructura = computed(() => props.nucleos.filter((n) => n.tamano >= MINIMO).slice(0, 40))
-const pequenos = computed(() => props.nucleos.filter((n) => n.tamano < MINIMO).length)
+// El corte vive en `nucleos.js` porque el mapa tiene que aplicar el mismo:
+// si aquí se esconde un grupo por pequeño y allí se le da color, la leyenda
+// promete una fila que no existe.
+const MINIMO = MINIMO_NUCLEO
+const conCuerpo = computed(() => conEstructura(props.nucleos).slice(0, 40))
+const pequenos = computed(() => props.nucleos.length - conEstructura(props.nucleos).length)
 
 function resumenTipos(tipos) {
   return Object.entries(tipos)
@@ -56,12 +55,12 @@ function resumenTipos(tipos) {
       </p>
     </div>
 
-    <p v-if="!conEstructura.length" class="vacio">
+    <p v-if="!conCuerpo.length" class="vacio">
       Todavía no se ha encontrado ningún núcleo con estructura.
     </p>
 
     <ul v-else class="lista">
-      <li v-for="n in conEstructura" :key="n.id">
+      <li v-for="n in conCuerpo" :key="n.id">
         <button
           class="nucleo"
           :class="{ activo: enfocado === n.id }"

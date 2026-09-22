@@ -59,10 +59,21 @@ function recortar(texto, max = 24) {
   return `${texto.slice(0, max - 1).trimEnd()}…`
 }
 
-/** Tamaño por dinero, no por número de conexiones: esto es un mapa de dinero. */
+/**
+ * Tamaño por dinero, no por número de conexiones: esto es un mapa de dinero.
+ *
+ * Los puntos medían de 8 a 26 px y los núcleos salían como manchas macizas:
+ * sesenta círculos de veinte píxeles dentro del sitio que ocupa un núcleo se
+ * funden en una sola forma. Lo que se veía era una ameba de color, no una
+ * red, y la propia ameba engañaba con el tamaño —lo que se lee es el área de
+ * la unión de los círculos, no el dinero—.
+ *
+ * Con este rango, de 3 a 14, se ven los puntos por separado y se ve por
+ * dónde se tocan, que es lo que el mapa dice: quién está conectado con quién.
+ */
 function tamano(dinero, grado) {
-  const base = 2.5 + Math.log10(1 + Math.max(0, dinero)) * 1.5
-  return Math.min(26, base + Math.min(5, Math.sqrt(grado)))
+  const base = 1.6 + Math.log10(1 + Math.max(0, dinero)) * 0.85
+  return Math.min(14, base + Math.min(3, Math.sqrt(grado) * 0.55))
 }
 
 function construir() {
@@ -149,9 +160,13 @@ function construir() {
   // de color se quedaba muda. Color, etiqueta y fila de la lista señalan ahora
   // al mismo núcleo, que es lo que permite pasar del mapa a la lista y al
   // revés sin tener que adivinar nada.
+  // `continue` y no `break`: la paleta salta los núcleos sin cuerpo —los de
+  // menos de seis entidades, que la lista tampoco enseña—, así que en medio
+  // de la lista hay grises. Cortando en el primero, los de color que venían
+  // detrás se quedaban sin nombre.
   const conEtiqueta = new Set()
   for (const n of visible.nucleos) {
-    if (color(n.id) === FONDO) break
+    if (color(n.id) === FONDO) continue
     const cabeza = n.principales.find((m) => g.hasNode(m.id))
     if (cabeza) conEtiqueta.add(cabeza.id)
   }
@@ -160,6 +175,12 @@ function construir() {
   g.forEachNode((id, attrs) => {
     g.mergeNodeAttributes(id, {
       label: conEtiqueta.has(id) ? recortar(attrs.label) : '',
+      // Forzada: si el núcleo lleva color, lleva nombre, y no depende de que
+      // su cabeza gane la celda de la rejilla de rótulos de Sigma. Con el
+      // reparto automático salían con nombre cuatro de los siete de color y
+      // los otros tres eran manchas mudas — y el color está precisamente
+      // para poder ir de la mancha a su fila en la lista de al lado.
+      forceLabel: conEtiqueta.has(id),
       etiquetaReal: attrs.label,
       color: color(attrs.nucleo),
       extranjera: Boolean(nodosPorId.get(id)?.properties?.entidad_extranjera),
@@ -184,9 +205,14 @@ function construir() {
     const inferida = attrs.estado === 'inferred'
     const dentro = orig.nucleo === dest.nucleo
     const color = inferida
-      ? `rgba(224,163,58,${dentro ? 0.3 : 0.12})`
-      : `rgba(150,170,200,${dentro ? 0.18 : 0.05})`
-    const grosor = 0.4 + Math.min(3.2, Math.log10(1 + attrs.importe) * 0.55)
+      ? `rgba(224,163,58,${dentro ? 0.26 : 0.1})`
+      // Más tenues que antes porque ahora se ven. Con los puntos pequeños,
+      // un organismo que paga a sesenta empresas dibuja un abanico de sesenta
+      // rectas que salen del mismo sitio: apiladas a 0,18 se suman hasta el
+      // blanco y el abanico tapa el núcleo entero. A 0,11 la forma se sigue
+      // leyendo y no se come lo que hay debajo.
+      : `rgba(150,170,200,${dentro ? 0.11 : 0.045})`
+    const grosor = 0.35 + Math.min(2.2, Math.log10(1 + attrs.importe) * 0.4)
     g.mergeEdgeAttributes(e, { color, size: dentro ? grosor : Math.min(grosor, 0.6) })
   })
 
@@ -201,7 +227,7 @@ function construir() {
         barnesHutOptimize: g.order > 300,
       },
     })
-    separarNucleos(g)
+    separarNucleos(g, aspectoDelLienzo())
   }
 
   grafo.value = g
@@ -288,7 +314,21 @@ function recalcularVisible(g, nucleos) {
  * a los pequeños, y la espiral (en vez de un círculo) evita que los muchos
  * núcleos diminutos se aplasten en el borde.
  */
-function separarNucleos(g) {
+/**
+ * Cuánto más ancho que alto es el lienzo, acotado.
+ *
+ * El empaquetado hacía una región cuadrada y Sigma la encaja respetando la
+ * proporción: en una pantalla de 16:9 eso deja casi la mitad del lienzo en
+ * negro a izquierda y derecha. Dándole la proporción real, lo mismo se dibuja
+ * con un 40 % más de píxeles.
+ */
+function aspectoDelLienzo() {
+  const el = contenedor.value
+  if (!el || !el.clientHeight) return 1
+  return Math.min(2.6, Math.max(0.5, el.clientWidth / el.clientHeight))
+}
+
+function separarNucleos(g, aspecto = 1) {
   const acc = new Map()
   g.forEachNode((id, a) => {
     const c = a.nucleo ?? -1
@@ -324,8 +364,13 @@ function separarNucleos(g) {
   // arriba a la izquierda es el que más dinero mueve, y eso ya es información
   // antes de tocar nada.
   const orden = [...acc.entries()].sort((a, b) => b[1].dinero - a[1].dinero || b[1].n - a[1].n)
-  const HUECO = 1.35
-  const anchoFila = Math.sqrt(orden.reduce((s, [, v]) => s + (v.radio * 2 * HUECO) ** 2, 0)) * 1.1
+  // Más aire entre núcleos del que pide el dibujo, porque el rótulo también
+  // ocupa: los nombres se escriben centrados sobre la cabeza del grupo y se
+  // salen de su mancha por los dos lados. Con 1,35 «Aena. Consejo de
+  // Administración» se metía dentro del núcleo de al lado.
+  const HUECO = 1.55
+  const area = orden.reduce((s, [, v]) => s + (v.radio * 2 * HUECO) ** 2, 0)
+  const anchoFila = Math.sqrt(area * aspecto) * 1.1
 
   const destino = new Map()
   let x = 0
@@ -370,10 +415,12 @@ function pintar() {
     // sirve para llegar a la lista de al lado.
     labelDensity: 0.6,
     labelGridCellSize: 155,
-    // Con 7 salían seis rótulos y dos se tocaban; con 11, cuatro o cinco y
-    // ninguno. Gana lo limpio: el nombre de cada núcleo está igualmente en la
-    // lista de al lado, con su mismo color, y pasando el ratón por encima.
-    labelRenderedSizeThreshold: 11,
+    // El umbral es de tamaño DIBUJADO, así que va atado al rango de `tamano`.
+    // Al bajar los puntos de 8-26 px a 3-14, un umbral de 11 dejaba mudos la
+    // mitad de los núcleos de color: el de Aena, el de Metro de Madrid y dos
+    // más salían pintados y sin nombre, que es justo lo que no puede pasar
+    // —el color existe para poder saltar del mapa a la lista de al lado—.
+    labelRenderedSizeThreshold: 8,
     labelFont: 'system-ui, sans-serif',
     labelColor: { color: '#f2f5fa' },
     labelSize: 12,

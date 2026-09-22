@@ -20,7 +20,7 @@ import {
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
 import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
-import { direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
+import { accionDeEstado, direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
 import { areaDeInfluencia } from './influencia.js'
 import { contratosDeMedios } from './medios.js'
 import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
@@ -348,26 +348,23 @@ watch(estadoDeVista, (ahora) => {
 async function irAEstado({ vista: v, clave }) {
   restaurando = true
   try {
-    if (v === 'portada') {
-      volverAlMapa()
-      return
-    }
     const nodo = clave ? nodoDeClave(clave) : null
-    if (!nodo) {
-      // Un enlace a algo que ya no está en esta instantánea. La portada dice
-      // más que una ficha vacía, y el buscador queda a mano.
-      volverAlMapa()
-      return
+    // El reparto está en `enlace.js` y tiene tests: el orden de estas
+    // comprobaciones ya se equivocó una vez —`?v=mapa` no lleva entidad y
+    // caía en la rama de enlace roto— sin que nada lo dijera.
+    switch (accionDeEstado({ vista: v, clave }, Boolean(nodo))) {
+      case 'mapa':
+        verMapa()
+        return
+      case 'portada':
+        volverAlMapa()
+        return
+      case 'vecindario':
+        await abrir(nodo.id)
+        return
+      default:
+        await enfocar(nodo.id)
     }
-    if (v === 'mapa') {
-      verMapa()
-      return
-    }
-    if (v === 'vecindario') {
-      await abrir(nodo.id)
-      return
-    }
-    await enfocar(nodo.id)
   } finally {
     estadoPintado = { vista: vista.value, clave: claveSeleccionada.value }
     restaurando = false

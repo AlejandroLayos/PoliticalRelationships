@@ -5,7 +5,7 @@
  * de una entidad no puede ser su UUID, que se regenera en cada ingesta.
  */
 import { describe, expect, it } from 'vitest'
-import { direccionDeVista, mismoEstado, parametrosDeVista, vistaDeParametros } from './enlace.js'
+import { accionDeEstado, direccionDeVista, mismoEstado, parametrosDeVista, vistaDeParametros } from './enlace.js'
 
 describe('de estado a dirección', () => {
   it('la portada no lleva parámetros', () => {
@@ -74,5 +74,31 @@ describe('mismoEstado', () => {
     expect(mismoEstado({ vista: 'ficha', clave: 'a' }, { vista: 'ficha', clave: 'a' })).toBe(true)
     expect(mismoEstado({ vista: 'ficha', clave: 'a' }, { vista: 'ficha', clave: 'b' })).toBe(false)
     expect(mismoEstado({ vista: 'mapa' }, { vista: 'mapa', clave: '' })).toBe(true)
+  })
+})
+
+describe('accionDeEstado', () => {
+  it('el enlace al mapa lleva al mapa, aunque no lleve entidad', () => {
+    // El fallo real: la comprobación de «¿existe la clave?» iba por delante,
+    // `?v=mapa` no lleva ninguna, y el enlace abría la portada. Callado.
+    expect(accionDeEstado({ vista: 'mapa', clave: '' }, false)).toBe('mapa')
+  })
+
+  it('una ficha que existe se abre', () => {
+    expect(accionDeEstado({ vista: 'ficha', clave: 'nif:A28017895' }, true)).toBe('ficha')
+    expect(accionDeEstado({ vista: 'vecindario', clave: 'nif:A28017895' }, true)).toBe('vecindario')
+  })
+
+  it('una ficha que ya no está en la instantánea cae en la portada', () => {
+    expect(accionDeEstado({ vista: 'ficha', clave: 'nif:B00000000' }, false)).toBe('portada')
+    expect(accionDeEstado({ vista: 'vecindario', clave: 'nif:B00000000' }, false)).toBe('portada')
+  })
+
+  it('sin clave no hay ficha', () => {
+    expect(accionDeEstado({ vista: 'ficha', clave: '' }, true)).toBe('portada')
+  })
+
+  it('la portada es la portada', () => {
+    expect(accionDeEstado({ vista: 'portada', clave: '' }, false)).toBe('portada')
   })
 })
