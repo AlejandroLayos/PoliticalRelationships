@@ -1,0 +1,330 @@
+{
+  "fuente": "https://www.boe.es/datosabiertos/api/boe/sumario/<fecha>",
+  "capturado": "2026-09-25T20:51:58.302710+00:00",
+  "nota": "Sólo ítems de la sección 2A por Real Decreto de nombramiento o cese.",
+  "items": [
+    {
+      "identificador": "BOE-A-2026-19256",
+      "control": "2026/14237",
+      "titulo": "Real Decreto 734/2026, de 15 de septiembre, por el que se nombra Directora del Departamento de Comunicación Institucional de la Secretaría de Estado de Comunicación a doña María Teresa Velilla de la Rocha.",
+      "url_pdf": {
+        "szBytes": "190777",
+        "szKBytes": "186",
+        "pagina_inicial": "122403",
+        "pagina_final": "122403",
+        "texto": "https://www.boe.es/boe/dias/2026/09/16/pdfs/BOE-A-2026-19256.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-19256",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-19256",
+      "_departamento": "PRESIDENCIA DEL GOBIERNO",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260916"
+    },
+    {
+      "identificador": "BOE-A-2026-18438",
+      "control": "2026/13678",
+      "titulo": "Real Decreto 712/2026, de 1 de septiembre, por el que se dispone el cese de doña Rocío Báguena Rodríguez como Secretaria General de Transporte Terrestre.",
+      "url_pdf": {
+        "szBytes": "190674",
+        "szKBytes": "186",
+        "pagina_inicial": "118337",
+        "pagina_final": "118337",
+        "texto": "https://www.boe.es/boe/dias/2026/09/02/pdfs/BOE-A-2026-18438.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18438",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18438",
+      "_departamento": "MINISTERIO DE TRANSPORTES Y MOVILIDAD SOSTENIBLE",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260902"
+    },
+    {
+      "identificador": "BOE-A-2026-18439",
+      "control": "2026/13679",
+      "titulo": "Real Decreto 713/2026, de 1 de septiembre, por el que se dispone el cese de doña Sara Hernández del Olmo como Secretaria General de Movilidad Sostenible.",
+      "url_pdf": {
+        "szBytes": "190819",
+        "szKBytes": "186",
+        "pagina_inicial": "118338",
+        "pagina_final": "118338",
+        "texto": "https://www.boe.es/boe/dias/2026/09/02/pdfs/BOE-A-2026-18439.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18439",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18439",
+      "_departamento": "MINISTERIO DE TRANSPORTES Y MOVILIDAD SOSTENIBLE",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260902"
+    },
+    {
+      "identificador": "BOE-A-2026-18440",
+      "control": "2026/13680",
+      "titulo": "Real Decreto 714/2026, de 1 de septiembre, por el que se nombra Secretaria General de Transporte Terrestre a doña Sara Hernández del Olmo.",
+      "url_pdf": {
+        "szBytes": "190814",
+        "szKBytes": "186",
+        "pagina_inicial": "118339",
+        "pagina_final": "118339",
+        "texto": "https://www.boe.es/boe/dias/2026/09/02/pdfs/BOE-A-2026-18440.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18440",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18440",
+      "_departamento": "MINISTERIO DE TRANSPORTES Y MOVILIDAD SOSTENIBLE",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260902"
+    },
+    {
+      "identificador": "BOE-A-2026-18442",
+      "control": "2026/13681",
+      "titulo": "Real Decreto 715/2026, de 1 de septiembre, por el que se dispone el cese de doña Leire Iglesias Santiago como Presidenta de CASA 47 Entidad Pública Empresarial.",
+      "url_pdf": {
+        "szBytes": "190703",
+        "szKBytes": "186",
+        "pagina_inicial": "118342",
+        "pagina_final": "118342",
+        "texto": "https://www.boe.es/boe/dias/2026/09/02/pdfs/BOE-A-2026-18442.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18442",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18442",
+      "_departamento": "MINISTERIO DE VIVIENDA Y AGENDA URBANA",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260902"
+    },
+    {
+      "identificador": "BOE-A-2026-18443",
+      "control": "2026/13682",
+      "titulo": "Real Decreto 716/2026, de 1 de septiembre, por el que se nombra Secretaria de Estado de Vivienda y Agenda Urbana a doña Leire Iglesias Santiago.",
+      "url_pdf": {
+        "szBytes": "190489",
+        "szKBytes": "186",
+        "pagina_inicial": "118343",
+        "pagina_final": "118343",
+        "texto": "https://www.boe.es/boe/dias/2026/09/02/pdfs/BOE-A-2026-18443.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18443",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18443",
+      "_departamento": "MINISTERIO DE VIVIENDA Y AGENDA URBANA",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260902"
+    },
+    {
+      "identificador": "BOE-A-2026-18444",
+      "control": "2026/13683",
+      "titulo": "Real Decreto 717/2026, de 1 de septiembre, por el que se nombra Presidenta de CASA 47 Entidad Pública Empresarial a doña María Isabel Ramos Vergeles.",
+      "url_pdf": {
+        "szBytes": "190869",
+        "szKBytes": "186",
+        "pagina_inicial": "118344",
+        "pagina_final": "118344",
+        "texto": "https://www.boe.es/boe/dias/2026/09/02/pdfs/BOE-A-2026-18444.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18444",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18444",
+      "_departamento": "MINISTERIO DE VIVIENDA Y AGENDA URBANA",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260902"
+    },
+    {
+      "identificador": "BOE-A-2026-18208",
+      "control": "2026/13456",
+      "titulo": "Real Decreto 687/2026, de 25 de agosto, por el que se dispone el cese de don José Manuel Nevado Martínez como Director del Departamento de Comunicación Institucional de la Secretaría de Estado de Comunicación.",
+      "url_pdf": {
+        "szBytes": "190901",
+        "szKBytes": "186",
+        "pagina_inicial": "116953",
+        "pagina_final": "116953",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18208.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18208",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18208",
+      "_departamento": "PRESIDENCIA DEL GOBIERNO",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18209",
+      "control": "2026/13471",
+      "titulo": "Real Decreto 693/2026, de 26 de agosto, por el que se nombra Inspectora Fiscal de la Inspección Fiscal de la Fiscalía General del Estado a doña María del Milagro Martínez-Pardo Cabrillo.",
+      "url_pdf": {
+        "szBytes": "192136",
+        "szKBytes": "188",
+        "pagina_inicial": "116954",
+        "pagina_final": "116954",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18209.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18209",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18209",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18210",
+      "control": "2026/13472",
+      "titulo": "Real Decreto 694/2026, de 26 de agosto, por el que se nombra Fiscal de la Fiscalía ante el Tribunal Constitucional a doña Ana Belén Alonso González.",
+      "url_pdf": {
+        "szBytes": "191874",
+        "szKBytes": "187",
+        "pagina_inicial": "116955",
+        "pagina_final": "116955",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18210.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18210",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18210",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18211",
+      "control": "2026/13473",
+      "titulo": "Real Decreto 695/2026, de 26 de agosto, por el que se nombra Fiscal de la Fiscalía Especial Antidroga a doña María José Martínez Rodríguez.",
+      "url_pdf": {
+        "szBytes": "191670",
+        "szKBytes": "187",
+        "pagina_inicial": "116956",
+        "pagina_final": "116956",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18211.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18211",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18211",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18212",
+      "control": "2026/13474",
+      "titulo": "Real Decreto 696/2026, de 26 de agosto, por el que se nombra Fiscal Jefe de la Fiscalía Provincial de Madrid a don José Luis García-Juanes Guerrero.",
+      "url_pdf": {
+        "szBytes": "191636",
+        "szKBytes": "187",
+        "pagina_inicial": "116957",
+        "pagina_final": "116957",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18212.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18212",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18212",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18213",
+      "control": "2026/13475",
+      "titulo": "Real Decreto 697/2026, de 26 de agosto, por el que se nombra Fiscal Jefa de la Fiscalía Provincial de Tarragona a doña María de la Cinta López Cardús.",
+      "url_pdf": {
+        "szBytes": "192160",
+        "szKBytes": "188",
+        "pagina_inicial": "116958",
+        "pagina_final": "116958",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18213.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18213",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18213",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18214",
+      "control": "2026/13476",
+      "titulo": "Real Decreto 698/2026, de 26 de agosto, por el que se nombra Fiscal Jefe de la Fiscalía Provincial de Málaga a don Fernando Germán Benítez Pérez-Fajardo.",
+      "url_pdf": {
+        "szBytes": "192304",
+        "szKBytes": "188",
+        "pagina_inicial": "116959",
+        "pagina_final": "116959",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18214.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18214",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18214",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18215",
+      "control": "2026/13477",
+      "titulo": "Real Decreto 699/2026, de 26 de agosto, por el que se nombra Fiscal Jefa de la Fiscalía Provincial de Lugo a doña María Olga Serrano Pedrós.",
+      "url_pdf": {
+        "szBytes": "192016",
+        "szKBytes": "188",
+        "pagina_inicial": "116960",
+        "pagina_final": "116960",
+        "texto": "https://www.boe.es/boe/dias/2026/08/27/pdfs/BOE-A-2026-18215.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18215",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18215",
+      "_departamento": "MINISTERIO DE LA PRESIDENCIA, JUSTICIA Y RELACIONES CON LAS CORTES",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260827"
+    },
+    {
+      "identificador": "BOE-A-2026-18153",
+      "control": "2026/13457",
+      "titulo": "Real Decreto 688/2026, de 25 de agosto, por el que se dispone el cese de don Antonio González-Zavala Peña como Enviado Especial para Siria.",
+      "url_pdf": {
+        "szBytes": "191023",
+        "szKBytes": "187",
+        "pagina_inicial": "116813",
+        "pagina_final": "116813",
+        "texto": "https://www.boe.es/boe/dias/2026/08/26/pdfs/BOE-A-2026-18153.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18153",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18153",
+      "_departamento": "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260826"
+    },
+    {
+      "identificador": "BOE-A-2026-18154",
+      "control": "2026/13458",
+      "titulo": "Real Decreto 689/2026, de 25 de agosto, por el que se dispone el cese de don Daniel Losada Millar como Enviado Especial para Sudán.",
+      "url_pdf": {
+        "szBytes": "190542",
+        "szKBytes": "186",
+        "pagina_inicial": "116814",
+        "pagina_final": "116814",
+        "texto": "https://www.boe.es/boe/dias/2026/08/26/pdfs/BOE-A-2026-18154.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18154",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18154",
+      "_departamento": "MINISTERIO DE ASUNTOS EXTERIORES, UNIÓN EUROPEA Y COOPERACIÓN",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260826"
+    },
+    {
+      "identificador": "BOE-A-2026-18166",
+      "control": "2026/13462",
+      "titulo": "Real Decreto 703/2026, de 25 de agosto, por el que se dispone el cese de doña Inés Carpio San Román como Directora General de Financiación Internacional.",
+      "url_pdf": {
+        "szBytes": "190622",
+        "szKBytes": "186",
+        "pagina_inicial": "116834",
+        "pagina_final": "116834",
+        "texto": "https://www.boe.es/boe/dias/2026/08/26/pdfs/BOE-A-2026-18166.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18166",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18166",
+      "_departamento": "MINISTERIO DE ECONOMÍA, COMERCIO Y EMPRESA",
+      "_epigrafe": "Ceses",
+      "_fecha": "20260826"
+    },
+    {
+      "identificador": "BOE-A-2026-18167",
+      "control": "2026/13463",
+      "titulo": "Real Decreto 704/2026, de 25 de agosto, por el que se nombra Director General de Financiación Internacional a don Luis Óscar Moreno García-Cano.",
+      "url_pdf": {
+        "szBytes": "190824",
+        "szKBytes": "186",
+        "pagina_inicial": "116835",
+        "pagina_final": "116835",
+        "texto": "https://www.boe.es/boe/dias/2026/08/26/pdfs/BOE-A-2026-18167.pdf"
+      },
+      "url_html": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-18167",
+      "url_xml": "https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18167",
+      "_departamento": "MINISTERIO DE ECONOMÍA, COMERCIO Y EMPRESA",
+      "_epigrafe": "Nombramientos",
+      "_fecha": "20260826"
+    }
+  ]
+}

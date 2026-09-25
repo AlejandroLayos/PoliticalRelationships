@@ -1,16 +1,319 @@
-# Fuente: https://www.boe.es/borme/dias/2026/09/25/pdfs/BORME-A-2026-186-24.pdf
-# Capturado: 2026-09-25T20:40:08.269581+00:00
-# Nombres de persona sustituidos: 7
+# Fuente: https://www.boe.es/borme/dias/2026/09/25/pdfs/BORME-A-2026-186-03.pdf
+# Capturado: 2026-09-25T20:51:59.626823+00:00
+# Nombres de persona sustituidos: 143
 
 APELLIDO1 APELLIDO2 NOMBRE
-Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45288
+Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45234
 APELLIDO1 APELLIDO2 NOMBRE
 Empresarios
 Actos inscritos
-LEÓN
-430076 - BAR BLACK MAMBA SOCIEDAD LIMITADA.
-Constitución. Comienzo de operaciones: 25.09.26. Objeto social: C.N.A.E. APELLIDO1 APELLIDO2 NOMBRE: 56.30 / APELLIDO1 APELLIDO2 NOMBRE. Domicilio: C/ APELLIDO1 APELLIDO2 NOMBRE, 10 24008 (LEON). Capital: 3.000,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H LE 30099, I/A 1 (18.09.26).
-42-681-6202-A-EMROB
+ALICANTE/ALACANT
+429387 - ORIGEN LEVANTE SL.
+Constitución. Comienzo de operaciones: 1.09.26. Objeto social: 1. Construcción, instalaciones y mantenimiento. 2. Comercio al por
+mayor y al por menor. Distribución comercial. Importación y exportación. 3. Actividades inmobiliarias. 4. Industrias manufactureras y
+textiles. 5. Turismo, hostelería y restauración. 6. Prestación de servicios. Actividades de adminis. Domicilio: APELLIDO1 APELLIDO2 NOMBRE.
+24 BAJO (APELLIDO1 APELLIDO2 NOMBRE (L')). Capital: 3.000,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos
+registrales. S 8 , H A 208213, I/A 1 (18.09.26).
+429388 - MECANICA JIJONENCA SA.
+Ceses/Dimisiones. Cons.Del.Man: APELLIDO1 APELLIDO2 NOMBRE. Apo.Sol.: APELLIDO1 APELLIDO2 NOMBRE.
+Apo.Man.Soli: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Cons.Del.Man: APELLIDO1 APELLIDO2 NOMBRE. Ampliación de
+capital. Suscrito: 330.550,00 Euros. Desembolsado: 330.550,00 Euros. Resultante Suscrito: 967.610,00 Euros. Resultante
+Desembolsado: 967.610,00 Euros. Datos registrales. S 8 , H A 1044, I/A 24 (18.09.26).
+429389 - VERTICE Y CALIDAD CONSTRUCTORA HN SL.
+Constitución. Comienzo de operaciones: 8.09.26. Objeto social: Albañilería y trabajos de construcción, así como instalaciones de
+electricidad y fontanería. Domicilio: C/ ALGOL 24 3º DR (ALICANTE). Capital: 3.000,00 Euros. Nombramientos. Adm. Solid.:
+APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208239, I/A 1
+(18.09.26).
+429390 - LEVANTATE Y ANDA INVEST SL.
+Constitución. Comienzo de operaciones: 29.06.26. Objeto social: La compraventa de bienes inmuebles por cuenta propia, la
+promoción, construcción, explotación, venta o arrendamiento de apartamentos, viviendas, locales y edificios de todas clases, la
+realización de programas de adquisición, transformación, parcelación, urbanización y enajenación de terrenos, const. Domicilio: C/
+TEULADA 11 (BENISSA). Capital: 480.000,00 Euros. Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE &
+BUSINESS SL. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208242, I/A 1 (18.09.26).
+429391 - SERGIO&SOFIA SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A 166898, I/A 3 (18.09.26).
+429392 - TORREVIEJA SANITARY EXCELLENCE SL.
+Constitución. Comienzo de operaciones: 4.09.26. Objeto social: La gestión, instalación, mantenimiento y explotación de aseos y
+servicios sanitarios destinados al uso público, incluidos aquellos cuyo acceso se encuentre sujeto al pago de un precio, tarifa o
+contraprestación por los usuarios, así como la instalación, gestión y explotación de los sistemas, equipos. Domicilio: C/ PUCCINI 27 -
+APELLIDO1 APELLIDO2 NOMBRE (TORREVIEJA). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208244, I/A 1 (18.09.26).
+429393 - TALLERES RAFAEL BARROSO SL.
+Ceses/Dimisiones. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico:
+APELLIDO1 APELLIDO2 NOMBRE. Otros conceptos: Cambio del Organo de Administración: Administradores solidarios a Administrador
+único. Datos registrales. S 8 , H A 23218, I/A 6 (18.09.26).
+429394 - EVGENY PROPERTIES SL.
+Reapertura hoja registral. Datos registrales. S 8 , H A 112921, I/A 6 . (18.09.26).
+429395 - GANBARU BROTHERS SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE.
+Nombramientos. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A
+196398, I/A 3 (18.09.26).
+30-681-6202-A-EMROB
+:evc
+se.eob.www//:sptth
+ne
+elbacifireV
+APELLIDO1 APELLIDO2 NOMBRE
+Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45235
+429396 - CONGELADOS BAHIA SL.
+Reducción de capital. Importe reducción: 0,57 Euros. Resultante Suscrito: 28.848,00 Euros. Reducción de capital. Importe
+reducción: 180,30 Euros. Resultante Suscrito: 28.667,70 Euros. Datos registrales. S 8 , H A 63225, I/A 8 (18.09.26).
+429397 - APELLIDO1 APELLIDO2 NOMBRE 2022 SL.
+Cambio de objeto social. Ampliación: 4. Transporte de todo tipo de mercancías por carretera, público y privado tanto nacional como
+internacional. 5. Compra y venta de materiales de construcción. Así como la exportación e importación de los mismos. 6. Todo tipo de
+actividad hostelera, bares restaurante, salas de ocio, etc. 7. Datos registrales. S 8 , H A 180138, I/A 3 (18.09.26).
+429398 - AUTOBUSES URBANOS DE ELCHE SL.
+Reelecciones. Auditor: DELOITTE AUDITORES SL. Datos registrales. S 8 , H A 39183, I/A 56 (18.09.26).
+429399 - GRUPO SEGURVID SL.
+Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 193872, I/A 2 (18.09.26).
+429400 - APELLIDO1 APELLIDO2 NOMBRE Y CONSULTORES SL.
+Sociedad unipersonal. Cambio de identidad del socio único: SIROCO NETWORK PARTNERS SL. Ceses/Dimisiones. Adm.
+Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE.
+Otros conceptos: Cambio del Organo de Administración: Administrador único a Administradores solidarios. Datos registrales. S 8 , H
+A 119709, I/A 9 (18.09.26).
+429401 - ASESORES TRIBUTARIOS SYS SL.
+Constitución. Comienzo de operaciones: 21.08.26. Objeto social: El asesoramiento laboral de cualquier tipo de empresas. Asimismo
+también podrá abarcar el asesoramiento fiscal de empresas. El asesoramiento laboral, fiscal y contable de empresas y la adquisición,
+tenencia, explotación propia o en arrendamiento, administración y enajenación de fincas rústicas y urb. Domicilio: C/ JAVEA 12 ENTLO
+(ALICANTE). Capital: 3.000,00 Euros. Nombramientos. Adm. Mancom.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Datos
+registrales. S 8 , H A 208253, I/A 1 (18.09.26).
+429402 - GRUPO SALINAS MORENO SL.
+Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 196479, I/A 4 (18.09.26).
+429403 - TERRA MITICA, PARQUE TEMATICO DE BENIDORM SA.
+Reelecciones. Auditor: GEAUDIT AUDITORES SLP. Datos registrales. S 8 , H A 46268, I/A 123 (18.09.26).
+429404 - AVANZA MOVILIDAD LEVANTE SL.
+Reelecciones. Auditor: DELOITTE AUDITORES SL. Datos registrales. S 8 , H A 62827, I/A 78 (18.09.26).
+429405 - VICENTE GOMEZ PIÑOL SL.
+Reelecciones. Auditor: COMPAÑIA GENERAL DE AUDITORIA SLP. Datos registrales. S 8 , H A 17895, I/A 18 (18.09.26).
+429406 - MY PLACE REAL ESTATE BOUTIQUE IBERIA SL.
+Cambio de domicilio social. C/ APELLIDO1 APELLIDO2 NOMBRE 9 BAJO (DENIA). Datos registrales. S 8 , H A 208255, I/A 6 (18.09.26).
+429407 - DS PRANA SL.
+Constitución. Comienzo de operaciones: 10.09.26. Objeto social: a- La reparación, revisión, mantenimiento y conservación de toda
+clase de vehículos automóviles y vehículos a motor, incluyendo trabajos de mecánica, electricidad, electrónica, diagnosis, neumáticos,
+lubricación y cualesquiera otros relacionados con el mantenimiento y reparación de vehículos. b- La. Domicilio: C/ APELLIDO1 APELLIDO2 NOMBRE
+20 BAJO (ALICANTE). Capital: 3.000,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H
+A 208256, I/A 1 (18.09.26).
+429408 - HOB SERVICIOS JURIDICOS SL.
+Sociedad unipersonal. Cambio de identidad del socio único: SIROCO NETWORK PARTNERS SL. Ceses/Dimisiones. Adm.
+Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE.
+Otros conceptos: Cambio del Organo de Administración: Administrador único a Administradores solidarios. Datos registrales. S 8 , H
+A 137195, I/A 9 (18.09.26).
+429409 - MOONSTAR INTERNATIONAL SL.
+Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Ceses/Dimisiones. Adm. Unico:
+APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Cambio de domicilio social.
+C/ CAMAMI 16 - CASA 40 (MUTXAMEL). Datos registrales. S 8 , H A 67281, I/A 12 (18.09.26).
+429410 - SUMINISTROS HOSTELEROS BENISSA SL.
+Reelecciones. Auditor: COMPAÑIA GENERAL DE AUDITORIA SLP. Datos registrales. S 8 , H A 55552, I/A 5 (18.09.26).
+30-681-6202-A-EMROB
+:evc
+se.eob.www//:sptth
+ne
+elbacifireV
+APELLIDO1 APELLIDO2 NOMBRE
+Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45236
+429411 - CONSTRUCCIONES E INNOVACIONES CORREOSO SL.
+Sociedad unipersonal. Cambio de identidad del socio único: APELLIDO1 APELLIDO2 NOMBRE. Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 203964, I/A 2 (18.09.26).
+429412 - HOB CONSULTORES DE NEGOCIOS SL.
+Sociedad unipersonal. Cambio de identidad del socio único: SIROCO NETWORK PARTNERS SL. Ceses/Dimisiones. Adm.
+Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE.
+Otros conceptos: Cambio del Organo de Administración: Administrador único a Administradores solidarios. Datos registrales. S 8 , H
+A 148766, I/A 5 (18.09.26).
+429413 - ALBALADEJO Y GONZALEZ SL.
+Reelecciones. Auditor: COMPAÑIA GENERAL DE AUDITORIA SLP. Datos registrales. S 8 , H A 30401, I/A 6 (18.09.26).
+429414 - HOB VRA ASESORES SL.
+Sociedad unipersonal. Cambio de identidad del socio único: SIROCO NETWORK PARTNERS SL. Ceses/Dimisiones. Adm.
+Unico: GRUPO HOB NEGOCIOS SL. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Otros
+conceptos: Cambio del Organo de Administración: Administrador único a Administradores solidarios. Datos registrales. S 8 , H A
+8654, I/A 27 (18.09.26).
+429415 - IZQUIERDO-BERNABEU SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos.
+Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A 148191, I/A 5 (18.09.26).
+429416 - HOB SOLGIA ASESORES SL.
+Sociedad unipersonal. Cambio de identidad del socio único: SIROCO NETWORK PARTNERS SL. Ceses/Dimisiones. Adm.
+Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE.
+Otros conceptos: Cambio del Organo de Administración: Administrador único a Administradores solidarios. Datos registrales. S 8 , H
+A 146699, I/A 9 (18.09.26).
+429417 - ESTUCADOS PEREIRA SL.
+Constitución. Comienzo de operaciones: 15.04.26. Objeto social: Construcción de toda clase de edificios residenciales y no
+residenciales. Otras instalaciones en obras en construcción. Otras actividades de construcción especializadas. Promoción inmobiliaria
+Compra venta de toda clase de bienes inmobiliarias por cuenta propia Arrendamiento de toda clase de bienes. Domicilio: C/ RODRIGO
+235 (TORREVIEJA). Capital: 3.100,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos
+registrales. S 8 , H A 208261, I/A 1 (18.09.26).
+429418 - APELLIDO1 APELLIDO2 NOMBRE Y PROYECTOS SL.
+Constitución. Comienzo de operaciones: 8.09.26. Objeto social: Actividad principal: 7020 - Otras actividades de consultoría de gestión
+empresarial. La consultoría, asesoramiento, diseño, implantación, mantenimiento, auditoría interna y mejora de sistemas de gestión
+conforme a normas y esquemas nacionales e internacionales, entre otros ISO 9001, ISO 14001, ISO 4. Domicilio: APELLIDO1 APELLIDO2 NOMBRE
+41 3º B (ALICANTE). Capital: 3.000,00 Euros. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE.
+Datos registrales. S 8 , H A 208260, I/A 1 (18.09.26).
+429419 - CONSTRUCCIONES INDUSTRIALIZADAS MODULARES SL.
+Revocaciones. Auditor: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 153225, I/A 14 (18.09.26).
+429420 - HOB RECURSOS HUMANOS SL.
+Sociedad unipersonal. Cambio de identidad del socio único: SIROCO NETWORK PARTNERS SL. Ceses/Dimisiones. Adm.
+Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE.
+Otros conceptos: Cambio del Organo de Administración: Administrador único a Administradores solidarios. Datos registrales. S 8 , H
+A 180282, I/A 8 (18.09.26).
+429421 - MEDITERRANEA DE ENSUEÑO SL.
+Constitución. Comienzo de operaciones: 12.08.26. Objeto social: La promoción de edificaciones para venta por cuenta propia;
+construcción completa, reparación y conservación de edificaciones. Domicilio: C/ BAILEN 37 BAJO (ASPE). Capital: 3.000,00 Euros.
+Nombramientos. Adm. Mancom.: APELLIDO1 APELLIDO2 NOMBRE;INGENIERIA Y GENOMA EMPRESARIAL SL. Datos registrales. S 8 , H A
+208262, I/A 1 (18.09.26).
+429422 - BESPOKE FACTORY GROUP SL.
+Nombramientos. Auditor: NANSA AUDITORES SL. Datos registrales. S 8 , H A 157053, I/A 4 (18.09.26).
+30-681-6202-A-EMROB
+:evc
+se.eob.www//:sptth
+ne
+elbacifireV
+APELLIDO1 APELLIDO2 NOMBRE
+Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45237
+429423 - CONSTA APP SL.
+Constitución. Comienzo de operaciones: 13.08.26. Objeto social: El diseño, desarrollo, programación, creación, mantenimiento,
+actualización, explotación, distribución y comercialización de programas informáticos, aplicaciones, plataformas y soluciones
+tecnológicas y digitales, tanto propias como de terceros. Asimismo, constituye su objeto la explotación comercia. Domicilio: C/
+COLUMBRETES 6 (PETRER). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único: BAMBOLEO CAPITAL SL.
+Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208259, I/A 1 (18.09.26).
+429424 - MOPASOL 2014 SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Liquidador:
+APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A 140905, I/A 3 (18.09.26).
+429425 - MECANICA RAPIDA RACING SL.
+Constitución. Comienzo de operaciones: 9.09.26. Objeto social: La reparación, revisión y mantenimiento de vehículos de motor,
+trabajos de mecánica, electricidad, diagnosis, mantenimiento y reparación de automóviles, así como la compra venta de recambios de
+repuestos, accesorios o piezas, y componentes para vehículos a motor. El arrendamiento coworking, alquiler. Domicilio: C/
+BENIMANTELL 28 (NUCIA (LA)). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208265, I/A 1 (18.09.26).
+429426 - FRANAMA INVERSIONES SL.
+Nombramientos. Apo.Sol.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A
+175068, I/A 9 (18.09.26).
+429427 - NORBITON HILL HOLDINGS SPAIN SL.
+Sociedad unipersonal. Cambio de identidad del socio único: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A
+208111, I/A 5 (18.09.26).
+429428 - GROUPO GLOBAL LIBERTAD SL.
+Pérdida del carácter de unipersonalidad. Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm.
+Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 199206, I/A 2 (18.09.26).
+429429 - VIDALTA GLOBAL SL.
+Constitución. Comienzo de operaciones: 10.09.26. Objeto social: La intermediación en la compra, venta y alquiler de bienes
+inmuebles por cuenta de terceros; las actividades de asesoramiento y los servicios de tasación en relación con la compra y venta, o
+alquiler de bienes inmuebles, por cuenta de terceros; las actividades de agentes inmobiliarios neutrales que. Domicilio: C/ APELLIDO1 APELLIDO2 NOMBRE 2 Bl.1 Es (ALICANTE). Capital: 3.200,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208264, I/A 1 (18.09.26).
+429430 - APELLIDO1 APELLIDO2 NOMBRE 2 SL.
+Reelecciones. Auditor: ALBADIT AUDITORES SLP. Datos registrales. S 8 , H A 68941, I/A 5 (18.09.26).
+429431 - PROSOLFUTUR SIGLO XXI SL.
+Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 98752, I/A 3 (18.09.26).
+429432 - PASCUAL PASTOR OLLER SL.
+Modificaciones estatutarias. ARTICULO 5º.- CAPITAL.. ARTICULO 7º.- APELLIDO1 APELLIDO2 NOMBRE. . ARTICULO 11º.- APELLIDO1 APELLIDO2 NOMBRE. . ARTICULO 14.- APELLIDO1 APELLIDO2 NOMBRE Y APELLIDO1 APELLIDO2 NOMBRE. Datos
+registrales. S 8 , H A 114411, I/A 5 (18.09.26).
+429433 - TACOMA SHOES SL.
+Reducción de capital. Importe reducción: 1.503,00 Euros. Resultante Suscrito: 1.503,00 Euros. Cambio de domicilio social. C/
+APELLIDO1 APELLIDO2 NOMBRE, 29 BAJO (ELDA). Datos registrales. S 8 , H A 55507, I/A 8 (18.09.26).
+429434 - SAN BERTULFO SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE.
+Nombramientos. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A
+200505, I/A 2 (18.09.26).
+429435 - HEALTH ISIM SL.
+Pérdida del carácter de unipersonalidad. Datos registrales. S 8 , H A 196737, I/A 5 (18.09.26).
+30-681-6202-A-EMROB
+:evc
+se.eob.www//:sptth
+ne
+elbacifireV
+APELLIDO1 APELLIDO2 NOMBRE
+Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45238
+429436 - CHINDASVINTOQUINTO SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE.
+Nombramientos. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A
+200503, I/A 2 (18.09.26).
+429437 - RICO BERBEGAL HNOS SL.
+Cambio de objeto social. - Prestación de servicios contables, facturación y administrativos. - Alquiler de maquinaria. - Alquiler de
+inmuebles. - Explotación de placas solares. Datos registrales. S 8 , H A 82617, I/A 5 (18.09.26).
+429438 - ALCOILIMP SL.
+Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Otros conceptos: Cambio del Organo de Administración: Administrador único a
+Administradores solidarios. Datos registrales. S 8 , H A 83232, I/A 4 (18.09.26).
+429439 - TU MEJOR FORMA FISICA SL.
+Constitución. Comienzo de operaciones: 11.09.26. Objeto social: La actividad de gimnasio y centros deportivos, así como la
+compraventa de material deportivo y suplementos alimenticios. Domicilio: APELLIDO1 APELLIDO2 NOMBRE 17 - APELLIDO1 APELLIDO2 NOMBRE11 (ALICANTE). Capital:
+3.000,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208271, I/A 1
+(18.09.26).
+429440 - APELLIDO1 APELLIDO2 NOMBRE Y DISEÑO SL.
+Reelecciones. Auditor: COMPAÑIA GENERAL DE AUDITORIA SLP. Datos registrales. S 8 , H A 146560, I/A 7 (18.09.26).
+429441 - MONTGO CAPITAL SL.
+Ceses/Dimisiones. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Liquidador: APELLIDO1 APELLIDO2 NOMBRE. Disolución. Voluntaria. Extinción. Datos registrales. S 8 , H A 185099, I/A 3 (18.09.26).
+429442 - EDI-JAMACA SL.
+Cambio de objeto social. Ampliación de objeto: Alquiler de embarcaciones recreativas con y sin patrón. Actividades recreativas
+acuáticas. Formación para la obtención de títulos náuticos. Datos registrales. S 8 , H A 78802, I/A 10 (18.09.26).
+429443 - MOA SEVEN CATERING SL.
+Constitución. Comienzo de operaciones: 17.09.26. Objeto social: Las actividades correspondientes a los siguientes códigos y
+descripciones de la CNAE: 56.11 Restaurantes, 56.21 Servicios ocasionales de catering, 56.30 Servicios de bebidas. Domicilio: APELLIDO1 APELLIDO2 NOMBRE 5 (ALICANTE). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208272, I/A 1 (18.09.26).
+429444 - HORMIGONES Y MORTEROS DEL SOL SL.
+Reelecciones. Auditor: COMPAÑIA GENERAL DE AUDITORIA SLP. Datos registrales. S 8 , H A 41392, I/A 7 (18.09.26).
+429445 - MISTER PLANT SL.
+Cambio de objeto social. Se amplia en: Intermediación en la compra, venta, permuta y arrendamiento de toda clase de bienes
+inmuebles rústicos o urbanos, por cuenta propia o de terceros, incluyendo la gestión de alquileres y mediación inmobiliaria.
+Asesoramiento y consultoría en el sector inmobiliario, gestiones de corretaje. Datos registrales. S 8 , H A 79208, I/A 6 (18.09.26).
+429446 - BET CAPITAL FINANCIAL SOLUTIONS SL.
+Pérdida del carácter de unipersonalidad. Cambio de objeto social. Ampliación de objeto: Actividad de distribución de seguros como
+correduría de seguros con sometimiento a la legislación específica de distribución de seguros privados para la promoción y
+asesoramiento preparatorio de la formalización de contratos de seguros privados entre personas físicas o jurídica. Datos registrales. S
+8 , H A 204570, I/A 2 (18.09.26).
+429447 - MIMADO 13 SL.
+Constitución. Comienzo de operaciones: 8.09.26. Objeto social: Administración de loterías, con la gestión, comercialización y
+explotación de todos los juegos y apuesta, presentes y/o futuros, que gestiona la Sociedad Estatal Loterías y Apuestas del Estado
+SELAE o la sociedad que en un futuro la sustituya. Domicilio: C/ APELLIDO1 APELLIDO2 NOMBRE 31 (ELCHE). Capital: 3.100,00 Euros. Declaración
+de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208273, I/A 1 (18.09.26).
+429448 - WH CONSTRUCT SL.
+Constitución. Comienzo de operaciones: 1.10.26. Objeto social: Las actividades correspondientes al siguiente código y descripción de
+la CNAE: 41.01.- Construcción de edificios residenciales.- Domicilio: APELLIDO1 APELLIDO2 NOMBRE Número25 0 A (APELLIDO1 APELLIDO2 NOMBRE). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos.
+Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208275, I/A 1 (18.09.26).
+30-681-6202-A-EMROB
+:evc
+se.eob.www//:sptth
+ne
+elbacifireV
+APELLIDO1 APELLIDO2 NOMBRE
+Núm. 186 Viernes 25 de septiembre de 2026 Pág. 45239
+429449 - SABLE STUDIO SL.
+Constitución. Comienzo de operaciones: 14.09.26. Objeto social: Las actividades correspondientes a los códigos y descripciones del
+CNAE: 8299 - Otras actividades de apoyo a las empresas n.c.o.p. 7491 - Actividades de los agentes de patentes y de los servicios de
+marketing. Domicilio: APELLIDO1 APELLIDO2 NOMBRE Número41 3 (ALICANTE). Capital: 3.000,00 Euros. Nombramientos. Adm. Mancom.:
+APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208266, I/A 1 (18.09.26).
+429450 - SIMO I MULET CONSTRUCCIONS SL.
+Ceses/Dimisiones. Adm. Mancom.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Otros conceptos: Cambio del Organo de Administración: Administradores mancomunados a
+Administradores solidarios. Datos registrales. S 8 , H A 37220, I/A 4 (18.09.26).
+429451 - NATIVA COFFEE SL.
+Constitución. Comienzo de operaciones: 29.07.26. Objeto social: CNAE: Actividad Principal: 56.30 / Servicios de bebidas. Otras
+actividades: 56.40 / Actividades de intermediación para los servicios de comidas y bebidas, 41.01 / Construcción de edificios
+residenciales, 68.12 / Promoción inmobiliaria, 56.11 Restaurantes, 43.33 / Revestimiento de suelos y paredes, 4. Domicilio: APELLIDO1 APELLIDO2 NOMBRE Y
+MARGALL Número26 0 (ELDA). Capital: 3.000,00 Euros. Nombramientos. Adm. Solid.: APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208276, I/A 1 (18.09.26).
+429452 - EURO-HISPANIA TRADE SL.
+Constitución. Comienzo de operaciones: 16.07.26. Objeto social: Intermediarios del comercio de productos alimenticios, bebidas y
+tabaco. Comercio al por mayor de alimentos -comercio al por mayor de cítricos, almacén de exportación de alimentos, comercio al por
+mayor de materias primas agrarias, comercio al por mayor de alimentos-. Comercio al por mayor de aceit. Domicilio: APELLIDO1 APELLIDO2 NOMBRE 15 1º (ALICANTE). Capital: 4.000,00 Euros. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales.
+S 8 , H A 208248, I/A 1 (18.09.26).
+429453 - ALQUILERES C.O.D. SL.
+Pérdida del carácter de unipersonalidad. Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Solid.:
+APELLIDO1 APELLIDO2 NOMBRE;APELLIDO1 APELLIDO2 NOMBRE. Otros conceptos: Cambio del Organo de Administración: Administrador único a
+Administradores solidarios. Cambio de denominación social. ROYAL DRINKS IBERICA SL. Cambio de objeto social. El comercio al
+por mayor de toda clase de bebidas, tanto alcohólicas como no alcohólicas. El comercio al por mayor de productos del tabaco. El
+comercio al por mayor de productos alimenticios, materias primas agrarias y productos de consumo no especializados. Servicios de
+hostelería, restauración y c. Datos registrales. S 8 , H A 185337, I/A 6 (18.09.26).
+429454 - YESOS PROYECTADOS PORY SL.
+Ceses/Dimisiones. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE.
+Datos registrales. S 8 , H A 197510, I/A 2 (18.09.26).
+429455 - ALEONOVA SL.
+Constitución. Comienzo de operaciones: 4.09.26. Objeto social: 47.12 Otro comercio al por menor no especializado. 47.51 Comercio
+al por menor de textiles. 47.54 Comercio al por menor de aparatos electrodomésticos. 47.55 Comercio al por menor de muebles,
+aparatos de iluminación, vajilla y otros artículos de uso domésticos. 47.64 Comercio al por menor de juegos y. Domicilio: C/ ORIHUELA
+72 (TORREVIEJA). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único: APELLIDO1 APELLIDO2 NOMBRE. Nombramientos.
+Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208279, I/A 1 (18.09.26).
+429456 - PAY AND PLAY SL.
+Reelecciones. Auditor: AUREN AUDITORES SP SLP. Datos registrales. S 8 , H A 59344, I/A 18 (18.09.26).
+429457 - HOORAIN ISTURK KEBAB SL.
+Constitución. Comienzo de operaciones: 13.08.26. Objeto social: a. Restauración. b. Venta de productos alimenticios y bebidas en
+general. c. Venta de productos alimenticios y bebidas para llevar. d. Compra venta productos alimentación al por mayor. Domicilio:
+APELLIDO1 APELLIDO2 NOMBRE 67 BAJO - LOCAL 2C (ALICANTE). Capital: 3.000,00 Euros. Declaración de unipersonalidad. Socio único:
+APELLIDO1 APELLIDO2 NOMBRE. Nombramientos. Adm. Unico: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 208280, I/A 1 (18.09.26).
+429458 - NOVATEX BAÑERES SL.
+Nombramientos. Apoderado: APELLIDO1 APELLIDO2 NOMBRE. Datos registrales. S 8 , H A 44211, I/A 6 (18.09.26).
+429459 - MODAL 23 SOCIEDAD LIMITADA.
+Cambio de domicilio social. APELLIDO1 APELLIDO2 NOMBRE 118 3 5 (ALICANTE). Datos registrales. S 8 , H A 208285, I/A 4
+(18.09.26).
+30-681-6202-A-EMROB
 :evc
 se.eob.www//:sptth
 ne
