@@ -708,6 +708,13 @@ def test_cada_variante_pide_su_feed(fabrica, esperado):
     assert cliente.urls[0] == esperado
 
 
+def test_el_feed_de_menores_es_el_que_verifico_el_reconocimiento():
+    # La 643 servía una página de redirección con un 200. La 1143 la dio el
+    # reconocimiento en la CI, con Atom de verdad (docs/fuentes/placsp-
+    # reconocimiento.md). Si alguien vuelve a la vieja, que salte aquí.
+    assert "/sindicacion_1143/contratosMenoresPerfilesContratantes.atom" in FEEDS["menores"]
+
+
 def test_las_tres_variantes_comparten_fuente():
     # `source_id` es la fuente; la clave del registro es el conector. Si las
     # variantes declararan fuentes distintas, la misma empresa saldría

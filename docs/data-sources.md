@@ -200,10 +200,16 @@ responde **200 con una página HTML** de redirección al portal
 `raise_for_status` —el código es 200— ni el parser, que sólo decía «mismatched
 tag: line 1, column 200».
 
-El conector lo diagnostica ahora explícitamente y sigue en la ingesta diaria:
-una petición por noche a una ruta muerta no carga a nadie, y quitarlo haría
-invisible el hueco justo en el tramo que más se pregunta. Falta encontrar la
-ruta buena en la especificación de sindicación.
+El conector lo diagnostica ahora explícitamente: una página HTML donde tenía
+que haber un Atom se dice como tal en el log.
+
+**La ruta buena es `sindicacion_1143`.** Reconocimiento del 25/9/2026
+(`docs/fuentes/placsp-reconocimiento.md`, `scripts/explorar_placsp.py`):
+`sindicacion_1143/contratosMenoresPerfilesContratantes.atom` sirve
+`application/atom+xml`, actualizado a diario, con su enlace a la página
+siguiente; la 643 sigue devolviendo la redirección. La página de datos
+abiertos de Hacienda ya enlaza los feeds desde el dominio nuevo,
+`contrataciondelsectorpublico.gob.es`; el viejo responde igual por ahora.
 
 **Coste real:** bastante mayor que BDNS. Hay que descargar ZIPs, descomprimir,
 recorrer la cadena de ATOM y parsear XML UBL. Es trabajo de fase 3, no de

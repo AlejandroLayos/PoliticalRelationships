@@ -56,8 +56,11 @@ FEEDS = {
     "agregadas": (
         "https://contrataciondelestado.es/sindicacion/sindicacion_1044/PlataformasAgregadasSinMenores.atom"
     ),
+    # 1143, no 643: la 643 responde desde septiembre de 2026 con una página
+    # de redirección. La buena la da el reconocimiento del 25/9/2026
+    # (docs/fuentes/placsp-reconocimiento.md): Atom, actualizado a diario.
     "menores": (
-        "https://contrataciondelestado.es/sindicacion/sindicacion_643/contratosMenoresPerfilesContratantes.atom"
+        "https://contrataciondelestado.es/sindicacion/sindicacion_1143/contratosMenoresPerfilesContratantes.atom"
     ),
 }
 
