@@ -3,17 +3,17 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `36192960011` · 2026-09-25T22:40:46Z
+- Ejecución: `36198019072` · 2026-09-25T23:32:39Z
 
 ## Fuentes que no aportaron
 
 ```
 ### placsp-menores (código 1)
-{"fuente": "placsp", "params": "{'fecha_desde': datetime.date(2025, 1, 1), 'fecha_hasta': datetime.date(2025, 12, 31), 'max_paginas': 30}", "event": "ingesta iniciada", "level": "info", "timestamp": "2026-09-25T22:23:20.355409Z"}
-{"url": "https://contrataciondelestado.es/sindicacion/sindicacion_643/contratosMenoresPerfilesContratantes.atom", "content_type": "text/html; charset=UTF-8", "bytes": 521, "pista": "la ruta del feed ha cambiado o ya no existe; comprobar contra la especificaci\u00f3n de sindicaci\u00f3n", "event": "placsp: la ruta no sirve el feed, devuelve una p\u00e1gina HTML", "level": "error", "timestamp": "2026-09-25T22:23:20.952357Z"}
-{"fuente": "placsp", "documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-25T22:23:20.952517Z"}
-{"documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-25T22:23:20.953133Z"}
-{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-25T22:23:20.953234Z"}
+{"fuente": "placsp", "params": "{'fecha_desde': datetime.date(2025, 1, 1), 'fecha_hasta': datetime.date(2025, 12, 31), 'max_paginas': 30}", "event": "ingesta iniciada", "level": "info", "timestamp": "2026-09-25T23:12:09.331734Z"}
+{"url": "https://contrataciondelestado.es/sindicacion/sindicacion_643/contratosMenoresPerfilesContratantes.atom", "content_type": "text/html; charset=UTF-8", "bytes": 521, "pista": "la ruta del feed ha cambiado o ya no existe; comprobar contra la especificaci\u00f3n de sindicaci\u00f3n", "event": "placsp: la ruta no sirve el feed, devuelve una p\u00e1gina HTML", "level": "error", "timestamp": "2026-09-25T23:12:09.977748Z"}
+{"fuente": "placsp", "documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-25T23:12:09.978614Z"}
+{"documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-25T23:12:09.978748Z"}
+{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-25T23:12:09.978794Z"}
 
 ```
 
@@ -21,15 +21,17 @@ Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 526 |
-| Boletín Oficial del Estado | 256 |
-| Plataforma de Contratación del Sector Público | 2851 |
+| Base de Datos Nacional de Subvenciones | 549 |
+| Boletín Oficial del Estado | 596 |
+| Congreso de los Diputados | 1477 |
+| Oficina de Conflictos de Intereses | 341 |
+| Plataforma de Contratación del Sector Público | 2829 |
 | Tribunal de Cuentas | 630 |
 
 ## Territorio de los organismos
 
 - del Estado: 369
-- con comunidad: 2870
+- con comunidad: 2885
 - **sin clasificar: 169**
 
 Jerarquías más repetidas entre los sin clasificar (para afinar
@@ -55,6 +57,6 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 
 ## Altos cargos (BOE)
 
-- días del BOE en caché: 500
-- personas: 256 · actos: 355
-- actos leídos del 2025-05-14 al 2026-09-16
+- días del BOE en caché: 1000
+- personas: 912 · actos: 4055
+- actos leídos del 2008-03-14 al 2026-09-16
