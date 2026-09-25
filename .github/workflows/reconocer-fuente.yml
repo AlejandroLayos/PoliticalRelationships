@@ -22,6 +22,10 @@ permissions:
 jobs:
   reconocer:
     runs-on: ubuntu-latest
+    # Un reconocimiento son unas decenas de peticiones. Si tarda más que
+    # esto, algo está colgado, y es mejor saberlo en veinte minutos que en
+    # seis horas.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 

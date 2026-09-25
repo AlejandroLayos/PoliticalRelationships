@@ -65,17 +65,38 @@ ACTOS_BORME = re.compile(
 )
 
 
+# Tope de tiempo TOTAL por petición. El `timeout` de httpx es por lectura, no
+# por respuesta: un servidor que suelta bytes a cuentagotas lo cumple siempre.
+# El segundo reconocimiento se quedó media hora colgado así, sin un renglón en
+# el log que dijera dónde.
+TOPE_POR_PETICION = 60.0
+
+
 def pedir(cliente: httpx.Client, url: str, json_: bool = True) -> tuple[int, Any, str]:
+    print(f"→ {url}", flush=True)
+    cabeceras = CABECERAS if json_ else {"User-Agent": CABECERAS["User-Agent"]}
     for intento in range(2):
+        inicio = time.monotonic()
         try:
-            r = cliente.get(url, headers=CABECERAS if json_ else {"User-Agent": CABECERAS["User-Agent"]})
+            with cliente.stream("GET", url, headers=cabeceras) as r:
+                trozos = []
+                for trozo in r.iter_bytes():
+                    trozos.append(trozo)
+                    if time.monotonic() - inicio > TOPE_POR_PETICION:
+                        print(f"  cortado a los {TOPE_POR_PETICION:.0f} s", flush=True)
+                        return 0, None, f"cortado a los {TOPE_POR_PETICION:.0f} s"
+                contenido = b"".join(trozos)
+                tipo = r.headers.get("content-type", "")
+                codigo = r.status_code
+            print(f"  HTTP {codigo} · {len(contenido)} bytes · {time.monotonic() - inicio:.1f} s", flush=True)
             if json_:
                 try:
-                    return r.status_code, r.json(), r.headers.get("content-type", "")
+                    return codigo, json.loads(contenido), tipo
                 except ValueError:
-                    return r.status_code, None, r.headers.get("content-type", "")
-            return r.status_code, r.content, r.headers.get("content-type", "")
+                    return codigo, None, tipo
+            return codigo, contenido, tipo
         except httpx.HTTPError as exc:
+            print(f"  error: {exc}", flush=True)
             if intento:
                 return 0, None, f"error: {exc}"
             time.sleep(2)
