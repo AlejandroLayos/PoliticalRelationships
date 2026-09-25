@@ -126,6 +126,11 @@ empleador en la serif, como la actividad de una autorización, y la
 descripción y el periodo tal cual los escribió, en mayúsculas si las puso.
 Nada se corrige ni se completa: es su declaración, y así se dice.
 
+Bajo qué Gobierno se nombró a alguien va en su periodo, en la sans pequeña y
+sin color: «Nombramiento con el Gobierno de …», con la formación del
+presidente sólo si el Congreso la da. Es contexto del periodo, no una
+etiqueta de la persona; por eso no va junto al nombre.
+
 Los nombres, en orden natural en toda la página. El Congreso y la Oficina
 escriben «Apellidos, Nombre» y el BOE no; la misma persona se lee igual venga
 de donde venga. «Escaño en la XV legislatura» y no «Diputado»: la fuente no

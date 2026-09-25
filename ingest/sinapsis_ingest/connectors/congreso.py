@@ -397,6 +397,14 @@ class CongresoConnector:
                 "grupo": d.get("grupo", ""),
                 "circunscripcion": d.get("circunscripcion", ""),
                 "url": d.get("url", ""),
+                # También en cada mandato, y no sólo en la persona: la ficha
+                # es una para todas las legislaturas y la biografía de la
+                # última taparía lo que decía la de otra.
+                **(
+                    {"cargosEnBiografia": d["cargos_en_biografia"]}
+                    if d.get("cargos_en_biografia")
+                    else {}
+                ),
             },
         )
         return Normalizado(entidades=entidades, aristas=[arista])

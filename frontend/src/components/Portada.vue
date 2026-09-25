@@ -497,6 +497,10 @@ function filasVisibles(l) {
             <p class="cruce-quien">
               <a href="#" @click.prevent="emit('verCargo', c.persona)">{{ c.nombre }}</a>
               <span v-if="c.cargoAnterior" class="cruce-cargo">{{ c.cargoAnterior.toLowerCase() }}</span>
+              <!-- Quién gobernaba cuando se le nombró para ese cargo, si se sabe. -->
+              <span v-if="c.gobierno" class="cruce-cargo">
+                · Gobierno de {{ c.gobierno.nombre }}<template v-if="c.gobierno.formacion"> ({{ c.gobierno.formacion }})</template>
+              </span>
             </p>
             <p class="cruce-donde">
               <span class="flecha" aria-hidden="true">→</span>

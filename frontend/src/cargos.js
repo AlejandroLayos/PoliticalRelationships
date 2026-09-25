@@ -332,3 +332,47 @@ export function papelDeLaFicha(persona) {
   if (fuentes.has('congreso')) return 'Congreso de los Diputados'
   return 'Ex alto cargo'
 }
+
+/**
+ * Las personas nombradas —algún periodo del BOE— bajo la presidencia de
+ * `presidente` (su clave). Es la fecha del Real Decreto contra las
+ * presidencias leídas (`gobierno`, de exportar_cargos.py): dice quién
+ * gobernaba, no a qué partido pertenece la persona.
+ */
+export function bajoGobierno(personas, presidente) {
+  if (!presidente) return personas
+  return personas.filter((persona) =>
+    (persona.periodos ?? []).some((p) => p.gobierno?.persona === presidente),
+  )
+}
+
+/**
+ * Los gobiernos por los que se puede filtrar: una entrada por presidente,
+ * con cuántas personas nombró, sólo si nombró a alguien en lo leído. En
+ * orden de tiempo, como la franja de presidencias.
+ */
+export function gobiernos(datos) {
+  const cuenta = new Map()
+  for (const persona of datos?.personas ?? []) {
+    const vistos = new Set()
+    for (const p of persona.periodos ?? []) {
+      const g = p.gobierno
+      if (!g || vistos.has(g.persona)) continue
+      vistos.add(g.persona)
+      const x = cuenta.get(g.persona) ?? { ...g, personas: 0, primero: p.desde }
+      x.personas += 1
+      if (g.formacion) x.formacion = g.formacion
+      if (p.desde && p.desde < x.primero) x.primero = p.desde
+      cuenta.set(g.persona, x)
+    }
+  }
+  return [...cuenta.values()]
+    .sort((a, b) => (a.primero < b.primero ? -1 : 1))
+    .map(({ primero, ...g }) => g)
+}
+
+/** «Gobierno de Mariano Rajoy Brey · PP», o sin la formación si no se sabe. */
+export function nombreDeGobierno(g) {
+  if (!g) return ''
+  return `Gobierno de ${g.nombre}${g.formacion ? ` · ${g.formacion}` : ''}`
+}

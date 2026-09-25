@@ -381,7 +381,10 @@ Estado a 25/9/2026:
 - Línea 4: empezada. Diputados de cada legislatura desde la IX con su
   formación (Congreso), unidos a los altos cargos del BOE con dos señales;
   la franja de presidencias del Gobierno dice con qué formación fue elegido
-  cada presidente. Falta el partido de cada gobierno autonómico y local.
+  cada presidente, y cada nombramiento del BOE lleva bajo qué presidencia se
+  firmó (la fecha del Real Decreto contra las presidencias leídas: quién
+  gobernaba, no el partido de la persona nombrada). La sección de cargos se
+  filtra por Gobierno. Falta el partido de cada gobierno autonómico y local.
 - Línea 2: sin empezar.
 
 ## 16. Tests

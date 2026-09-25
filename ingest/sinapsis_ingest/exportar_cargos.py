@@ -209,6 +209,78 @@ def nombre_natural(nombre: str) -> str:
     return f"{partes[1]} {partes[0]}"
 
 
+PRESIDENCIA = "Presidente del Gobierno"
+
+
+def formacion_en(mandatos: list[dict[str, Any]], fecha: str) -> str:
+    """La formación del mandato del Congreso que cubre `fecha`, o la del
+    último anterior. `mandatos`, ordenados por `desde`."""
+    if not fecha:
+        return ""
+    cubre = [
+        m for m in mandatos if m["desde"] <= fecha and (not m.get("hasta") or fecha <= m["hasta"])
+    ]
+    if cubre:
+        return cubre[-1]["formacion"]
+    antes = [m for m in mandatos if m["desde"] <= fecha]
+    return antes[-1]["formacion"] if antes else ""
+
+
+def presidencias_del_gobierno(personas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Las presidencias del Gobierno de lo leído, con la formación con la que
+    fue elegido diputado cada presidente, si su ficha está unida al Congreso.
+
+    Salen de los Reales Decretos del Presidente, sin inferir nada: si falta un
+    nombramiento o un cese, el periodo queda abierto por ese lado.
+    """
+    salida = []
+    for persona in personas:
+        mandatos = sorted(
+            (
+                p
+                for p in persona["periodos"]
+                if p.get("fuente") == "congreso" and p.get("formacion") and p.get("desde")
+            ),
+            key=lambda p: p["desde"],
+        )
+        for p in persona["periodos"]:
+            if p.get("puesto") != PRESIDENCIA or p.get("fuente"):
+                continue
+            salida.append(
+                {
+                    "persona": persona["clave"],
+                    "nombre": persona["nombre"],
+                    "desde": p.get("desde"),
+                    "hasta": p.get("hasta"),
+                    "formacion": formacion_en(mandatos, p.get("desde") or p.get("hasta") or ""),
+                }
+            )
+    salida.sort(key=lambda x: x["desde"] or x["hasta"] or "")
+    return salida
+
+
+def gobierno_en(presidencias: list[dict[str, Any]], fecha: str) -> dict[str, str] | None:
+    """Bajo qué presidencia del Gobierno cae `fecha`, o None si no se sabe.
+
+    El día del relevo cuenta ya como del nuevo presidente: el cese del
+    saliente y el nombramiento del entrante llevan la misma fecha. Una
+    presidencia sin cese leído dura hasta la siguiente que se haya leído.
+    """
+    candidatas = [
+        x
+        for x in presidencias
+        if (not x["desde"] or x["desde"] <= fecha) and (not x["hasta"] or fecha < x["hasta"])
+    ]
+    if not candidatas:
+        return None
+    x = max(candidatas, key=lambda x: x["desde"] or "")
+    return {
+        "persona": x["persona"],
+        "nombre": x["nombre"],
+        **({"formacion": x["formacion"]} if x["formacion"] else {}),
+    }
+
+
 def _fuente_no_boe(acto: dict[str, Any]) -> dict[str, str]:
     """La fuente de un periodo, sólo si no es el BOE: la web lo dice."""
     fuente = acto.get("fuente") or "boe"
@@ -405,7 +477,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     personas: dict[str, dict[str, Any]] = {}
     actos: dict[str, list[dict[str, Any]]] = {}
     para_cruzar: dict[str, str] = {}
-    biografias: dict[str, list[str]] = {}
+    biografias: dict[str, set[str]] = {}
     descartadas = 0
     for f in filas:
         # La condición del DNI en Python, con la misma función que usa el
@@ -423,11 +495,17 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         nombre = f["caption"] if fuente == "boe" else nombre_natural(f["caption"])
         personas.setdefault(clave, {"clave": clave, "nombre": nombre})
         if fuente in {"oci", "congreso"}:
-            para_cruzar[clave] = (f["props_persona"] or {}).get("nombreParaCruzar", "")
+            # Otra vez por `_plano`, el mismo que el lado del BOE: el del
+            # conector deja el guion y éste lo junta, y «Pérez-Castejón» no
+            # casaba con «Pérez-Castejón». Pedro Sánchez no se unía a su escaño.
+            para_cruzar[clave] = _plano((f["props_persona"] or {}).get("nombreParaCruzar", ""))
         if fuente == "congreso":
-            biografias[clave] = [
-                _plano(m) for m in (f["props_persona"] or {}).get("cargosEnBiografia", [])
-            ]
+            # Lo que dicen las biografías de TODAS sus legislaturas: la de la
+            # persona (la última leída) y la de cada mandato.
+            menciones = (f["props_persona"] or {}).get("cargosEnBiografia", []) + props.get(
+                "cargosEnBiografia", []
+            )
+            biografias.setdefault(clave, set()).update(_plano(m) for m in menciones)
         actos.setdefault(clave, []).append(
             {
                 "tipo": tipo,
@@ -624,6 +702,30 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
 
     salida.sort(key=lambda p: (ultima(p), p["nombre"]), reverse=True)
 
+    # Línea 4: bajo qué Gobierno se nombró cada alto cargo. Es la fecha del
+    # Real Decreto contra las presidencias leídas, nada más: dice quién
+    # gobernaba, no a qué partido pertenece la persona nombrada.
+    presidencias = presidencias_del_gobierno(salida)
+    for persona in salida:
+        for p in persona["periodos"]:
+            if p.get("fuente") or p.get("puesto") == PRESIDENCIA or not p.get("desde"):
+                continue
+            gobierno = gobierno_en(presidencias, p["desde"])
+            if gobierno is not None:
+                p["gobierno"] = gobierno
+        # Y la autorización, el Gobierno que nombró a la persona en el cargo
+        # que dejaba: el periodo del BOE cuyo cese casa con el que da la OCI.
+        for a in persona.get("autorizaciones", []):
+            if not a.get("fechaCese"):
+                continue
+            cese = date.fromisoformat(a["fechaCese"])
+            for p in persona["periodos"]:
+                if not p.get("gobierno") or not p.get("hasta"):
+                    continue
+                if abs((date.fromisoformat(p["hasta"]) - cese).days) <= MARGEN_CESE:
+                    a["gobierno"] = p["gobierno"]
+                    break
+
     # Los actos del BOE, y sólo ésos: «nombradas o cesadas por Real Decreto
     # entre el … y el …» no puede contar un cese que sólo da la Oficina de
     # Conflictos de Intereses, ni el alta de un diputado en 2008.
@@ -641,6 +743,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "nAutorizaciones": sum(len(v) for v in autorizaciones.values()),
         "nDeclaraciones": sum(len(p.get("declaraciones", [])) for p in salida),
         "personas": salida,
+        "presidencias": presidencias,
         "organos": al_frente,
         "empresas": en_empresas,
         "declarantes": declarantes,
@@ -665,6 +768,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                 "actividad": a["actividad"],
                 "empresa": a["empresa"],
                 **({"fecha": a["fecha"]} if a.get("fecha") else {}),
+                **({"gobierno": a["gobierno"]} if a.get("gobierno") else {}),
             }
             for p in salida
             for a in p.get("autorizaciones", [])

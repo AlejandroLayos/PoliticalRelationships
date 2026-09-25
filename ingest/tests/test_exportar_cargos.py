@@ -943,3 +943,146 @@ def test_nombre_natural():
     assert nombre_natural("María Fátima Báñez García") == "María Fátima Báñez García"
     assert nombre_natural("A, B, C") == "A, B, C"
     assert nombre_natural("Báñez García,") == "Báñez García,"
+
+
+# --- de punta a punta, con las muestras reales ----------------------------------
+
+
+def _ingerir_real(store: Store, conector: Any, raw: RawDocument) -> None:
+    ingerir_documento(store, conector, raw, Resultado())
+    store.conn.commit()
+
+
+@con_base
+def test_los_presidentes_reales_se_unen_a_su_escano(store_congreso, tmp_path):
+    """Los Reales Decretos que nombran a Rajoy (2011) y a Sánchez (2018), y los
+    diputados de la XII y la XIV, por los conectores de verdad."""
+    from sinapsis_ingest.connectors.congreso import CongresoConnector
+
+    golden = Path(__file__).parent / "golden"
+    for identificador in (
+        "BOE-A-2011-19861",
+        "BOE-A-2011-19942",
+        "BOE-A-2018-7400",
+        "BOE-A-2018-7577",
+    ):
+        _ingerir_real(
+            store_congreso,
+            BOEConnector(),
+            RawDocument(
+                source_id="boe",
+                url=f"https://www.boe.es/diario_boe/xml.php?id={identificador}",
+                content=(golden / "boe_disposiciones" / f"{identificador}.xml").read_bytes(),
+                media_type="application/xml",
+            ),
+        )
+    for fichero in ("odsDiputados12__20260925050024.json", "odsDiputados14__20260925050256.json"):
+        _ingerir_real(
+            store_congreso,
+            CongresoConnector(),
+            RawDocument(
+                source_id="congreso",
+                url=f"https://www.congreso.es/webpublica/opendata/diputados/{fichero}",
+                content=(golden / "congreso" / fichero).read_bytes(),
+                media_type="application/json",
+            ),
+        )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    por_nombre = {p["nombre"]: p for p in cargos["personas"]}
+    for nombre, formacion in (
+        ("Mariano Rajoy Brey", "PP"),
+        ("Pedro Sánchez Pérez-Castejón", "PSOE"),
+    ):
+        persona = por_nombre[nombre]
+        assert persona["clave"].startswith("boe:")
+        assert any(p.get("puesto") == "Presidente del Gobierno" for p in persona["periodos"])
+        mandatos = [p for p in persona["periodos"] if p.get("fuente") == "congreso"]
+        assert mandatos, nombre
+        assert {p["formacion"] for p in mandatos} == {formacion}
+
+    # Y con eso, bajo qué Gobierno se nombró a cada ministro: la fecha del
+    # Real Decreto contra las presidencias leídas.
+    #
+    # La formación de Rajoy en diciembre de 2011 NO se sabe con esta muestra:
+    # su único escaño guardado es el de la XII, de 2016, y lo posterior no se
+    # proyecta hacia atrás. Con la X leída, sí.
+    assert [(x["nombre"], x["formacion"]) for x in cargos["presidencias"]] == [
+        ("Mariano Rajoy Brey", ""),
+        ("Pedro Sánchez Pérez-Castejón", "PSOE"),
+    ]
+    banez = por_nombre["María Fátima Báñez García"]
+    [ministra] = [p for p in banez["periodos"] if "fuente" not in p]
+    assert ministra["gobierno"] == {
+        "persona": por_nombre["Mariano Rajoy Brey"]["clave"],
+        "nombre": "Mariano Rajoy Brey",
+    }
+    montero = por_nombre["María Jesús Montero Cuadrado"]
+    [ministra] = [p for p in montero["periodos"] if "fuente" not in p]
+    assert ministra["gobierno"]["nombre"] == "Pedro Sánchez Pérez-Castejón"
+    assert ministra["gobierno"]["formacion"] == "PSOE"
+    # El presidente no lleva «nombrado bajo sí mismo».
+    rajoy = por_nombre["Mariano Rajoy Brey"]
+    assert all(
+        "gobierno" not in p
+        for p in rajoy["periodos"]
+        if p.get("puesto") == "Presidente del Gobierno"
+    )
+
+
+@con_base
+def test_la_biografia_de_una_legislatura_no_tapa_la_de_otra(store_congreso, tmp_path):
+    _ingerir(
+        store_congreso,
+        "boe",
+        _nombramiento_boe(
+            "María Fátima Báñez García", "BOE-A-7", "Ministra de Empleo y Seguridad Social"
+        ),
+        b"<documento>7</documento>",
+    )
+    # La XII menciona el ministerio; una legislatura leída después, otra cosa.
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado(
+            "Báñez García, María Fátima",
+            "PP",
+            "15/07/2016",
+            "21/05/2019",
+            ["Ministra de Empleo y Seguridad Social"],
+        ),
+        b"[12]",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Báñez García, María Fátima", "PP", "21/05/2019", "", ["Portavoz adjunta"]),
+        b"[13]",
+    )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    [persona] = cargos["personas"]
+    assert persona["clave"].startswith("boe:")
+    assert len([p for p in persona["periodos"] if p.get("fuente") == "congreso"]) == 2
+
+
+def test_gobierno_en():
+    from sinapsis_ingest.exportar_cargos import gobierno_en
+
+    presidencias = [
+        {"persona": "z", "nombre": "Z", "desde": None, "hasta": "2011-12-21", "formacion": "PSOE"},
+        {
+            "persona": "r",
+            "nombre": "R",
+            "desde": "2011-12-21",
+            "hasta": "2018-06-02",
+            "formacion": "PP",
+        },
+        {"persona": "s", "nombre": "S", "desde": "2018-06-02", "hasta": None, "formacion": ""},
+    ]
+    assert gobierno_en(presidencias, "2011-12-01")["nombre"] == "Z"
+    # El día del relevo, ya el nuevo.
+    assert gobierno_en(presidencias, "2011-12-21")["nombre"] == "R"
+    assert gobierno_en(presidencias, "2018-06-02")["nombre"] == "S"
+    # Sin formación conocida, no se pone.
+    assert "formacion" not in gobierno_en(presidencias, "2020-01-01")
+    # Antes de lo leído, nada.
+    assert gobierno_en(presidencias[1:], "2010-01-01") is None

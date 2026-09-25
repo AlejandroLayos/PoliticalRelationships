@@ -15,14 +15,17 @@
  */
 import { computed, nextTick, ref, watch } from 'vue'
 import {
+  bajoGobierno,
   buscarCargos,
   dePapel,
   fechaCorta,
   fechaLarga,
+  gobiernos as gobiernosDe,
   huecoDelPeriodo,
   lineaDeTiempo,
   marcasDeAnios,
   movimientos,
+  nombreDeGobierno,
   nombreFuente,
   organismos,
   papelDeLaFicha,
@@ -45,14 +48,19 @@ const emit = defineEmits(['persona', 'entidad'])
 const filtro = ref('')
 /** Todos, quien tiene un Real Decreto, o los diputados. */
 const papel = ref('todos')
+/** La clave del presidente bajo cuyo Gobierno se nombró, o ''. */
+const gobierno = ref('')
 const VISIBLES = 30
 const cuantas = ref(VISIBLES)
-watch([filtro, papel], () => {
+watch([filtro, papel, gobierno], () => {
   cuantas.value = VISIBLES
 })
 
 const abierta = computed(() => personaDeClave(props.datos, props.persona))
-const filtradas = computed(() => dePapel(buscarCargos(props.datos, filtro.value), papel.value))
+const filtradas = computed(() =>
+  bajoGobierno(dePapel(buscarCargos(props.datos, filtro.value), papel.value), gobierno.value),
+)
+const porGobierno = computed(() => gobiernosDe(props.datos))
 const PAPELES = [
   { id: 'todos', texto: 'Todos' },
   { id: 'boe', texto: 'Altos cargos' },
@@ -226,6 +234,18 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
           <div class="periodo-cuerpo">
             <p class="periodo-cargo">{{ p.cargo }}</p>
             <p v-if="p.organismo" class="periodo-organismo">{{ p.organismo }}</p>
+            <!--
+              Bajo qué Gobierno se nombró: la fecha del Real Decreto contra
+              las presidencias leídas. Dice quién gobernaba, no el partido de
+              la persona nombrada.
+            -->
+            <p v-if="p.gobierno" class="periodo-gobierno">
+              Nombramiento con el
+              <a href="#" @click.prevent="abrir(p.gobierno.persona)">Gobierno de {{ p.gobierno.nombre }}</a><abbr
+                v-if="p.gobierno.formacion"
+                title="Formación con la que el presidente fue elegido diputado, según el Congreso"
+              > · {{ p.gobierno.formacion }}</abbr>
+            </p>
             <p v-if="p.formacion" class="periodo-organismo">
               {{ p.formacion }}<template v-if="p.circunscripcion"> · {{ p.circunscripcion }}</template><template v-if="p.grupo"> · {{ p.grupo }}</template>
             </p>
@@ -275,6 +295,7 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
           <li v-for="(a, i) in abierta.autorizaciones" :key="i" class="autorizacion">
             <p class="actividad">{{ a.actividad }}</p>
             <p class="autorizacion-meta">
+              <span v-if="a.gobierno" class="gobierno-autorizacion">nombramiento con el {{ nombreDeGobierno(a.gobierno) }} · </span>
               <span v-if="a.fecha" class="tramo">autorizada el {{ fechaCorta(a.fecha) }}</span>
               <span v-if="a.cargoAnterior"> · tras cesar como {{ a.cargoAnterior.toLowerCase() }}</span>
               <span v-if="a.fechaCese"> ({{ fechaCorta(a.fechaCese) }})</span>
@@ -354,6 +375,21 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
             :aria-pressed="papel === x.id"
             @click="papel = x.id"
           >{{ x.texto }}</button>
+        </div>
+        <!--
+          Por Gobierno: quién estaba en la Presidencia el día del Real
+          Decreto. Sólo con presidencias leídas.
+        -->
+        <div v-if="porGobierno.length" class="papeles gobiernos-filtro" role="group" aria-label="Nombrados con el Gobierno de">
+          <button class="papel" :aria-pressed="!gobierno" @click="gobierno = ''">Cualquier Gobierno</button>
+          <button
+            v-for="g in porGobierno"
+            :key="g.persona"
+            class="papel"
+            :aria-pressed="gobierno === g.persona"
+            :title="`${g.personas} personas nombradas con el ${nombreDeGobierno(g)}`"
+            @click="gobierno = g.persona"
+          >{{ g.nombre }}<template v-if="g.formacion"> · {{ g.formacion }}</template></button>
         </div>
         <label class="filtro">
           <span class="visualmente-oculto">Buscar entre los cargos</span>
@@ -496,7 +532,7 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 .por-que .nota { color: var(--tinta); }
 
 .gobiernos {
-  list-style: none; margin: var(--e6) 0 0; padding: var(--e3) 0 0;
+  list-style: none; margin: var(--e6) auto 0; padding: var(--e3) 0 0;
   display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5);
   border-top: 1px solid var(--filete-suave);
 }
@@ -677,6 +713,12 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 .papel + .papel { border-left: 0; }
 .papel[aria-pressed='true'] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
 .papel:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
+.gobiernos-filtro { flex-wrap: wrap; }
+.gobiernos-filtro .papel { font-size: var(--t-xs); }
+.periodo-gobierno { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.2rem !important; }
+.periodo-gobierno a { color: var(--tinta); }
+.periodo-gobierno abbr { text-decoration: none; }
+.gobierno-autorizacion { color: var(--tinta-2); }
 .mov-texto { font-size: var(--t-s); line-height: 1.45; color: var(--tinta-2); margin: 0.2rem 0 0.35rem !important; }
 .mov-texto a { color: var(--tinta); font-weight: 600; }
 

@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
+  bajoGobierno,
   buscarCargos,
   dePapel,
   fechaCorta,
   fechaLarga,
   formacionEn,
+  gobiernos,
   huecoDelPeriodo,
   lineaDeTiempo,
   marcasDeAnios,
   movimientos,
+  nombreDeGobierno,
   organismos,
   papelDeLaFicha,
   personaDeClave,
@@ -346,5 +349,33 @@ describe('lineaDeTiempo fuera del eje', () => {
     expect(b.fin).toBe(1)
     expect(b.abiertoIzquierda).toBe(true)
     expect(b.abiertoDerecha).toBe(true)
+  })
+})
+
+describe('gobiernos', () => {
+  const rajoy = { persona: 'boe:persona:rajoy', nombre: 'Mariano Rajoy Brey', formacion: 'PP' }
+  const sanchez = { persona: 'boe:persona:sanchez', nombre: 'Pedro Sánchez Pérez-Castejón' }
+  const d = {
+    personas: [
+      { clave: 'a', periodos: [{ desde: '2012-01-01', gobierno: rajoy }, { desde: '2013-01-01', gobierno: rajoy }] },
+      { clave: 'b', periodos: [{ desde: '2019-01-01', gobierno: sanchez }, { desde: '2015-01-01', gobierno: rajoy }] },
+      { clave: 'c', periodos: [{ hasta: '2019-01-01' }] },
+    ],
+  }
+  it('uno por presidente, contando personas y no periodos, en orden de tiempo', () => {
+    expect(gobiernos(d).map((g) => [g.nombre, g.personas])).toEqual([
+      ['Mariano Rajoy Brey', 2],
+      ['Pedro Sánchez Pérez-Castejón', 1],
+    ])
+  })
+  it('el filtro, por la clave del presidente', () => {
+    expect(bajoGobierno(d.personas, rajoy.persona).map((p) => p.clave)).toEqual(['a', 'b'])
+    expect(bajoGobierno(d.personas, sanchez.persona).map((p) => p.clave)).toEqual(['b'])
+    expect(bajoGobierno(d.personas, '')).toHaveLength(3)
+  })
+  it('el nombre, sin formación si no se sabe', () => {
+    expect(nombreDeGobierno(rajoy)).toBe('Gobierno de Mariano Rajoy Brey · PP')
+    expect(nombreDeGobierno(sanchez)).toBe('Gobierno de Pedro Sánchez Pérez-Castejón')
+    expect(nombreDeGobierno(null)).toBe('')
   })
 })
