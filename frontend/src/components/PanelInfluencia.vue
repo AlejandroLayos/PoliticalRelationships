@@ -11,7 +11,7 @@ import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
 import { resumenEnPalabras } from '../influencia.js'
 import { colorTipo, etiquetaEsquema } from '../esquemas.js'
-import { enumerar, fechaCorta, nombreDocumento, nombreFuente } from '../procedencia.js'
+import { fechaCorta, nombreDocumento, siglaFuente } from '../procedencia.js'
 
 const props = defineProps({
   area: { type: Object, default: null },
@@ -92,9 +92,10 @@ const procedencia = computed(() => {
   return props.crudo?.provenance?.[id] ?? []
 })
 
-const fuentesDeLaFicha = computed(() =>
-  enumerar(procedencia.value.map((d) => nombreFuente(props.fuentes, d.source_id))),
-)
+/** Un sello por fuente, con su sigla. */
+const fuentesDeLaFicha = computed(() => [
+  ...new Set(procedencia.value.map((d) => siglaFuente(props.fuentes, d.source_id))),
+])
 
 /*
   Un organismo grande sale de decenas de documentos —el Servicio Andaluz de
@@ -225,21 +226,21 @@ const sinDatos = computed(
     <!-- Sólo en el índice: las cifras que hay, y por qué no hay más. -->
     <template v-if="fueraDelMapa">
       <div class="acciones">
-        <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+        <button class="boton tenue" @click="emit('volver')">← Portada</button>
         <!--
           El botón existe para que se sepa que el enlace significa algo. Ahora
           cada ficha tiene su dirección, pero nadie mira la barra del
           navegador: sin un botón que lo diga, la función está y no la usa
           nadie.
         -->
-        <button class="volver copiar" @click="copiarEnlace">
+        <button class="boton tenue" @click="copiarEnlace">
           {{ copiado ? '✓ Copiado' : 'Copiar enlace' }}
         </button>
       </div>
-      <header>
-        <span class="punto" :style="{ background: color(fueraDelMapa.schema) }" />
-        <span class="tipo">{{ etiquetaEsquema(fueraDelMapa.schema) }}</span>
-      </header>
+      <p class="antetitulo tipo">
+        <span class="punto-tipo" :style="{ background: color(fueraDelMapa.schema) }" />
+        {{ etiquetaEsquema(fueraDelMapa.schema) }}
+      </p>
       <h2>{{ fueraDelMapa.caption }}</h2>
       <p v-if="fueraDelMapa.nif" class="nif">NIF {{ fueraDelMapa.nif }}</p>
 
@@ -281,22 +282,22 @@ const sinDatos = computed(
 
     <template v-else>
       <div class="acciones">
-        <button class="volver" @click="emit('volver')">← Volver a la portada</button>
+        <button class="boton tenue" @click="emit('volver')">← Portada</button>
         <!--
           El botón existe para que se sepa que el enlace significa algo. Ahora
           cada ficha tiene su dirección, pero nadie mira la barra del
           navegador: sin un botón que lo diga, la función está y no la usa
           nadie.
         -->
-        <button class="volver copiar" @click="copiarEnlace">
+        <button class="boton tenue" @click="copiarEnlace">
           {{ copiado ? '✓ Copiado' : 'Copiar enlace' }}
         </button>
       </div>
 
-      <header>
-        <span class="punto" :style="{ background: color(area.entidad.schema) }" />
-        <span class="tipo">{{ etiquetaEsquema(area.entidad.schema) }}</span>
-      </header>
+      <p class="antetitulo tipo">
+        <span class="punto-tipo" :style="{ background: color(area.entidad.schema) }" />
+        {{ etiquetaEsquema(area.entidad.schema) }}
+      </p>
       <h2>{{ area.entidad.caption }}</h2>
       <p v-if="area.entidad.nif" class="nif">NIF {{ area.entidad.nif }}</p>
       <p class="resumen">{{ resumen }}</p>
@@ -327,52 +328,6 @@ const sinDatos = computed(
       </div>
 
       <!--
-        Cómo se reparte el dinero.
-
-        La ficha decía «reparte 224 M € entre 77 receptores» y ahí se quedaba.
-        Setenta y siete receptores suena a mucho reparto, y puede que los
-        cinco primeros se lleven la mitad: es una diferencia grande y el
-        número de receptores no la enseña. Y el panel tenía media pantalla en
-        blanco justo debajo.
-      -->
-      <section v-if="reparto.length" class="bloque">
-        <h3>Cómo se reparte</h3>
-        <ul class="reparto">
-          <li v-for="r in reparto" :key="r.clave">
-            <p class="frase">
-              El <b>{{ r.c.primero }} %</b> de lo que {{ r.verbo }} {{ r.preposicion }}
-              <button class="enlace" @click="emit('seleccionar', r.c.idPrimero)">
-                {{ r.c.nombrePrimero }}</button><!--
-              La razón social ya acaba muchas veces en punto —«S.A.U.»— y
-              añadirle otro deja «S.A.U..».
-              --><template v-if="!r.c.nombrePrimero.endsWith('.')">.</template>
-              <template v-if="r.c.deCuantos > r.c.cuantos">
-                Los {{ r.c.cuantos }} primeros se llevan el
-                <b>{{ r.c.cabeza }} %</b>, de {{ r.c.deCuantos }}
-                {{ r.plural }} con cifra.
-              </template>
-            </p>
-            <span class="barra-reparto" aria-hidden="true">
-              <i :style="{ width: `${r.c.primero}%` }" />
-            </span>
-          </li>
-        </ul>
-        <p v-if="area.periodo" class="matiz">
-          Operaciones fechadas entre el {{ fechaCorta(area.periodo.desde) }} y el
-          {{ fechaCorta(area.periodo.hasta) }}.
-        </p>
-        <!--
-          Y el matiz de siempre, que aquí hace falta: una concentración alta
-          no es irregular por sí misma. Hay mercados con tres proveedores en
-          toda España, y una obra grande se adjudica entera a una empresa.
-        -->
-        <p class="matiz">
-          Una parte alta no indica nada irregular por sí misma: hay mercados
-          con muy pocos proveedores, y una obra grande se adjudica entera.
-        </p>
-      </section>
-
-      <!--
         La procedencia, en la ficha y no a dos clics.
         «Sin procedencia no se persiste» es la primera invariante del proyecto
         y la promesa que la portada hace en su primera frase, pero para ver el
@@ -380,16 +335,17 @@ const sinDatos = computed(
         buscar a otra pantalla es media promesa.
         Va plegada y en una línea: quien sólo mira las cifras no la nota; quien
         duda de una tiene el documento ahí, con su huella y la fecha en que se
-        descargó.
+        descargó. Y va justo debajo de las cifras, como un sello de registro:
+        es de dónde salen.
       -->
       <section v-if="procedencia.length" class="bloque procedencia">
         <details>
           <summary>
-            <span class="sello">✓</span>
-            {{ procedencia.length }}
-            {{ procedencia.length === 1 ? 'documento' : 'documentos' }}
-            {{ procedencia.length === 1 ? 'guardado' : 'guardados' }}
-            de {{ fuentesDeLaFicha }}
+            <span v-for="f in fuentesDeLaFicha" :key="f" class="sello">{{ f }}</span>
+            <span class="docs">
+              {{ procedencia.length }}
+              {{ procedencia.length === 1 ? 'documento guardado' : 'documentos guardados' }}
+            </span>
           </summary>
           <ul>
             <li v-for="(d, i) in documentosVisibles" :key="i">
@@ -422,6 +378,53 @@ const sinDatos = computed(
       </section>
 
       <!--
+        Cómo se reparte el dinero.
+
+        La ficha decía «reparte 224 M € entre 77 receptores» y ahí se quedaba.
+        Setenta y siete receptores suena a mucho reparto, y puede que los
+        cinco primeros se lleven la mitad: es una diferencia grande y el
+        número de receptores no la enseña. Y el panel tenía media pantalla en
+        blanco justo debajo.
+      -->
+      <section v-if="reparto.length" class="bloque">
+        <h3>Cómo se reparte</h3>
+        <ul class="reparto">
+          <li v-for="r in reparto" :key="r.clave">
+            <p class="frase">
+              El <b>{{ r.c.primero }} %</b> de lo que {{ r.verbo }} {{ r.preposicion }}
+              <a href="#" class="enlace" @click.prevent="emit('seleccionar', r.c.idPrimero)">{{
+                r.c.nombrePrimero
+              }}</a><!--
+              La razón social ya acaba muchas veces en punto —«S.A.U.»— y
+              añadirle otro deja «S.A.U..».
+              --><template v-if="!r.c.nombrePrimero.endsWith('.')">.</template>
+              <template v-if="r.c.deCuantos > r.c.cuantos">
+                Los {{ r.c.cuantos }} primeros se llevan el
+                <b>{{ r.c.cabeza }} %</b>, de {{ r.c.deCuantos }}
+                {{ r.plural }} con cifra.
+              </template>
+            </p>
+            <span class="barra-reparto" aria-hidden="true">
+              <i :style="{ width: `${r.c.primero}%` }" />
+            </span>
+          </li>
+        </ul>
+        <p v-if="area.periodo" class="matiz">
+          Operaciones fechadas entre el {{ fechaCorta(area.periodo.desde) }} y el
+          {{ fechaCorta(area.periodo.hasta) }}.
+        </p>
+        <!--
+          Y el matiz de siempre, que aquí hace falta: una concentración alta
+          no es irregular por sí misma. Hay mercados con tres proveedores en
+          toda España, y una obra grande se adjudica entera a una empresa.
+        -->
+        <p class="nota">
+          Una parte alta no indica nada irregular por sí misma: hay mercados
+          con muy pocos proveedores, y una obra grande se adjudica entera.
+        </p>
+      </section>
+
+      <!--
         Exposición a capital extranjero. Se dice de qué son los datos: el NIF
         de no residente prueba dónde tributa quien cobra o paga, y nada más.
         Presentarlo como «influencia extranjera» a secas sería afirmar algo
@@ -444,7 +447,7 @@ const sinDatos = computed(
               <span class="importe">{{ dineroCorto(c.total) }}</span>
             </li>
           </ul>
-          <p class="matiz">
+          <p class="nota">
             Lo afirma la letra del NIF: N para entidad extranjera, W para
             establecimiento permanente de no residente. Dice dónde tributan, no
             quién las controla.
@@ -465,7 +468,7 @@ const sinDatos = computed(
               <span class="importe">{{ dineroCorto(c.total) }}</span>
             </li>
           </ul>
-          <p class="matiz">
+          <p class="nota">
             No constan con NIF español y su nombre termina en una forma
             societaria extranjera. Es un indicio, no un dato de la Agencia
             Tributaria, y por eso no cuenta en el porcentaje de arriba.
@@ -513,7 +516,7 @@ const sinDatos = computed(
             </span>
           </li>
         </ul>
-        <p class="matiz">
+        <p class="nota">
           Dice de qué iba el contrato, no qué es quien lo cobra: puede ser un
           medio, la agencia que compra los espacios o la productora.
         </p>
@@ -535,8 +538,9 @@ const sinDatos = computed(
           Hay {{ area.compartenDeProgramaGeneral.entidades }} entidades que
           cobran de algún pagador de ésta, pero no se listan: el que comparten
           es
-          <button class="enlace" @click="emit('seleccionar', area.compartenDeProgramaGeneral.id)">
-            {{ area.compartenDeProgramaGeneral.caption }}</button>, que reparte
+          <a href="#" class="enlace" @click.prevent="emit('seleccionar', area.compartenDeProgramaGeneral.id)">{{
+            area.compartenDeProgramaGeneral.caption
+          }}</a>, que reparte
           entre {{ area.compartenDeProgramaGeneral.alcance }}. Coincidir en un
           reparto general no es una relación entre ellas, y enseñarlo como una
           lista lo parecería.
@@ -544,7 +548,7 @@ const sinDatos = computed(
       </section>
       <section v-else-if="area.comparten.length" class="bloque">
         <h3>Cobran de los mismos organismos</h3>
-        <p class="matiz">
+        <p class="nota">
           Cobran de los mismos organismos que esta entidad. Es una coincidencia
           de pagador, no una relación entre ellas.
         </p>
@@ -566,7 +570,7 @@ const sinDatos = computed(
         <div v-for="g in gruposComparten" :key="g.id" class="grupo-via">
           <p class="via-cabecera">
             Vía
-            <button class="enlace" @click="emit('seleccionar', g.id)">{{ g.caption }}</button>,
+            <a href="#" class="enlace" @click.prevent="emit('seleccionar', g.id)">{{ g.caption }}</a>,
             que reparte entre {{ g.alcance }}
           </p>
           <ul class="lista compacta">
@@ -606,7 +610,7 @@ const sinDatos = computed(
               <span class="nombre">{{ c.caption }}</span>
               <span class="importe">{{ dineroCorto(c.total) }}</span>
             </button>
-            <span class="barra"><i class="entra" :style="{ width: pct(c.total, tope(area.recibeDe)) }" /></span>
+            <span class="barra"><i :style="{ width: pct(c.total, tope(area.recibeDe)), background: color(c.schema) }" /></span>
             <span class="meta">
               {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
               <template v-if="c.expedientes?.length">
@@ -617,7 +621,7 @@ const sinDatos = computed(
                 </button>
               </template>
               <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
-              <span v-if="c.extranjera" class="extranjera">· extranjera</span>
+              <span v-if="c.extranjera" class="extranjera">· no residente</span>
               <!--
                 Un hueco sin explicar se lee como un cero. Aquí se dice que la
                 cifra existe y que no se publica, y por qué.
@@ -662,7 +666,7 @@ const sinDatos = computed(
               <span class="nombre">{{ c.caption }}</span>
               <span class="importe">{{ dineroCorto(c.total) }}</span>
             </button>
-            <span class="barra"><i class="sale" :style="{ width: pct(c.total, tope(area.pagaA)) }" /></span>
+            <span class="barra"><i :style="{ width: pct(c.total, tope(area.pagaA)), background: color(c.schema) }" /></span>
             <span class="meta">
               {{ c.n }} {{ c.n === 1 ? 'operación' : 'operaciones' }}
               <template v-if="c.expedientes?.length">
@@ -673,7 +677,7 @@ const sinDatos = computed(
                 </button>
               </template>
               <span v-if="c.inferido" class="inferido">· inferido ({{ (c.confianza * 100).toFixed(0) }} %)</span>
-              <span v-if="c.extranjera" class="extranjera">· extranjera</span>
+              <span v-if="c.extranjera" class="extranjera">· no residente</span>
               <!--
                 Un hueco sin explicar se lee como un cero. Aquí se dice que la
                 cifra existe y que no se publica, y por qué.
@@ -715,173 +719,183 @@ const sinDatos = computed(
 </template>
 
 <style scoped>
-.reparto { list-style: none; margin: 0 0 var(--e3); padding: 0; }
-.reparto li + li { margin-top: var(--e3); }
-.frase { margin: 0 0 var(--e2); font-size: var(--t-s); color: var(--tinta-2); line-height: 1.5; }
-.frase b { color: var(--tinta); font-weight: 650; }
 /*
-  Un `button` sin estilo propio hereda el del navegador: fondo gris, texto
-  centrado y caja de bloque. Dentro de una frase eso no es un enlace, es un
-  botón gordo en medio del párrafo — y así salió el nombre del organismo en
-  la cabecera de cada grupo.
+  La ficha es una columna de artículo: antetítulo con el tipo, el nombre en
+  la serif como un titular, una entradilla que lo resume, dos cifras y el
+  sello de dónde salen. Debajo, cada bloque bajo su filete, sin cajas: se
+  separa con reglas, como en papel (docs/diseno.md §1).
 */
-.frase .enlace,
-.matiz .enlace,
-.via-cabecera .enlace {
-  display: inline; background: none; border: none; padding: 0; font: inherit;
-  color: var(--serie-1); cursor: pointer; text-align: left;
-}
-.frase .enlace:hover,
-.matiz .enlace:hover,
-.via-cabecera .enlace:hover { text-decoration: underline; }
-/* Barra de una sola serie: la parte del primero sobre el total. */
-.barra-reparto {
-  display: block; height: 6px; background: var(--superficie-2);
-  border-radius: 3px; overflow: hidden;
-}
-.barra-reparto i { display: block; height: 100%; background: var(--serie-1); border-radius: 1px 3px 3px 1px; }
-
-.grupo-via + .grupo-via { margin-top: var(--e4); }
-.via-cabecera {
-  margin: 0 0 var(--e2); font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.4;
-}
-
-.enlace-expedientes {
-  background: none; border: none; padding: 0; font: inherit;
-  color: var(--serie-1); cursor: pointer; text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.expedientes-de {
-  list-style: none; margin: 0.3rem 0 0; padding: 0 0 0 0.6rem;
-  border-left: 2px solid var(--linea-fuerte);
-}
-.expedientes-de li { font-size: var(--t-xs); line-height: 1.4; margin-bottom: 0.25rem; }
-.expedientes-de a { color: var(--serie-1); }
-
-.acciones { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e2); }
-.copiar { color: var(--tinta-3); }
-.copiar:hover { color: var(--tinta); }
-
-.procedencia > details > summary {
-  cursor: pointer; font-size: 0.78rem; color: var(--texto-tenue);
-  list-style-position: outside;
-}
-.procedencia .sello { color: #4bb47f; font-weight: 700; }
-.procedencia ul { list-style: none; margin: 0.5rem 0 0; padding: 0; }
-.procedencia li {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem;
-  font-size: 0.72rem; padding: 0.3rem 0; border-top: 1px solid var(--borde-suave);
-}
-.procedencia a { color: var(--acento); word-break: break-word; }
-.procedencia .cuando { color: var(--texto-tenue); }
-.procedencia code {
-  font-size: 0.66rem; color: var(--texto-tenue);
-  background: var(--fondo-boton); padding: 0.05rem 0.25rem; border-radius: 3px;
-}
-.procedencia .y-mas { color: var(--texto-tenue); }
-.procedencia blockquote {
-  flex-basis: 100%; margin: 0.25rem 0 0; padding-left: 0.5rem;
-  border-left: 2px solid var(--borde); color: var(--texto-tenue); font-style: italic;
-}
-
-.lista-larga > summary {
-  cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--texto);
-  display: flex; align-items: baseline; gap: 0.4rem;
-}
-.lista-larga > summary::marker { color: var(--texto-tenue); }
-.lista-larga[open] > summary { margin-bottom: 0.5rem; }
-
 .panel {
-  overflow-y: auto; padding: 0.9rem 1.15rem 3rem;
-  border-left: 1px solid var(--borde); background: var(--fondo-panel);
+  overflow-y: auto; padding: var(--e4) var(--e5) var(--e7);
+  border-left: 1px solid var(--filete-suave); background: var(--papel);
 }
-.vacio { color: var(--texto-tenue); font-size: 0.9rem; margin-top: 1rem; }
+.vacio { color: var(--tinta-3); font-size: var(--t-m); margin-top: var(--e4); }
 
-.volver {
-  background: var(--fondo-boton); color: var(--texto); border: 1px solid var(--borde);
-  border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.78rem;
-  cursor: pointer; margin-bottom: 0.8rem;
+.acciones { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e5); }
+.acciones .boton { font-size: var(--t-xs); padding: 0.3rem 0.6rem; }
+
+.tipo { display: flex; align-items: center; gap: 0.45em; margin-bottom: var(--e2); }
+h2 {
+  font-size: clamp(1.4rem, 1.2rem + 0.6vw, 1.75rem); line-height: 1.12;
+  margin: 0 0 var(--e2); overflow-wrap: anywhere;
 }
-.volver:hover { border-color: var(--acento); }
-
-header { display: flex; align-items: center; gap: 0.5rem; }
-.punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.punto.pequeno { width: 7px; height: 7px; display: inline-block; }
-.tipo { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-tenue); }
-h2 { font-size: var(--t-xl); margin: var(--e2) 0 0.15rem; line-height: 1.25; }
-.nif { font-size: var(--t-xs); color: var(--tinta-3); font-variant-numeric: tabular-nums; margin: 0; }
-.resumen { font-size: var(--t-s); color: var(--tinta-2); line-height: 1.5; margin: var(--e3) 0 var(--e4); }
+.nif {
+  font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3);
+  letter-spacing: 0.02em; margin: 0;
+}
+.resumen {
+  font-family: var(--serif); font-size: var(--t-l); color: var(--tinta-2);
+  line-height: 1.45; margin: var(--e3) 0 var(--e4);
+}
 
 /*
-  Dos fichas de cifra, con el contrato de siempre: rótulo, valor y qué es.
-  El valor va en TINTA y el color lo lleva el filo de la izquierda. Antes el
-  valor iba pintado de verde o de naranja claro: compite con el dato que el
-  diagrama está dibujando al lado y, sobre fondo oscuro, se lee peor que el
-  blanco.
+  Las dos cifras, entre filetes y sin recuadro: lo que recibe y lo que paga.
+  Antes eran dos cajas con un filo verde y otro naranja —los colores de
+  «entra» y «sale», que en el resto de la web no significaban eso—.
 */
-.cifras { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e2); }
-.cifra {
-  background: var(--superficie-2); border: 1px solid var(--linea);
-  border-radius: var(--radio-s); padding: var(--e3); display: flex;
-  flex-direction: column; gap: 0.15rem;
+.cifras {
+  display: grid; grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--filete); border-bottom: 1px solid var(--filete-suave);
 }
+.cifra { display: flex; flex-direction: column; gap: 0.1rem; padding: var(--e3) var(--e3) var(--e3) 0; }
+.cifra + .cifra { border-left: 1px solid var(--filete-suave); padding-left: var(--e3); }
 .cifra .valor {
-  font-size: var(--t-l); font-weight: 650; color: var(--tinta); line-height: 1.15;
-  white-space: nowrap;
+  font-family: var(--serif); font-size: var(--t-h2); font-weight: 600; color: var(--tinta);
+  line-height: 1.1; white-space: nowrap;
 }
 .cifra .que { font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.35; }
-.cifra.entra { border-left: 3px solid var(--entra); }
-.cifra.sale { border-left: 3px solid var(--sale); }
-.cifra.nada { border-left-color: var(--linea-fuerte); }
-.cifra.nada .valor { color: var(--tinta-3); font-size: var(--t-m); font-weight: 600; }
+.cifra.nada .valor { font-family: var(--sans); font-size: var(--t-m); color: var(--tinta-3); font-weight: 600; }
 
-.bloque { margin-top: var(--e5); }
+/* El sello de procedencia, pegado a las cifras: es de dónde salen. */
+.bloque.procedencia { margin-top: var(--e3); padding-top: 0; border-top: none; }
+.procedencia > details > summary {
+  cursor: pointer; font-size: var(--t-xs); color: var(--tinta-2);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--e1) var(--e2); list-style: none;
+}
+.procedencia .docs { text-decoration: underline; text-decoration-color: var(--filete-medio); text-underline-offset: 0.18em; }
+.procedencia > details > summary::-webkit-details-marker { display: none; }
+.procedencia > details > summary::after { content: '↓'; color: var(--tinta-3); }
+.procedencia > details[open] > summary::after { content: '↑'; }
+.procedencia ul { list-style: none; margin: var(--e2) 0 0; padding: 0; }
+.procedencia li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem;
+  font-size: var(--t-xs); padding: 0.35rem 0; border-top: 1px solid var(--filete-suave);
+}
+.procedencia a { word-break: break-word; }
+.procedencia .cuando { color: var(--tinta-3); }
+.procedencia code { font-family: var(--mono); font-size: 0.6875rem; color: var(--tinta-3); }
+.procedencia .y-mas { color: var(--tinta-3); }
+.procedencia blockquote {
+  flex-basis: 100%; margin: 0.25rem 0 0; padding-left: var(--e2);
+  border-left: 2px solid var(--filete-medio); color: var(--tinta-2);
+  font-family: var(--serif); font-style: italic;
+}
+
+/* --- Bloques ------------------------------------------------------------- */
+
+.bloque { margin-top: var(--e6); padding-top: var(--e3); border-top: 2px solid var(--filete); }
 h3 {
-  font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--texto-tenue); margin: 0 0 0.5rem;
+  font-family: var(--serif); font-size: var(--t-h3); font-weight: 600;
+  color: var(--tinta); margin: 0 0 var(--e3); display: flex; align-items: baseline; gap: var(--e2);
 }
-.cuenta { font-weight: 400; opacity: 0.7; }
+.cuenta { font-family: var(--mono); font-size: var(--t-xs); font-weight: 400; color: var(--tinta-3); }
 
-.bloque.extranjero {
-  background: #241d33; border: 1px solid #3c3155; border-radius: 8px; padding: 0.7rem 0.75rem;
+.matiz { font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.5; margin: var(--e2) 0 0; }
+.panel .nota { font-size: var(--t-s); margin-top: var(--e3); }
+.hueco { margin-top: var(--e5); }
+
+/*
+  Dentro de una frase, un enlace de verdad y no un `button`: un botón es una
+  caja aunque se le ponga `display: inline`, así que un nombre largo ocupaba
+  el renglón entero y el punto de detrás caía solo al principio del
+  siguiente. Tinta subrayada, como todo enlace.
+*/
+.enlace,
+.enlace-expedientes {
+  display: inline; background: none; border: none; padding: 0; font: inherit;
+  color: var(--tinta); cursor: pointer; text-align: left;
+  text-decoration: underline; text-decoration-color: var(--filete-medio);
+  text-underline-offset: 0.18em;
 }
-.bloque.extranjero .grande { font-size: 1.05rem; font-weight: 700; color: #cbb0f0; margin: 0 0 0.5rem; }
-.bloque.extranjero .pct { font-size: 0.72rem; font-weight: 400; color: var(--texto-tenue); margin-left: 0.4rem; }
-.indicios { margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px dashed #3c3155; }
+.enlace:hover, .enlace-expedientes:hover { text-decoration-color: currentColor; }
+
+.reparto { list-style: none; margin: 0 0 var(--e3); padding: 0; }
+.reparto li + li { margin-top: var(--e4); }
+.frase { margin: 0 0 var(--e2); font-size: var(--t-m); color: var(--tinta-2); line-height: 1.5; }
+.frase b { color: var(--tinta); font-weight: 700; }
+/* Barra de una sola parte: lo del primero sobre el total. */
+.barra-reparto {
+  display: block; height: 4px; background: var(--papel-3); border-radius: 1px; overflow: hidden;
+}
+.barra-reparto i { display: block; height: 100%; background: var(--tinta-2); }
+
+.grupo-via + .grupo-via { margin-top: var(--e4); }
+.via-cabecera { margin: 0 0 var(--e1); font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.45; }
+
+.expedientes-de {
+  list-style: none; margin: 0.35rem 0 0; padding: 0 0 0 var(--e3);
+  border-left: 2px solid var(--filete-medio);
+}
+.expedientes-de li { font-family: var(--mono); font-size: 0.6875rem; line-height: 1.45; margin-bottom: 0.25rem; }
+
+/* Capital extranjero: sin caja morada. Lo que es un dato va como dato. */
+.extranjero .grande {
+  font-family: var(--serif); font-size: var(--t-h2); font-weight: 600; color: var(--tinta);
+  margin: 0 0 var(--e2); line-height: 1.1;
+}
+.extranjero .pct { font-family: var(--sans); font-size: var(--t-xs); font-weight: 400; color: var(--tinta-3); margin-left: var(--e2); }
+.indicios { margin-top: var(--e4); padding-top: var(--e3); border-top: 1px dashed var(--filete-medio); }
 .indicios h4 {
-  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--texto-tenue); margin: 0 0 0.35rem; font-weight: 600;
+  font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--tinta-3); margin: 0 0 var(--e1); font-weight: 650;
 }
 
 .lista { list-style: none; margin: 0; padding: 0; }
 .lista button {
-  background: none; border: none; color: var(--texto); font: inherit; cursor: pointer;
+  background: none; border: none; color: var(--tinta); font: inherit; cursor: pointer;
   padding: 0; text-align: left;
 }
-.lista button:hover { color: var(--acento); }
-
-.barras li { padding: 0.5rem 0; border-bottom: 1px solid var(--borde-suave); }
-.fila { display: flex; align-items: baseline; gap: 0.4rem; width: 100%; font-size: 0.85rem; }
-.fila .nombre { flex: 1; line-height: 1.3; }
-.importe { font-variant-numeric: tabular-nums; font-size: 0.8rem; white-space: nowrap; color: var(--texto-tenue); }
-.barra { display: block; height: 3px; background: var(--borde-suave); border-radius: 2px; margin: 0.3rem 0 0.25rem; overflow: hidden; }
-.barra i { display: block; height: 100%; }
-.barra i.entra { background: #4bb47f; }
-.barra i.sale { background: #e8703a; }
-.meta { font-size: 0.7rem; color: var(--texto-tenue); }
-.meta .inferido { color: var(--aviso); }
-.meta .extranjera { color: #b08cd9; }
-.meta .sin-cifra { color: var(--aviso); }
+.lista button:hover { text-decoration: underline; text-decoration-color: var(--filete-medio); text-underline-offset: 0.18em; }
 
 .compacta li {
-  display: flex; align-items: baseline; gap: 0.5rem; justify-content: space-between;
-  padding: 0.32rem 0; border-bottom: 1px solid var(--borde-suave); font-size: 0.83rem;
+  display: flex; align-items: baseline; gap: var(--e3); justify-content: space-between;
+  padding: 0.4rem 0; border-bottom: 1px solid var(--filete-suave); font-size: var(--t-s);
 }
 .compacta .nombre { flex: 1; }
+.importe {
+  font-variant-numeric: tabular-nums; font-size: var(--t-s); font-weight: 650;
+  white-space: nowrap; color: var(--tinta);
+}
+.punto.pequeno {
+  display: inline-block; width: 0.5em; height: 0.5em; border-radius: 50%;
+  margin-right: 0.3em; vertical-align: 0.1em;
+}
 
-.sanciones h3 { color: #e8877f; }
-.sanciones .importe { color: #e8877f; }
+/* Sanciones: lacre, y siempre con su palabra al lado. */
+.sanciones { border-top-color: var(--sancion); }
+.sanciones h3 { color: var(--sancion); }
+.sanciones .importe { color: var(--sancion); }
+.sanciones li { flex-wrap: wrap; }
+.sanciones .meta { flex-basis: 100%; font-family: var(--mono); }
 
-.matiz { font-size: 0.72rem; color: var(--texto-tenue); line-height: 1.45; margin: 0.4rem 0 0; }
-.hueco { margin-top: 1.2rem; }
+/* --- Listas completas ---------------------------------------------------- */
+
+.lista-larga > summary {
+  cursor: pointer; font-family: var(--serif); font-size: var(--t-h3); font-weight: 600;
+  color: var(--tinta); display: flex; align-items: baseline; gap: var(--e2);
+}
+.lista-larga > summary::marker { color: var(--tinta-3); }
+.lista-larga[open] > summary { margin-bottom: var(--e2); }
+
+.barras li { padding: 0.55rem 0; border-bottom: 1px solid var(--filete-suave); }
+.fila { display: flex; align-items: baseline; gap: var(--e2); width: 100%; font-size: var(--t-s); }
+.fila .nombre { flex: 1; line-height: 1.35; }
+.barra {
+  display: block; height: 3px; background: var(--papel-3); border-radius: 1px;
+  margin: 0.35rem 0 0.25rem; overflow: hidden;
+}
+.barra i { display: block; height: 100%; }
+.meta { font-size: var(--t-xs); color: var(--tinta-3); }
+.meta .inferido, .meta .sin-cifra { color: var(--aviso); }
+.meta .extranjera { color: var(--tinta-2); }
 </style>

@@ -7,7 +7,7 @@
  * y no se distinguía uno de otro.
  */
 import { describe, expect, it } from 'vitest'
-import { enumerar, fechaCorta, nombreDocumento, nombreFuente } from './procedencia.js'
+import { enumerar, fechaCorta, nombreDocumento, nombreFuente, siglaFuente } from './procedencia.js'
 
 describe('nombreDocumento', () => {
   it('lee la marca de tiempo y la página del nombre del fichero', () => {
@@ -87,5 +87,19 @@ describe('fechaCorta', () => {
     expect(fechaCorta('')).toBe('')
     expect(fechaCorta(null)).toBe('')
     expect(fechaCorta('no es una fecha')).toBe('')
+  })
+})
+
+describe('siglaFuente', () => {
+  const fuentes = [{ id: 'bdns', name: 'Base de Datos Nacional de Subvenciones' }, { id: 'boe', name: 'BOE' }]
+
+  it('las fuentes conocidas van con su sigla', () => {
+    expect(siglaFuente(fuentes, 'bdns')).toBe('BDNS')
+    expect(siglaFuente([], 'placsp')).toBe('PLACSP')
+  })
+
+  it('sin sigla, el nombre; sin nombre, el identificador', () => {
+    expect(siglaFuente(fuentes, 'boe')).toBe('BOE')
+    expect(siglaFuente(fuentes, 'otra')).toBe('otra')
   })
 })

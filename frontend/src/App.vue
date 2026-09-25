@@ -20,7 +20,8 @@ import {
   vecinos,
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
-import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA, colorTipo } from './esquemas.js'
+import { siglaFuente } from './procedencia.js'
+import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA, NOMBRE_TIPO, colorTipo, tipoDe } from './esquemas.js'
 import { accionDeEstado, direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
 import { areaDeInfluencia } from './influencia.js'
 import { contratosDeMedios } from './medios.js'
@@ -117,16 +118,6 @@ const fechaEdicion = computed(() =>
     : '',
 )
 
-/**
- * La sigla con que se conoce cada fuente, para su sello.
- *
- * «Base de Datos Nacional de Subvenciones» no cabe en un sello; BDNS es como
- * la llama todo el que la usa, y el nombre entero está en el detalle.
- */
-const SIGLAS = { bdns: 'BDNS', placsp: 'PLACSP', tcu: 'Tribunal de Cuentas' }
-function siglaFuente(f) {
-  return SIGLAS[f.id] ?? f.name
-}
 
 /**
  * Los tipos de entidad que hay dentro del grupo abierto, de más a menos.
@@ -220,13 +211,18 @@ const hayInferidas = computed(() =>
   (datos.value?.edges ?? []).some((a) => a.status === 'inferred'),
 )
 
-/** ¿Hay alguna contraparte no residente entre las que se dibujan? */
-const hayNoResidente = computed(() =>
-  Boolean(
-    area.value &&
-      [...(area.value.recibeDe ?? []), ...(area.value.pagaA ?? [])].some((c) => c.extranjera),
-  ),
-)
+/**
+ * Los tipos de contraparte que hay en el flujo de la ficha, para la leyenda.
+ * Sólo los que están: anunciar un color que no aparece obliga a buscarlo.
+ */
+const tiposDelFlujo = computed(() => {
+  const vistos = new Set(
+    [...(area.value?.recibeDe ?? []), ...(area.value?.pagaA ?? [])].map((c) => tipoDe(c.schema)),
+  )
+  return ['adm', 'emp', 'par', 'neutro']
+    .filter((t) => vistos.has(t))
+    .map((t) => ({ tipo: t, nombre: NOMBRE_TIPO[t] }))
+})
 
 // Se calcula una vez sobre el grafo entero y la ficha filtra lo suyo: recorrer
 // cuatro mil nodos en cada selección no aporta nada y se nota al pulsar.
@@ -543,7 +539,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
             v-for="f in instantanea.fuentesConDatos ?? instantanea.fuentes"
             :key="f.id ?? f.name"
             class="sello"
-          >{{ siglaFuente(f) }}</span>
+          >{{ siglaFuente([f], f.id) }}</span>
         </span>
         <details class="franja-mas">
           <summary><span class="ancho">De dónde salen estos datos</span><span class="estrecho">Las fuentes</span></summary>
@@ -931,10 +927,16 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           leyenda que nombra colores que no están obliga a buscarlos.
         -->
         <div v-if="vista === 'ficha'" class="leyenda">
-          <span v-if="area?.recibeDe?.length"><i style="background: #4bb47f" />Dinero que entra</span>
-          <span v-if="area?.pagaA?.length"><i style="background: #e8703a" />Dinero que sale</span>
-          <span v-if="hayNoResidente"><i style="background: #b08cd9" />Contraparte no residente</span>
-          <span>El grosor es el importe · la cifra exacta va escrita</span>
+          <!--
+            El color de cada cinta es el de quien está al otro lado, como en
+            toda la web; la dirección la dice el lado. Antes eran verde
+            «entra» y naranja «sale», dos colores que no significaban eso en
+            ningún otro sitio.
+          -->
+          <span v-for="t in tiposDelFlujo" :key="t.tipo">
+            <i :style="{ background: `var(--${t.tipo})` }" />{{ t.nombre }}
+          </span>
+          <span><span class="ancho">Izquierda: de quién recibe · derecha: a quién paga ·&nbsp;</span>el grosor es el importe</span>
         </div>
         <!--
           Sólo los tipos que hay en pantalla. La leyenda enumeraba los siete

@@ -11,7 +11,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { disponerFlujo, recortarAAncho } from '../flujo.js'
 import { dineroCorto } from '../nucleos.js'
-import { colorTipo, etiquetaEsquema } from '../esquemas.js'
+import { colorTipo, etiquetaEsquema, tipoDe } from '../esquemas.js'
 
 const props = defineProps({
   area: { type: Object, default: null },
@@ -22,14 +22,18 @@ const props = defineProps({
 })
 const emit = defineEmits(['seleccionar'])
 
-// Los mismos de la hoja de estilos, medidos: entra/sale pasan las seis
-// comprobaciones con todos los pares (peor ΔE 9,4 con deuteranopia, 24,6 en
-// visión normal). Aquí el color dice DIRECCIÓN y no tipo, y puede hacerlo
-// porque en este dibujo no hay ninguna marca de tipo con la que confundirse y
-// las cabeceras de columna lo dicen además con palabras.
-const ENTRA = '#199e70'
-const SALE = '#d95926'
-const EXTRANJERO = '#9085e9'
+/*
+  La cinta lleva el color de la CONTRAPARTE, no el de la dirección.
+
+  Antes era verde lo que entra y naranja lo que sale, y un morado aparte
+  para lo extranjero: tres colores que en el resto de la web no significaban
+  nada, y el naranja de «sale» era casi el de «administración» en las
+  listas. Ahora es el mismo código que en todas partes (docs/diseno.md §2):
+  cobrizo si al otro lado hay una administración, azul si hay una empresa.
+  La dirección ya la dice el lado —izquierda entra, derecha sale— y la
+  flecha de la cabecera. Lo de no residente va escrito en la ficha.
+*/
+const TIPOS = ['adm', 'emp', 'par', 'neutro']
 
 const caja = ref(null)
 const ancho = ref(0)
@@ -92,12 +96,23 @@ function anchoDe(texto, fuente) {
   return medidor.measureText(texto).width
 }
 
-const FUENTE_NOMBRE = '11.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-const FUENTE_CIFRA = '650 12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+// La misma fuente que pinta el SVG: medir con otra recortaba de más o de menos.
+const SANS = '"Public Sans Variable", system-ui, sans-serif'
+const FUENTE_NOMBRE = `11.5px ${SANS}`
+const FUENTE_CIFRA = `650 12px ${SANS}`
+
+/*
+  Las fuentes llegan después del primer pintado. Hasta entonces se mide con
+  la de reserva, que es más ancha o más estrecha, y el recorte se queda mal;
+  al llegar, `medidas` cambia y el nombre se vuelve a recortar.
+*/
+const medidas = ref(0)
+if (typeof document !== 'undefined') document.fonts?.ready.then(() => medidas.value++)
 /** Aire entre el nombre y la cifra cuando comparten renglón. */
 const AIRE = 12
 
 function recortar(texto, w, reservado = 0) {
+  void medidas.value
   return recortarAAncho(texto, w - 18 - reservado, (t) => anchoDe(t, FUENTE_NOMBRE))
 }
 
@@ -106,7 +121,7 @@ function anchoCifra(total) {
   return anchoDe(dineroCorto(total), FUENTE_CIFRA) + AIRE
 }
 
-const FUENTE_TIPO = '9.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+const FUENTE_TIPO = `600 9.5px ${SANS}`
 /** `measureText` no sabe del `letter-spacing` del CSS; se suma aparte. */
 const ESPACIADO_TIPO = 0.95
 
@@ -132,13 +147,11 @@ function esAlta(c) {
 }
 
 function colorDe(c) {
-  if (c.extranjera) return EXTRANJERO
-  return c.lado === 'izquierda' ? ENTRA : SALE
+  return colorTipo(c.schema)
 }
 
 function rellenoCinta(c) {
-  const sufijo = c.extranjera ? '-ext' : ''
-  return `url(#cinta-${c.lado === 'izquierda' ? 'entra' : 'sale'}${sufijo})`
+  return `url(#cinta-${c.lado}-${tipoDe(c.schema)})`
 }
 
 function ultima(columna) {
@@ -181,22 +194,16 @@ const sinFlujo = computed(
         etiqueta, que es donde se mira.
       -->
       <defs>
-        <linearGradient id="cinta-entra" x1="0" x2="1">
-          <stop offset="0" :stop-color="ENTRA" stop-opacity="0.22" />
-          <stop offset="1" :stop-color="ENTRA" stop-opacity="0.05" />
-        </linearGradient>
-        <linearGradient id="cinta-sale" x1="0" x2="1">
-          <stop offset="0" :stop-color="SALE" stop-opacity="0.05" />
-          <stop offset="1" :stop-color="SALE" stop-opacity="0.22" />
-        </linearGradient>
-        <linearGradient id="cinta-entra-ext" x1="0" x2="1">
-          <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.26" />
-          <stop offset="1" :stop-color="EXTRANJERO" stop-opacity="0.06" />
-        </linearGradient>
-        <linearGradient id="cinta-sale-ext" x1="0" x2="1">
-          <stop offset="0" :stop-color="EXTRANJERO" stop-opacity="0.06" />
-          <stop offset="1" :stop-color="EXTRANJERO" stop-opacity="0.26" />
-        </linearGradient>
+        <template v-for="t in TIPOS" :key="t">
+          <linearGradient :id="`cinta-izquierda-${t}`" x1="0" x2="1">
+            <stop offset="0" :style="{ stopColor: `var(--${t})`, stopOpacity: 0.34 }" />
+            <stop offset="1" :style="{ stopColor: `var(--${t})`, stopOpacity: 0.1 }" />
+          </linearGradient>
+          <linearGradient :id="`cinta-derecha-${t}`" x1="0" x2="1">
+            <stop offset="0" :style="{ stopColor: `var(--${t})`, stopOpacity: 0.1 }" />
+            <stop offset="1" :style="{ stopColor: `var(--${t})`, stopOpacity: 0.34 }" />
+          </linearGradient>
+        </template>
       </defs>
       <!-- Cabeceras de columna: el papel de cada lado, dicho con palabras. -->
       <!--
@@ -205,30 +212,27 @@ const sinFlujo = computed(
         del color del dato compite con el dato y encima se lee peor: un verde
         o un naranja sobre fondo oscuro no dan el contraste que da el blanco.
       -->
-      <template v-if="disposicion.izquierda.length">
-        <rect :x="disposicion.izquierda[0].x" y="9" width="9" height="9" rx="2" :fill="ENTRA" />
-        <text :x="disposicion.izquierda[0].x + 14" y="18" class="cabecera">
-          DE QUIÉN RECIBE · {{ dineroCorto(area.totalRecibido) }}
-        </text>
-      </template>
-      <template v-if="disposicion.derecha.length">
-        <text
-          :x="disposicion.derecha[0].x + disposicion.derecha[0].w - 14"
-          y="18"
-          text-anchor="end"
-          class="cabecera"
-        >
-          A QUIÉN PAGA · {{ dineroCorto(area.totalPagado) }}
-        </text>
-        <rect
-          :x="disposicion.derecha[0].x + disposicion.derecha[0].w - 9"
-          y="9"
-          width="9"
-          height="9"
-          rx="2"
-          :fill="SALE"
-        />
-      </template>
+      <!--
+        La dirección, con una flecha hacia donde va el dinero: de la columna
+        izquierda a la entidad, y de la entidad a la derecha.
+      -->
+      <text
+        v-if="disposicion.izquierda.length"
+        :x="disposicion.izquierda[0].x"
+        y="18"
+        class="cabecera"
+      >
+        DE QUIÉN RECIBE · {{ dineroCorto(area.totalRecibido) }} →
+      </text>
+      <text
+        v-if="disposicion.derecha.length"
+        :x="disposicion.derecha[0].x + disposicion.derecha[0].w"
+        y="18"
+        text-anchor="end"
+        class="cabecera"
+      >
+        → A QUIÉN PAGA · {{ dineroCorto(area.totalPagado) }}
+      </text>
 
       <!-- Cintas primero, para que las fichas queden encima. -->
       <g>
@@ -252,7 +256,7 @@ const sinFlujo = computed(
         @click="emit('seleccionar', c.id)"
       >
         <title>{{ c.caption }} · {{ dineroCorto(c.total) }} · {{ c.n }} {{ c.n === 1 ? 'relación' : 'relaciones' }}</title>
-        <rect :x="c.x" :y="c.y" :width="c.w" :height="c.h" rx="6" class="caja-ficha" />
+        <rect :x="c.x" :y="c.y" :width="c.w" :height="c.h" rx="3" class="caja-ficha" />
         <!--
           La banda de color va por la BANDA, no por la ficha: es lo que deja
           ver el grosor real cuando la etiqueta es más baja que el flujo.
@@ -269,7 +273,7 @@ const sinFlujo = computed(
         </text>
         <text v-if="esAlta(c)" :x="c.x + 9" :y="c.y + 33" class="cifra">
           {{ dineroCorto(c.total) }}
-          <tspan v-if="c.extranjera" class="marca">· extranjera</tspan>
+          <tspan v-if="c.extranjera" class="marca">· no residente</tspan>
           <tspan v-if="c.inferido" class="marca inferida">· inferido</tspan>
         </text>
         <text v-else :x="c.x + c.w - 9" :y="c.y + c.h / 2 + 4" text-anchor="end" class="cifra">
@@ -284,7 +288,7 @@ const sinFlujo = computed(
           :y="disposicion.centro.y"
           :width="disposicion.centro.w"
           :height="disposicion.centro.h"
-          rx="10"
+          rx="3"
           class="caja-centro"
           :style="{ stroke: colorCentro }"
         />
@@ -377,69 +381,72 @@ const sinFlujo = computed(
 </template>
 
 <style scoped>
-.lienzo { position: absolute; inset: 0; background: var(--fondo-grafo); overflow: hidden; }
-.flujo { display: block; }
+/* La ficha es papel: se lee, no se explora (docs/diseno.md §5). */
+.lienzo { position: absolute; inset: 0; background: var(--papel); overflow: hidden; }
+.flujo { display: block; font-family: var(--sans); }
 
 .cabecera {
-  font-size: 10.5px; letter-spacing: 0.09em; font-weight: 700;
-  fill: var(--tinta-3);
+  font-size: 10.5px; letter-spacing: 0.1em; font-weight: 650;
+  fill: var(--tinta-2);
 }
 
-/* El filo marca dónde acaba cada cinta cuando dos van pegadas. */
 /*
   El relleno es un lavado y el FILO es quien lleva la forma. Con el relleno
-  cargado, doce cintas juntas se funden en un bloque marrón que ocupa media
-  pantalla y no deja ver ninguna; con el filo marcado se distinguen las doce y
-  el dibujo respira.
+  cargado, doce cintas juntas se funden en un bloque que ocupa media pantalla
+  y no deja ver ninguna; con el filo marcado se distinguen las doce.
 */
-.cinta { transition: opacity 0.15s; stroke-width: 1.25; stroke-opacity: 0.5; }
-.cinta.apagada { opacity: 0.12; }
-.cinta.inferida { opacity: 0.45; }
+.cinta { transition: opacity 0.15s; stroke-width: 1; stroke-opacity: 0.55; }
+.cinta.apagada { opacity: 0.1; }
+/* Inferida: a trazos, como en el resto de la web. */
+.cinta.inferida { stroke-dasharray: 4 3; opacity: 0.6; }
 
 .ficha { cursor: pointer; transition: opacity 0.15s; }
 .ficha.apagada { opacity: 0.3; }
-.caja-ficha { fill: var(--superficie); stroke: var(--linea); }
-.ficha:hover .caja-ficha { stroke: var(--acento); }
+.caja-ficha { fill: var(--hoja); stroke: var(--filete-suave); }
+.ficha:hover .caja-ficha { stroke: var(--tinta); }
 
-.nombre { font-size: 11.5px; fill: var(--tinta-2); }
+.nombre { font-size: 11.5px; fill: var(--tinta); }
 .cifra {
   font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 650;
   fill: var(--tinta);
 }
-.marca { font-size: 9.5px; font-weight: 400; fill: var(--texto-tenue); }
+.marca { font-size: 9.5px; font-weight: 400; fill: var(--tinta-3); }
 .marca.inferida { fill: var(--aviso); }
 
-.caja-centro { fill: var(--superficie); stroke-width: 2; }
-.tipo-centro { font-size: 9.5px; letter-spacing: 0.1em; fill: var(--texto-tenue); }
-.cuerpo-centro { display: flex; flex-direction: column; justify-content: center; height: 100%; text-align: center; }
+/* La entidad: recuadro en tinta y el nombre en la serif, como un titular. */
+.caja-centro { fill: var(--hoja); stroke: var(--tinta); stroke-width: 1.5; }
+.tipo-centro { font-size: 9.5px; letter-spacing: 0.1em; font-weight: 600; fill: var(--tinta-3); }
+.cuerpo-centro {
+  display: flex; flex-direction: column; justify-content: center; height: 100%;
+  text-align: center;
+}
 .titulo {
-  margin: 0; font-size: 14px; line-height: 1.3; font-weight: 650; color: var(--tinta);
-  font-family: system-ui, sans-serif;
+  margin: 0; font-family: var(--serif); font-size: 16px; line-height: 1.2;
+  font-weight: 600; color: var(--tinta); text-wrap: balance;
 }
 .sancion {
-  margin: 0.35rem 0 0; font-size: 10.5px; color: #e8877f; line-height: 1.3;
-  font-family: system-ui, sans-serif;
+  margin: 0.4rem 0 0; font-family: var(--sans); font-size: 10.5px; font-weight: 600;
+  color: var(--sancion); line-height: 1.3;
 }
 
-.recorte { font-size: 10px; fill: var(--texto-tenue); }
+.recorte { font-size: 10.5px; fill: var(--tinta-3); }
 
 .sin-flujo {
-  margin: 0; text-align: center; font-size: 11.5px; line-height: 1.45;
-  color: var(--texto-tenue); font-family: system-ui, sans-serif;
+  margin: 0; text-align: center; font-family: var(--serif); font-style: italic;
+  font-size: 13px; line-height: 1.45; color: var(--tinta-2);
 }
 
 /*
   Era un <p> con `display: grid`, y eso convierte en celda cada hijo: los
   trozos de texto por un lado y el <strong> por otro, cada uno centrado
-  aparte. En la ficha de un organismo salía la palabra «De» suelta arriba del
-  todo, el nombre en negrita pisando el diagrama por el medio y el resto de la
-  frase abajo. Parecía un fallo de render porque lo era.
+  aparte. Parecía un fallo de render porque lo era.
 */
 .vacio {
   position: absolute; inset: 0; margin: 0;
   display: flex; align-items: center; justify-content: center;
   padding: 2rem; text-align: center;
-  color: var(--texto-tenue); font-size: 0.88rem; line-height: 1.5;
+  color: var(--tinta-2); font-family: var(--serif); font-size: var(--t-l); line-height: 1.5;
 }
 .vacio > * { max-width: 34rem; margin: 0; }
+.vacio strong { font-weight: 600; color: var(--tinta); }
 </style>

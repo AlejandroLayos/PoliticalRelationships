@@ -54,6 +54,20 @@ export function nombreFuente(fuentes, id) {
   return (fuentes ?? []).find((f) => f.id === id)?.name ?? id
 }
 
+/**
+ * La sigla con que se conoce cada fuente, para su sello.
+ *
+ * «Base de Datos Nacional de Subvenciones» no cabe en un sello —en la ficha
+ * se salía del panel—; BDNS es como la llama todo el que la usa, y el nombre
+ * entero está en el detalle. Una fuente sin sigla conocida sale con su
+ * nombre, o con su identificador si tampoco hay nombre.
+ */
+const SIGLAS = { bdns: 'BDNS', placsp: 'PLACSP', tcu: 'Tribunal de Cuentas' }
+
+export function siglaFuente(fuentes, id) {
+  return SIGLAS[id] ?? nombreFuente(fuentes, id)
+}
+
 /** «A», «A y B», «A, B y C». */
 export function enumerar(nombres) {
   const unicos = [...new Set(nombres)].filter(Boolean)

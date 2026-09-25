@@ -46,20 +46,38 @@ export const COLOR_POR_ESQUEMA = {
   Position: '#7b7a80',
 }
 
-/** El token CSS de cada tipo. Sirve igual en papel y en el visor. */
-export const VAR_POR_ESQUEMA = {
-  PublicBody: 'var(--adm)',
-  Company: 'var(--emp)',
-  LegalEntity: 'var(--emp)',
-  Organization: 'var(--par)',
-  Person: 'var(--neutro)',
-  Contract: 'var(--neutro)',
-  Position: 'var(--neutro)',
+/** Qué tipo de actor es cada esquema: el nombre de su token de color. */
+export const TIPO_POR_ESQUEMA = {
+  PublicBody: 'adm',
+  Company: 'emp',
+  LegalEntity: 'emp',
+  Organization: 'par',
+  Person: 'neutro',
+  Contract: 'neutro',
+  Position: 'neutro',
 }
+
+/** Cómo se llama cada tipo en una leyenda. */
+export const NOMBRE_TIPO = {
+  adm: 'Administración',
+  emp: 'Empresa',
+  par: 'Partido u organización',
+  neutro: 'Otro',
+}
+
+/** 'adm', 'emp', 'par' o 'neutro'. */
+export function tipoDe(esquema) {
+  return TIPO_POR_ESQUEMA[esquema] ?? 'neutro'
+}
+
+/** El token CSS de cada tipo. Sirve igual en papel y en el visor. */
+export const VAR_POR_ESQUEMA = Object.fromEntries(
+  Object.entries(TIPO_POR_ESQUEMA).map(([esquema, tipo]) => [esquema, `var(--${tipo})`]),
+)
 
 /** El color de un tipo, para HTML y SVG. */
 export function colorTipo(esquema) {
-  return VAR_POR_ESQUEMA[esquema] ?? 'var(--neutro)'
+  return `var(--${tipoDe(esquema)})`
 }
 
 export const NOMBRE_ESQUEMA = {
