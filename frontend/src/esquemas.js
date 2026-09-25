@@ -173,3 +173,21 @@ export function etiquetaRelacion(arista) {
   }
   return etiquetaArista(arista?.schema)
 }
+
+/** Cómo se dice cada nivel de administración (lo pone el volcado, `territorio.py`). */
+export const NOMBRE_NIVEL = {
+  estatal: 'Administración General del Estado',
+  autonomico: 'Administración autonómica',
+  local: 'Administración local',
+}
+
+/**
+ * De qué administración es un organismo, en una línea: «Administración
+ * autonómica · Andalucía». Vacío si la fuente no permite decirlo: un organismo
+ * sin clasificar no lleva nada, en vez de algo adivinado.
+ */
+export function administracionDe(e) {
+  if (!e || e.schema !== 'PublicBody') return ''
+  const partes = [NOMBRE_NIVEL[e.nivel], e.nivel === 'estatal' ? '' : e.territorio].filter(Boolean)
+  return partes.join(' · ')
+}

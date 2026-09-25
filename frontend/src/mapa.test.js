@@ -79,6 +79,35 @@ describe('analizarMapa', () => {
   })
 })
 
+describe('la edición de una comunidad', () => {
+  function conTerritorio() {
+    const d = datos()
+    for (const n of d.nodes) {
+      if (n.id === 'ayto') n.territorio = 'Andalucía'
+      if (n.id === 'cons') n.territorio = 'Galicia'
+    }
+    return d
+  }
+
+  it('deja sus organismos y a quien cobra de ellos', () => {
+    const a = analizarMapa(conTerritorio(), { territorio: 'Andalucía' })
+    const ids = a.nucleos.flatMap((g) => g.miembros).sort()
+    expect(ids).toEqual(['ayto', 'e1', 'e2', 'e3'])
+  })
+
+  it('el grupo se llama como quien queda, no como quien se ha ido', () => {
+    const a = analizarMapa(conTerritorio(), { territorio: 'Andalucía' })
+    const [g] = a.nucleos
+    expect(g.principales.map((m) => m.id)).toContain('ayto')
+    expect(g.etiqueta).toBe('ayto')
+  })
+
+  it('sin organismos de esa comunidad no queda nada, en vez de todo', () => {
+    const a = analizarMapa(conTerritorio(), { territorio: 'Aragón' })
+    expect(a.nucleos).toEqual([])
+  })
+})
+
 describe('gruposDelMapa', () => {
   it('numera en el orden de la lista, el del dinero', () => {
     const a = analizarMapa(datos())

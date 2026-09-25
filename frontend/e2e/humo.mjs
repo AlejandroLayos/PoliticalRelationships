@@ -207,6 +207,27 @@ await paso('el botón de la portada abre el mapa', async () => {
   if ((await pagina.locator('svg .grupo').count()) < 5) throw new Error('no abrió el mapa')
 })
 
+// La edición de una comunidad. Sólo si el volcado trae comunidades: antes
+// de la primera ingesta con `territorio.py` no las trae, y el selector no
+// sale —que es lo correcto—.
+await paso('elegir una comunidad cambia la portada y la dirección', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(2000)
+  const selector = pagina.locator('.selector-edicion select')
+  if (!(await selector.count())) {
+    console.log('    (el volcado no trae comunidades todavía: no hay edición que probar)')
+    return
+  }
+  const opciones = await selector.locator('option').allTextContents()
+  const comunidad = opciones.find((o) => o !== 'España')
+  await selector.selectOption(comunidad)
+  await pagina.waitForTimeout(3000)
+  if (!(await pagina.locator('h1.titular').innerText()).includes(comunidad)) throw new Error('titular sin comunidad')
+  if (!decodeURIComponent(pagina.url()).includes(`t=${comunidad}`)) throw new Error(`dirección: ${pagina.url()}`)
+  await selector.selectOption('')
+  await pagina.waitForTimeout(1000)
+})
+
 // Aena no está en la base. Por subcadena salía una asociación de Baena como
 // primer resultado, e Intro llevaba a su ficha como si fuera lo buscado.
 await paso('buscar lo que no está dice que no está', async () => {

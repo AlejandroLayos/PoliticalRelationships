@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { construirDirectorio, construirDirectorioDesdeIndice } from './directorio.js'
+import {
+  construirDirectorio,
+  construirDirectorioDeTerritorio,
+  construirDirectorioDesdeIndice,
+} from './directorio.js'
 
 function grafo() {
   return {
@@ -206,5 +210,48 @@ describe('los totales salen del fichero, no del extracto', () => {
     expect(d.totales.dineroTotal).toBe(3000)
     expect(d.totales.nActores).toBe(2)
     expect(d.totales.parcial).toBe(false)
+  })
+})
+
+describe('construirDirectorioDeTerritorio', () => {
+  const indice = {
+    entidades: [
+      { id: 'sas', caption: 'SAS', schema: 'PublicBody', territorio: 'Andalucía', nivel: 'autonomico', pagado: '900', receptores: 2 },
+      { id: 'sev', caption: 'AYTO SEVILLA', schema: 'PublicBody', territorio: 'Andalucía', nivel: 'local', pagado: '100', receptores: 1 },
+      { id: 'gen', caption: 'GENERALITAT', schema: 'PublicBody', territorio: 'Cataluña', pagado: '5000', receptores: 1 },
+      { id: 'min', caption: 'MINISTERIO', schema: 'PublicBody', nivel: 'estatal', pagado: '7000', receptores: 1 },
+      { id: 'a', caption: 'CONSTRUCTORA', schema: 'Company', recibido: '1000', pagadores: 3, recibidoDe: { Andalucía: '800', Cataluña: '200' } },
+      { id: 'b', caption: 'PHARMA BV', schema: 'Company', extranjera: true, recibido: '200', pagadores: 1, recibidoDe: { Andalucía: '200' } },
+      { id: 'c', caption: 'SOLO CATALANA', schema: 'Company', recibido: '4800', recibidoDe: { Cataluña: '4800' } },
+    ],
+  }
+
+  it('los organismos que reparten son los de la comunidad, y sólo ésos', () => {
+    const d = construirDirectorioDeTerritorio(indice, 'Andalucía')
+    expect(d.pagadores.map((p) => p.id)).toEqual(['sas', 'sev'])
+    expect(d.totales.dineroTotal).toBe(1000)
+  })
+
+  it('quién más cobra de ella, con lo que cobra de ella y no el total', () => {
+    const d = construirDirectorioDeTerritorio(indice, 'Andalucía')
+    expect(d.receptores.map((r) => [r.id, r.total])).toEqual([
+      ['a', 800],
+      ['b', 200],
+    ])
+    // Y qué parte de todo lo que cobra viene de aquí.
+    expect(d.receptores[0].parte).toBeCloseTo(0.8, 6)
+    expect(d.receptores[1].parte).toBe(1)
+  })
+
+  it('lo que no se puede dar por comunidad queda vacío, no inventado', () => {
+    const d = construirDirectorioDeTerritorio(indice, 'Andalucía')
+    expect(d.transversales).toEqual([])
+    expect(d.sancionados).toEqual([])
+    expect(d.extranjeras.map((e) => e.id)).toEqual(['b'])
+  })
+
+  it('sin comunidad o sin índice no hay edición', () => {
+    expect(construirDirectorioDeTerritorio(indice, '')).toBeNull()
+    expect(construirDirectorioDeTerritorio({ entidades: [] }, 'Andalucía')).toBeNull()
   })
 })

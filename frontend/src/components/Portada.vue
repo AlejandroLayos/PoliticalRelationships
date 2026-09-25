@@ -11,7 +11,11 @@
  * quiere decir que se compra mucho.
  */
 import { computed, ref } from 'vue'
-import { construirDirectorio, construirDirectorioDesdeIndice } from '../directorio.js'
+import {
+  construirDirectorio,
+  construirDirectorioDeTerritorio,
+  construirDirectorioDesdeIndice,
+} from '../directorio.js'
 import { contratosDeMedios } from '../medios.js'
 import { cifraDeTitular, dineroCorto } from '../nucleos.js'
 import { colorTipo, etiquetaEsquema } from '../esquemas.js'
@@ -23,8 +27,16 @@ const props = defineProps({
   crudo: { type: Object, default: null },
   /** Índice de TODA la base. Si está, manda él para los rankings de dinero. */
   indice: { type: Object, default: null },
+  /** El índice entero, con el reparto por comunidad. Sólo con una edición. */
+  indiceCompleto: { type: Object, default: null },
+  /** La edición: una comunidad, o '' para toda España. */
+  territorio: { type: String, default: '' },
+  /** Las comunidades del volcado, para el selector. */
+  territorios: { type: Array, default: () => [] },
+  /** Organismos que no se han podido situar en ninguna comunidad. */
+  sinTerritorio: { type: Number, default: 0 },
 })
-const emit = defineEmits(['seleccionar', 'verMapa'])
+const emit = defineEmits(['seleccionar', 'verMapa', 'territorio'])
 
 /**
  * Los rankings de dinero salen del índice cuando lo hay, porque el índice
@@ -38,7 +50,14 @@ const emit = defineEmits(['seleccionar', 'verMapa'])
 const delGrafo = computed(() => construirDirectorio(props.datos))
 const delIndice = computed(() => construirDirectorioDesdeIndice(props.indice))
 
+/** La edición de una comunidad, o null si es la de toda España o aún no ha llegado. */
+const deTerritorio = computed(() =>
+  props.territorio ? construirDirectorioDeTerritorio(props.indiceCompleto, props.territorio) : null,
+)
+const cargandoTerritorio = computed(() => Boolean(props.territorio) && !deTerritorio.value)
+
 const dir = computed(() => {
+  if (deTerritorio.value) return deTerritorio.value
   const g = delGrafo.value
   const i = delIndice.value
   if (!i) return g
@@ -117,8 +136,41 @@ const LISTAS = [
   },
 ]
 
+/*
+  En la edición de una comunidad las listas cambian de pregunta, y lo dicen:
+  «quién más cobra» pasa a ser «quién más cobra de las administraciones de
+  Andalucía», con lo que cobra de ellas y qué parte es de todo lo suyo. Las
+  que no se pueden contestar por comunidad —cuántas administraciones distintas
+  pagan a alguien, las sanciones— no salen, en vez de salir con los datos de
+  toda España bajo un título que diría otra cosa.
+*/
+function listasDe(t) {
+  if (!t) return LISTAS
+  const parte = (x) =>
+    x.parte == null ? '' : x.parte >= 0.995 ? 'todo lo que cobra' : `el ${Math.round(x.parte * 100)}\u00a0% de lo que cobra`
+  return [
+    {
+      ...LISTAS[0],
+      ante: `Quién paga en ${t}`,
+      titulo: `Qué organismos de ${t} reparten más`,
+      que: `Administraciones autonómicas y locales de ${t}, por lo que sale de ellas hacia empresas y beneficiarios.`,
+    },
+    {
+      ...LISTAS[1],
+      ante: `Quién cobra de ${t}`,
+      titulo: `Quién más cobra de las administraciones de ${t}`,
+      que: `Empresas y entidades por lo que reciben de organismos de ${t}. Al lado, qué parte es de todo lo que cobran.`,
+      noEs: 'Cobrar mucho de una administración es lo normal para quien presta un servicio que sólo ella compra.',
+      unidad: parte,
+    },
+    { ...LISTAS[3], que: `Entidades con NIF de no residente que cobran de organismos de ${t}.`, unidad: parte },
+  ]
+}
+
 const listas = computed(() =>
-  LISTAS.map((l) => ({ ...l, filas: dir.value[l.clave] ?? [] })).filter((l) => l.filas.length),
+  listasDe(props.territorio)
+    .map((l) => ({ ...l, filas: dir.value[l.clave] ?? [] }))
+    .filter((l) => l.filas.length),
 )
 
 function tope(filas, campo = 'total') {
@@ -198,8 +250,28 @@ function filasVisibles(l) {
     -->
     <section class="primera">
       <div class="apertura">
-        <p class="antetitulo">Contratos y subvenciones públicas en España</p>
-        <h1 class="titular">
+        <!--
+          La edición, como las regionales de un periódico: la misma portada
+          con lo que pagan las administraciones de una comunidad. Sólo si el
+          volcado trae comunidades.
+        -->
+        <p class="antetitulo edicion">
+          Contratos y subvenciones públicas en
+          <label v-if="territorios.length" class="selector-edicion">
+            <span class="visualmente-oculto">Edición</span>
+            <select :value="territorio" @change="emit('territorio', $event.target.value)">
+              <option value="">España</option>
+              <option v-for="t in territorios" :key="t.nombre" :value="t.nombre">{{ t.nombre }}</option>
+            </select>
+          </label>
+          <template v-else>España</template>
+        </p>
+        <h1 v-if="cargandoTerritorio" class="titular">{{ territorio }}</h1>
+        <h1 v-else-if="territorio" class="titular">
+          Adónde van <span class="cifra-titular">{{ cifraDeTitular(dir.totales.dineroTotal) }}</span>
+          de las administraciones de {{ territorio }}
+        </h1>
+        <h1 v-else class="titular">
           Adónde van <span class="cifra-titular">{{ cifraDeTitular(dir.totales.dineroTotal) }}</span>
           de dinero público
         </h1>
@@ -240,7 +312,38 @@ function filasVisibles(l) {
       </aside>
     </section>
 
-    <dl class="apoyo">
+    <p v-if="cargandoTerritorio" class="nota">Cargando la edición de {{ territorio }}…</p>
+    <!--
+      Lo que la edición NO cuenta, antes de las cifras: los organismos que no
+      se han podido situar en ninguna comunidad no están en ninguna. Sin
+      decirlo, una comunidad parecería gastar menos de lo que gasta.
+    -->
+    <div v-if="territorio && !cargandoTerritorio" class="aviso-edicion">
+      <p class="nota">
+        Cuenta lo que pagan los organismos que la propia fuente sitúa en {{ territorio }}.
+        <template v-if="sinTerritorio">
+          Otros {{ sinTerritorio.toLocaleString('es-ES') }} organismos no se han podido situar
+          en ninguna comunidad y no están en ninguna edición.
+        </template>
+        Lo que paga el Estado no es de ninguna comunidad.
+      </p>
+    </div>
+
+    <dl v-if="territorio && !cargandoTerritorio" class="apoyo">
+      <div>
+        <dt>organismos de {{ territorio }}</dt>
+        <dd>{{ dir.totales.nOrganismos.toLocaleString('es-ES') }}</dd>
+      </div>
+      <div>
+        <dt>cobran de ellos</dt>
+        <dd>{{ dir.totales.nReceptores.toLocaleString('es-ES') }}</dd>
+      </div>
+      <div v-if="dir.totales.nExtranjeras">
+        <dt>no residentes</dt>
+        <dd>{{ dir.totales.nExtranjeras.toLocaleString('es-ES') }}</dd>
+      </div>
+    </dl>
+    <dl v-else-if="!territorio" class="apoyo">
       <div>
         <dt>entidades en la base</dt>
         <dd>{{ dir.totales.nActores.toLocaleString('es-ES') }}</dd>
@@ -342,7 +445,7 @@ function filasVisibles(l) {
         de publicidad y ninguno de los cuatro es un medio de comunicación.
         Por eso el título no lo afirma y el matiz va arriba, en la nota.
       -->
-      <section v-if="medios.contratos.length" class="seccion medios">
+      <section v-if="medios.contratos.length && !territorio" class="seccion medios">
         <header class="seccion-cabeza">
           <p class="antetitulo">Publicidad</p>
           <h2>Gasto en publicidad institucional</h2>
@@ -446,6 +549,24 @@ function filasVisibles(l) {
 .portada > * { max-width: 78rem; margin-left: auto; margin-right: auto; }
 
 /* --- Primera plana ------------------------------------------------------- */
+
+.edicion { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; }
+.selector-edicion select {
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--tinta);
+  background: transparent; border: none; border-bottom: 1.5px solid var(--tinta);
+  padding: 0 1.1em 0.05em 0; cursor: pointer; appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 0.45em) 55%, calc(100% - 0.15em) 55%;
+  background-size: 0.3em 0.3em;
+  background-repeat: no-repeat;
+}
+.selector-edicion select:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.visualmente-oculto {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.aviso-edicion { margin-top: var(--e5); }
+.aviso-edicion .nota { max-width: var(--medida); margin: 0; }
 
 .primera {
   display: grid; gap: var(--e6) var(--e7);

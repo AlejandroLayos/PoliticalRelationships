@@ -22,12 +22,19 @@
  * `bdns:organo:1234`) y por definición no cambia entre volcados.
  */
 
-/** Los parámetros que corresponden a un estado de la vista. */
-export function parametrosDeVista({ vista, clave }) {
+/**
+ * Los parámetros que corresponden a un estado de la vista.
+ *
+ * `territorio` es la edición: «?t=Andalucía» es la portada o el mapa de lo que
+ * pagan las administraciones andaluzas. Sólo en esas dos vistas; una ficha es
+ * la misma se mire desde donde se mire.
+ */
+export function parametrosDeVista({ vista, clave, territorio }) {
   const p = new URLSearchParams()
   if (vista === 'mapa') p.set('v', 'mapa')
   else if (vista === 'vecindario') p.set('v', 'red')
   if (clave && vista !== 'mapa') p.set('e', clave)
+  if (territorio && (vista === 'portada' || vista === 'mapa')) p.set('t', territorio)
   return p
 }
 
@@ -49,15 +56,21 @@ export function vistaDeParametros(busqueda) {
   const p = new URLSearchParams(busqueda ?? '')
   const clave = p.get('e') ?? ''
   const v = p.get('v') ?? ''
-  if (v === 'mapa') return { vista: 'mapa', clave: '' }
+  const t = (p.get('t') ?? '').trim()
+  const conTerritorio = t ? { territorio: t } : {}
+  if (v === 'mapa') return { vista: 'mapa', clave: '', ...conTerritorio }
   if (v === 'red' && clave) return { vista: 'vecindario', clave }
   if (clave) return { vista: 'ficha', clave }
-  return { vista: 'portada', clave: '' }
+  return { vista: 'portada', clave: '', ...conTerritorio }
 }
 
 /** ¿Estos dos estados son el mismo? Para no apilar entradas repetidas. */
 export function mismoEstado(a, b) {
-  return a.vista === b.vista && (a.clave ?? '') === (b.clave ?? '')
+  return (
+    a.vista === b.vista &&
+    (a.clave ?? '') === (b.clave ?? '') &&
+    (a.territorio ?? '') === (b.territorio ?? '')
+  )
 }
 
 /**

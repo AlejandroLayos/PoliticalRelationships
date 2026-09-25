@@ -69,6 +69,31 @@ describe('de dirección a estado', () => {
   })
 })
 
+describe('la edición de una comunidad', () => {
+  it('va en la portada y en el mapa', () => {
+    expect(direccionDeVista({ vista: 'portada', clave: '', territorio: 'Andalucía' })).toBe(
+      '/?t=Andaluc%C3%ADa',
+    )
+    expect(vistaDeParametros('?v=mapa&t=Andaluc%C3%ADa')).toEqual({
+      vista: 'mapa',
+      clave: '',
+      territorio: 'Andalucía',
+    })
+  })
+
+  it('una ficha es la misma se mire desde donde se mire', () => {
+    expect(direccionDeVista({ vista: 'ficha', clave: 'nif:A1', territorio: 'Andalucía' })).toBe(
+      '/?e=nif%3AA1',
+    )
+  })
+
+  it('cambiar de edición es cambiar de estado', () => {
+    const a = { vista: 'portada', clave: '' }
+    expect(mismoEstado(a, { ...a, territorio: 'Galicia' })).toBe(false)
+    expect(mismoEstado({ ...a, territorio: '' }, a)).toBe(true)
+  })
+})
+
 describe('mismoEstado', () => {
   it('no apila dos veces la misma entrada', () => {
     expect(mismoEstado({ vista: 'ficha', clave: 'a' }, { vista: 'ficha', clave: 'a' })).toBe(true)

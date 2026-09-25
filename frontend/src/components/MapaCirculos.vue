@@ -47,6 +47,8 @@ const props = defineProps({
   mostrarSueltos: { type: Boolean, default: false },
   soloExtranjero: { type: Boolean, default: false },
   soloPartidos: { type: Boolean, default: false },
+  /** La edición: sólo los organismos de esa comunidad y quien cobra de ellos. */
+  territorio: { type: String, default: '' },
   /** El grupo en el que está la cámara, o null para verlos todos. */
   nucleoEnfocado: { type: Number, default: null },
   /** El grupo señalado desde la lista de al lado. */
@@ -72,6 +74,7 @@ const analisis = computed(() =>
     mostrarExpedientes: props.mostrarExpedientes,
     soloExtranjero: props.soloExtranjero,
     soloPartidos: props.soloPartidos,
+    territorio: props.territorio,
   }),
 )
 const grupos = computed(() => gruposDelMapa(analisis.value, { conPequenos: props.mostrarSueltos }))
@@ -614,8 +617,13 @@ function etiquetaAria(g) {
 </template>
 
 <style scoped>
+/*
+  `isolation`: los z-index de dentro —leyenda, ficha flotante— se quedan
+  dentro. Sin esto, con una ficha abierta encima del mapa, la leyenda del
+  mapa se transparentaba por encima de la de la ficha.
+*/
 .mapa-circulos {
-  position: relative; width: 100%; height: 100%; overflow: hidden;
+  position: relative; width: 100%; height: 100%; overflow: hidden; isolation: isolate;
   display: flex; flex-direction: column; background: var(--papel);
 }
 .cabeza { flex: none; height: var(--banda, 3.4rem); display: flex; align-items: center; padding: 0 var(--e4); }

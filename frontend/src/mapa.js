@@ -23,7 +23,7 @@
  * componente `MapaCirculos.vue` sólo pinta.
  */
 import { pack, packSiblings, hierarchy } from 'd3-hierarchy'
-import { analizarNucleos, colapsarNodosDePaso, conEstructura, aNumero } from './nucleos.js'
+import { analizarNucleos, colapsarNodosDePaso, conEstructura, aNumero, etiquetaDe } from './nucleos.js'
 
 /**
  * El análisis de grupos con los filtros del mapa aplicados.
@@ -35,7 +35,13 @@ import { analizarNucleos, colapsarNodosDePaso, conEstructura, aNumero } from './
  */
 export function analizarMapa(
   datos,
-  { minImporte = 0, mostrarExpedientes = false, soloExtranjero = false, soloPartidos = false } = {},
+  {
+    minImporte = 0,
+    mostrarExpedientes = false,
+    soloExtranjero = false,
+    soloPartidos = false,
+    territorio = '',
+  } = {},
 ) {
   const fuente = mostrarExpedientes ? datos : colapsarNodosDePaso(datos)
   const { grafo, nucleos } = analizarNucleos(fuente)
@@ -48,6 +54,34 @@ export function analizarMapa(
     if (soloExtranjero && !n?.properties?.entidad_extranjera) fuera.add(id)
     if (soloPartidos && attrs.esquema !== 'Organization') fuera.add(id)
   })
+
+  /*
+    La edición de una comunidad: sus organismos, y quien cobra de ellos. El
+    territorio lo trae el volcado para cada organismo (`territorio.py` en la
+    ingesta); los que no lo tienen —del Estado, o sin clasificar— se quedan
+    fuera, y quien sólo cobra de ellos también. Con los expedientes a la
+    vista, el que cobra está a dos pasos del organismo, no a uno.
+  */
+  if (territorio) {
+    const suyos = new Set()
+    grafo.forEachNode((id, a) => {
+      if (a.esquema === 'PublicBody' && porId.get(id)?.territorio === territorio) suyos.add(id)
+    })
+    const cerca = new Set(suyos)
+    for (let paso = 0; paso < (mostrarExpedientes ? 2 : 1); paso++) {
+      const frontera = [...cerca]
+      for (const id of frontera) {
+        for (const v of grafo.neighbors(id)) {
+          const esquema = grafo.getNodeAttribute(v, 'esquema')
+          // Por un organismo de fuera no se pasa: su gente no es de aquí.
+          if (esquema !== 'PublicBody') cerca.add(v)
+        }
+      }
+    }
+    grafo.forEachNode((id) => {
+      if (!cerca.has(id)) fuera.add(id)
+    })
+  }
 
   const vivos = new Map()
   grafo.forEachNode((id, a) => {
@@ -100,11 +134,19 @@ export function analizarMapa(
         const e = grafo.getNodeAttribute(id, 'esquema')
         tipos[e] = (tipos[e] ?? 0) + 1
       }
+      // El nombre del grupo, de los que QUEDAN. Con un filtro puesto, el
+      // grupo se seguía llamando como su miembro principal aunque ése se
+      // hubiera ido: en la edición de Andalucía salía un grupo «Metro de
+      // Madrid» sin Metro de Madrid dentro.
+      const visibles = [...ids]
+        .map((id) => ({ id, ...grafo.getNodeAttributes(id), caption: porId.get(id)?.caption }))
+        .sort((a, b) => b.dinero - a.dinero || b.grado - a.grado)
       return {
         ...n,
         tamano: ids.size,
         dinero: dineroGrupo.get(n.id) ?? 0,
-        principales: n.principales.filter((m) => ids.has(m.id)),
+        principales: visibles.slice(0, 8),
+        etiqueta: etiquetaDe(visibles),
         tipos,
         miembros: [...ids],
       }

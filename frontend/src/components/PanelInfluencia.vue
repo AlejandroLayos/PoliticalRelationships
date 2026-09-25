@@ -10,7 +10,7 @@
 import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
 import { resumenEnPalabras } from '../influencia.js'
-import { colorTipo, etiquetaEsquema } from '../esquemas.js'
+import { administracionDe, colorTipo, etiquetaEsquema } from '../esquemas.js'
 import { fechaCorta, nombreDocumento, siglaFuente } from '../procedencia.js'
 
 const props = defineProps({
@@ -241,6 +241,7 @@ const sinDatos = computed(
         <span class="punto-tipo" :style="{ background: color(fueraDelMapa.schema) }" />
         {{ etiquetaEsquema(fueraDelMapa.schema) }}
       </p>
+      <p v-if="administracionDe(fueraDelMapa)" class="administracion">{{ administracionDe(fueraDelMapa) }}</p>
       <h2>{{ fueraDelMapa.caption }}</h2>
       <p v-if="fueraDelMapa.nif" class="nif">NIF {{ fueraDelMapa.nif }}</p>
 
@@ -298,6 +299,11 @@ const sinDatos = computed(
         <span class="punto-tipo" :style="{ background: color(area.entidad.schema) }" />
         {{ etiquetaEsquema(area.entidad.schema) }}
       </p>
+      <!--
+        De qué administración es, cuando la fuente lo dice. Es la pregunta de
+        fondo de quien llega a la ficha de un organismo: ¿quién manda aquí?
+      -->
+      <p v-if="administracionDe(area.entidad)" class="administracion">{{ administracionDe(area.entidad) }}</p>
       <h2>{{ area.entidad.caption }}</h2>
       <p v-if="area.entidad.nif" class="nif">NIF {{ area.entidad.nif }}</p>
       <p class="resumen">{{ resumen }}</p>
@@ -735,6 +741,9 @@ const sinDatos = computed(
 .acciones .boton { font-size: var(--t-xs); padding: 0.3rem 0.6rem; }
 
 .tipo { display: flex; align-items: center; gap: 0.45em; margin-bottom: var(--e2); }
+.administracion {
+  margin: calc(-1 * var(--e1)) 0 var(--e2); font-size: var(--t-s); color: var(--tinta-2);
+}
 h2 {
   font-size: clamp(1.4rem, 1.2rem + 0.6vw, 1.75rem); line-height: 1.12;
   margin: 0 0 var(--e2); overflow-wrap: anywhere;

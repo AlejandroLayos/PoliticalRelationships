@@ -261,3 +261,80 @@ export function construirDirectorioDesdeIndice(indice, { limite = 25 } = {}) {
     },
   }
 }
+
+/**
+ * Las listas de la portada para una comunidad: la «edición» de Andalucía.
+ *
+ * Todo sale del índice completo, que es el que trae el territorio de cada
+ * organismo y, de cada receptor, lo que cobra repartido por la comunidad de
+ * quien le paga (`recibidoDe`). El extracto no basta: sus cabezas son las de
+ * toda España, y las de una comunidad pequeña pueden no estar en ellas.
+ *
+ * Lo que no se puede dar por comunidad se deja vacío y la portada no lo
+ * enseña: cuántas administraciones distintas pagan a alguien DENTRO de una
+ * comunidad no viene en el índice, y las sanciones no son de ninguna.
+ */
+export function construirDirectorioDeTerritorio(indice, territorio, { limite = 25 } = {}) {
+  const entidades = indice?.entidades ?? []
+  if (!entidades.length || !territorio) return null
+
+  const suyos = entidades.filter((e) => e.schema === 'PublicBody' && e.territorio === territorio)
+  const cobran = entidades.filter((e) => aNumero(e.recibidoDe?.[territorio]) > 0)
+
+  const fila = (e, total, n) => ({
+    id: e.id,
+    caption: e.caption,
+    schema: e.schema,
+    nivel: e.nivel,
+    extranjera: Boolean(e.extranjera),
+    partido: Boolean(e.partido),
+    enMapa: Boolean(e.enMapa),
+    total,
+    n,
+  })
+
+  const pagadores = suyos
+    .filter((e) => aNumero(e.pagado) > 0)
+    .map((e) => fila(e, aNumero(e.pagado), e.receptores ?? 0))
+    .sort((a, b) => b.total - a.total || b.n - a.n)
+    .slice(0, limite)
+
+  // De cada receptor, lo que cobra de esta comunidad y qué parte es de todo
+  // lo que cobra: no es lo mismo una empresa que vive de una administración
+  // que otra para la que es un cliente más.
+  const receptoresDeAqui = cobran.map((e) => {
+    const aqui = aNumero(e.recibidoDe[territorio])
+    const todo = aNumero(e.recibido)
+    return { ...fila(e, aqui, e.pagadores ?? 0), parte: todo > 0 ? Math.min(1, aqui / todo) : null }
+  })
+  const receptores = [...receptoresDeAqui]
+    .sort((a, b) => b.total - a.total || b.n - a.n)
+    .slice(0, limite)
+  const extranjeras = receptoresDeAqui
+    .filter((e) => e.extranjera)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, limite)
+
+  const ids = new Set([...suyos, ...cobran].map((e) => e.id))
+  return {
+    pagadores,
+    receptores,
+    transversales: [],
+    extranjeras,
+    sancionados: [],
+    totales: {
+      dineroTotal: suyos.reduce((s, e) => s + aNumero(e.pagado), 0),
+      nOperaciones: 0,
+      nActores: ids.size,
+      nOrganismos: suyos.length,
+      nReceptores: cobran.length,
+      nPartidos: cobran.filter((e) => e.partido).length,
+      nExtranjeras: cobran.filter((e) => e.extranjera).length,
+      nSancionados: 0,
+      totalSancionado: 0,
+      nSinCifra: 0,
+      enMapa: [...suyos, ...cobran].filter((e) => e.enMapa).length,
+      parcial: false,
+    },
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colorTipo, etiquetaRelacion, mezclaDeTipos, tipoDe } from './esquemas.js'
+import { administracionDe, colorTipo, etiquetaRelacion, mezclaDeTipos, tipoDe } from './esquemas.js'
 
 describe('tipoDe', () => {
   it('la persona jurídica es empresa: las dos cobran dinero público', () => {
@@ -48,5 +48,21 @@ describe('etiquetaRelacion', () => {
   it('sin papel, el nombre del esquema', () => {
     expect(etiquetaRelacion({ schema: 'UnknownLink' })).toBe('Conexión sin clasificar')
     expect(etiquetaRelacion({ schema: 'ContractAward', properties: { role: 'x' } })).toBe('Adjudicación')
+  })
+})
+
+describe('administracionDe', () => {
+  it('dice nivel y comunidad', () => {
+    expect(administracionDe({ schema: 'PublicBody', nivel: 'autonomico', territorio: 'Andalucía' })).toBe(
+      'Administración autonómica · Andalucía',
+    )
+    expect(administracionDe({ schema: 'PublicBody', territorio: 'Cataluña' })).toBe('Cataluña')
+    expect(administracionDe({ schema: 'PublicBody', nivel: 'estatal' })).toBe('Administración General del Estado')
+  })
+
+  it('sin clasificar, o si no es un organismo, nada', () => {
+    expect(administracionDe({ schema: 'PublicBody' })).toBe('')
+    expect(administracionDe({ schema: 'Company', territorio: 'Andalucía' })).toBe('')
+    expect(administracionDe(null)).toBe('')
   })
 })

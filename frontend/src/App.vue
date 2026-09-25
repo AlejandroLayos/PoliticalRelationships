@@ -10,6 +10,7 @@ import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
 import {
   buscarTodo,
+  cargarIndice,
   cargarIndiceTop,
   cargarInstantanea,
   indiceCargado,
@@ -181,8 +182,29 @@ const area = computed(() => {
 })
 
 /** Los filtros que recortan el mapa ahora mismo, dichos con palabras. */
+/**
+ * La edición: una comunidad autónoma, o '' para toda España. La comparten la
+ * portada y el mapa, y va en la dirección (`?t=`), para poder mandarla.
+ */
+const territorio = ref('')
+/** Las comunidades que trae el volcado, con cuántos organismos y cuánto dinero. */
+const territorios = computed(() => indice.value?.territorios ?? [])
+/**
+ * El índice completo, que es el que lleva el reparto por comunidad de lo que
+ * cobra cada uno. Se pide sólo al elegir una edición: el extracto de la
+ * portada tiene las cabezas de toda España, y las de una comunidad pequeña
+ * pueden no estar en él.
+ */
+const indiceCompleto = ref(null)
+watch(territorio, (t) => {
+  if (t && !indiceCompleto.value) cargarIndice().then((i) => (indiceCompleto.value = i))
+  // Otra edición, otros grupos: el que estaba abierto puede no existir en ella.
+  nucleoEnfocado.value = null
+})
+
 const filtrosPuestos = computed(() => {
   const puestos = []
+  if (territorio.value) puestos.push(territorio.value)
   if (soloExtranjero.value) puestos.push('capital extranjero')
   if (soloPartidos.value) puestos.push('partidos')
   if (minImporte.value > 0) {
@@ -193,6 +215,7 @@ const filtrosPuestos = computed(() => {
 })
 
 function quitarFiltros() {
+  territorio.value = ''
   soloExtranjero.value = false
   soloPartidos.value = false
   minImporte.value = 0
@@ -421,10 +444,14 @@ const claveSeleccionada = computed(() => {
   return claveDe(n) || seleccionId.value
 })
 
-const estadoDeVista = computed(() => ({ vista: vista.value, clave: claveSeleccionada.value }))
+const estadoDeVista = computed(() => ({
+  vista: vista.value,
+  clave: claveSeleccionada.value,
+  territorio: territorio.value,
+}))
 
 /** Evita apilar una entrada de historial por el estado que acabamos de leer. */
-let estadoPintado = { vista: 'portada', clave: '' }
+let estadoPintado = { vista: 'portada', clave: '', territorio: '' }
 let restaurando = false
 
 watch(estadoDeVista, (ahora) => {
@@ -434,9 +461,10 @@ watch(estadoDeVista, (ahora) => {
   history.pushState({ ...ahora }, '', direccionDeVista(ahora, location.pathname))
 })
 
-async function irAEstado({ vista: v, clave }) {
+async function irAEstado({ vista: v, clave, territorio: t }) {
   restaurando = true
   try {
+    if (v === 'portada' || v === 'mapa') territorio.value = t ?? ''
     const nodo = clave ? nodoDeClave(clave) : null
     // El reparto está en `enlace.js` y tiene tests: el orden de estas
     // comprobaciones ya se equivocó una vez —`?v=mapa` no lleva entidad y
@@ -455,7 +483,7 @@ async function irAEstado({ vista: v, clave }) {
         await enfocar(nodo.id)
     }
   } finally {
-    estadoPintado = { vista: vista.value, clave: claveSeleccionada.value }
+    estadoPintado = { ...estadoDeVista.value }
     restaurando = false
   }
 }
@@ -497,8 +525,9 @@ onMounted(async () => {
     // Y si la dirección pedía algo concreto, se va allí. Después de tener el
     // grafo: hace falta para resolver la clave.
     const pedido = vistaDeParametros(location.search)
+    if (pedido.territorio) territorio.value = pedido.territorio
     if (pedido.vista !== 'portada') await irAEstado(pedido)
-    estadoPintado = { vista: vista.value, clave: claveSeleccionada.value }
+    estadoPintado = { ...estadoDeVista.value }
     history.replaceState({ ...estadoPintado }, '', direccionDeVista(estadoPintado, location.pathname))
   } else {
     await abrir(ENTIDAD_INICIAL) // demostración, y se anuncia como tal
@@ -679,6 +708,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
               <span v-if="mueve(r)" class="mueve">{{ dineroCorto(mueve(r)) }}</span>
               <span class="tipo">
                 {{ NOMBRE_ESQUEMA[r.schema] ?? r.schema }}
+                <template v-if="r.territorio">· {{ r.territorio }}</template>
                 <!--
                   «Sin red» va aquí y en gris, no en un recuadro ámbar al lado
                   del nombre. Era lo más llamativo de cada fila y no es una
@@ -750,6 +780,21 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           Filtros<span v-if="filtrosPuestos.length"> ({{ filtrosPuestos.length }})</span>
         </button>
         <div class="filtros" :class="{ plegados: !filtrosAbiertos }">
+          <!--
+            La edición: sólo si el volcado trae comunidades. Un selector con
+            «Toda España» y nada más prometería algo que no hay.
+          -->
+          <label
+            v-if="territorios.length"
+            class="control"
+            title="Sólo los organismos de esa comunidad y quien cobra de ellos"
+          >
+            Comunidad
+            <select v-model="territorio">
+              <option value="">Toda España</option>
+              <option v-for="t in territorios" :key="t.nombre" :value="t.nombre">{{ t.nombre }}</option>
+            </select>
+          </label>
           <label class="control" title="Oculta las relaciones por debajo de este importe">
             Importe mínimo
             <select v-model.number="minImporte">
@@ -849,6 +894,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :mostrar-sueltos="mostrarSueltos"
           :solo-extranjero="soloExtranjero"
           :solo-partidos="soloPartidos"
+          :territorio="territorio"
           :nucleo-enfocado="nucleoEnfocado"
           :senalado="nucleoSenalado"
           :miembro-senalado="miembroSenalado"
@@ -1051,8 +1097,13 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :datos="grafoColapsado"
         :crudo="grafoEntero"
         :indice="indice"
+        :indice-completo="indiceCompleto"
+        :territorio="territorio"
+        :territorios="territorios"
+        :sin-territorio="indice?.organismosSinTerritorio ?? 0"
         @seleccionar="enfocar"
         @ver-mapa="verMapa"
+        @territorio="(t) => (territorio = t)"
       />
     </main>
   </div>
@@ -1303,8 +1354,13 @@ main { flex: 1; position: relative; min-height: 0; }
   font-size: var(--t-xs); color: var(--tinta-3); font-style: italic; font-family: var(--serif);
 }
 
+/*
+  Abajo a la derecha: arriba tapaba el pie de gráfico del mapa, que es donde
+  se explica qué se está viendo. Abajo a la derecha no hay nada en el mapa de
+  grupos —la ayuda sólo sale dentro de uno—.
+*/
 .recuento {
-  position: absolute; top: var(--e3); left: var(--e4); margin: 0;
+  position: absolute; bottom: var(--e3); right: var(--e4); margin: 0; z-index: 3;
   font-size: var(--t-s); color: var(--tinta-2);
   background: var(--hoja); border: 1px solid var(--filete-suave); padding: var(--e1) var(--e3);
 }
