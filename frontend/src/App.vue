@@ -1313,6 +1313,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :n-cruces="instantanea?.cargos?.nCruces ?? 0"
         :declarados="instantanea?.cargos?.declarados ?? []"
         :n-declarados="instantanea?.cargos?.nDeclarados ?? 0"
+        :presidencias-autonomicas="instantanea?.cargos?.presidenciasAutonomicas ?? {}"
         @seleccionar="enfocar"
         @ver-mapa="verMapa"
         @territorio="(t) => (territorio = t)"

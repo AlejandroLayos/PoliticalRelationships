@@ -718,6 +718,8 @@ def exportar(
             # sociedad del mapa.
             "declarados": cargos["declarados"],
             "nDeclarados": cargos["n_declarados"],
+            # Quién presidió cada comunidad en lo leído del BOE.
+            "presidenciasAutonomicas": cargos["presidencias_autonomicas"],
         },
     }
 
@@ -738,7 +740,11 @@ def exportar(
         "truncado": documento["truncado"],
         "bytes": destino.stat().st_size,
         **indice,
-        **{k: v for k, v in cargos.items() if k not in {"cruces", "declarados"}},
+        **{
+            k: v
+            for k, v in cargos.items()
+            if k not in {"cruces", "declarados", "presidencias_autonomicas"}
+        },
     }
     log.info("grafo exportado", destino=str(destino), **resumen)
     return resumen

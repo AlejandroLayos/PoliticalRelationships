@@ -48,6 +48,8 @@ const props = defineProps({
    */
   declarados: { type: Array, default: () => [] },
   nDeclarados: { type: Number, default: 0 },
+  /** {comunidad: [presidencias]} según el BOE, para la edición de cada comunidad. */
+  presidenciasAutonomicas: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['seleccionar', 'verMapa', 'territorio', 'verCargo', 'verClave', 'verCargos'])
 
@@ -81,6 +83,7 @@ const deTerritorio = computed(() =>
   props.territorio ? construirDirectorioDeTerritorio(props.indiceCompleto, props.territorio) : null,
 )
 const cargandoTerritorio = computed(() => Boolean(props.territorio) && !deTerritorio.value)
+const presidentesDe = computed(() => props.presidenciasAutonomicas?.[props.territorio] ?? [])
 
 const dir = computed(() => {
   if (deTerritorio.value) return deTerritorio.value
@@ -352,6 +355,25 @@ function filasVisibles(l) {
           en ninguna comunidad y no están en ninguna edición.
         </template>
         Lo que paga el Estado no es de ninguna comunidad.
+      </p>
+    </div>
+
+    <!--
+      Quién presidía la comunidad, según el BOE: el Real Decreto que nombra
+      a cada presidente autonómico tras su investidura. Sin partido: el BOE
+      no lo dice, y no se completa de otra parte.
+    -->
+    <div v-if="territorio && !cargandoTerritorio && presidentesDe.length" class="presidencias-comunidad">
+      <p class="antetitulo">Presidencia de la comunidad, según el BOE</p>
+      <ol>
+        <li v-for="p in presidentesDe" :key="p.persona + (p.desde ?? p.hasta ?? '')">
+          <a href="#" @click.prevent="emit('verCargo', p.persona)">{{ p.nombre }}</a>
+          <span v-if="p.desde" class="tramo">nombramiento del {{ fechaCorta(p.desde) }}</span>
+        </li>
+      </ol>
+      <p class="nota">
+        Sólo lo leído del BOE, que no dice el partido. Una presidencia sin cese
+        leído dura hasta el nombramiento siguiente.
       </p>
     </div>
 
@@ -688,6 +710,15 @@ function filasVisibles(l) {
 }
 .aviso-edicion { margin-top: var(--e5); }
 .aviso-edicion .nota { max-width: var(--medida); margin: 0; }
+.presidencias-comunidad { margin-top: var(--e4); }
+.presidencias-comunidad ol {
+  list-style: none; margin: var(--e2) 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5);
+}
+.presidencias-comunidad li { display: flex; flex-direction: column; gap: 0.1rem; }
+.presidencias-comunidad a { color: var(--tinta); font-weight: 600; font-size: var(--t-s); }
+.presidencias-comunidad .tramo { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); }
+.presidencias-comunidad .nota { max-width: var(--medida); margin: 0; font-size: var(--t-xs); }
 
 .primera {
   display: grid; gap: var(--e6) var(--e7);

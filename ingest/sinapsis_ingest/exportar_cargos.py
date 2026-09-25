@@ -47,7 +47,7 @@ import structlog
 
 from sinapsis_ingest.cargos import organo_del_puesto
 from sinapsis_ingest.store import Store
-from sinapsis_ingest.territorio import clasificar_entidad
+from sinapsis_ingest.territorio import COMUNIDADES, clasificar_entidad
 from sinapsis_ingest.util import es_identificador_personal, parece_forma_societaria
 
 log = structlog.get_logger()
@@ -273,6 +273,80 @@ def formacion_en(mandatos: list[dict[str, Any]], fecha: str) -> str:
         return cubre[-1]["formacion"]
     antes = [m for m in mandatos if m["desde"] <= fecha]
     return antes[-1]["formacion"] if antes else ""
+
+
+# Lo que puede ir entre «Presidente de» y el nombre de la comunidad. Se quita
+# uno cada vez y lo que queda tiene que ser, entero, una forma de la comunidad.
+_INSTITUCIONES = (
+    "junta de comunidades de ",
+    "junta de ",
+    "comunidad autonoma de las ",
+    "comunidad autonoma de la ",
+    "comunidad autonoma de ",
+    "comunidad foral de ",
+    "comunidad de ",
+    "generalitat de ",
+    "xunta de ",
+    "gobierno de ",
+    "principado de ",
+    "ciudad autonoma de ",
+    "ciudad de ",
+    "consejo de gobierno de ",
+    "diputacion general de ",
+)
+
+# Las formas de COMUNIDADES que nombran la comunidad o su gobierno, no un
+# servicio de salud.
+_FORMAS_DE_COMUNIDAD = {
+    _plano(forma): comunidad
+    for comunidad, formas in COMUNIDADES.items()
+    for forma in formas
+    if not forma.startswith(("servicio", "servizo", "institut", "osakidetza", "osasunbidea"))
+}
+
+
+def comunidad_de_la_presidencia(puesto: str) -> str:
+    """«Presidente de la Junta de Andalucía» → «Andalucía»; '' si el puesto no
+    es, entero, la presidencia de una comunidad autónoma.
+
+    Estricto a propósito: «Presidente de la Autoridad Portuaria de Baleares»
+    lleva «Baleares» y no es la presidencia de las Islas Baleares.
+    """
+    if not puesto.startswith("Presidente "):
+        return ""
+    resto = _plano(puesto[len("Presidente ") :])
+    for articulo in ("de la ", "de las ", "del ", "de "):
+        if resto.startswith(articulo):
+            resto = resto[len(articulo) :]
+            break
+    candidatos = {resto} | {resto[len(i) :] for i in _INSTITUCIONES if resto.startswith(i)}
+    halladas = {_FORMAS_DE_COMUNIDAD[c] for c in candidatos if c in _FORMAS_DE_COMUNIDAD}
+    return halladas.pop() if len(halladas) == 1 else ""
+
+
+def presidencias_autonomicas(personas: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """{comunidad: [presidencias]} de lo leído del BOE, de la más antigua a la
+    más reciente. Sin el partido: el BOE no lo dice, y el Congreso no sirve
+    para quien no fue diputado.
+    """
+    salida: dict[str, list[dict[str, Any]]] = {}
+    for persona in personas:
+        for p in persona["periodos"]:
+            if p.get("fuente"):
+                continue
+            comunidad = comunidad_de_la_presidencia(p.get("puesto", ""))
+            if not comunidad:
+                continue
+            salida.setdefault(comunidad, []).append(
+                {
+                    "persona": persona["clave"],
+                    "nombre": persona["nombre"],
+                    **{k: p[k] for k in ("desde", "hasta") if p.get(k)},
+                }
+            )
+    for lista in salida.values():
+        lista.sort(key=lambda x: x.get("desde") or x.get("hasta") or "")
+    return salida
 
 
 def presidencias_del_gobierno(personas: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -823,9 +897,16 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     # Real Decreto contra las presidencias leídas, nada más: dice quién
     # gobernaba, no a qué partido pertenece la persona nombrada.
     presidencias = presidencias_del_gobierno(salida)
+    autonomicas = presidencias_autonomicas(salida)
     for persona in salida:
         for p in persona["periodos"]:
             if p.get("fuente") or p.get("puesto") == PRESIDENCIA or not p.get("desde"):
+                continue
+            # A un presidente autonómico lo elige el parlamento de su
+            # comunidad; el Real Decreto lo firma el Rey con el refrendo del
+            # presidente del Gobierno, pero decir «nombramiento con el Gobierno
+            # de …» leería al revés.
+            if comunidad_de_la_presidencia(p.get("puesto", "")):
                 continue
             gobierno = gobierno_en(presidencias, p["desde"])
             if gobierno is not None:
@@ -861,6 +942,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "nDeclaraciones": sum(len(p.get("declaraciones", [])) for p in salida),
         "personas": salida,
         "presidencias": presidencias,
+        "presidenciasAutonomicas": autonomicas,
         "organos": al_frente,
         "empresas": en_empresas,
         "declarantes": declarantes,
@@ -930,11 +1012,18 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "cruces": cruces[:MAX_CRUCES_EN_PORTADA],
         "n_cruces": len(cruces),
         "declarados": declarados[:MAX_CRUCES_EN_PORTADA],
+        # Pocas —una por comunidad y legislatura— y la portada de cada
+        # comunidad las enseña sin tener que descargar todos los cargos.
+        "presidencias_autonomicas": autonomicas,
         "n_declarados": len(declarados),
     }
     log.info(
         "cargos exportados",
         destino=str(destino),
-        **{k: v for k, v in resumen.items() if k not in {"cruces", "declarados"}},
+        **{
+            k: v
+            for k, v in resumen.items()
+            if k not in {"cruces", "declarados", "presidencias_autonomicas"}
+        },
     )
     return resumen

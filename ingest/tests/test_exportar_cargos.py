@@ -1200,3 +1200,65 @@ def test_sin_dinero_del_organo_a_la_sociedad_no_se_dice_nada(store_oci, tmp_path
     [autorizacion] = cargos["personas"][0]["autorizaciones"]
     assert autorizacion["empresa"]["clave"] == "nif:A11111111"
     assert "delOrgano" not in autorizacion
+
+
+# --- las presidencias autonómicas ------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("puesto", "comunidad"),
+    [
+        ("Presidente de la Junta de Andalucía", "Andalucía"),
+        ("Presidente de Aragón", "Aragón"),
+        ("Presidente de la Comunidad Autónoma de Extremadura", "Extremadura"),
+        ("Presidente de la Junta de Castilla y León", "Castilla y León"),
+        ("Presidente de la Junta de Comunidades de Castilla-La Mancha", "Castilla-La Mancha"),
+        ("Presidente de la Generalitat de Cataluña", "Cataluña"),
+        ("Presidente de la Generalitat Valenciana", "Comunidad Valenciana"),
+        ("Presidente del Gobierno Vasco", "País Vasco"),
+        ("Presidente de la Comunidad Autónoma de la Región de Murcia", "Murcia"),
+        ("Presidente de la Comunidad Autónoma de La Rioja", "La Rioja"),
+        ("Presidente de las Illes Balears", "Baleares"),
+        ("Presidente de la Ciudad de Ceuta", "Ceuta"),
+        # Lo que no es, entero, la presidencia de una comunidad.
+        ("Presidente de la Generalitat", ""),
+        ("Presidente de la Autoridad Portuaria de Baleares", ""),
+        ("Presidente del Gobierno", ""),
+        ("Presidente del Servicio Andaluz de Salud", ""),
+        ("Delegado del Gobierno en la Comunidad Autónoma de Cantabria", ""),
+    ],
+)
+def test_comunidad_de_la_presidencia(puesto, comunidad):
+    from sinapsis_ingest.exportar_cargos import comunidad_de_la_presidencia
+
+    assert comunidad_de_la_presidencia(puesto) == comunidad
+
+
+@con_base
+def test_las_presidencias_autonomicas_salen_por_comunidad_y_sin_gobierno_del_estado(
+    store, tmp_path
+):
+    _ingerir(
+        store,
+        "boe",
+        _nombramiento_boe(
+            "Juan Manuel Moreno Bonilla", "BOE-A-1", "Presidente de la Junta de Andalucía"
+        ),
+        b"<documento>1</documento>",
+    )
+    _ingerir(
+        store,
+        "boe",
+        _nombramiento_boe("Pedro Sánchez Pérez-Castejón", "BOE-A-2", "Presidente del Gobierno"),
+        b"<documento>2</documento>",
+    )
+    grafo, _, cargos = _volcar(store, tmp_path)
+    [andalucia] = cargos["presidenciasAutonomicas"]["Andalucía"]
+    assert andalucia["nombre"] == "Juan Manuel Moreno Bonilla"
+    assert (
+        grafo["cargos"]["presidenciasAutonomicas"]["Andalucía"][0]["persona"]
+        == andalucia["persona"]
+    )
+    # Lo elige el parlamento andaluz: nada de «nombramiento con el Gobierno de …».
+    moreno = next(p for p in cargos["personas"] if p["nombre"] == "Juan Manuel Moreno Bonilla")
+    assert all("gobierno" not in p for p in moreno["periodos"])
