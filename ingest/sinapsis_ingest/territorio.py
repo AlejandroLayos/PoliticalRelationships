@@ -48,27 +48,42 @@ def _normaliza(texto: str) -> str:
 #: Nombre con que se enseña cada comunidad, y las formas en que la escriben
 #: las fuentes —en castellano y en su lengua—, ya normalizadas.
 COMUNIDADES: dict[str, tuple[str, ...]] = {
-    "Andalucía": ("andalucia", "junta de andalucia"),
-    "Aragón": ("aragon", "gobierno de aragon"),
+    "Andalucía": ("andalucia", "junta de andalucia", "servicio andaluz de salud"),
+    "Aragón": ("aragon", "gobierno de aragon", "servicio aragones de salud"),
     "Asturias": ("asturias", "principado de asturias"),
     "Baleares": ("illes balears", "islas baleares", "baleares", "balears"),
     "Canarias": ("canarias", "gobierno de canarias"),
-    "Cantabria": ("cantabria",),
+    "Cantabria": ("cantabria", "servicio cantabro de salud"),
     "Castilla y León": ("castilla y leon", "junta de castilla y leon"),
     "Castilla-La Mancha": ("castilla-la mancha", "castilla la mancha"),
-    "Cataluña": ("cataluna", "catalunya", "generalitat de catalunya"),
+    "Cataluña": (
+        "cataluna",
+        "catalunya",
+        "generalitat de catalunya",
+        "institut catala de la salut",
+    ),
     "Comunidad Valenciana": (
         "comunidad valenciana",
         "comunitat valenciana",
         "generalitat valenciana",
     ),
-    "Extremadura": ("extremadura",),
-    "Galicia": ("galicia", "xunta de galicia"),
-    "Madrid": ("comunidad de madrid",),
-    "Murcia": ("region de murcia",),
-    "Navarra": ("navarra", "nafarroa", "comunidad foral de navarra"),
-    "País Vasco": ("pais vasco", "euskadi", "gobierno vasco", "eusko jaurlaritza"),
-    "La Rioja": ("la rioja",),
+    "Extremadura": ("extremadura", "servicio extremeno de salud"),
+    "Galicia": ("galicia", "xunta de galicia", "servizo galego de saude"),
+    "Madrid": ("comunidad de madrid", "servicio madrileno de salud"),
+    "Murcia": ("region de murcia", "servicio murciano de salud"),
+    # Los servicios de salud van por su nombre propio entero, no por el
+    # gentilicio: son lo que más contrata de cada comunidad, y la fuente los
+    # pone como órgano padre sin nombrar la comunidad. «Navarro» suelto no
+    # sirve; «Servicio Navarro de Salud» es uno y sólo uno.
+    "Navarra": (
+        "navarra",
+        "nafarroa",
+        "comunidad foral de navarra",
+        "servicio navarro de salud",
+        "osasunbidea",
+    ),
+    "País Vasco": ("pais vasco", "euskadi", "gobierno vasco", "eusko jaurlaritza", "osakidetza"),
+    "La Rioja": ("la rioja", "servicio riojano de salud"),
     "Ceuta": ("ceuta",),
     "Melilla": ("melilla",),
 }
@@ -137,6 +152,11 @@ PROVINCIAS: dict[str, str] = {
 #: exclusivamente a organismos de su comunidad.
 PLATAFORMAS: dict[str, str] = {
     "contractaciopublica.gencat.cat": "Cataluña",
+    # El dominio nuevo de la plataforma catalana. La primera ingesta real
+    # (25/9/2026) dejó 66 organismos sin clasificar con este perfil —el
+    # Ajuntament de Barcelona, TMB, el Área Metropolitana— porque sólo se
+    # conocía el antiguo.
+    "contractaciopublica.cat": "Cataluña",
     "contratos-publicos.comunidad.madrid": "Madrid",
     "www.contratos-publicos.comunidad.madrid": "Madrid",
     "www.contratacion.euskadi.eus": "País Vasco",
@@ -159,6 +179,10 @@ _LOCAL = (
     "entidades locales",
     "entitats municipals",
     "entitats locals",
+    # «Entitats de l'administració local»: la categoría con que la plataforma
+    # catalana cuelga a sus ayuntamientos. 379 organismos en la primera
+    # ingesta real.
+    "administracio local",
     "administracion local",
     "ayuntamiento",
     "ajuntament",

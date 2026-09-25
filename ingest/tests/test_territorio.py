@@ -127,3 +127,43 @@ def test_se_combinan_las_dos_fuentes():
         "perfil_contratante": "https://contractaciopublica.gencat.cat/x",
     }
     assert clasificar_entidad(props) == Clasificacion("local", "Cataluña", "jerarquia")
+
+
+# --- Lo que dejó sin clasificar la primera ingesta real (25/9/2026) ---------
+
+
+def test_la_plataforma_catalana_nueva():
+    """379 organismos colgaban de «Entitats de l'administració local» con el
+    perfil en contractaciopublica.cat, que no se conocía: el Ajuntament de
+    Barcelona, TMB, el Área Metropolitana."""
+    c = clasificar(
+        ["Entitats de l'administració local"],
+        "https://contractaciopublica.cat/perfil/BCNAJT",
+    )
+    assert (c.nivel, c.territorio, c.por) == ("local", "Cataluña", "plataforma")
+
+
+def test_la_categoria_catalana_dice_local_aunque_no_diga_donde():
+    c = clasificar(["Entitats de l'administració local"])
+    assert c.nivel == "local"
+    assert c.territorio is None
+
+
+@pytest.mark.parametrize(
+    ("padre", "comunidad"),
+    [
+        ("Servicio Navarro de Salud - Osasunbidea", "Navarra"),
+        ("Servicio Andaluz de Salud", "Andalucía"),
+        ("Servizo Galego de Saúde", "Galicia"),
+        ("Osakidetza", "País Vasco"),
+        ("Institut Català de la Salut", "Cataluña"),
+        ("Servicio Madrileño de Salud", "Madrid"),
+    ],
+)
+def test_los_servicios_de_salud_por_su_nombre_entero(padre, comunidad):
+    assert clasificar([padre]).territorio == comunidad
+
+
+def test_un_gentilicio_suelto_no_basta():
+    # «Navarro» es también un apellido. Sólo el nombre entero del servicio.
+    assert clasificar(["Fundación Navarro Villoslada"]).territorio is None
