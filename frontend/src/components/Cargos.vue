@@ -321,7 +321,7 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
             -->
             <p v-for="(d, k) in a.delOrgano ?? []" :key="k" class="del-organo">
               <a href="#" @click.prevent="emit('entidad', d.organo.clave)">{{ d.organo.nombre }}</a>,
-              que dirigía, {{ delOrganoEnPalabras(d).verbo }} a esta sociedad
+              que dirigía, {{ delOrganoEnPalabras(d).verbo }} a esta entidad
               <strong>{{ dineroCorto(d.importe) }}</strong>
               <span class="tramo">
                 · {{ delOrganoEnPalabras(d).cuantos }}<template v-if="delOrganoEnPalabras(d).cuando"> · {{ delOrganoEnPalabras(d).cuando }}</template>

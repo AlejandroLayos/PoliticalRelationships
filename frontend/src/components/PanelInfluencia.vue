@@ -306,7 +306,7 @@ const sinDatos = computed(
           Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
           en el sector privado en los dos años siguientes al cese. Una
           autorización no dice que la persona llegara a ocupar el puesto. Si el
-          órgano que dirigía pagó a esta sociedad, va al lado: dos hechos
+          órgano que dirigía pagó a esta entidad, va al lado: dos hechos
           documentados, y ninguno dice nada del otro.
         </p>
       </section>
@@ -328,7 +328,7 @@ const sinDatos = computed(
         </ul>
         <p class="matiz">
           Lo que cada diputado declaró al Congreso de su actividad, con sus
-          palabras. Que haya trabajado aquí no dice nada de esta sociedad ni
+          palabras. Que haya trabajado aquí no dice nada de esta entidad ni
           de él.
         </p>
       </section>
@@ -500,7 +500,7 @@ const sinDatos = computed(
           Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
           en el sector privado en los dos años siguientes al cese. Una
           autorización no dice que la persona llegara a ocupar el puesto. Si el
-          órgano que dirigía pagó a esta sociedad, va al lado: dos hechos
+          órgano que dirigía pagó a esta entidad, va al lado: dos hechos
           documentados, y ninguno dice nada del otro.
         </p>
       </section>
@@ -522,7 +522,7 @@ const sinDatos = computed(
         </ul>
         <p class="matiz">
           Lo que cada diputado declaró al Congreso de su actividad, con sus
-          palabras. Que haya trabajado aquí no dice nada de esta sociedad ni
+          palabras. Que haya trabajado aquí no dice nada de esta entidad ni
           de él.
         </p>
       </section>
