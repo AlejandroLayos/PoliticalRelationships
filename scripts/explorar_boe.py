@@ -226,6 +226,84 @@ def reconocer_boe(cliente: httpx.Client, informe: list[str], golden: Path | None
     informe.append("\n**Ningún día reciente devolvió un sumario legible.**\n")
 
 
+# Días de cambio de gobierno: traen ministros, secretarios de Estado y ceses en
+# bloque, la variedad de títulos que un día cualquiera no enseña. Y dicen si
+# la API llega tan atrás, que es lo que decide cómo se carga el histórico.
+DIAS_HISTORICOS = ("20111222", "20111224", "20111231", "20180607", "20180619", "20231122")
+
+
+def reconocer_historico(cliente: httpx.Client, informe: list[str], golden: Path | None) -> None:
+    informe += ["## BOE — días de cambio de gobierno", ""]
+    titulos: list[dict] = []
+    for dia in DIAS_HISTORICOS:
+        url = f"{API}/boe/sumario/{dia}"
+        r_codigo, datos, tipo = pedir(cliente, url)
+        if r_codigo != 200 or not isinstance(datos, dict):
+            informe.append(f"- `{dia}` → HTTP {r_codigo} · `{tipo}`")
+            continue
+        tam = len(json.dumps(datos, ensure_ascii=False).encode())
+        s2a = [i for s in secciones_boe(datos) if str(s.get("codigo", "")).upper() == "2A" for i in items_de(s)]
+        reales = [i for i in s2a if (i.get("titulo") or "").startswith("Real Decreto")]
+        informe.append(
+            f"- `{dia}` → HTTP 200 · {tam // 1024} KB · II.A: {len(s2a)} · por Real Decreto: **{len(reales)}**"
+        )
+        titulos += [{**i, "_fecha": dia} for i in reales]
+        time.sleep(0.5)
+    formas = Counter(
+        " ".join(re.sub(r"^Real Decreto [^,]+, de [^,]+, ", "", t["titulo"]).split(" ")[:5])
+        for t in titulos
+    )
+    informe += ["", "Cómo empiezan los títulos, sin número ni fecha (las 25 formas más comunes):", ""]
+    informe += [f"- {n} × `{f}`" for f, n in formas.most_common(25)]
+    informe.append("")
+    if golden is not None and titulos:
+        golden.parent.mkdir(parents=True, exist_ok=True)
+        golden.write_text(
+            json.dumps(
+                {
+                    "fuente": f"{API}/boe/sumario/<fecha>",
+                    "capturado": datetime.now(UTC).isoformat(),
+                    "nota": "Sección 2A, sólo disposiciones por Real Decreto, de días de cambio de gobierno.",
+                    "items": titulos,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        informe.append(f"Muestra guardada en `{golden}` ({len(titulos)} ítems).\n")
+
+
+def reconocer_disposiciones(cliente: httpx.Client, informe: list[str], muestra: Path, destino: Path) -> None:
+    """El XML de cada disposición: la prueba, no el índice.
+
+    El sumario sirve para encontrar; lo que se guarda como crudo de un cargo
+    es la disposición misma. Se bajan unas pocas de la muestra —un
+    nombramiento, un cese— para escribir el parser sobre su forma real.
+    """
+    informe += ["## BOE — XML de una disposición", ""]
+    if not muestra.exists():
+        informe.append("(sin muestra de sumario de la que partir)\n")
+        return
+    items = json.loads(muestra.read_text(encoding="utf-8")).get("items", [])
+    elegidos: list[dict] = []
+    for clave in ("se nombra", "se dispone el cese"):
+        elegidos += [i for i in items if clave in (i.get("titulo") or "")][:2]
+    destino.mkdir(parents=True, exist_ok=True)
+    for i in elegidos:
+        url = i.get("url_xml")
+        if not url:
+            continue
+        r_codigo, contenido, tipo = pedir(cliente, url, json_=False)
+        informe.append(f"- `{url}` → HTTP {r_codigo} · `{tipo}` · {len(contenido or b'')} bytes")
+        if r_codigo == 200 and contenido:
+            (destino / f"{i['identificador']}.xml").write_bytes(contenido)
+            etiquetas = sorted(set(re.findall(rb"<([a-z_]+)[ >]", contenido)))
+            informe.append(f"  - etiquetas: {', '.join(e.decode() for e in etiquetas)}")
+        time.sleep(0.5)
+    informe.append("")
+
+
 # --- BORME ----------------------------------------------------------------
 
 
@@ -351,6 +429,8 @@ def main() -> int:
     ap.add_argument("--salida", default="docs/fuentes/boe-reconocimiento.md")
     ap.add_argument("--golden-boe", default="ingest/tests/golden/boe_altos_cargos_muestra.json")
     ap.add_argument("--golden-borme", default="ingest/tests/golden/borme_seccion1_muestra.txt")
+    ap.add_argument("--golden-historico", default="ingest/tests/golden/boe_altos_cargos_historico.json")
+    ap.add_argument("--golden-disposiciones", default="ingest/tests/golden/boe_disposiciones")
     args = ap.parse_args()
 
     informe = [
@@ -365,6 +445,8 @@ def main() -> int:
     ]
     with httpx.Client(timeout=TIMEOUT, follow_redirects=True) as cliente:
         reconocer_boe(cliente, informe, Path(args.golden_boe))
+        reconocer_historico(cliente, informe, Path(args.golden_historico))
+        reconocer_disposiciones(cliente, informe, Path(args.golden_boe), Path(args.golden_disposiciones))
         reconocer_borme(cliente, informe, Path(args.golden_borme))
 
     Path(args.salida).parent.mkdir(parents=True, exist_ok=True)
