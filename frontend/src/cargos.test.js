@@ -9,6 +9,8 @@ import {
   movimientos,
   organismos,
   personaDeClave,
+  presidencias,
+  recuento,
   resultadosDeCargos,
   tramo,
 } from './cargos.js'
@@ -214,5 +216,38 @@ describe('Oficina de Conflictos de Intereses', () => {
       ['2018-06-01', 'cese'],
     ])
     expect(m[1].boe).toBe('Oficina de Conflictos de Intereses')
+  })
+})
+
+describe('presidencias', () => {
+  it('sólo el Presidente del Gobierno, del BOE, por orden', () => {
+    const d = {
+      personas: [
+        { clave: 'b', nombre: 'Pedro Sánchez Pérez-Castejón', periodos: [{ puesto: 'Presidente del Gobierno', desde: '2018-06-02' }] },
+        {
+          clave: 'a',
+          nombre: 'Mariano Rajoy Brey',
+          periodos: [
+            { puesto: 'Presidente del Gobierno', desde: '2011-12-21', hasta: '2018-06-02' },
+            { puesto: 'Presidente del Gobierno', desde: '2012-01-01', fuente: 'oci' },
+          ],
+        },
+        { clave: 'c', nombre: 'Otra', periodos: [{ puesto: 'Presidente del CSN', desde: '2015-01-01' }] },
+      ],
+    }
+    expect(presidencias(d).map((p) => p.nombre)).toEqual(['Mariano Rajoy Brey', 'Pedro Sánchez Pérez-Castejón'])
+  })
+})
+
+describe('recuento', () => {
+  it('cada persona en su fuente', () => {
+    const d = {
+      personas: [
+        { periodos: [{ desde: 'x' }] },
+        { periodos: [{ hasta: 'x', fuente: 'oci' }] },
+        { periodos: [{ hasta: 'x', fuente: 'oci' }, { desde: 'y' }] },
+      ],
+    }
+    expect(recuento(d)).toEqual({ boe: 2, soloOci: 1 })
   })
 })

@@ -23,6 +23,8 @@ import {
   nombreFuente,
   organismos,
   personaDeClave,
+  presidencias,
+  recuento,
   tramo,
 } from '../cargos.js'
 
@@ -46,6 +48,8 @@ const abierta = computed(() => personaDeClave(props.datos, props.persona))
 const filtradas = computed(() => buscarCargos(props.datos, filtro.value))
 const ultimos = computed(() => movimientos(props.datos, 12))
 const porOrganismo = computed(() => organismos(props.datos, 6))
+const gobiernos = computed(() => presidencias(props.datos))
+const cuantos = computed(() => recuento(props.datos))
 
 const eje = computed(() => {
   const p = abierta.value
@@ -85,17 +89,20 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
   <div class="cargos">
     <section class="primera">
       <div class="apertura">
-        <p class="antetitulo">Cargos públicos · Boletín Oficial del Estado</p>
+        <p class="antetitulo">Cargos públicos · BOE y Oficina de Conflictos de Intereses</p>
         <h1 class="titular">Quién ha ocupado los altos cargos del Estado</h1>
         <p v-if="datos" class="entradilla">
-          {{ datos.personas.length.toLocaleString('es-ES') }} personas nombradas o
+          {{ cuantos.boe.toLocaleString('es-ES') }} personas nombradas o
           cesadas por Real Decreto entre el {{ fechaLarga(datos.actosDesde) }} y el
           {{ fechaLarga(datos.actosHasta) }}: ministros, secretarios de Estado,
           subsecretarios, directores generales, embajadores y quien preside o
           dirige un organismo público.
           <template v-if="datos.nAutorizaciones">
-            Y {{ datos.nAutorizaciones.toLocaleString('es-ES') }} autorizaciones para
-            trabajar en el sector privado tras el cese.
+            Y {{ datos.nAutorizaciones.toLocaleString('es-ES') }} autorizaciones de la
+            Oficina de Conflictos de Intereses para trabajar en el sector privado
+            tras el cese<template v-if="cuantos.soloOci">; de
+            {{ cuantos.soloOci.toLocaleString('es-ES') }} de las personas autorizadas
+            no hay nombramiento en lo leído del BOE</template>.
           </template>
         </p>
         <p v-else-if="cargando" class="entradilla">Cargando los cargos…</p>
@@ -110,8 +117,10 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
         <p class="antetitulo">Por qué aquí hay nombres</p>
         <p>
           En el resto de esta web no sale ninguna persona física. Aquí sí, y
-          sólo con lo que publica el BOE: quién fue nombrado para qué cargo y
-          cuándo cesó. Ocupar un cargo público es un hecho público.
+          sólo con lo que publican el BOE —quién fue nombrado para qué cargo y
+          cuándo cesó— y la Oficina de Conflictos de Intereses —a qué se le
+          autorizó a dedicarse después—. Ocupar un cargo público es un hecho
+          público.
         </p>
         <p class="nota">
           Nada de esta página dice nada de lo que alguien hizo antes o después
@@ -119,6 +128,18 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
         </p>
       </aside>
     </section>
+
+    <!--
+      Las presidencias del Gobierno que hay en lo leído: el contexto de todo
+      lo demás. Sólo de los Reales Decretos del Presidente; sin partido, que
+      el BOE no lo dice.
+    -->
+    <ol v-if="gobiernos.length && !abierta" class="gobiernos" aria-label="Presidencias del Gobierno">
+      <li v-for="g in gobiernos" :key="g.persona + (g.desde ?? g.hasta)">
+        <a href="#" @click.prevent="abrir(g.persona)">{{ g.nombre }}</a>
+        <span class="tramo">{{ tramo(g) }}</span>
+      </li>
+    </ol>
 
     <!-- La ficha de una persona, encima de todo lo demás. -->
     <article v-if="abierta" ref="ficha" class="ficha" aria-live="polite">
@@ -386,6 +407,15 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
   font-size: var(--t-s); line-height: 1.5; color: var(--tinta-2); margin: var(--e2) 0 0;
 }
 .por-que .nota { color: var(--tinta); }
+
+.gobiernos {
+  list-style: none; margin: var(--e6) 0 0; padding: var(--e3) 0 0;
+  display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5);
+  border-top: 1px solid var(--filete-suave);
+}
+.gobiernos li { display: flex; flex-direction: column; gap: 0.1rem; }
+.gobiernos a { color: var(--tinta); font-weight: 600; font-size: var(--t-s); }
+.gobiernos .tramo { font-size: var(--t-xs); color: var(--tinta-3); }
 
 /* --- La ficha ------------------------------------------------------------ */
 

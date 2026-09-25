@@ -223,3 +223,36 @@ export function marcasDeAnios(desde, hasta, n = 6) {
   }
   return salida
 }
+
+/**
+ * Las presidencias del Gobierno que hay en lo leído, de la más antigua a la
+ * más reciente. Salen de los Reales Decretos de nombramiento y cese del
+ * Presidente, sin inferir nada: si falta un cese, el periodo queda abierto
+ * y se dice como cualquier otro.
+ */
+export function presidencias(datos) {
+  const salida = []
+  for (const persona of datos?.personas ?? []) {
+    for (const p of persona.periodos ?? []) {
+      if (p.puesto === 'Presidente del Gobierno' && (p.fuente ?? 'boe') === 'boe') {
+        salida.push({ persona: persona.clave, nombre: persona.nombre, ...p })
+      }
+    }
+  }
+  return salida.sort((a, b) => ((a.desde || a.hasta) < (b.desde || b.hasta) ? -1 : 1))
+}
+
+/**
+ * Cuántas personas salen de cada fuente. «408 personas nombradas por Real
+ * Decreto» contaba también a quien sólo sale en la Oficina de Conflictos de
+ * Intereses, que no publica nombramientos: cada cifra con su fuente.
+ */
+export function recuento(datos) {
+  let boe = 0
+  let soloOci = 0
+  for (const persona of datos?.personas ?? []) {
+    if ((persona.periodos ?? []).some((p) => (p.fuente ?? 'boe') === 'boe')) boe += 1
+    else soloOci += 1
+  }
+  return { boe, soloOci }
+}
