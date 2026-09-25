@@ -388,7 +388,10 @@ Estado a 25/9/2026:
   cada presidente, y cada nombramiento del BOE lleva bajo qué presidencia se
   firmó (la fecha del Real Decreto contra las presidencias leídas: quién
   gobernaba, no el partido de la persona nombrada). La sección de cargos se
-  filtra por Gobierno. De las comunidades, quién las presidía: el Real
+  filtra por Gobierno y por formación. La formación de un diputado lleva al
+  partido del mapa del dinero por el puente oficial de las siglas, que da el
+  Senado (siglas → nombre → ficha con ese nombre exacto), y el panel del
+  partido lleva a sus diputados. De las comunidades, quién las presidía: el Real
   Decreto que nombra a cada presidente autonómico, en la edición de cada
   comunidad. Falta su partido —el BOE no lo dice y el Congreso no sirve para
   quien no fue diputado— y el de los gobiernos locales.

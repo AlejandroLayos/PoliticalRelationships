@@ -425,3 +425,26 @@ export function deFormacion(personas, formacion) {
     (persona.periodos ?? []).some((p) => p.fuente === 'congreso' && p.formacion === formacion),
   )
 }
+
+/**
+ * La ficha del partido de una formación en el mapa del dinero, o null. El
+ * puente lo da el Senado (siglas → nombre oficial) y el volcado lo resuelve
+ * sólo con nombre exacto y único (`formaciones` de exportar_cargos.py).
+ */
+export function entidadDeFormacion(datos, formacion) {
+  return datos?.formaciones?.[formacion]?.entidad ?? null
+}
+
+/**
+ * Las formaciones cuyo partido es la entidad `clave` del mapa, con cuántos de
+ * sus diputados salen en la sección. Para el panel del partido.
+ */
+export function formacionesDeEntidad(datos, clave) {
+  if (!clave) return []
+  const salida = []
+  for (const [formacion, f] of Object.entries(datos?.formaciones ?? {})) {
+    if (f?.entidad?.clave !== clave) continue
+    salida.push({ formacion, nombre: f.nombre, personas: deFormacion(datos?.personas ?? [], formacion).length })
+  }
+  return salida.filter((f) => f.personas > 0)
+}

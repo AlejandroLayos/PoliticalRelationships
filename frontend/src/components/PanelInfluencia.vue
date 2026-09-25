@@ -42,8 +42,10 @@ const props = defineProps({
   exAltosCargos: { type: Array, default: () => [] },
   /** Diputados que declararon al Congreso trabajar aquí (`cargos.json`, `declarantes`). */
   declarantes: { type: Array, default: () => [] },
+  /** Si es un partido: sus formaciones en el Congreso, con cuántos diputados salen. */
+  enElCongreso: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo'])
+const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo', 'verDiputados'])
 
 const resumen = computed(() => resumenEnPalabras(props.area))
 
@@ -312,6 +314,26 @@ const sinDatos = computed(
       </section>
 
       <!--
+        Si esta entidad es un partido: sus diputados. El puente de las siglas
+        lo da el Senado; el nombre, exacto.
+      -->
+      <section v-if="enElCongreso.length" class="bloque al-frente">
+        <h3>En el Congreso</h3>
+        <ul class="lista">
+          <li v-for="f in enElCongreso" :key="f.formacion">
+            <a href="#" @click.prevent="emit('verDiputados', f.formacion)">
+              {{ f.personas }} {{ f.personas === 1 ? 'diputado' : 'diputados' }} elegidos por {{ f.formacion }}
+            </a>
+            <span class="cargo-frente">con declaración de actividades o con un alto cargo</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Las siglas y el nombre del partido, según el Senado. Salen los
+          diputados de los que hay algo que cruzar, no todos los que ha tenido.
+        </p>
+      </section>
+
+      <!--
         Diputados que declararon al Congreso haber trabajado en esta sociedad.
         La nombraron por su denominación completa, que es única en España.
       -->
@@ -502,6 +524,26 @@ const sinDatos = computed(
           autorización no dice que la persona llegara a ocupar el puesto. Si el
           órgano que dirigía pagó a esta entidad, va al lado: dos hechos
           documentados, y ninguno dice nada del otro.
+        </p>
+      </section>
+
+      <!--
+        Si esta entidad es un partido: sus diputados. El puente de las siglas
+        lo da el Senado; el nombre, exacto.
+      -->
+      <section v-if="enElCongreso.length" class="bloque al-frente">
+        <h3>En el Congreso</h3>
+        <ul class="lista">
+          <li v-for="f in enElCongreso" :key="f.formacion">
+            <a href="#" @click.prevent="emit('verDiputados', f.formacion)">
+              {{ f.personas }} {{ f.personas === 1 ? 'diputado' : 'diputados' }} elegidos por {{ f.formacion }}
+            </a>
+            <span class="cargo-frente">con declaración de actividades o con un alto cargo</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Las siglas y el nombre del partido, según el Senado. Salen los
+          diputados de los que hay algo que cruzar, no todos los que ha tenido.
         </p>
       </section>
 

@@ -21,6 +21,7 @@ import {
   deFormacion,
   dePapel,
   delOrganoEnPalabras,
+  entidadDeFormacion,
   fechaCorta,
   fechaLarga,
   formaciones,
@@ -45,6 +46,8 @@ const props = defineProps({
   datos: { type: Object, default: null },
   /** La clave de la persona abierta, o ''. */
   persona: { type: String, default: '' },
+  /** Una formación con la que abrir la lista de diputados (desde el panel de un partido). */
+  formacionInicial: { type: String, default: '' },
   cargando: { type: Boolean, default: false },
 })
 const emit = defineEmits(['persona', 'entidad'])
@@ -59,6 +62,16 @@ const formacion = ref('')
 watch(papel, (p) => {
   if (p !== 'congreso') formacion.value = ''
 })
+watch(
+  () => props.formacionInicial,
+  (f) => {
+    if (!f) return
+    papel.value = 'congreso'
+    formacion.value = f
+  },
+  { immediate: true },
+)
+const deLaFormacion = computed(() => (formacion.value ? entidadDeFormacion(props.datos, formacion.value) : null))
 const VISIBLES = 30
 const cuantas = ref(VISIBLES)
 watch([filtro, papel, gobierno, formacion], () => {
@@ -263,7 +276,14 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
               > · {{ p.gobierno.formacion }}</abbr>
             </p>
             <p v-if="p.formacion" class="periodo-organismo">
-              {{ p.formacion }}<template v-if="p.circunscripcion"> · {{ p.circunscripcion }}</template><template v-if="p.grupo"> · {{ p.grupo }}</template>
+              <!-- El partido en el mapa del dinero, si el puente del Senado lo da. -->
+              <a
+                v-if="entidadDeFormacion(datos, p.formacion)"
+                href="#"
+                :title="`${entidadDeFormacion(datos, p.formacion).nombre}: ver de quién cobra`"
+                @click.prevent="emit('entidad', entidadDeFormacion(datos, p.formacion).clave)"
+              >{{ p.formacion }}</a>
+              <template v-else>{{ p.formacion }}</template><template v-if="p.circunscripcion"> · {{ p.circunscripcion }}</template><template v-if="p.grupo"> · {{ p.grupo }}</template>
             </p>
             <!--
               El órgano que dirigía, cuando es uno del mapa del dinero: por ahí
@@ -422,6 +442,11 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
             @click="formacion = f.formacion"
           >{{ f.formacion }} <span class="cuenta-papel">{{ f.personas }}</span></button>
         </div>
+        <p v-if="deLaFormacion" class="nota formacion-en-el-mapa">
+          {{ formacion }} es {{ datos.formaciones[formacion].nombre }}, según el Senado.
+          En el mapa del dinero:
+          <a href="#" @click.prevent="emit('entidad', deLaFormacion.clave)">{{ deLaFormacion.nombre }}</a> →
+        </p>
         <!--
           Por Gobierno: quién estaba en la Presidencia el día del Real
           Decreto. Sólo con presidencias leídas.
@@ -772,6 +797,8 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 .gobiernos-filtro { flex-wrap: wrap; }
 .gobiernos-filtro .papel { font-size: var(--t-xs); }
 .cuenta-papel { font-family: var(--mono); opacity: 0.7; }
+.formacion-en-el-mapa { margin: 0 0 var(--e2); font-size: var(--t-s); }
+.formacion-en-el-mapa a { color: var(--emp); font-weight: 600; }
 .periodo-gobierno { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.2rem !important; }
 .periodo-gobierno a { color: var(--tinta); }
 .periodo-gobierno abbr { text-decoration: none; }

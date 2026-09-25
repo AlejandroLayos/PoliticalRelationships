@@ -23,7 +23,7 @@ import {
   vecinos,
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
-import { resultadosDeCargos } from './cargos.js'
+import { formacionesDeEntidad, resultadosDeCargos } from './cargos.js'
 import { siglaFuente } from './procedencia.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA, NOMBRE_TIPO, colorTipo, tipoDe } from './esquemas.js'
 import { accionDeEstado, direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
@@ -94,6 +94,16 @@ const alFrente = computed(() => cargos.value?.organos?.[claveSeleccionada.value]
 const exAltosCargos = computed(() => cargos.value?.empresas?.[claveSeleccionada.value] ?? [])
 /** Diputados que declararon al Congreso trabajar en la sociedad de la ficha abierta. */
 const declarantes = computed(() => cargos.value?.declarantes?.[claveSeleccionada.value] ?? [])
+/** Si la entidad abierta es un partido: sus formaciones en el Congreso. */
+const enElCongreso = computed(() => formacionesDeEntidad(cargos.value, claveSeleccionada.value))
+/** La formación con la que abrir la lista de diputados, desde el panel de un partido. */
+const formacionCargos = ref('')
+function verDiputadosDe(formacion) {
+  verCargos()
+  // Después: `verCargos` la limpia, para que entrar desde el menú no abra la
+  // lista filtrada por la última formación que se miró.
+  formacionCargos.value = formacion
+}
 watch(
   () => vista.value === 'ficha' && seleccionId.value,
   (abierta) => {
@@ -111,6 +121,7 @@ async function abrirPorClave(clave) {
 function verCargos(persona = '') {
   vista.value = 'cargos'
   personaCargo.value = persona
+  formacionCargos.value = ''
   traerCargos()
   window.scrollTo({ top: 0 })
 }
@@ -1264,6 +1275,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :al-frente="alFrente"
         :ex-altos-cargos="exAltosCargos"
         :declarantes="declarantes"
+        :en-el-congreso="enElCongreso"
+        @ver-diputados="verDiputadosDe"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
         @ver-en-mapa="llevarAlMapa(seleccionId)"
@@ -1326,6 +1339,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         class="portada-encima"
         :datos="cargos"
         :persona="personaCargo"
+        :formacion-inicial="formacionCargos"
         :cargando="cargandoCargos"
         @persona="(c) => (personaCargo = c)"
         @entidad="abrirPorClave"

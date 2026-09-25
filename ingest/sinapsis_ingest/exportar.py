@@ -324,6 +324,7 @@ def exportar(
           -- declaran los diputados: el destino es el texto que escribieron.
           AND es.dedupe_key NOT LIKE 'oci:%' AND et.dedupe_key NOT LIKE 'oci:%'
           AND es.dedupe_key NOT LIKE 'congreso:%' AND et.dedupe_key NOT LIKE 'congreso:%'
+          AND es.dedupe_key NOT LIKE 'senado:%' AND et.dedupe_key NOT LIKE 'senado:%'
         ORDER BY r.amount DESC NULLS LAST, r.id
         """
     ).fetchall()
@@ -816,6 +817,9 @@ def _exportar_indice(
               AND e.dedupe_key NOT LIKE 'boe:%%'
               AND e.dedupe_key NOT LIKE 'oci:%%'
               AND e.dedupe_key NOT LIKE 'congreso:%%'
+              -- Los partidos del Senado son el puente de las siglas, no
+              -- entidades del mapa: el partido que cobra ya está, con su NIF.
+              AND e.dedupe_key NOT LIKE 'senado:%%'
             GROUP BY e.id
         ),
         -- Órgano -> (UnknownLink) -> expediente -> (ContractAward) -> empresa.

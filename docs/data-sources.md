@@ -437,6 +437,39 @@ entidad del mapa: no entra en el grafo ni en el índice, igual que la
 
 ---
 
+## 2.sexies Senado — los partidos y sus siglas
+
+**Aporta:** el puente entre unas siglas y un partido. El Congreso dice que un
+diputado fue elegido por «PSOE»; el mapa del dinero tiene a «PARTIDO
+SOCIALISTA OBRERO ESPAÑOL» cobrando subvenciones. Unirlos con una tabla hecha
+a mano sería una inferencia nuestra. El Senado publica, para cada
+legislatura, los partidos de cada grupo con sus siglas y su nombre oficial:
+es la fuente de esa equivalencia.
+
+**Acceso:** datos abiertos del Senado, sin registro.
+`ficopendataservlet?tipoFich=4&legis=N` (grupos y partidos de la legislatura
+N), desde la IX. Forma verificada en `docs/fuentes/senado-reconocimiento.md`
+y `ingest/tests/golden/senado/`.
+
+**Cómo se usa.** Siglas del Congreso → nombre oficial del Senado → partido
+del mapa con ese nombre exacto. Unas siglas con dos nombres distintos en
+distintas legislaturas no se usan; un nombre con dos fichas en el mapa,
+tampoco. Los partidos del Senado no entran en el grafo: el que cobra ya está,
+con su NIF.
+
+**Lo que no se lee.** Las fichas de cada senador (con estado civil, hijos y
+fecha de nacimiento) no se piden. La composición desde 1977 está reconocida
+(`composicion-desde-1977.xml`, 2.505 registros); ojo, sus campos de grupo
+vienen corridos —`grupoCod` trae la procedencia—, y no lleva el partido.
+
+**Mapeo a FollowTheMoney:**
+
+```
+partido (Organization) --UnknownLink{relacion: partido_en_grupo, legislatura}--> grupo parlamentario (Organization)
+```
+
+---
+
 ## 2.quinquies Cuentas de los partidos (Tribunal de Cuentas) — reconocida, sin conector
 
 Para la línea 2 de la fase 7. El Tribunal de Cuentas fiscaliza cada año los

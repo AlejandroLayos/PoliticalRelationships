@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, boe, congreso, oci, placsp, tcu
+from sinapsis_ingest.connectors import bdns, boe, congreso, oci, placsp, senado, tcu
 
 
 @dataclass(frozen=True)
@@ -60,6 +60,12 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://www.congreso.es/es/opendata/diputados",
         license="Datos abiertos del Congreso; reutilización libre (Ley 37/2007)",
     ),
+    "senado": FichaFuente(
+        id="senado",
+        name="Senado",
+        url="https://www.senado.es/web/relacionesciudadanos/datosabiertos/catalogodatos/index.html",
+        license="Datos abiertos del Senado; reutilización libre (Ley 37/2007)",
+    ),
     "oci": FichaFuente(
         id="oci",
         name="Oficina de Conflictos de Intereses",
@@ -88,6 +94,9 @@ _CONECTORES: dict[str, Any] = {
     # Diputados por legislatura, con su formación: el partido, para el
     # contexto de gobierno (fase 7, línea 4).
     "congreso": congreso.crear,
+    # Los partidos de cada legislatura con sus siglas: el puente oficial entre
+    # la formación de un diputado y el partido del mapa del dinero.
+    "senado": senado.crear,
 }
 
 

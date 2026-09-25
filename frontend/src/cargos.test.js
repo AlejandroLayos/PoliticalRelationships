@@ -3,12 +3,14 @@ import {
   bajoGobierno,
   buscarCargos,
   delOrganoEnPalabras,
+  entidadDeFormacion,
   deFormacion,
   dePapel,
   fechaCorta,
   fechaLarga,
   formacionEn,
   formaciones,
+  formacionesDeEntidad,
   gobiernos,
   huecoDelPeriodo,
   lineaDeTiempo,
@@ -418,5 +420,31 @@ describe('formaciones', () => {
     expect(deFormacion(personas, 'PSOE')).toHaveLength(2)
     expect(deFormacion(personas, 'PSC-PSOE')).toHaveLength(1)
     expect(deFormacion(personas, '')).toHaveLength(5)
+  })
+})
+
+describe('el puente de las formaciones', () => {
+  const psoe = { clave: 'nif:G28477727', nombre: 'PARTIDO SOCIALISTA OBRERO ESPAÑOL' }
+  const datos = {
+    formaciones: {
+      PSOE: { nombre: 'PARTIDO SOCIALISTA OBRERO ESPAÑOL', entidad: psoe },
+      VOX: { nombre: 'VOX' },
+    },
+    personas: [
+      { periodos: [{ fuente: 'congreso', formacion: 'PSOE' }] },
+      { periodos: [{ fuente: 'congreso', formacion: 'PSOE' }] },
+      { periodos: [{ fuente: 'congreso', formacion: 'VOX' }] },
+    ],
+  }
+  it('de la formación a su ficha en el mapa, si la hay', () => {
+    expect(entidadDeFormacion(datos, 'PSOE')).toEqual(psoe)
+    expect(entidadDeFormacion(datos, 'VOX')).toBeNull()
+    expect(entidadDeFormacion(null, 'PSOE')).toBeNull()
+  })
+  it('de la ficha del partido a sus diputados', () => {
+    expect(formacionesDeEntidad(datos, psoe.clave)).toEqual([
+      { formacion: 'PSOE', nombre: 'PARTIDO SOCIALISTA OBRERO ESPAÑOL', personas: 2 },
+    ])
+    expect(formacionesDeEntidad(datos, 'nif:otro')).toEqual([])
   })
 })

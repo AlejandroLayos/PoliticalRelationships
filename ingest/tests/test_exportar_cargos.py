@@ -1262,3 +1262,108 @@ def test_las_presidencias_autonomicas_salen_por_comunidad_y_sin_gobierno_del_est
     # Lo elige el parlamento andaluz: nada de «nombramiento con el Gobierno de …».
     moreno = next(p for p in cargos["personas"] if p["nombre"] == "Juan Manuel Moreno Bonilla")
     assert all("gobierno" not in p for p in moreno["periodos"])
+
+
+# --- el puente de las siglas (Senado) ------------------------------------------------
+
+
+def _partidos_del_senado(store: Store) -> None:
+    from sinapsis_ingest.connectors.senado import SenadoConnector
+
+    store.upsert_source(Source(id="senado", name="Senado", url="https://ejemplo.test"))
+    store.conn.commit()
+    xml = (Path(__file__).parent / "golden" / "senado" / "grupos-y-partidos-xv.xml").read_bytes()
+    ingerir_documento(
+        store,
+        SenadoConnector(),
+        RawDocument(
+            source_id="senado",
+            url="https://www.senado.es/web/ficopendataservlet?tipoFich=4&legis=15",
+            content=xml,
+            media_type="application/xml",
+            metadata={"legislatura": 15},
+        ),
+        Resultado(),
+    )
+    store.conn.commit()
+
+
+def _partido_del_mapa(store: Store, nombre: str, nif: str) -> None:
+    _ingerir(
+        store,
+        "bdns",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada("PublicBody", "Ministerio del Interior", "test:mir"),
+                EntidadNormalizada(
+                    "Organization",
+                    nombre,
+                    f"nif:{nif}",
+                    nif=nif,
+                    properties={"partido_politico": True},
+                ),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    "Payment",
+                    "test:mir",
+                    f"nif:{nif}",
+                    f"subvencion:{nif}",
+                    confidence=1.0,
+                    amount=1000,
+                    currency="EUR",
+                )
+            ],
+        ),
+        f"<subvencion>{nif}</subvencion>".encode(),
+    )
+
+
+@con_base
+def test_la_formacion_del_diputado_lleva_al_partido_del_mapa(store_congreso, tmp_path):
+    _partidos_del_senado(store_congreso)
+    _partido_del_mapa(store_congreso, "PARTIDO SOCIALISTA OBRERO ESPAÑOL", "G28477727")
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Pérez Gil, Ana", "PSOE", "17/08/2023", "", []),
+        b"[15]",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _declaracion("Pérez Gil,Ana", "AYUNTAMIENTO DE X", "CONCEJALA", "2019-2023"),
+        b"[declaracion]",
+    )
+    grafo, indice, cargos = _volcar(store_congreso, tmp_path)
+    assert cargos["formaciones"] == {
+        "PSOE": {
+            "nombre": "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+            "entidad": {"clave": "nif:G28477727", "nombre": "PARTIDO SOCIALISTA OBRERO ESPAÑOL"},
+        }
+    }
+    # Los partidos del Senado no entran en el mapa: el que cobra ya está.
+    texto = json.dumps({k: v for k, v in grafo.items() if k != "cargos"}) + json.dumps(indice)
+    assert "senado:" not in texto.replace('"id": "senado"', "")
+    # Pero el Senado aportó, y así consta.
+    assert next(f for f in grafo["fuentes"] if f["id"] == "senado")["entidades"] > 0
+
+
+@con_base
+def test_sin_partido_en_el_mapa_la_formacion_sale_sin_ficha(store_congreso, tmp_path):
+    _partidos_del_senado(store_congreso)
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Pérez Gil, Ana", "VOX", "17/08/2023", "", []),
+        b"[15]",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _declaracion("Pérez Gil,Ana", "AYUNTAMIENTO DE X", "CONCEJALA", "2019-2023"),
+        b"[declaracion]",
+    )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    [vox] = cargos["formaciones"].values()
+    assert "entidad" not in vox

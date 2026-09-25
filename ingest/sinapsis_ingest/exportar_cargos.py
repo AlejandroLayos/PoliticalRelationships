@@ -502,6 +502,7 @@ def empresas_por_nombre(store: Store) -> dict[str, list[tuple[str, str]]]:
           -- Lo que declaran los diputados es su texto, no una sociedad del
           -- mapa: sin esto, «UNIPREX S.A.U.» declarado se cruzaría consigo.
           AND dedupe_key NOT LIKE 'congreso:%'
+          AND dedupe_key NOT LIKE 'senado:%'
         """
     ).fetchall()
     mapa: dict[str, list[tuple[str, str]]] = {}
@@ -591,6 +592,54 @@ def empresa_en(texto: str, mapa: dict[str, list[tuple[str, str]]]) -> dict[str, 
         return None
     clave, nombre = halladas[largas[0]]
     return {"clave": clave, "nombre": nombre}
+
+
+def partidos_por_siglas(store: Store) -> dict[str, dict[str, Any]]:
+    """{siglas normalizadas: {"nombre": nombre oficial, "entidad"?: {clave, nombre}}}.
+
+    El puente entre la formación de un diputado —unas siglas, en el Congreso—
+    y el partido del mapa del dinero, sin tabla hecha a mano: las siglas y el
+    nombre los da el Senado para cada legislatura, y el partido del mapa se
+    busca por ese nombre exacto. Unas siglas con dos nombres distintos en
+    distintas legislaturas no se usan; un nombre con dos fichas en el mapa,
+    tampoco.
+    """
+    nombres: dict[str, set[str]] = {}
+    for f in store.conn.execute(
+        """
+        SELECT properties FROM entities
+        WHERE canonical_id IS NULL AND dedupe_key LIKE 'senado:partido:%'
+        """
+    ).fetchall():
+        props = f["properties"] or {}
+        siglas, nombre = props.get("siglasSenado"), props.get("nombreSenado")
+        if siglas and nombre:
+            nombres.setdefault(_plano(siglas), set()).add(nombre)
+    en_el_mapa: dict[str, list[tuple[str, str]]] = {}
+    for f in store.conn.execute(
+        """
+        SELECT caption, dedupe_key FROM entities
+        WHERE canonical_id IS NULL
+          AND (properties ->> 'partido_politico') = 'true'
+          AND dedupe_key NOT LIKE 'senado:%'
+        """
+    ).fetchall():
+        en_el_mapa.setdefault(_plano(f["caption"]), []).append((f["dedupe_key"], f["caption"]))
+    salida: dict[str, dict[str, Any]] = {}
+    for siglas, suyos in nombres.items():
+        if len({_plano(n) for n in suyos}) != 1:
+            continue
+        nombre = sorted(suyos)[0]
+        fichas = en_el_mapa.get(_plano(nombre), [])
+        salida[siglas] = {
+            "nombre": nombre,
+            **(
+                {"entidad": {"clave": fichas[0][0], "nombre": fichas[0][1]}}
+                if len(fichas) == 1
+                else {}
+            ),
+        }
+    return salida
 
 
 def dinero_del_organo(store: Store, organo: str, empresa: str) -> dict[str, Any] | None:
@@ -898,6 +947,19 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     # gobernaba, no a qué partido pertenece la persona nombrada.
     presidencias = presidencias_del_gobierno(salida)
     autonomicas = presidencias_autonomicas(salida)
+    puente = partidos_por_siglas(store)
+    formaciones = {
+        f: puente[_plano(f)]
+        for f in sorted(
+            {
+                p["formacion"]
+                for persona in salida
+                for p in persona["periodos"]
+                if p.get("fuente") == "congreso" and p.get("formacion")
+            }
+        )
+        if _plano(f) in puente
+    }
     for persona in salida:
         for p in persona["periodos"]:
             if p.get("fuente") or p.get("puesto") == PRESIDENCIA or not p.get("desde"):
@@ -943,6 +1005,9 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "personas": salida,
         "presidencias": presidencias,
         "presidenciasAutonomicas": autonomicas,
+        # Cada formación de los diputados que salen, con su nombre oficial y
+        # su ficha en el mapa del dinero, si el puente del Senado la da.
+        "formaciones": formaciones,
         "organos": al_frente,
         "empresas": en_empresas,
         "declarantes": declarantes,
@@ -1008,7 +1073,9 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "cargos_personas": len(salida),
         "cargos_actos": len(fechas),
         "cargos_organos": len(al_frente),
-        "cargos_por_fuente": por_fuente,
+        # El Senado no aporta personas sino el puente de las siglas: cuenta lo
+        # que dio, para que la web no lo anuncie como caído el día que respondió.
+        "cargos_por_fuente": {**por_fuente, "senado": len(puente)},
         "cruces": cruces[:MAX_CRUCES_EN_PORTADA],
         "n_cruces": len(cruces),
         "declarados": declarados[:MAX_CRUCES_EN_PORTADA],
