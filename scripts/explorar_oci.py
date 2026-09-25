@@ -39,12 +39,19 @@ except ImportError:  # pragma: no cover
     sys.exit("falta httpx: pip install httpx")
 
 BASE = "https://transparencia.gob.es"
+NOVEDADES = f"{BASE}/masinformacion/novedades-de-transparencia/2026novedades"
 PORTADAS = (
     f"{BASE}/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese",
-    f"{BASE}/es/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese",
+    # Las novedades de 2026: el primer reconocimiento vio que las páginas de
+    # seguimiento llegan a 2021 y que la portada no trae la tabla en el HTML.
+    f"{NOVEDADES}/Autorizaciones-actividad-privada-cese-Altos-Cargos_abril2026",
+    f"{NOVEDADES}/Autorizaciones_EjercicioActividadPrivada_TraselCese_AltosCargos",
     f"{BASE}/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese/aac-graficos",
-    f"{BASE}/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese/seguimiento20190920",
+    f"{BASE}/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese/seguimiento20211101",
 )
+# Las mismas páginas en otras lenguas: el primer reconocimiento gastó en ellas
+# la mitad de su cupo.
+_OTRA_LENGUA = re.compile(r"^/(ca|eu|gl|va|en)/")
 CABECERAS = {"User-Agent": "Sinapsis/0.1 (reconocimiento; proyecto abierto de transparencia)"}
 TOPE = 60.0
 
@@ -152,6 +159,8 @@ def main() -> int:
                 destino = urljoin(url, href)
                 ruta = urlparse(destino).path.lower()
                 ext = ruta.rsplit(".", 1)[-1] if "." in ruta.rsplit("/", 1)[-1] else ""
+                if "/bin/" in ruta:
+                    continue
                 if ext in {"pdf", "xlsx", "xls", "csv", "ods", "json", "xml"}:
                     ficheros[ext] += 1
                     relevantes.append(f"- [{ext}] {texto!r} → `{destino}`")
@@ -167,12 +176,37 @@ def main() -> int:
                         if f_codigo == 200 and f_contenido and len(f_contenido) < 3_000_000:
                             nombre_f = Path(urlparse(destino).path).name
                             (golden / nombre_f).write_bytes(f_contenido)
-                elif "actividad-privada" in ruta or "seguimiento" in ruta or "autorizacion" in ruta:
+                elif (
+                    ("actividad-privada" in ruta or "autorizacion" in ruta)
+                    and not _OTRA_LENGUA.match(urlparse(destino).path)
+                    and "/bin/" not in ruta
+                ):
                     relevantes.append(f"- {texto!r} → `{destino}`")
                     if urlparse(destino).netloc.endswith("transparencia.gob.es"):
                         pendientes.append(destino.split("#")[0])
             informe += ["", "Enlaces relevantes:", "", *sorted(set(relevantes))[:60], ""]
-            if lector.tablas and any(len(t) > 3 for t in lector.tablas) and guardadas < 4:
+            # Lo que la página carga aparte: si la tabla de ahora no está en
+            # el HTML, vendrá de un script, un iframe o un fichero de datos.
+            cargas = sorted(
+                set(
+                    re.findall(
+                        r"""(?:src|data-[a-z-]+|href)=["']([^"']+\.(?:json|csv|xlsx?|js)(?:\?[^"']*)?)["']""",
+                        html,
+                    )
+                )
+            )
+            cargas = [x for x in cargas if "clientlib" not in x and "/etc." not in x][:30]
+            if cargas:
+                informe += ["Lo que la página carga aparte:", "", *[f"- `{x}`" for x in cargas], ""]
+            iframes = re.findall(r"<iframe[^>]+src=[\"']([^\"']+)", html)
+            if iframes:
+                informe += ["Iframes:", "", *[f"- `{x}`" for x in iframes], ""]
+            ids_tabla = re.findall(r"<table[^>]*\bid=[\"']([^\"']+)", html)
+            if ids_tabla:
+                informe.append(f"Tablas por id: {ids_tabla}")
+                informe.append("")
+            es_portada = url == PORTADAS[0]
+            if (es_portada or (lector.tablas and any(len(t) > 3 for t in lector.tablas))) and guardadas < 4:
                 nombre = re.sub(r"[^a-z0-9]+", "-", urlparse(url).path.lower()).strip("-")
                 (golden / f"{nombre}.html").write_bytes(contenido)
                 guardadas += 1
