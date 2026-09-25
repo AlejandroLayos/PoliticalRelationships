@@ -66,12 +66,10 @@ const grafoEntero = ref(null)
 const mapaPedido = ref(false)
 const nucleos = ref([])
 const nucleoEnfocado = ref(null)
+/** El grupo por el que pasa el ratón, en el mapa de bloques o en su lista. */
+const nucleoSenalado = ref(null)
 /** En estrecho los filtros del mapa nacen plegados; en ancho no se pliegan. */
 const filtrosAbiertos = ref(false)
-/** Los grupos que el mapa de bloques no dibuja por pequeños. */
-const gruposPequenos = ref(null)
-const totalDinero = ref(0)
-const visiblesEnMapa = ref(0)
 const minImporte = ref(0)
 const mostrarExpedientes = ref(false)
 const mostrarSueltos = ref(false)
@@ -86,11 +84,13 @@ const ESCALONES = [
   { v: 10_000_000, t: '10 M €' },
 ]
 
-function alAnalizar({ nucleos: n, totalDinero: d, visibles, entidades, pequenos }) {
+/*
+  Del análisis del mapa sólo hace falta aquí la lista de grupos, para la
+  columna de al lado. Las cifras de conjunto —cuántos grupos, cuánto dinero,
+  cuántos se quedan fuera— las dice el propio mapa en su pie de gráfico.
+*/
+function alAnalizar({ nucleos: n }) {
   nucleos.value = n
-  totalDinero.value = d
-  visiblesEnMapa.value = visibles ?? entidades ?? 0
-  gruposPequenos.value = pequenos ?? null
 }
 
 const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
@@ -841,11 +841,14 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :mostrar-expedientes="mostrarExpedientes"
           :solo-extranjero="soloExtranjero"
           :solo-partidos="soloPartidos"
+          :senalado="nucleoSenalado"
           @abrir="(n) => (nucleoEnfocado = n)"
           @analizado="alAnalizar"
+          @senalar="(n) => (nucleoSenalado = n)"
         />
         <MapaNucleos
           v-else-if="hayMapa && mapaPedido"
+          class="bajo-banda"
           :datos="grafoEntero"
           :seleccion="seleccionId"
           :nucleo-enfocado="nucleoEnfocado"
@@ -967,35 +970,11 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           </span>
           <span>El tamaño es el dinero</span>
         </div>
-        <div v-else class="leyenda leyenda-texto">
-          <!--
-            `span` de texto corrido, no de leyenda: `.leyenda span` es un
-            contenedor flex —lo necesitan las entradas con su cuadrito de
-            color— y dentro de un flex cada trozo de texto suelto se convierte
-            en un elemento aparte. La frase salía partida en tres columnas.
-          -->
-          <!--
-            En un teléfono, la frase entera son seis renglones sobre una
-            pantalla en la que el mapa ya sólo tiene media: la explicación
-            tapaba lo explicado. Ahí se queda lo imprescindible —qué es un
-            bloque y que se puede pulsar— y el detalle se lee en la columna
-            de al lado, que en estrecho va justo debajo.
-          -->
-          <span class="corrida">
-            Cada bloque es un grupo de organismos y empresas que se pagan
-            entre ellos más que con el resto. El tamaño es el dinero.
-            <b>Pulsa un bloque para ver quién está dentro.</b>
-            <span class="ancho">
-              Son {{ nucleos.length }} grupos, {{ visiblesEnMapa }} entidades y
-              {{ dineroCorto(totalDinero) }} en juego.
-              <template v-if="gruposPequenos?.cuantos">
-                No se dibujan {{ gruposPequenos.cuantos }} grupos de menos de seis
-                entidades ({{ dineroCorto(gruposPequenos.dinero) }}): con dos o tres
-                no hay grupo que enseñar, y se pueden buscar por su nombre.
-              </template>
-            </span>
-          </span>
-        </div>
+        <!--
+          La explicación del mapa de bloques ya no va aquí: era una placa
+          encima de la esquina de abajo y tapaba los bloques que caían en
+          ella. Es el pie de gráfico de MapaDinero, arriba y fuera del dibujo.
+        -->
 
         <p v-if="vista !== 'mapa' || nucleoEnfocado !== null" class="ayuda">
           {{
@@ -1029,8 +1008,10 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         v-else-if="vista === 'mapa'"
         :nucleos="nucleos"
         :enfocado="nucleoEnfocado"
+        :senalado="nucleoEnfocado === null ? nucleoSenalado : null"
         @enfocar="(n) => (nucleoEnfocado = n)"
         @seleccionar="enfocar"
+        @senalar="(n) => (nucleoSenalado = n)"
       />
       <PanelEntidad
         v-else
@@ -1296,20 +1277,8 @@ main { flex: 1; position: relative; min-height: 0; }
   (0,1,0). El detalle de pantalla ancha salía también en el teléfono.
 */
 .leyenda > span { display: flex; align-items: center; gap: 0.35rem; }
-.leyenda > span.corrida { display: block; }
 .leyenda i { width: 0.55rem; height: 0.55rem; border-radius: 50%; display: inline-block; }
-.leyenda i.linea-inferida { width: 18px; height: 2px; border-radius: 1px; background: #e0a33a; }
-/*
-  La explicación va sobre placa: cae encima del bloque de abajo a la
-  izquierda —que es grande y lleva su nombre escrito— y sin fondo se leían
-  los dos textos mezclados.
-*/
-.leyenda-texto {
-  max-width: min(76ch, calc(100% - 2rem)); line-height: 1.5; font-size: var(--t-s);
-  background: var(--hoja); border: 1px solid var(--filete-suave);
-  padding: var(--e2) var(--e3);
-}
-.leyenda-texto b { color: var(--tinta); }
+.leyenda i.linea-inferida { width: 18px; height: 2px; border-radius: 1px; background: var(--aviso); }
 .ayuda {
   position: absolute; bottom: var(--e3); right: var(--e4); margin: 0;
   font-size: var(--t-xs); color: var(--tinta-3); font-style: italic; font-family: var(--serif);
@@ -1327,10 +1296,19 @@ main { flex: 1; position: relative; min-height: 0; }
 }
 
 /* La barra de «dentro de un grupo», en el visor. */
+/*
+  Dentro de un grupo, una banda arriba con la salida y el nombre, y el dibujo
+  empieza debajo. Flotaban encima del dibujo, y los nodos de arriba del todo
+  se colaban entre las letras: «326 entidades» se leía con tres puntos
+  azules encima.
+*/
 .dentro-de {
-  position: absolute; top: var(--e3); left: var(--e4); right: var(--e4); z-index: 2;
-  display: flex; align-items: center; gap: var(--e4); flex-wrap: wrap;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 2; height: var(--banda);
+  display: flex; align-items: center; gap: var(--e4);
+  padding: 0 var(--e4); background: var(--papel); border-bottom: 1px solid var(--filete-suave);
 }
+.lienzo-wrap { --banda: 3.4rem; }
+.lienzo-wrap > .bajo-banda { position: absolute; top: var(--banda); left: 0; right: 0; bottom: 0; height: auto; }
 .salir {
   font: inherit; font-size: var(--t-s); font-weight: 600; cursor: pointer; white-space: nowrap;
   color: var(--tinta); background: var(--papel-2);
@@ -1387,6 +1365,6 @@ main { flex: 1; position: relative; min-height: 0; }
   .vista-grafo { grid-template-columns: 1fr; grid-template-rows: 58vh 1fr; }
   .ayuda { display: none; }
   .leyenda { max-width: calc(100% - 1.4rem); left: var(--e3); bottom: var(--e2); }
-  .leyenda:not(.leyenda-texto) { background: var(--hoja); padding: var(--e1) var(--e2); }
+  .leyenda { background: var(--hoja); padding: var(--e1) var(--e2); }
 }
 </style>

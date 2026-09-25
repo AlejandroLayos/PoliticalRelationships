@@ -29,11 +29,10 @@ import {
   colapsarNodosDePaso,
   conEstructura,
   dineroCorto,
-  FONDO,
   MINIMO_NUCLEO,
-  paletaDeNucleos,
 } from '../nucleos.js'
 import { repartirConResto } from '../rectangulos.js'
+import { mezclaDeTipos } from '../esquemas.js'
 
 const props = defineProps({
   datos: { type: Object, required: true },
@@ -41,14 +40,28 @@ const props = defineProps({
   mostrarExpedientes: { type: Boolean, default: false },
   soloExtranjero: { type: Boolean, default: false },
   soloPartidos: { type: Boolean, default: false },
+  /** El grupo que se está señalando desde la lista de al lado. */
+  senalado: { type: Number, default: null },
 })
-const emit = defineEmits(['abrir', 'analizado'])
+const emit = defineEmits(['abrir', 'analizado', 'senalar'])
 
+// Se mide el lienzo y no el componente entero: encima va el pie de gráfico.
 const contenedor = ref(null)
 const ancho = ref(0)
 const alto = ref(0)
 const encima = ref(null)
 let observador = null
+
+/*
+  El bloque y su fila se señalan el uno al otro: pasar por un bloque resalta
+  su fila en la lista, y pasar por la fila, su bloque. El número los ata;
+  esto ahorra además buscarlo.
+*/
+const resaltado = computed(() => encima.value ?? props.senalado)
+function senalar(id) {
+  encima.value = id
+  emit('senalar', typeof id === 'number' ? id : null)
+}
 
 function medir() {
   if (!contenedor.value) return
@@ -140,9 +153,7 @@ const pequenos = computed(() => {
   return { cuantos: fuera.length, dinero: fuera.reduce((s, n) => s + n.dinero, 0) }
 })
 
-const color = computed(() => paletaDeNucleos(analisis.value.nucleos))
-
-const MARGEN = 10
+const MARGEN = 2
 
 /*
   La cola se junta en un bloque «y N más».
@@ -170,39 +181,61 @@ const juntados = computed(() => {
   return { cuantos: r.cuantos, dinero: r.valor }
 })
 
+/*
+  Los bloques van en papel y numerados, no pintados.
+
+  Eran ocho colores para los ocho primeros grupos y gris para el resto, y la
+  lista de al lado repetía el color en un punto. Casar tonos parecidos de
+  memoria —¿este naranja o aquel salmón?— es el trabajo que un número ahorra,
+  y ocho colores más chocaban con los tres que dicen quién es quién en toda
+  la web (docs/diseno.md §2). Ahora el bloque 03 es la fila 03.
+*/
 const bloques = computed(() => {
   const lista = dibujables.value
   const { cajas, resto } = reparto.value
   return cajas.map((c) => {
+    const cabe = {
+      cabeNombre: c.ancho > 86 && c.alto > 40,
+      cabeCifra: c.ancho > 86 && c.alto > 62,
+    }
     if (resto && c.i === resto.desde) {
-      return {
-        ...c,
-        nucleo: null,
-        color: FONDO,
-        destacado: false,
-        cabeNombre: c.ancho > 86 && c.alto > 40,
-        cabeCifra: c.ancho > 86 && c.alto > 58,
-        cabeDetalle: false,
-        juntados: resto,
-      }
+      return { ...c, ...cabe, nucleo: null, numero: '', cabeDetalle: false, mezcla: [], juntados: resto }
     }
     const n = lista[c.i]
-    const tono = color.value(n.id)
     return {
       ...c,
+      ...cabe,
       nucleo: n,
-      color: tono,
-      destacado: tono !== FONDO,
+      numero: String(c.i + 1).padStart(2, '0'),
       // Un rótulo en una caja que no lo admite es peor que ninguno: tapa el
-      // bloque y no se lee. Los umbrales son el sitio que piden dos renglones
-      // de nombre y uno de cifra con sus márgenes.
-      cabeNombre: c.ancho > 86 && c.alto > 40,
-      cabeCifra: c.ancho > 86 && c.alto > 58,
-      cabeDetalle: c.ancho > 150 && c.alto > 86,
+      // bloque y no se lee.
+      cabeDetalle: c.ancho > 150 && c.alto > 104,
+      mezcla: mezclaDeTipos(n.tipos),
       juntados: null,
     }
   })
 })
+
+/**
+ * La cifra crece con el bloque, como en una infografía de prensa: el bloque
+ * más grande lleva la cifra más grande, y la jerarquía se lee antes que los
+ * números. Con tope, para que no compita con el nombre.
+ */
+function cuerpoCifra(b) {
+  return Math.round(Math.min(30, Math.max(16, Math.sqrt(b.ancho * b.alto) / 13)))
+}
+
+/** Los tramos de la barra de mezcla de un bloque, en píxeles. */
+function tramos(b) {
+  const x0 = b.x + 9
+  const w = Math.max(0, b.ancho - 20)
+  let x = x0
+  return b.mezcla.map((m) => {
+    const t = { tipo: m.tipo, x, w: Math.max(0, m.parte * w - 1) }
+    x += m.parte * w
+    return t
+  })
+}
 
 function emitirAnalisis() {
   emit('analizado', {
@@ -226,95 +259,147 @@ function titulo(n) {
 </script>
 
 <template>
-  <div ref="contenedor" class="mapa-dinero">
-    <svg v-if="bloques.length" :width="ancho" :height="alto" role="img">
-      <title>Dónde se concentra el dinero público, por grupos</title>
-      <g
-        v-for="b in bloques"
-        :key="b.juntados ? 'resto' : b.nucleo.id"
-        class="bloque"
-        :class="{
-          destacado: b.destacado,
-          resto: Boolean(b.juntados),
-          apagado: encima !== null && encima !== (b.nucleo?.id ?? 'resto'),
-        }"
-        @mouseenter="encima = b.nucleo?.id ?? 'resto'"
-        @mouseleave="encima = null"
-        @click="b.nucleo && emit('abrir', b.nucleo.id)"
-      >
-        <title v-if="b.juntados">
-          {{ b.juntados.cuantos }} grupos más pequeños · {{ dineroCorto(b.juntados.valor) }}
-        </title>
-        <title v-else>{{ titulo(b.nucleo) }}</title>
-        <rect
-          :x="b.x"
-          :y="b.y"
-          :width="Math.max(0, b.ancho - 2)"
-          :height="Math.max(0, b.alto - 2)"
-          rx="4"
-          :fill="b.color"
-          :fill-opacity="b.destacado ? 0.4 : 0.16"
-          :stroke="b.color"
-          stroke-opacity="0.85"
-        />
-        <!--
-          El canto de color, arriba: con el relleno translúcido a solas, los
-          ocho de cabeza y el resto se distinguían mal en los bloques
-          pequeños, y el color es lo que los ata a su fila de la lista.
-        -->
-        <rect
-          v-if="b.destacado"
-          :x="b.x"
-          :y="b.y"
-          :width="Math.max(0, b.ancho - 2)"
-          height="3"
-          :fill="b.color"
-        />
-        <foreignObject
-          v-if="b.cabeNombre"
-          :x="b.x + 7"
-          :y="b.y + 8"
-          :width="Math.max(0, b.ancho - 16)"
-          :height="Math.max(0, b.alto - 14)"
+  <div class="mapa-dinero">
+    <!--
+      El pie de gráfico va ARRIBA y fuera del dibujo. Era una placa encima de
+      la esquina de abajo, y tapaba justo los bloques que caían ahí: el de la
+      Diputación de Gipuzkoa se leía a medias debajo de la frase que
+      explicaba qué eran los bloques.
+    -->
+    <p class="pie-grafico">
+      <b>El área de cada bloque es el dinero</b> que se pagan entre sí los
+      organismos y empresas de un grupo. Pulsa uno para ver quién está dentro.
+      <span class="ancho">
+        {{ dibujables.length }} grupos, {{ analisis.entidades.toLocaleString('es-ES') }}
+        entidades, {{ dineroCorto(analisis.totalDinero) }} en juego.
+        <!-- Lo que se recorta se dice, con su cifra: es la diferencia entre recortar y esconder. -->
+        <template v-if="pequenos.cuantos">
+          No se dibujan {{ pequenos.cuantos }} grupos de menos de {{ MINIMO_NUCLEO }}
+          entidades ({{ dineroCorto(pequenos.dinero) }}): se pueden buscar por su nombre.
+        </template>
+      </span>
+    </p>
+
+    <div ref="contenedor" class="lienzo">
+      <svg v-if="bloques.length" :width="ancho" :height="alto" role="img">
+        <title>Dónde se concentra el dinero público, por grupos</title>
+        <defs>
+          <!-- El rayado del resto: lo que no se dibuja por separado. -->
+          <pattern id="rayado-resto" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="7" height="7" class="rayado-fondo" />
+            <line x1="0" y1="0" x2="0" y2="7" class="rayado-linea" />
+          </pattern>
+        </defs>
+        <g
+          v-for="b in bloques"
+          :key="b.juntados ? 'resto' : b.nucleo.id"
+          class="bloque"
+          :class="{
+            resto: Boolean(b.juntados),
+            apagado: resaltado !== null && resaltado !== (b.nucleo?.id ?? 'resto'),
+          }"
+          @mouseenter="senalar(b.nucleo?.id ?? 'resto')"
+          @mouseleave="senalar(null)"
+          @click="b.nucleo && emit('abrir', b.nucleo.id)"
         >
-          <div v-if="b.juntados" class="rotulo">
-            <p class="nombre tenue">y {{ b.juntados.cuantos }} grupos más</p>
-            <p v-if="b.cabeCifra" class="cifra tenue">{{ dineroCorto(b.juntados.valor) }}</p>
-          </div>
-          <div v-else class="rotulo">
-            <p class="nombre">{{ b.nucleo.etiqueta }}</p>
-            <p v-if="b.cabeCifra" class="cifra">{{ dineroCorto(b.nucleo.dinero) }}</p>
-            <p v-if="b.cabeDetalle" class="detalle">{{ b.nucleo.tamano }} entidades</p>
-          </div>
-        </foreignObject>
-      </g>
-    </svg>
-    <p v-else class="vacio">Calculando los grupos…</p>
+          <title v-if="b.juntados">
+            {{ b.juntados.cuantos }} grupos más pequeños · {{ dineroCorto(b.juntados.valor) }}
+          </title>
+          <title v-else>{{ titulo(b.nucleo) }}</title>
+          <rect
+            :x="b.x"
+            :y="b.y"
+            :width="Math.max(0, b.ancho - 3)"
+            :height="Math.max(0, b.alto - 3)"
+            rx="2"
+            class="caja"
+            :style="b.juntados ? { fill: 'url(#rayado-resto)' } : null"
+          />
+          <foreignObject
+            v-if="b.cabeNombre"
+            :x="b.x + 9"
+            :y="b.y + 7"
+            :width="Math.max(0, b.ancho - 20)"
+            :height="Math.max(0, b.alto - (b.cabeDetalle ? 26 : 12))"
+          >
+            <div v-if="b.juntados" class="rotulo">
+              <p class="nombre tenue">y {{ b.juntados.cuantos }} grupos más</p>
+              <p v-if="b.cabeCifra" class="cifra tenue">{{ dineroCorto(b.juntados.valor) }}</p>
+            </div>
+            <div v-else class="rotulo">
+              <p class="numero">{{ b.numero }}</p>
+              <p class="nombre">{{ b.nucleo.etiqueta }}</p>
+              <p v-if="b.cabeCifra" class="cifra" :style="{ fontSize: `${cuerpoCifra(b)}px` }">
+                {{ dineroCorto(b.nucleo.dinero) }}
+              </p>
+              <p v-if="b.cabeDetalle" class="detalle">{{ b.nucleo.tamano }} entidades</p>
+            </div>
+          </foreignObject>
+          <!--
+            La mezcla del grupo: cuántas administraciones, empresas y
+            organizaciones tiene, en los tres colores de tipo. Dice de un
+            vistazo si un bloque es un organismo con sus proveedores o una
+            red de administraciones que se pagan entre sí.
+          -->
+          <g v-if="b.cabeDetalle" aria-hidden="true">
+            <rect
+              v-for="t in tramos(b)"
+              :key="t.tipo"
+              :x="t.x"
+              :y="b.y + b.alto - 15"
+              :width="t.w"
+              height="4"
+              :style="{ fill: `var(--${t.tipo})` }"
+            />
+          </g>
+        </g>
+      </svg>
+      <p v-else class="vacio">Calculando los grupos…</p>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.mapa-dinero { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.mapa-dinero {
+  position: relative; width: 100%; height: 100%; overflow: hidden;
+  display: flex; flex-direction: column; background: var(--papel);
+}
+.pie-grafico {
+  margin: 0; padding: var(--e3) var(--e4) var(--e2);
+  font-size: var(--t-s); color: var(--tinta-2); line-height: 1.45;
+  max-width: 90ch;
+}
+.pie-grafico b { color: var(--tinta); font-weight: 650; }
+.lienzo { position: relative; flex: 1; min-height: 0; margin: 0 var(--e3) var(--e3); }
 
 .bloque { cursor: pointer; transition: opacity 0.12s; }
+.caja { fill: var(--papel-2); stroke: none; transition: fill 0.12s; }
+.bloque:hover .caja { fill: var(--papel-3); }
+.bloque.apagado { opacity: 0.5; }
 /* El bloque del resto no lleva a ninguna parte: no se puede pulsar. */
 .bloque.resto { cursor: default; }
-.bloque.resto:hover rect { fill-opacity: 0.16; }
+.rayado-fondo { fill: var(--papel); }
+.rayado-linea { stroke: var(--filete-suave); stroke-width: 2.5; }
 .tenue { color: var(--tinta-3) !important; }
-.bloque.apagado { opacity: 0.45; }
-.bloque:hover rect { fill-opacity: 0.6; }
 
 .rotulo { overflow: hidden; height: 100%; pointer-events: none; }
+.numero {
+  margin: 0 0 2px; font-family: var(--mono); font-size: 10.5px; color: var(--tinta-3);
+  line-height: 1.2;
+}
 .nombre {
-  margin: 0; font-size: 12.5px; line-height: 1.2; font-weight: 600; color: var(--tinta);
+  margin: 0; font-size: 12.5px; line-height: 1.22; font-weight: 600; color: var(--tinta);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .cifra {
-  margin: 3px 0 0; font-size: 13px; font-weight: 650; color: var(--tinta);
-  font-variant-numeric: tabular-nums;
+  margin: 3px 0 0; font-family: var(--serif); font-size: 17px; font-weight: 600;
+  color: var(--tinta); line-height: 1.15;
 }
-.detalle { margin: 1px 0 0; font-size: 11px; color: var(--tinta-2); }
+.detalle { margin: 1px 0 0; font-size: 11px; color: var(--tinta-3); }
 
 .vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tinta-3); }
 
+@media (max-width: 820px) {
+  .ancho { display: none; }
+}
 </style>

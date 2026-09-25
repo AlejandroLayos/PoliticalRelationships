@@ -12,21 +12,25 @@
  * (spec §12).
  */
 import { computed } from 'vue'
-import { MINIMO_NUCLEO, conEstructura, dineroCorto, paletaDeNucleos } from '../nucleos.js'
+import { MINIMO_NUCLEO, conEstructura, dineroCorto } from '../nucleos.js'
 import { etiquetaEsquemaPlural } from '../esquemas.js'
 
 const props = defineProps({
   nucleos: { type: Array, default: () => [] },
   enfocado: { type: Number, default: null },
+  /** El grupo señalado en el mapa, para resaltar su fila. */
+  senalado: { type: Number, default: null },
 })
-const emit = defineEmits(['enfocar', 'seleccionar'])
+const emit = defineEmits(['enfocar', 'seleccionar', 'senalar'])
 
 /*
-  El mismo color que el mapa, y calculado igual: por el orden de esta lista.
-  Antes cada uno pedía su color por el id del núcleo, así que la fila decía un
-  color y la mancha otro en cuanto el orden no coincidía con el id.
+  El mismo número que el bloque del mapa, y por el mismo orden: el de esta
+  lista, que es el del dinero. Antes era un color —ocho, y gris el resto—, y
+  casar tonos de memoria era un trabajo que un número ahorra.
 */
-const color = computed(() => paletaDeNucleos(props.nucleos))
+function numero(i) {
+  return String(i + 1).padStart(2, '0')
+}
 
 // El corte vive en `nucleos.js` porque el mapa tiene que aplicar el mismo:
 // si aquí se esconde un grupo por pequeño y allí se le da color, la leyenda
@@ -52,12 +56,15 @@ function resumenTipos(tipos) {
         dónde sale el dinero de una decisión no tiene por qué traducirla, y si
         el título de la columna hay que traducirlo, la columna no se lee.
       -->
+      <p class="antetitulo">Los grupos, por dinero</p>
       <h2>Grupos de dinero público</h2>
       <p class="que-es">
         Organismos y empresas que <strong>se pagan entre ellos mucho más que
-        con el resto</strong>. Sale de mirar la forma de la red, no de ninguna
-        investigación: estar en el mismo grupo no implica irregularidad ni
-        connivencia.
+        con el resto</strong>.
+      </p>
+      <p class="nota">
+        Sale de mirar la forma de la red, no de ninguna investigación: estar
+        en el mismo grupo no implica irregularidad ni connivencia.
       </p>
     </div>
 
@@ -66,13 +73,15 @@ function resumenTipos(tipos) {
     </p>
 
     <ul v-else class="lista">
-      <li v-for="n in conCuerpo" :key="n.id">
+      <li v-for="(n, i) in conCuerpo" :key="n.id">
         <button
           class="nucleo"
-          :class="{ activo: enfocado === n.id }"
+          :class="{ activo: enfocado === n.id, senalado: senalado === n.id }"
           @click="emit('enfocar', enfocado === n.id ? null : n.id)"
+          @mouseenter="emit('senalar', n.id)"
+          @mouseleave="emit('senalar', null)"
         >
-          <span class="marca" :style="{ background: color(n.id) }" />
+          <span class="puesto-num">{{ numero(i) }}</span>
           <span class="cuerpo">
             <span class="titulo">{{ n.etiqueta }}</span>
             <span class="cifras">
@@ -105,127 +114,49 @@ function resumenTipos(tipos) {
 
 <style scoped>
 .panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow-y: auto;
-  background: var(--fondo-panel);
-  border-left: 1px solid var(--borde);
+  display: flex; flex-direction: column; height: 100%; overflow-y: auto;
+  background: var(--papel); border-left: 1px solid var(--filete-suave);
 }
 .cabecera {
-  padding: 1rem 1rem 0.75rem;
-  border-bottom: 1px solid var(--borde);
-  position: sticky;
-  top: 0;
-  background: var(--fondo-panel);
-  z-index: 1;
+  padding: var(--e4) var(--e4) var(--e3);
+  border-bottom: 2px solid var(--filete);
+  position: sticky; top: 0; background: var(--papel); z-index: 1;
 }
-h2 {
-  margin: 0 0 0.35rem;
-  font-size: 0.95rem;
-  letter-spacing: 0.02em;
-}
-.que-es {
-  margin: 0;
-  font-size: 0.72rem;
-  line-height: 1.45;
-  color: var(--texto-tenue);
-}
-.vacio {
-  padding: 1rem;
-  color: var(--texto-tenue);
-  font-size: 0.8rem;
-}
-.lista,
-.miembros {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+h2 { margin: 0 0 var(--e2); font-size: var(--t-h3); }
+.que-es { margin: 0; font-size: var(--t-s); line-height: 1.45; color: var(--tinta-2); }
+.que-es strong { color: var(--tinta); font-weight: 650; }
+.cabecera .nota { font-size: var(--t-s); margin-top: var(--e2); }
+.vacio { padding: var(--e4); color: var(--tinta-3); font-size: var(--t-s); }
+
+.lista, .miembros { list-style: none; margin: 0; padding: 0; }
 .nucleo {
-  display: flex;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.65rem 1rem;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid var(--borde);
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  align-items: flex-start;
+  display: grid; grid-template-columns: 1.7rem 1fr; gap: var(--e2);
+  width: 100%; padding: var(--e3) var(--e4);
+  background: none; border: 0; border-bottom: 1px solid var(--filete-suave);
+  color: inherit; font: inherit; text-align: left; cursor: pointer; align-items: baseline;
 }
-.nucleo:hover {
-  background: var(--fondo-hover);
-}
-.nucleo.activo {
-  background: var(--fondo-hover);
-}
-.marca {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-top: 0.3rem;
-  flex: none;
-}
-.cuerpo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-.titulo {
-  font-size: 0.83rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-.cifras {
-  font-size: 0.76rem;
-  color: var(--texto-tenue);
-}
-.cifras strong {
-  color: var(--texto);
-}
-.sep {
-  margin: 0 0.3rem;
-}
-.tipos {
-  font-size: 0.7rem;
-  color: var(--texto-tenue);
-}
-.miembros {
-  background: rgba(0, 0, 0, 0.18);
-  border-bottom: 1px solid var(--borde);
-}
+.nucleo:hover, .nucleo.activo, .nucleo.senalado { background: var(--papel-2); }
+.nucleo.activo { box-shadow: inset 3px 0 0 var(--tinta); }
+.cuerpo { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.titulo { font-size: var(--t-m); font-weight: 600; color: var(--tinta); line-height: 1.3; overflow-wrap: anywhere; }
+.cifras { font-size: var(--t-s); color: var(--tinta-3); }
+.cifras strong { color: var(--tinta); font-weight: 650; }
+.sep { margin: 0 0.3rem; }
+.tipos { font-size: var(--t-xs); color: var(--tinta-3); }
+
+.miembros { background: var(--hoja); border-bottom: 1px solid var(--filete-suave); }
 .miembro {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.4rem 1rem 0.4rem 2.1rem;
-  background: none;
-  border: 0;
-  color: inherit;
-  font-size: 0.76rem;
-  text-align: left;
-  cursor: pointer;
+  display: flex; justify-content: space-between; gap: var(--e3);
+  width: 100%; padding: 0.45rem var(--e4) 0.45rem calc(var(--e4) + 1.7rem + var(--e2));
+  background: none; border: 0; color: var(--tinta); font: inherit; font-size: var(--t-s);
+  text-align: left; cursor: pointer;
 }
-.miembro:hover {
-  background: var(--fondo-hover);
-}
-.nombre {
-  overflow-wrap: anywhere;
-}
-.dinero {
-  color: var(--texto-tenue);
-  white-space: nowrap;
-}
+.miembro:hover { background: var(--papel-2); }
+.miembro:hover .nombre { text-decoration: underline; text-decoration-color: var(--filete-medio); text-underline-offset: 0.18em; }
+.nombre { overflow-wrap: anywhere; }
+.dinero { color: var(--tinta-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .nota-pequenos {
-  padding: 0.85rem 1rem;
-  margin: 0;
-  font-size: 0.72rem;
-  line-height: 1.45;
-  color: var(--texto-tenue);
-  border-top: 1px solid var(--borde);
+  padding: var(--e3) var(--e4); margin: 0;
+  font-size: var(--t-xs); line-height: 1.5; color: var(--tinta-3);
 }
 </style>

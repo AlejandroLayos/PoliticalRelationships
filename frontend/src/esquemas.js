@@ -70,6 +70,26 @@ export function tipoDe(esquema) {
   return TIPO_POR_ESQUEMA[esquema] ?? 'neutro'
 }
 
+/**
+ * De qué está hecho un grupo: la parte de cada tipo, por número de
+ * entidades, en el orden fijo adm, emp, par, neutro y sin los que no hay.
+ *
+ * @param {Record<string, number>} porEsquema cuántas entidades de cada esquema
+ * @returns {{tipo: string, parte: number}[]}
+ */
+export function mezclaDeTipos(porEsquema) {
+  const cuenta = { adm: 0, emp: 0, par: 0, neutro: 0 }
+  let total = 0
+  for (const [esquema, n] of Object.entries(porEsquema ?? {})) {
+    cuenta[tipoDe(esquema)] += n
+    total += n
+  }
+  if (!total) return []
+  return Object.entries(cuenta)
+    .filter(([, n]) => n > 0)
+    .map(([tipo, n]) => ({ tipo, parte: n / total }))
+}
+
 /** El token CSS de cada tipo. Sirve igual en papel y en el visor. */
 export const VAR_POR_ESQUEMA = Object.fromEntries(
   Object.entries(TIPO_POR_ESQUEMA).map(([esquema, tipo]) => [esquema, `var(--${tipo})`]),
