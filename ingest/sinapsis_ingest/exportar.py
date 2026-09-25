@@ -26,6 +26,7 @@ from typing import Any
 
 import structlog
 
+from sinapsis_ingest.exportar_cargos import exportar_cargos
 from sinapsis_ingest.store import Store
 from sinapsis_ingest.territorio import clasificar_entidad
 from sinapsis_ingest.util import es_identificador_personal
@@ -311,6 +312,12 @@ def exportar(
         JOIN entities es ON es.id = r.source_entity_id AND es.canonical_id IS NULL
         JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
         WHERE r.status <> 'retracted'
+          -- Los cargos públicos salen por su propia puerta (`cargos.json`,
+          -- ver exportar_cargos.py). Aquí no entran: un acto de nombramiento
+          -- no lleva dinero, y si entrara se quedaría en el mapa un puesto
+          -- colgando con su titular retirado por la regla de personas.
+          AND r.ftm_schema <> 'Occupancy'
+          AND es.ftm_schema <> 'Position' AND et.ftm_schema <> 'Position'
         ORDER BY r.amount DESC NULLS LAST, r.id
         """
     ).fetchall()
@@ -693,6 +700,7 @@ def exportar(
     )
 
     indice = _exportar_indice(store, destino, {str(n["id"]) for n in nodos}, patron)
+    cargos = exportar_cargos(store, destino.with_name("cargos.json"))
 
     resumen = {
         "entidades": len(nodos),
@@ -703,6 +711,7 @@ def exportar(
         "truncado": documento["truncado"],
         "bytes": destino.stat().st_size,
         **indice,
+        **cargos,
     }
     log.info("grafo exportado", destino=str(destino), **resumen)
     return resumen
@@ -766,7 +775,12 @@ def _exportar_indice(
             FROM entities e
             LEFT JOIN vivas r ON r.source_entity_id = e.id OR r.target_entity_id = e.id
             WHERE e.canonical_id IS NULL
-              AND e.ftm_schema NOT IN (%s, 'Contract')
+              AND e.ftm_schema NOT IN (%s, 'Contract', 'Position')
+              -- Los departamentos que nombra el BOE no reparten dinero en
+              -- ninguna fuente: salen en `cargos.json`, con sus cargos. En
+              -- el índice serían un segundo «Ministerio de Hacienda» con
+              -- cero euros al lado del que sí paga.
+              AND e.dedupe_key NOT LIKE 'boe:%%'
             GROUP BY e.id
         ),
         -- Órgano -> (UnknownLink) -> expediente -> (ContractAward) -> empresa.

@@ -1,0 +1,188 @@
+"""Lectura de títulos de Real Decreto, contra los títulos reales del BOE.
+
+La muestra la guardó el reconocimiento (`scripts/explorar_boe.py`) desde la
+API de datos abiertos del BOE: son títulos tal cual, sin retocar.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import date
+from pathlib import Path
+
+import pytest
+
+from sinapsis_ingest.cargos import es_alto_cargo, leer_titulo, puesto
+
+GOLDEN = Path(__file__).parent / "golden"
+
+
+def _titulos(fichero: str) -> list[str]:
+    ruta = GOLDEN / fichero
+    if not ruta.exists():
+        pytest.skip(f"falta la muestra {fichero}")
+    return [i["titulo"] for i in json.loads(ruta.read_text(encoding="utf-8"))["items"]]
+
+
+def test_nombramiento_real():
+    a = leer_titulo(
+        "Real Decreto 714/2026, de 1 de septiembre, por el que se nombra Secretaria "
+        "General de Transporte Terrestre a doña Sara Hernández del Olmo."
+    )
+    assert a is not None
+    assert a.tipo == "nombramiento"
+    assert a.cargo == "Secretaria General de Transporte Terrestre"
+    assert a.nombre == "Sara Hernández del Olmo"
+    assert a.numero == "714/2026"
+    assert a.fecha_decreto == date(2026, 9, 1)
+
+
+def test_cese_real():
+    a = leer_titulo(
+        "Real Decreto 712/2026, de 1 de septiembre, por el que se dispone el cese de "
+        "doña Rocío Báguena Rodríguez como Secretaria General de Transporte Terrestre."
+    )
+    assert a is not None
+    assert a.tipo == "cese"
+    assert a.cargo == "Secretaria General de Transporte Terrestre"
+    assert a.nombre == "Rocío Báguena Rodríguez"
+    assert a.motivo == ""
+
+
+def test_un_cargo_con_comas_no_se_corta():
+    # Los nombres de ministerio llevan comas. Cortar en la primera publicaría
+    # «Ministra de Trabajo» a secas.
+    a = leer_titulo(
+        "Real Decreto 5/2020, de 13 de enero, por el que se dispone el cese de doña "
+        "Magdalena Valerio Cordero como Ministra de Trabajo, Migraciones y Seguridad Social."
+    )
+    assert a is not None
+    assert a.cargo == "Ministra de Trabajo, Migraciones y Seguridad Social"
+
+
+@pytest.mark.parametrize(
+    ("titulo", "motivo"),
+    [
+        (
+            "Real Decreto 1/2024, de 2 de enero, por el que se dispone el cese, a petición "
+            "propia, de don Juan Pérez García como Director General de Carreteras.",
+            "a petición propia",
+        ),
+        (
+            "Real Decreto 1/2024, de 2 de enero, por el que se dispone el cese de don Juan "
+            "Pérez García como Director General de Carreteras, por pase a otro destino.",
+            "por pase a otro destino",
+        ),
+        (
+            "Real Decreto 1/2024, de 2 de enero, por el que se dispone el cese de don Juan "
+            "Pérez García como Director General de Carreteras, agradeciéndole los servicios "
+            "prestados.",
+            "agradeciéndole los servicios prestados",
+        ),
+    ],
+)
+def test_el_motivo_del_cese_no_es_parte_del_cargo(titulo, motivo):
+    a = leer_titulo(titulo)
+    assert a is not None
+    assert a.cargo == "Director General de Carreteras"
+    assert a.motivo == motivo
+
+
+@pytest.mark.parametrize(
+    "titulo",
+    [
+        # Varias personas a la vez: no se reparte a ciegas quién es qué.
+        "Real Decreto 1/2024, de 2 de enero, por el que se nombran Vocales del Consejo a "
+        "don Juan Pérez García y a doña Ana López Ruiz.",
+        # El cese colectivo de un gobierno no dice a quién ni de qué.
+        "Real Decreto 1/2024, de 2 de enero, por el que se dispone el cese de los "
+        "Vicepresidentes y Ministros del Gobierno.",
+        # No es un Real Decreto.
+        "Orden HFP/1/2024, de 2 de enero, por la que se nombra Subdirector General a don "
+        "Juan Pérez García.",
+        # Un nombre de una sola palabra no es un nombre y apellido.
+        "Real Decreto 1/2024, de 2 de enero, por el que se nombra Director General de "
+        "Carreteras a don Juan.",
+    ],
+)
+def test_lo_que_no_encaja_en_la_formula_no_se_lee(titulo):
+    assert leer_titulo(titulo) is None
+
+
+def test_todos_los_titulos_reales_se_leen():
+    """La muestra entera son actos de una persona: tienen que salir todos."""
+    titulos = _titulos("boe_altos_cargos_muestra.json")
+    no_leidos = [t for t in titulos if leer_titulo(t) is None]
+    assert not no_leidos, no_leidos
+    # Y ninguno se come el tratamiento ni el punto final.
+    for t in titulos:
+        a = leer_titulo(t)
+        assert a is not None
+        assert not a.nombre.startswith(("don ", "doña "))
+        assert not a.nombre.endswith(".")
+        assert a.cargo and a.cargo[0].isupper()
+
+
+def test_puesto_quita_el_genero_de_quien_lo_ocupa():
+    assert puesto("Secretaria General de Transporte Terrestre") == (
+        "Secretario General de Transporte Terrestre"
+    )
+    assert puesto("Ministra de Hacienda") == "Ministro de Hacienda"
+    assert puesto("Vicepresidenta primera del Gobierno") == "Vicepresidente primero del Gobierno"
+    # Más adentro no se toca: «Secretaría», con tilde, es el órgano.
+    assert puesto(
+        "Directora del Departamento de Comunicación Institucional de la Secretaría de Estado"
+    ) == ("Director del Departamento de Comunicación Institucional de la Secretaría de Estado")
+
+
+@pytest.mark.parametrize(
+    "cargo",
+    [
+        "Secretaria General de Transporte Terrestre",
+        "Secretaria de Estado de Vivienda y Agenda Urbana",
+        "Presidenta de CASA 47 Entidad Pública Empresarial",
+        "Directora General de Financiación Internacional",
+        "Director del Departamento de Comunicación Institucional de la Secretaría de "
+        "Estado de Comunicación",
+        "Enviado Especial para Siria",
+        "Ministra de Trabajo, Migraciones y Seguridad Social",
+        "Vicepresidenta Primera del Gobierno",
+        "Presidente del Gobierno",
+        "Subsecretario de Hacienda",
+        "Delegado del Gobierno en Andalucía",
+        "Embajador de España en la República Francesa",
+        "Fiscal General del Estado",
+    ],
+)
+def test_altos_cargos(cargo):
+    assert es_alto_cargo(cargo)
+
+
+@pytest.mark.parametrize(
+    "cargo",
+    [
+        # Carreras que también se nombran por Real Decreto.
+        "Fiscal de la Fiscalía Especial Antidroga",
+        "Fiscal Jefe de la Fiscalía Provincial de Madrid",
+        "Inspectora Fiscal de la Inspección Fiscal de la Fiscalía General del Estado",
+        "Presidente de la Audiencia Provincial de Sevilla",
+        "Magistrado de la Sala Tercera del Tribunal Supremo",
+        "General de Brigada del Cuerpo General del Ejército de Tierra",
+        # Y lo que no reconoce ninguna regla no pasa.
+        "Vocal del Consejo Asesor",
+        "Subdirector General de Coordinación",
+    ],
+)
+def test_no_son_altos_cargos(cargo):
+    assert not es_alto_cargo(cargo)
+
+
+def test_la_muestra_real_separa_fiscales_de_altos_cargos():
+    titulos = _titulos("boe_altos_cargos_muestra.json")
+    actos = [a for a in (leer_titulo(t) for t in titulos) if a]
+    altos = {a.cargo for a in actos if es_alto_cargo(a.cargo)}
+    fuera = {a.cargo for a in actos if not es_alto_cargo(a.cargo)}
+    assert "Secretaria General de Transporte Terrestre" in altos
+    assert "Directora General de Financiación Internacional" in altos
+    assert fuera, "la muestra trae fiscales y ninguno debería pasar"
+    assert all("Fiscal" in c for c in fuera), fuera
