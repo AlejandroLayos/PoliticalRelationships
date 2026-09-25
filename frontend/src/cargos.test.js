@@ -323,6 +323,8 @@ describe('diputados', () => {
     expect(dePapel(d, 'congreso')).toEqual([diputada])
     expect(dePapel(d, 'boe')).not.toContain(diputada)
     expect(dePapel(d, 'todos')).toHaveLength(d.length)
+    const autorizada = { clave: 'oci:x', periodos: [{ hasta: '2020-01-01', fuente: 'oci' }], autorizaciones: [{ actividad: 'X' }] }
+    expect(dePapel([...d, autorizada], 'autorizados')).toEqual([autorizada])
   })
   it('la ficha se llama por lo más alto que se sabe', () => {
     expect(papelDeLaFicha(diputada)).toBe('Congreso de los Diputados')

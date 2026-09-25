@@ -303,11 +303,15 @@ export function recuento(datos) {
 }
 
 /**
- * Quién sale en la lista: todos, quien tiene un Real Decreto (`boe`), o los
- * diputados (`congreso`: quien tiene un mandato, unido o no a un alto cargo).
+ * Quién sale en la lista: todos, quien tiene un Real Decreto (`boe`), los
+ * diputados (`congreso`: quien tiene un mandato, unido o no a un alto cargo),
+ * o quien tiene autorizaciones para el sector privado (`autorizados`).
  */
 export function dePapel(personas, papel) {
   if (!papel || papel === 'todos') return personas
+  // Quien tiene autorizaciones de la Oficina de Conflictos de Intereses, esté
+  // o no unido a su ficha del BOE.
+  if (papel === 'autorizados') return personas.filter((persona) => persona.autorizaciones?.length)
   return personas.filter((persona) =>
     (persona.periodos ?? []).some((p) => (p.fuente ?? 'boe') === papel),
   )

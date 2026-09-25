@@ -67,6 +67,7 @@ const PAPELES = [
   { id: 'todos', texto: 'Todos' },
   { id: 'boe', texto: 'Altos cargos' },
   { id: 'congreso', texto: 'Diputados' },
+  { id: 'autorizados', texto: 'Autorizados a ir al sector privado' },
 ]
 const ultimos = computed(() => movimientos(props.datos, 12))
 const porOrganismo = computed(() => organismos(props.datos, 6))
@@ -722,14 +723,14 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 }
 .sector.privado { color: var(--emp); }
 .sector.publico { color: var(--adm); }
-.papeles { display: flex; gap: 0; margin: 0 0 var(--e2); }
+.papeles { display: flex; flex-wrap: wrap; gap: 0; margin: 0 0 var(--e2); }
 .papel {
   font: inherit; font-size: var(--t-s); cursor: pointer;
   background: none; color: var(--tinta-2);
   border: 1px solid var(--filete); padding: 0.25rem 0.7rem;
 }
-.papel + .papel { border-left: 0; }
-.papel[aria-pressed='true'] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+.papel + .papel { margin-left: -1px; }
+.papel[aria-pressed='true'] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); position: relative; }
 .papel:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
 .gobiernos-filtro { flex-wrap: wrap; }
 .gobiernos-filtro .papel { font-size: var(--t-xs); }
