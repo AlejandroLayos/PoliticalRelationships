@@ -1,6 +1,6 @@
 # Reconocimiento: actividad privada tras el cese de altos cargos
 
-Generado el 2026-09-25T21:53:38.392418+00:00 por `scripts/explorar_oci.py`.
+Generado el 2026-09-25T22:02:31.960282+00:00 por `scripts/explorar_oci.py`.
 
 Lo que se ve desde fuera, sin interpretar, para escribir el conector de
 la fuente que afirma las puertas giratorias (spec §12 y §15, fase 7).
@@ -55,6 +55,10 @@ Lo que la página carga aparte:
 
 Tablas por id: ['resultados', 'resultados', 'resultados']
 
+- «Resultados encontrados»: ['644']
+- descarga → HTTP 200 · `application/zip;charset=UTF-8` · 42715 bytes · magia `504b030414000808`
+  - guardada como `ingest/tests/golden/oci/autorizaciones-vigentes.xlsx`
+  - no se pudo abrir: "There is no item named '[Content_Types].xml' in the archive"
 - `\d[\d.]* resultados?[^.]{0,40}`: ['2000 resultados']
 - páginas enlazadas: ['2', '3', '4', '5', '6'] … ['8', '9', '10']
 
@@ -185,7 +189,7 @@ Página guardada como muestra: `ingest/tests/golden/oci/servicios-buscador-busca
 
 ## `https://transparencia.gob.es/servicios-buscador/buscar.htm?categoria=autorizaciones_ind&lang=es&orderBy=fechaAutorizacion&or=DESC&historico=true`
 
-HTTP 200 · `text/html;charset=UTF-8` · 506317 bytes
+HTTP 200 · `text/html;charset=UTF-8` · 506316 bytes
 
 - tabla 0: 12 filas · cabecera: `['Nombre', 'Alto cargo', 'Ministerio', 'Fecha de cese', 'Empresa / Atividad autorizada', 'Fecha de autorización']`
 - tabla 1: 12 filas · cabecera: `['Nombre', 'Alto cargo', 'Ministerio', 'Fecha de cese', 'Empresa / Atividad autorizada', 'Fecha de autorización']`
@@ -235,6 +239,10 @@ Lo que la página carga aparte:
 
 Tablas por id: ['resultados', 'resultados', 'resultados']
 
+- «Resultados encontrados»: ['574']
+- descarga → HTTP 200 · `application/zip;charset=UTF-8` · 38466 bytes · magia `504b030414000808`
+  - guardada como `ingest/tests/golden/oci/autorizaciones-historico.xlsx`
+  - no se pudo abrir: "There is no item named '[Content_Types].xml' in the archive"
 - `\d[\d.]* resultados?[^.]{0,40}`: ['2000 resultados']
 - páginas enlazadas: ['2', '3', '4', '5', '6'] … ['8', '9', '10']
 
@@ -363,7 +371,7 @@ Página guardada como muestra: `ingest/tests/golden/oci/servicios-buscador-busca
 
 ## `https://transparencia.gob.es/servicios-buscador/buscar.htm?categoria=autorizaciones_ind&lang=es&orderBy=fechaAutorizacion&or=DESC&historico=false`
 
-HTTP 200 · `text/html;charset=UTF-8` · 505577 bytes
+HTTP 200 · `text/html;charset=UTF-8` · 505576 bytes
 
 - tabla 0: 12 filas · cabecera: `['Nombre', 'Alto cargo', 'Ministerio', 'Fecha de cese', 'Empresa / Atividad autorizada', 'Fecha de autorización']`
 - tabla 1: 12 filas · cabecera: `['Nombre', 'Alto cargo', 'Ministerio', 'Fecha de cese', 'Empresa / Atividad autorizada', 'Fecha de autorización']`
@@ -413,6 +421,7 @@ Lo que la página carga aparte:
 
 Tablas por id: ['resultados', 'resultados', 'resultados']
 
+- «Resultados encontrados»: ['70']
 - `\d[\d.]* resultados?[^.]{0,40}`: ['2000 resultados']
 - páginas enlazadas: ['2', '3', '4', '5', '6'] … ['5', '6', '7']
 
@@ -591,6 +600,7 @@ Lo que la página carga aparte:
 
 Tablas por id: ['resultados', 'resultados', 'resultados']
 
+- «Resultados encontrados»: ['644']
 - `\d[\d.]* resultados?[^.]{0,40}`: ['2000 resultados']
 - páginas enlazadas: ['1', '3', '4', '5', '6'] … ['8', '9', '10']
 
