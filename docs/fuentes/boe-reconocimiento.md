@@ -1,6 +1,6 @@
 # Reconocimiento del BOE y del BORME
 
-Generado automáticamente el 2026-09-25T20:51:40.237337+00:00 por `scripts/explorar_boe.py`.
+Generado automáticamente el 2026-09-25T21:13:58.446251+00:00 por `scripts/explorar_boe.py`.
 
 **No es documentación de una fuente integrada**: es lo que se ve desde fuera,
 anotado sin interpretar, para escribir los conectores de las puertas giratorias
@@ -116,6 +116,39 @@ Claves de un `item`:
 
 Títulos de altos cargos (son publicables: §12):
 
+
+## BOE — días de cambio de gobierno
+
+- `20111222` → HTTP 200 · 147 KB · II.A: 12 · por Real Decreto: **3**
+- `20111224` → HTTP 200 · 192 KB · II.A: 58 · por Real Decreto: **54**
+- `20111231` → HTTP 200 · 222 KB · II.A: 181 · por Real Decreto: **180**
+- `20180607` → HTTP 200 · 102 KB · II.A: 10 · por Real Decreto: **3**
+- `20180619` → HTTP 200 · 246 KB · II.A: 187 · por Real Decreto: **168**
+- `20231122` → HTTP 200 · 136 KB · II.A: 22 · por Real Decreto: **0**
+
+Cómo empiezan los títulos, sin número ni fecha (las 25 formas más comunes):
+
+- 218 × `por el que se dispone`
+- 174 × `por el que se nombra`
+- 9 × `por el que se promueve`
+- 2 × `por el que se nombran`
+- 2 × `por el que se confiere`
+- 1 × `por el que se declara`
+- 1 × `por el que se designa`
+- 1 × `por el que dispone el`
+
+Muestra guardada en `ingest/tests/golden/boe_altos_cargos_historico.json` (408 ítems).
+
+## BOE — XML de una disposición
+
+- `https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-19256` → HTTP 200 · `application/xml; charset=utf-8` · 2452 bytes
+  - etiquetas: alerta, alertas, analisis, departamento, diario, diario_numero, documento, estado_consolidacion, estatus_derogacion, fecha_disposicion, fecha_publicacion, identificador, judicialmente_anulada, letra_imagen, metadatos, numero_oficial, origen_legislativo, p, pagina_final, pagina_inicial, rango, referencias, seccion, subseccion, texto, titulo, url_pdf, vigencia_agotada
+- `https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18440` → HTTP 200 · `application/xml; charset=utf-8` · 2372 bytes
+  - etiquetas: alerta, alertas, analisis, departamento, diario, diario_numero, documento, estado_consolidacion, estatus_derogacion, fecha_disposicion, fecha_publicacion, identificador, judicialmente_anulada, letra_imagen, metadatos, numero_oficial, origen_legislativo, p, pagina_final, pagina_inicial, rango, referencias, seccion, subseccion, texto, titulo, url_pdf, vigencia_agotada
+- `https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18438` → HTTP 200 · `application/xml; charset=utf-8` · 2443 bytes
+  - etiquetas: alerta, alertas, analisis, departamento, diario, diario_numero, documento, estado_consolidacion, estatus_derogacion, fecha_disposicion, fecha_publicacion, identificador, judicialmente_anulada, letra_imagen, metadatos, numero_oficial, origen_legislativo, p, pagina_final, pagina_inicial, rango, referencias, seccion, subseccion, texto, titulo, url_pdf, vigencia_agotada
+- `https://www.boe.es/diario_boe/xml.php?id=BOE-A-2026-18439` → HTTP 200 · `application/xml; charset=utf-8` · 2402 bytes
+  - etiquetas: alerta, alertas, analisis, departamento, diario, diario_numero, documento, estado_consolidacion, estatus_derogacion, fecha_disposicion, fecha_publicacion, identificador, judicialmente_anulada, letra_imagen, metadatos, numero_oficial, origen_legislativo, p, pagina_final, pagina_inicial, rango, referencias, seccion, subseccion, texto, titulo, url_pdf, vigencia_agotada
 
 ## BORME — sumario diario y sección primera
 

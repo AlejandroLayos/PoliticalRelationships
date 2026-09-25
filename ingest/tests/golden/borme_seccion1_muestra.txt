@@ -1,5 +1,5 @@
 # Fuente: https://www.boe.es/borme/dias/2026/09/25/pdfs/BORME-A-2026-186-03.pdf
-# Capturado: 2026-09-25T20:51:59.626823+00:00
+# Capturado: 2026-09-25T21:14:28.058198+00:00
 # Nombres de persona sustituidos: 143
 
 APELLIDO1 APELLIDO2 NOMBRE
