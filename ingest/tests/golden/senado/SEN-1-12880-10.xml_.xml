@@ -1,0 +1,527 @@
+<?xml version = '1.0' encoding = 'ISO-8859-1' standalone = 'yes'?>
+<fichaSenador>
+<datosPersonales>
+<idweb>12880</idweb>
+<nombre>ENRIQUE</nombre>
+<apellidos>ABAD BENEDICTO</apellidos>
+<sexo>V</sexo>
+<estadoCivil>Casado.</estadoCivil>
+<fechaNacimiento>09/08/1956</fechaNacimiento>
+<lugarNacimiento>La Rinconada (Sevilla)</lugarNacimiento>
+<hijos>Un hijo.</hijos>
+<fallecido>NO</fallecido>
+<fallecidoFecha/>
+<biografia/>
+</datosPersonales>
+<legislaturas>
+<legislatura>
+<numLeg>8</numLeg>
+<numLegRomano>VIII Legislatura</numLegRomano>
+<legislaturaActual>NO</legislaturaActual>
+<credenciales>
+<credencial>
+<numCred>078</numCred>
+<procedTipo>E</procedTipo>
+<procedCod>41</procedCod>
+<procedLiteral>Electo:  Sevilla&lt;meta name="Tipo Procedencia" content = "ELECTO">&lt;meta name="Procedencia" content = "SEVILLA">&lt;meta name="Legislatura" content = "8">.</procedLiteral>
+<procedFecha>Fecha: 14/03/2004</procedFecha>
+<procedAntFecha>Fecha anterior elección: 14/03/2004</procedAntFecha>
+<sustitucionLiteral/>
+<sustitucionIdweb/>
+<bajaLiteral>Baja (extinción de la Diputación Permanente): 31/03/2008</bajaLiteral>
+<posicionHemiciclo/>
+<formElecSiglas>PSOE</formElecSiglas>
+<formElecNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)</formElecNombre>
+<formElecUrl/>
+<partidoSiglas>PSOE</partidoSiglas>
+<partidoNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)&lt;meta name="Partido politico" content = "PARTIDO SOCIALISTA OBRERO ESPAÑOL"></partidoNombre>
+<partidoUrl/>
+<partidoUrlLogo>www.senado.es/legis8/partidos/PSOE_log.gif</partidoUrlLogo>
+</credencial>
+</credenciales>
+<gruposParlamentarios>
+<grupoParlamentario>
+<grupoCod>800</grupoCod>
+<grupoSiglas>GPS</grupoSiglas>
+<grupoNombre>GRUPO PARLAMENTARIO SOCIALISTA</grupoNombre>
+<grupoAltaFec>13/04/2004</grupoAltaFec>
+<grupoBajaFec>31/03/2008</grupoBajaFec>
+</grupoParlamentario>
+</gruposParlamentarios>
+<gruposTerritoriales>
+<grupoTerritorial>
+<gruterrCodGP>800</gruterrCodGP>
+<gruterrCod>007</gruterrCod>
+<gruterrNombre>GRUPO TERRITORIAL "SOCIALISTAS DE ANDALUCÍA"</gruterrNombre>
+<gruterrAltaFec>13/10/2004</gruterrAltaFec>
+<gruterrBajaFec>15/01/2008</gruterrBajaFec>
+</grupoTerritorial>
+</gruposTerritoriales>
+<mandatos>
+<mandato>
+<mandatoTipoEx>500</mandatoTipoEx>
+<mandatoNumEx>000078</mandatoNumEx>
+<mandatoTitEx>Credencial acreditativa de su condición de  Senador electo por la circunscripción de Sevilla. </mandatoTitEx>
+</mandato>
+</mandatos>
+<cargos>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011017</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE ENTIDADES LOCALES</cargoOrganoNombre>
+<cargoCod>11</cargoCod>
+<cargoNombre>PORTAVOZ</cargoNombre>
+<cargoAltaFec>12/05/2004</cargoAltaFec>
+<cargoBajaFec>14/01/2008</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011014</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN GENERAL DE LAS COMUNIDADES AUTÓNOMAS</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>12/05/2004</cargoAltaFec>
+<cargoBajaFec>07/02/2007</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011014</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN GENERAL DE LAS COMUNIDADES AUTÓNOMAS</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>21/02/2007</cargoAltaFec>
+<cargoBajaFec>14/01/2008</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>DIPPERM</cargoOrganoTipo>
+<cargoOrganoCod>S000060</cargoOrganoCod>
+<cargoOrganoNombre>DIPUTACIÓN PERMANENTE DEL SENADO</cargoOrganoNombre>
+<cargoCod>17</cargoCod>
+<cargoNombre>MIEMBRO SUPLENTE</cargoNombre>
+<cargoAltaFec>11/09/2007</cargoAltaFec>
+<cargoBajaFec>31/03/2008</cargoBajaFec>
+</cargo>
+</cargos>
+<ponencias>
+<ponencia>
+<ponenciaTipo>PONEN</ponenciaTipo>
+<ponenciaCod>S011017</ponenciaCod>
+<ponenciaNombre>Ponencia de estudio de la financiación local</ponenciaNombre>
+<ponenciaTipoex>543</ponenciaTipoex>
+<ponenciaNumex>000015</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión de Entidades Locales</ponenciaOrganoPadre>
+<ponenciaAltaFec>28/11/2005</ponenciaAltaFec>
+<ponenciaBajaFec>14/01/2008</ponenciaBajaFec>
+</ponencia>
+<ponencia>
+<ponenciaTipo>PONINFORM</ponenciaTipo>
+<ponenciaCod/>
+<ponenciaNombre>Propuesta de reforma del Estatuto de Autonomía para Andalucía.</ponenciaNombre>
+<ponenciaTipoex>605</ponenciaTipoex>
+<ponenciaNumex>000003</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión General de las Comunidades Autónomas</ponenciaOrganoPadre>
+<ponenciaAltaFec/>
+<ponenciaBajaFec/>
+</ponencia>
+</ponencias>
+<iniciativas>
+<iniciativa>
+<iniciativaTipo>680</iniciativaTipo>
+<iniciativaDescr>Pregunta oral en Pleno</iniciativaDescr>
+<iniciativatotal>3</iniciativatotal>
+</iniciativa>
+<iniciativa>
+<iniciativaTipo>684</iniciativaTipo>
+<iniciativaDescr>Pregunta con respuesta escrita</iniciativaDescr>
+<iniciativatotal>89</iniciativatotal>
+</iniciativa>
+</iniciativas>
+<intervenciones>
+</intervenciones>
+</legislatura>
+<legislatura>
+<numLeg>9</numLeg>
+<numLegRomano>IX Legislatura</numLegRomano>
+<legislaturaActual>NO</legislaturaActual>
+<credenciales>
+<credencial>
+<numCred>125</numCred>
+<procedTipo>E</procedTipo>
+<procedCod>41</procedCod>
+<procedLiteral>Electo:  Sevilla&lt;meta name="Tipo Procedencia" content = "ELECTO">&lt;meta name="Procedencia" content = "SEVILLA">&lt;meta name="Legislatura" content = "9">.</procedLiteral>
+<procedFecha>Fecha: 09/03/2008</procedFecha>
+<procedAntFecha>Fecha anterior elección: 09/03/2008</procedAntFecha>
+<sustitucionLiteral/>
+<sustitucionIdweb/>
+<bajaLiteral>Baja (extinción de la Diputación Permanente): 12/12/2011</bajaLiteral>
+<posicionHemiciclo/>
+<formElecSiglas>PSOE</formElecSiglas>
+<formElecNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)</formElecNombre>
+<formElecUrl/>
+<partidoSiglas>PSOE</partidoSiglas>
+<partidoNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)&lt;meta name="Partido politico" content = "PARTIDO SOCIALISTA OBRERO ESPAÑOL"></partidoNombre>
+<partidoUrl/>
+<partidoUrlLogo>www.senado.es/legis9/partidos/PSOE_log.gif</partidoUrlLogo>
+</credencial>
+</credenciales>
+<gruposParlamentarios>
+<grupoParlamentario>
+<grupoCod>800</grupoCod>
+<grupoSiglas>GPS</grupoSiglas>
+<grupoNombre>GRUPO PARLAMENTARIO SOCIALISTA</grupoNombre>
+<grupoAltaFec>01/04/2008</grupoAltaFec>
+<grupoBajaFec>12/12/2011</grupoBajaFec>
+</grupoParlamentario>
+</gruposParlamentarios>
+<gruposTerritoriales>
+<grupoTerritorial>
+<gruterrCodGP>800</gruterrCodGP>
+<gruterrCod>007</gruterrCod>
+<gruterrNombre>GRUPO TERRITORIAL "SOCIALISTAS DE ANDALUCÍA"</gruterrNombre>
+<gruterrAltaFec>15/07/2008</gruterrAltaFec>
+<gruterrBajaFec>12/12/2011</gruterrBajaFec>
+</grupoTerritorial>
+</gruposTerritoriales>
+<mandatos>
+<mandato>
+<mandatoTipoEx>500</mandatoTipoEx>
+<mandatoNumEx>000125</mandatoNumEx>
+<mandatoTitEx>Credencial acreditativa de su condición de Senador electo por la circunscripción de Sevilla. </mandatoTitEx>
+</mandato>
+</mandatos>
+<cargos>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011017</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE ENTIDADES LOCALES</cargoOrganoNombre>
+<cargoCod>11</cargoCod>
+<cargoNombre>PORTAVOZ</cargoNombre>
+<cargoAltaFec>13/05/2008</cargoAltaFec>
+<cargoBajaFec>26/09/2011</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011014</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN GENERAL DE LAS COMUNIDADES AUTÓNOMAS</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>13/05/2008</cargoAltaFec>
+<cargoBajaFec>26/09/2011</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S012006</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE INCOMPATIBILIDADES</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>13/05/2008</cargoAltaFec>
+<cargoBajaFec>26/09/2011</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>DIPPERM</cargoOrganoTipo>
+<cargoOrganoCod>S000060</cargoOrganoCod>
+<cargoOrganoNombre>DIPUTACIÓN PERMANENTE DEL SENADO</cargoOrganoNombre>
+<cargoCod>17</cargoCod>
+<cargoNombre>MIEMBRO SUPLENTE</cargoNombre>
+<cargoAltaFec>13/05/2008</cargoAltaFec>
+<cargoBajaFec>12/12/2011</cargoBajaFec>
+</cargo>
+</cargos>
+<ponencias>
+<ponencia>
+<ponenciaTipo>PONEN</ponenciaTipo>
+<ponenciaCod>S011017</ponenciaCod>
+<ponenciaNombre>Ponencia de estudio sobre las Entidades Locales en el marco de la Unión Europea</ponenciaNombre>
+<ponenciaTipoex>543</ponenciaTipoex>
+<ponenciaNumex>000002</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión de Entidades Locales</ponenciaOrganoPadre>
+<ponenciaAltaFec>16/09/2008</ponenciaAltaFec>
+<ponenciaBajaFec>26/09/2011</ponenciaBajaFec>
+</ponencia>
+</ponencias>
+<iniciativas>
+</iniciativas>
+<intervenciones>
+</intervenciones>
+</legislatura>
+<legislatura>
+<numLeg>10</numLeg>
+<numLegRomano>X Legislatura</numLegRomano>
+<legislaturaActual>NO</legislaturaActual>
+<credenciales>
+<credencial>
+<numCred>034</numCred>
+<procedTipo>E</procedTipo>
+<procedCod>41</procedCod>
+<procedLiteral>Electo:  Sevilla&lt;meta name="Tipo Procedencia" content = "ELECTO">&lt;meta name="Procedencia" content = "SEVILLA">&lt;meta name="Legislatura" content = "10">.</procedLiteral>
+<procedFecha>Fecha: 20/11/2011</procedFecha>
+<procedAntFecha>Fecha anterior elección: 20/11/2011</procedAntFecha>
+<sustitucionLiteral/>
+<sustitucionIdweb/>
+<bajaLiteral>Baja (extinción de la Diputación Permanente): 12/01/2016</bajaLiteral>
+<posicionHemiciclo/>
+<formElecSiglas>PSOE</formElecSiglas>
+<formElecNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)</formElecNombre>
+<formElecUrl/>
+<partidoSiglas>PSOE</partidoSiglas>
+<partidoNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)&lt;meta name="Partido politico" content = "PARTIDO SOCIALISTA OBRERO ESPAÑOL"></partidoNombre>
+<partidoUrl/>
+<partidoUrlLogo>www.senado.es/legis10/partidos/PSOE_log.gif</partidoUrlLogo>
+</credencial>
+</credenciales>
+<gruposParlamentarios>
+<grupoParlamentario>
+<grupoCod>800</grupoCod>
+<grupoSiglas>GPS</grupoSiglas>
+<grupoNombre>GRUPO PARLAMENTARIO SOCIALISTA</grupoNombre>
+<grupoAltaFec>13/12/2011</grupoAltaFec>
+<grupoBajaFec>12/01/2016</grupoBajaFec>
+</grupoParlamentario>
+</gruposParlamentarios>
+<gruposTerritoriales>
+<grupoTerritorial>
+<gruterrCodGP>800</gruterrCodGP>
+<gruterrCod>007</gruterrCod>
+<gruterrNombre>GRUPO TERRITORIAL "SOCIALISTAS DE ANDALUCÍA"</gruterrNombre>
+<gruterrAltaFec>03/10/2012</gruterrAltaFec>
+<gruterrBajaFec>12/01/2016</gruterrBajaFec>
+</grupoTerritorial>
+</gruposTerritoriales>
+<mandatos>
+<mandato>
+<mandatoTipoEx>500</mandatoTipoEx>
+<mandatoNumEx>000034</mandatoNumEx>
+<mandatoTitEx>Credencial acreditativa de su condición de Senador electo por la circunscripción de Sevilla. </mandatoTitEx>
+</mandato>
+</mandatos>
+<cargos>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011004</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE DEFENSA</cargoOrganoNombre>
+<cargoCod>11</cargoCod>
+<cargoNombre>PORTAVOZ</cargoNombre>
+<cargoAltaFec>24/01/2012</cargoAltaFec>
+<cargoBajaFec>26/10/2015</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>S011007</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE CULTURA</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>07/02/2013</cargoAltaFec>
+<cargoBajaFec>26/10/2015</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>G013004</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN MIXTA PARA LAS RELACIONES CON EL TRIBUNAL DE CUENTAS</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>08/02/2012</cargoAltaFec>
+<cargoBajaFec>26/10/2015</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>DELEG_DP</cargoOrganoTipo>
+<cargoOrganoCod>cortes_026</cargoOrganoCod>
+<cargoOrganoNombre>DELEGACIÓN ESPAÑOLA EN LA ASAMBLEA PARLAMENTARIA DE LA ORGANIZACIÓN DEL TRATADO DEL ATLÁNTICO NORTE (OTAN)</cargoOrganoNombre>
+<cargoCod>05</cargoCod>
+<cargoNombre>VOCAL TITULAR</cargoNombre>
+<cargoAltaFec>16/02/2012</cargoAltaFec>
+<cargoBajaFec>12/01/2016</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>DIPPERM</cargoOrganoTipo>
+<cargoOrganoCod>S000060</cargoOrganoCod>
+<cargoOrganoNombre>DIPUTACIÓN PERMANENTE DEL SENADO</cargoOrganoNombre>
+<cargoCod>17</cargoCod>
+<cargoNombre>MIEMBRO SUPLENTE</cargoNombre>
+<cargoAltaFec>11/03/2015</cargoAltaFec>
+<cargoBajaFec>12/01/2016</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>DIPPERM</cargoOrganoTipo>
+<cargoOrganoCod>S000060</cargoOrganoCod>
+<cargoOrganoNombre>DIPUTACIÓN PERMANENTE DEL SENADO</cargoOrganoNombre>
+<cargoCod>17</cargoCod>
+<cargoNombre>MIEMBRO SUPLENTE</cargoNombre>
+<cargoAltaFec>24/01/2012</cargoAltaFec>
+<cargoBajaFec>19/11/2014</cargoBajaFec>
+</cargo>
+</cargos>
+<ponencias>
+<ponencia>
+<ponenciaTipo>PONINFORM</ponenciaTipo>
+<ponenciaCod/>
+<ponenciaNombre>Proposición de Ley para la regulación de la tauromaquia como patrimonio cultural.</ponenciaNombre>
+<ponenciaTipoex>620</ponenciaTipoex>
+<ponenciaNumex>000005</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión de Cultura</ponenciaOrganoPadre>
+<ponenciaAltaFec/>
+<ponenciaBajaFec/>
+</ponencia>
+<ponencia>
+<ponenciaTipo>PONINFORM</ponenciaTipo>
+<ponenciaCod/>
+<ponenciaNombre>Proyecto de Ley por la que se modifica la Ley 39/2007, de 19 de noviembre, de la carrera militar.</ponenciaNombre>
+<ponenciaTipoex>621</ponenciaTipoex>
+<ponenciaNumex>000141</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión de Defensa</ponenciaOrganoPadre>
+<ponenciaAltaFec/>
+<ponenciaBajaFec/>
+</ponencia>
+<ponencia>
+<ponenciaTipo>PONINFORM</ponenciaTipo>
+<ponenciaCod/>
+<ponenciaNombre>Proyecto de Ley Orgánica de Régimen Disciplinario de las Fuerzas Armadas.</ponenciaNombre>
+<ponenciaTipoex>621</ponenciaTipoex>
+<ponenciaNumex>000079</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión de Defensa</ponenciaOrganoPadre>
+<ponenciaAltaFec/>
+<ponenciaBajaFec/>
+</ponencia>
+</ponencias>
+<iniciativas>
+<iniciativa>
+<iniciativaTipo>680</iniciativaTipo>
+<iniciativaDescr>Pregunta oral en Pleno</iniciativaDescr>
+<iniciativatotal>5</iniciativatotal>
+</iniciativa>
+<iniciativa>
+<iniciativaTipo>681</iniciativaTipo>
+<iniciativaDescr>Pregunta oral en Comisión</iniciativaDescr>
+<iniciativatotal>2</iniciativatotal>
+</iniciativa>
+<iniciativa>
+<iniciativaTipo>684</iniciativaTipo>
+<iniciativaDescr>Pregunta con respuesta escrita</iniciativaDescr>
+<iniciativatotal>509</iniciativatotal>
+</iniciativa>
+<iniciativa>
+<iniciativaTipo>689</iniciativaTipo>
+<iniciativaDescr>Solicitud de informe al amparo del artículo 202 del Reglamento del Senado</iniciativaDescr>
+<iniciativatotal>1</iniciativatotal>
+</iniciativa>
+</iniciativas>
+<intervenciones>
+<intervencionTipo>intervIniControl</intervencionTipo>
+<intervencion>
+<intervTipoex>661</intervTipoex>
+<intervDescr>Moción en Comisión</intervDescr>
+<intervTotal>9</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>671</intervTipoex>
+<intervDescr>Moción consecuencia de interpelación</intervDescr>
+<intervTotal>2</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>680</intervTipoex>
+<intervDescr>Pregunta oral en Pleno</intervDescr>
+<intervTotal>5</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>681</intervTipoex>
+<intervDescr>Pregunta oral en Comisión</intervDescr>
+<intervTotal>2</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>711</intervTipoex>
+<intervDescr>Comparecencia de miembros del Gobierno en alguna Comisión</intervDescr>
+<intervTotal>7</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>713</intervTipoex>
+<intervDescr>Comparecencia de autoridades y funcionarios en alguna Comisión</intervDescr>
+<intervTotal>7</intervTotal>
+</intervencion>
+<intervencionTipo>intervIniLegislativas</intervencionTipo>
+<intervencion>
+<intervTipoex>620</intervTipoex>
+<intervDescr>Iniciativa legislativa popular</intervDescr>
+<intervTotal>2</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>621</intervTipoex>
+<intervDescr>Proyecto de Ley</intervDescr>
+<intervTotal>16</intervTotal>
+</intervencion>
+<intervencionTipo>intervIniOtras</intervencionTipo>
+<intervencion>
+<intervTipoex>500</intervTipoex>
+<intervDescr>Mandato</intervDescr>
+<intervTotal>1</intervTotal>
+</intervencion>
+<intervencion>
+<intervTipoex>771</intervTipoex>
+<intervDescr>Otros informes del Tribunal de Cuentas</intervDescr>
+<intervTotal>1</intervTotal>
+</intervencion>
+</intervenciones>
+</legislatura>
+</legislaturas>
+<legislaturasSenado>
+<legislaturaSenado>
+<legantsenLegislatura>8</legantsenLegislatura>
+<legantsenLegRomano>VIII Legislatura</legantsenLegRomano>
+<legantsenFechaAlta>02/04/2004</legantsenFechaAlta>
+<legantsenFechaBaja>15/01/2008</legantsenFechaBaja>
+</legislaturaSenado>
+<legislaturaSenado>
+<legantsenLegislatura>9</legantsenLegislatura>
+<legantsenLegRomano>IX Legislatura</legantsenLegRomano>
+<legantsenFechaAlta>01/04/2008</legantsenFechaAlta>
+<legantsenFechaBaja>27/09/2011</legantsenFechaBaja>
+</legislaturaSenado>
+<legislaturaSenado>
+<legantsenLegislatura>10</legantsenLegislatura>
+<legantsenLegRomano>X Legislatura</legantsenLegRomano>
+<legantsenFechaAlta>13/12/2011</legantsenFechaAlta>
+<legantsenFechaBaja>27/10/2015</legantsenFechaBaja>
+</legislaturaSenado>
+</legislaturasSenado>
+<legislaturasCongreso>
+</legislaturasCongreso>
+<asambleasLegislativas>
+</asambleasLegislativas>
+<corporacionesLocales>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de La Rinconada (Sevilla)</corporacionLocalNombre>
+<corporacionLocalPeriodo>1983-1987</corporacionLocalPeriodo>
+<corporacionLocalCargo>Teniente de Alcalde</corporacionLocalCargo>
+</corporacionLocal>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de La Rinconada (Sevilla)</corporacionLocalNombre>
+<corporacionLocalPeriodo>1987-1991</corporacionLocalPeriodo>
+<corporacionLocalCargo>Alcalde</corporacionLocalCargo>
+</corporacionLocal>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de La Rinconada (Sevilla)</corporacionLocalNombre>
+<corporacionLocalPeriodo>1991-1995</corporacionLocalPeriodo>
+<corporacionLocalCargo>Alcalde</corporacionLocalCargo>
+</corporacionLocal>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de La Rinconada (Sevilla)</corporacionLocalNombre>
+<corporacionLocalPeriodo>1995-1999</corporacionLocalPeriodo>
+<corporacionLocalCargo>Alcalde</corporacionLocalCargo>
+</corporacionLocal>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de La Rinconada (Sevilla)</corporacionLocalNombre>
+<corporacionLocalPeriodo>1999-2003</corporacionLocalPeriodo>
+<corporacionLocalCargo>Alcalde</corporacionLocalCargo>
+</corporacionLocal>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de La Rinconada (Sevilla)</corporacionLocalNombre>
+<corporacionLocalPeriodo>2003-2007</corporacionLocalPeriodo>
+<corporacionLocalCargo>Alcalde</corporacionLocalCargo>
+</corporacionLocal>
+<corporacionLocal>
+<corporacionLocalNombre>Diputación Provincial de Sevilla</corporacionLocalNombre>
+<corporacionLocalPeriodo>1999-2003</corporacionLocalPeriodo>
+<corporacionLocalCargo>Diputado</corporacionLocalCargo>
+</corporacionLocal>
+</corporacionesLocales>
+<otrosCargos>
+</otrosCargos>
+</fichaSenador>

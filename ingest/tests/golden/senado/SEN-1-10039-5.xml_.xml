@@ -1,0 +1,133 @@
+<?xml version = '1.0' encoding = 'ISO-8859-1' standalone = 'yes'?>
+<fichaSenador>
+<datosPersonales>
+<idweb>10039</idweb>
+<nombre>FERNANDO</nombre>
+<apellidos>ABAD BÉCQUER</apellidos>
+<sexo>V</sexo>
+<estadoCivil>Divorciado.</estadoCivil>
+<fechaNacimiento>30/01/1955</fechaNacimiento>
+<lugarNacimiento>Madrid</lugarNacimiento>
+<hijos/>
+<fallecido>NO</fallecido>
+<fallecidoFecha/>
+<biografia/>
+</datosPersonales>
+<legislaturas>
+<legislatura>
+<numLeg>5</numLeg>
+<numLegRomano>V Legislatura</numLegRomano>
+<legislaturaActual>NO</legislaturaActual>
+<credenciales>
+<credencial>
+<numCred>260</numCred>
+<procedTipo>D</procedTipo>
+<procedCod>16</procedCod>
+<procedLiteral>Designado: Asamblea de Madrid&lt;meta name="Tipo Procedencia" content = "DESIGNADO">&lt;meta name="Procedencia" content = "MADRID (COMUNIDAD DE)">&lt;meta name="Legislatura" content = "5">.</procedLiteral>
+<procedFecha>Fecha: 02/06/1994</procedFecha>
+<procedAntFecha>Fecha anterior designación: 02/06/1994</procedAntFecha>
+<sustitucionLiteral>Sustituye a: FRANCISCA SAUQUILLO PÉREZ DEL ARCO</sustitucionLiteral>
+<sustitucionIdweb>10038</sustitucionIdweb>
+<bajaLiteral>Baja (cese): 05/07/1995</bajaLiteral>
+<posicionHemiciclo/>
+<formElecSiglas/>
+<formElecNombre/>
+<formElecUrl/>
+<partidoSiglas>PSOE</partidoSiglas>
+<partidoNombre>PARTIDO SOCIALISTA OBRERO ESPAÑOL (PSOE)&lt;meta name="Partido politico" content = "PARTIDO SOCIALISTA OBRERO ESPAÑOL"></partidoNombre>
+<partidoUrl/>
+<partidoUrlLogo>www.senado.es/legis5/partidos/PSOE_log.gif</partidoUrlLogo>
+</credencial>
+</credenciales>
+<gruposParlamentarios>
+<grupoParlamentario>
+<grupoCod>800</grupoCod>
+<grupoSiglas>GPS</grupoSiglas>
+<grupoNombre>GRUPO PARLAMENTARIO SOCIALISTA</grupoNombre>
+<grupoAltaFec>13/06/1994</grupoAltaFec>
+<grupoBajaFec>05/07/1995</grupoBajaFec>
+</grupoParlamentario>
+</gruposParlamentarios>
+<gruposTerritoriales>
+</gruposTerritoriales>
+<mandatos>
+<mandato>
+<mandatoTipoEx>500</mandatoTipoEx>
+<mandatoNumEx>000260</mandatoNumEx>
+<mandatoTitEx>Credencial acreditativa de su condición de Senador designado por la Asamblea de Madrid. </mandatoTitEx>
+</mandato>
+</mandatos>
+<cargos>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>301</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE ASUNTOS IBEROAMERICANOS</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>15/06/1994</cargoAltaFec>
+<cargoBajaFec>05/07/1995</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>208</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE JUSTICIA</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>15/06/1994</cargoAltaFec>
+<cargoBajaFec>05/07/1995</cargoBajaFec>
+</cargo>
+<cargo>
+<cargoOrganoTipo>COMIS</cargoOrganoTipo>
+<cargoOrganoCod>210</cargoOrganoCod>
+<cargoOrganoNombre>COMISIÓN DE INTERIOR Y FUNCIÓN PÚBLICA</cargoOrganoNombre>
+<cargoCod>10</cargoCod>
+<cargoNombre>VOCAL</cargoNombre>
+<cargoAltaFec>15/06/1994</cargoAltaFec>
+<cargoBajaFec>05/07/1995</cargoBajaFec>
+</cargo>
+</cargos>
+<ponencias>
+<ponencia>
+<ponenciaTipo>PONINFORM</ponenciaTipo>
+<ponenciaCod/>
+<ponenciaNombre>Proyecto de ley por la que se modifica la Ley 50/1981, de 30 de diciembre, por la que se regula el Estatuto Orgánico del Ministerio Fiscal, y se crea la Fiscalía Especial para la represión de los delitos económicos relacionados con la corrupción.</ponenciaNombre>
+<ponenciaTipoex>621</ponenciaTipoex>
+<ponenciaNumex>000062</ponenciaNumex>
+<ponenciaOrganoPadre>Comisión de Justicia</ponenciaOrganoPadre>
+<ponenciaAltaFec/>
+<ponenciaBajaFec/>
+</ponencia>
+</ponencias>
+<iniciativas>
+<iniciativa>
+<iniciativaTipo>680</iniciativaTipo>
+<iniciativaDescr>Pregunta oral en Pleno</iniciativaDescr>
+<iniciativatotal>1</iniciativatotal>
+</iniciativa>
+</iniciativas>
+<intervenciones>
+</intervenciones>
+</legislatura>
+</legislaturas>
+<legislaturasSenado>
+<legislaturaSenado>
+<legantsenLegislatura>5</legantsenLegislatura>
+<legantsenLegRomano>V Legislatura</legantsenLegRomano>
+<legantsenFechaAlta>29/06/1993</legantsenFechaAlta>
+<legantsenFechaBaja>09/01/1996</legantsenFechaBaja>
+</legislaturaSenado>
+</legislaturasSenado>
+<legislaturasCongreso>
+</legislaturasCongreso>
+<asambleasLegislativas>
+</asambleasLegislativas>
+<corporacionesLocales>
+<corporacionLocal>
+<corporacionLocalNombre>Ayuntamiento de Leganés (Madrid)</corporacionLocalNombre>
+<corporacionLocalPeriodo>1983-1987</corporacionLocalPeriodo>
+<corporacionLocalCargo>Alcalde-Presidente</corporacionLocalCargo>
+</corporacionLocal>
+</corporacionesLocales>
+<otrosCargos>
+</otrosCargos>
+</fichaSenador>
