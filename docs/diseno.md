@@ -101,6 +101,22 @@ Es un solo dibujo con cámara (`MapaCirculos.vue`, cuenta en `mapa.js`):
 - En táctil, el primer toque señala y enseña una tarjeta; el segundo, o su
   botón, abre la ficha. Con teclado, el foco hace de ratón y Escape sale.
 
+### Los cargos
+
+La sección de altos cargos es papel, no visor: se lee como una página de
+nombramientos de un periódico. El cargo va en la serif, como un titular
+pequeño; las fechas, en la mono, como en un registro.
+
+La línea de tiempo de una persona va de lo primero a lo último que se ha leído
+del BOE, no de su vida: lo que queda fuera no se dibuja como sabido. Un periodo
+sin nombramiento entra por el borde con un degradado; uno sin cese se sale por
+el otro lado punteado. Cada barra lleva el número de su periodo en la lista.
+Con menos de un año de eje no se dibuja: tres semanas son una raya con una mota.
+
+El cobrizo de la administración para lo que es cargo público; el azul de la
+empresa para lo que es sector privado: una autorización para trabajar en una
+sociedad, el nombre de esa sociedad.
+
 ## 6. Decir lo que no es
 
 Cada lista, cada bloque, lleva su **nota** (`.nota`): lo que ese dato no

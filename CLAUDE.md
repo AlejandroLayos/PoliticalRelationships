@@ -126,6 +126,17 @@ cd ingest && pytest
   `test_exportar.py`, que necesita Postgres y en local se salta. Resultado:
   verde aquí, rojo allí, cuatro empujones seguidos. Si una regla es pura,
   pruébala en un test puro además del de integración.
+- **`pytest … | tail` sale con el código de `tail`, no con el de pytest.**
+  Un `&&` detrás sigue adelante aunque haya tests en rojo, y así se empujó un
+  test roto el 25/9/2026. Con `set -o pipefail` delante, o sin tubería. Y la
+  batería ENTERA antes de empujar, no sólo los ficheros tocados: el mismo día,
+  unos XML nuevos que trajo el reconocimiento rompieron un test de otro
+  fichero que nadie había vuelto a pasar.
+- **Los datos de fuentes nuevas se miran en la CI, no se suponen.** El entorno
+  de desarrollo no alcanza boe.es, transparencia.gob.es ni ine.es; el flujo
+  «Reconocer fuente» sí, y commitea lo que ve (`docs/fuentes/*-reconocimiento.md`)
+  y las muestras para los golden tests. Cada conector de la fase 7 se escribió
+  así, y cada reconocimiento cambió algo del diseño previsto.
 - **`ruff format` decide distinto según la versión.** Está acotado en
   `ingest/pyproject.toml` (`>=0.16.8,<0.17`) porque sin tope la CI instalaba la
   última publicada, en local había otra, y el mismo fichero pasaba aquí y

@@ -364,6 +364,20 @@ Cuatro líneas, en este orden:
 4. **Contexto de gobierno.** Qué partido gobernaba una administración cuando
    pagó, con fuente para cada periodo.
 
+Estado a 25/9/2026:
+
+- Línea 1: hecha. Nivel y comunidad desde la jerarquía de la fuente, la
+  plataforma autonómica y, para lo local, el municipio según la relación
+  oficial del INE. Edición por comunidad en la portada y el mapa.
+- Línea 3: en marcha. Altos cargos del Estado desde el BOE (nombramientos y
+  ceses por Real Decreto, gobiernos enteros incluidos) y autorizaciones de
+  actividad privada tras el cese desde la Oficina de Conflictos de Intereses,
+  en `cargos.json`, con una puerta propia en el volcado (§12). Cruces:
+  puesto ↔ órgano del Estado que contrata, y autorización ↔ sociedad del mapa
+  por denominación completa. Falta el BORME, que sólo daría candidatos a
+  revisión, nunca vínculos publicados.
+- Líneas 2 y 4: sin empezar.
+
 ## 16. Tests
 
 - Tests con cada pieza. Sin excepción.
