@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `35981468688` · 2026-09-24T10:58:54Z
+- Ejecución: `36120236738` · 2026-09-25T11:06:58Z
 
 Todas las fuentes respondieron.
 
@@ -11,6 +11,6 @@ Todas las fuentes respondieron.
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 548 |
-| Plataforma de Contratación del Sector Público | 2829 |
+| Base de Datos Nacional de Subvenciones | 561 |
+| Plataforma de Contratación del Sector Público | 2815 |
 | Tribunal de Cuentas | 630 |
