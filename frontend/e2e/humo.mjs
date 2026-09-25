@@ -298,10 +298,13 @@ await paso('del cargo a la empresa lleva a la sociedad y de vuelta a la persona'
 
 // Aena no está en la base. Por subcadena salía una asociación de Baena como
 // primer resultado, e Intro llevaba a su ficha como si fuera lo buscado.
+// Con una palabra que no puede estar. Era «Aena», hasta que el feed de
+// licitaciones de PLACSP trajo sus órganos y el paso empezó a fallar sin que
+// nada estuviera roto.
 await paso('buscar lo que no está dice que no está', async () => {
-  await pagina.fill('.buscador input', 'Aena')
+  await pagina.fill('.buscador input', 'Qzxwv')
   await pagina.waitForTimeout(2500)
-  if (!(await pagina.innerText('body')).includes('Nada con «Aena»')) throw new Error('no lo dijo')
+  if (!(await pagina.innerText('body')).includes('Nada con «Qzxwv»')) throw new Error('no lo dijo')
 })
 
 await navegador.close()
