@@ -90,6 +90,8 @@ async function traerCargos() {
  * responde «quién mandaba cuando pagó».
  */
 const alFrente = computed(() => cargos.value?.organos?.[claveSeleccionada.value] ?? [])
+/** Ex altos cargos autorizados a trabajar en la sociedad de la ficha abierta. */
+const exAltosCargos = computed(() => cargos.value?.empresas?.[claveSeleccionada.value] ?? [])
 watch(
   () => vista.value === 'ficha' && seleccionId.value,
   (abierta) => {
@@ -1258,6 +1260,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :fuera-del-mapa="fueraDelMapa"
         :en-mapa="idsDelMapa.has(seleccionId)"
         :al-frente="alFrente"
+        :ex-altos-cargos="exAltosCargos"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
         @ver-en-mapa="llevarAlMapa(seleccionId)"

@@ -9,7 +9,7 @@
  */
 import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
-import { tramo } from '../cargos.js'
+import { fechaCorta as fechaCortaCargo, tramo } from '../cargos.js'
 import { resumenEnPalabras } from '../influencia.js'
 import { administracionDe, colorTipo, etiquetaEsquema } from '../esquemas.js'
 import { fechaCorta, nombreDocumento, siglaFuente } from '../procedencia.js'
@@ -38,6 +38,8 @@ const props = defineProps({
   enMapa: { type: Boolean, default: false },
   /** Quién dirigió este órgano según el BOE (`cargos.json`, `organos`). */
   alFrente: { type: Array, default: () => [] },
+  /** Ex altos cargos autorizados a trabajar aquí (`cargos.json`, `empresas`). */
+  exAltosCargos: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo'])
 
@@ -273,6 +275,27 @@ const sinDatos = computed(
         </div>
       </div>
 
+      <!--
+        Ex altos cargos autorizados a trabajar en esta sociedad, según la
+        Oficina de Conflictos de Intereses. El texto de la autorización la
+        nombra por su denominación completa, que es única en España.
+      -->
+      <section v-if="exAltosCargos.length" class="bloque al-frente">
+        <h3>Ex altos cargos autorizados a trabajar aquí</h3>
+        <ul class="lista">
+          <li v-for="(a, n) in exAltosCargos.slice(0, 8)" :key="n">
+            <a href="#" @click.prevent="emit('verCargo', a.persona)">{{ a.nombre }}</a>
+            <span class="cargo-frente">{{ a.actividad }}</span>
+            <span class="tramo-frente">{{ a.fecha ? fechaCortaCargo(a.fecha) : '' }}</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
+          en el sector privado en los dos años siguientes al cese. Una
+          autorización no dice que la persona llegara a ocupar el puesto.
+        </p>
+      </section>
+
       <section v-if="alFrente.length" class="bloque al-frente">
         <h3>Al frente, según el BOE</h3>
         <ul class="lista">
@@ -411,6 +434,27 @@ const sinDatos = computed(
         órgano —el director general de Carreteras dirige la Dirección General
         de Carreteras— y el órgano es del Estado; ver exportar_cargos.py.
       -->
+      <!--
+        Ex altos cargos autorizados a trabajar en esta sociedad, según la
+        Oficina de Conflictos de Intereses. El texto de la autorización la
+        nombra por su denominación completa, que es única en España.
+      -->
+      <section v-if="exAltosCargos.length" class="bloque al-frente">
+        <h3>Ex altos cargos autorizados a trabajar aquí</h3>
+        <ul class="lista">
+          <li v-for="(a, n) in exAltosCargos.slice(0, 8)" :key="n">
+            <a href="#" @click.prevent="emit('verCargo', a.persona)">{{ a.nombre }}</a>
+            <span class="cargo-frente">{{ a.actividad }}</span>
+            <span class="tramo-frente">{{ a.fecha ? fechaCortaCargo(a.fecha) : '' }}</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
+          en el sector privado en los dos años siguientes al cese. Una
+          autorización no dice que la persona llegara a ocupar el puesto.
+        </p>
+      </section>
+
       <section v-if="alFrente.length" class="bloque al-frente">
         <h3>Al frente, según el BOE</h3>
         <ul class="lista">

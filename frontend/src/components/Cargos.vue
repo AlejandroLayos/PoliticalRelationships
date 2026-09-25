@@ -20,6 +20,7 @@ import {
   lineaDeTiempo,
   marcasDeAnios,
   movimientos,
+  nombreFuente,
   organismos,
   personaDeClave,
   tramo,
@@ -76,7 +77,8 @@ watch(
   },
 )
 
-const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
+const VERBOS = { nombramiento: 'Nombramiento', cese: 'Cese', autorizacion: 'Autorizada' }
+const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 </script>
 
 <template>
@@ -91,6 +93,10 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
           {{ fechaLarga(datos.actosHasta) }}: ministros, secretarios de Estado,
           subsecretarios, directores generales, embajadores y quien preside o
           dirige un organismo público.
+          <template v-if="datos.nAutorizaciones">
+            Y {{ datos.nAutorizaciones.toLocaleString('es-ES') }} autorizaciones para
+            trabajar en el sector privado tras el cese.
+          </template>
         </p>
         <p v-else-if="cargando" class="entradilla">Cargando los cargos…</p>
         <p v-else class="entradilla">Esta edición no trae cargos públicos.</p>
@@ -196,13 +202,50 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
                 Nombramiento · {{ p.boeDesde }}
               </a>
               <a v-if="p.urlHasta" :href="p.urlHasta" target="_blank" rel="noopener" class="sello">
-                Cese · {{ p.boeHasta }}
+                Cese · {{ p.boeHasta || nombreFuente(p) }}
               </a>
               <span v-if="p.motivoCese" class="motivo">{{ p.motivoCese }}</span>
             </p>
           </div>
         </li>
       </ol>
+      <!--
+        Lo que vino después del cargo, cuando lo afirma la fuente que lo
+        autoriza. Una autorización no dice que la persona llegara a ocupar el
+        puesto, y aquí no se dice tampoco.
+      -->
+      <section v-if="abierta.autorizaciones?.length" class="autorizaciones">
+        <h3>Autorizaciones para trabajar en el sector privado tras el cese</h3>
+        <p class="nota">
+          Según la Oficina de Conflictos de Intereses, que autoriza a quien deja
+          un alto cargo a trabajar en una entidad privada en los dos años
+          siguientes. Una autorización no dice que llegara a ocupar el puesto.
+        </p>
+        <ul>
+          <li v-for="(a, i) in abierta.autorizaciones" :key="i" class="autorizacion">
+            <p class="actividad">{{ a.actividad }}</p>
+            <p class="autorizacion-meta">
+              <span v-if="a.fecha" class="tramo">autorizada el {{ fechaCorta(a.fecha) }}</span>
+              <span v-if="a.cargoAnterior"> · tras cesar como {{ a.cargoAnterior.toLowerCase() }}</span>
+              <span v-if="a.fechaCese"> ({{ fechaCorta(a.fechaCese) }})</span>
+            </p>
+            <!--
+              La sociedad del mapa del dinero, cuando el texto la nombra por
+              su denominación completa, que es única en España.
+            -->
+            <p v-if="a.empresa" class="autorizacion-empresa">
+              En el mapa del dinero:
+              <a href="#" @click.prevent="emit('entidad', a.empresa.clave)">{{ a.empresa.nombre }}</a>
+              — ver de quién cobra →
+            </p>
+            <p class="periodo-fuentes">
+              <a v-if="a.url" :href="a.url" target="_blank" rel="noopener" class="sello">Oficina de Conflictos de Intereses</a>
+              <span v-if="a.cruce" class="motivo">unida a esta ficha por {{ a.cruce }}</span>
+            </p>
+          </li>
+        </ul>
+      </section>
+
       <p class="nota ficha-pie">
         Dos personas con el mismo nombre y los mismos apellidos se juntarían en
         esta ficha: el BOE no publica ningún identificador en un nombramiento.
@@ -239,6 +282,11 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
               <span v-if="p.periodos.length > 1" class="mas-cargos">
                 y {{ p.periodos.length - 1 }}
                 {{ p.periodos.length - 1 === 1 ? 'cargo más' : 'cargos más' }}
+              </span>
+              <span v-if="p.autorizaciones?.length" class="con-autorizacion">
+                {{ p.autorizaciones.length }}
+                {{ p.autorizaciones.length === 1 ? 'autorización' : 'autorizaciones' }}
+                para el sector privado
               </span>
             </button>
           </li>
@@ -473,6 +521,20 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
 }
 .mov-verbo.nombramiento { color: var(--adm); }
 .mov-verbo.cese { color: var(--tinta-3); }
+.mov-verbo.autorizacion { color: var(--emp); }
+
+.autorizaciones { margin-top: var(--e5); padding-top: var(--e3); border-top: 2px solid var(--filete); }
+.autorizaciones h3 { font-size: var(--t-h3); margin: 0 0 var(--e2); }
+.autorizaciones .nota { font-size: var(--t-s); margin: 0 0 var(--e3); max-width: var(--medida); }
+.autorizaciones ul { list-style: none; margin: 0; padding: 0; }
+.autorizacion { padding: var(--e3) 0; border-top: 1px solid var(--filete-suave); }
+.autorizacion p { margin: 0; }
+.actividad { font-family: var(--serif); font-size: var(--t-l); line-height: 1.35; color: var(--tinta); }
+.autorizacion-meta { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.25rem !important; }
+.autorizacion-empresa { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.3rem !important; }
+.autorizacion-empresa a { color: var(--emp); font-weight: 600; }
+.autorizacion .periodo-fuentes { margin-top: var(--e2) !important; }
+.con-autorizacion { font-size: var(--t-xs); color: var(--emp); font-weight: 600; }
 .mov-texto { font-size: var(--t-s); line-height: 1.45; color: var(--tinta-2); margin: 0.2rem 0 0.35rem !important; }
 .mov-texto a { color: var(--tinta); font-weight: 600; }
 

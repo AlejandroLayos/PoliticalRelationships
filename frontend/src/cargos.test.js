@@ -188,3 +188,31 @@ describe('marcasDeAnios', () => {
     ])
   })
 })
+
+describe('Oficina de Conflictos de Intereses', () => {
+  const conOci = {
+    personas: [
+      {
+        clave: 'oci:persona:x',
+        nombre: 'Banez Garcia, Fatima',
+        periodos: [{ puesto: 'MINISTRA', cargo: 'MINISTRA DE EMPLEO Y SEGURIDAD SOCIAL', hasta: '2018-06-01', fuente: 'oci', urlHasta: 'u' }],
+        autorizaciones: [
+          { actividad: 'MIEMBRO DEL CONSEJO DE ADMINISTRACION DE LABORATORIOS FARMACEUTICOS ROVI, S.A.', fecha: '2019-12-13', url: 'u' },
+        ],
+      },
+    ],
+  }
+
+  it('un cese sin nombramiento dice por qué, según la fuente', () => {
+    expect(huecoDelPeriodo(conOci.personas[0].periodos[0])).toBe('la fuente no da el nombramiento')
+  })
+
+  it('las autorizaciones entran en la columna de lo último, por delante del cese', () => {
+    const m = movimientos(conOci)
+    expect(m.map((a) => [a.fecha, a.tipo])).toEqual([
+      ['2019-12-13', 'autorizacion'],
+      ['2018-06-01', 'cese'],
+    ])
+    expect(m[1].boe).toBe('Oficina de Conflictos de Intereses')
+  })
+})

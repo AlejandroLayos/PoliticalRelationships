@@ -89,6 +89,7 @@ def periodos(actos: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "desde": a["fecha"],
                     "boeDesde": a["boe"],
                     "urlDesde": a["url"],
+                    **_fuente_no_boe(a),
                 }
             elif a["tipo"] == "cese":
                 cierre = {
@@ -107,6 +108,7 @@ def periodos(actos: list[dict[str, Any]]) -> list[dict[str, Any]]:
                             "cargo": a["cargo"],
                             "organismo": a.get("organismo") or "",
                             **cierre,
+                            **_fuente_no_boe(a),
                         }
                     )
         if abierto is not None:
@@ -162,6 +164,12 @@ def organo_de(puesto: str, organos: dict[str, list[tuple[str, str]]]) -> dict[st
         return None
     clave, caption = hallados[0]
     return {"clave": clave, "nombre": caption}
+
+
+def _fuente_no_boe(acto: dict[str, Any]) -> dict[str, str]:
+    """La fuente de un periodo, sólo si no es el BOE: la web lo dice."""
+    fuente = acto.get("fuente") or "boe"
+    return {} if fuente == "boe" else {"fuente": fuente}
 
 
 def _serializable(p: dict[str, Any]) -> dict[str, Any]:

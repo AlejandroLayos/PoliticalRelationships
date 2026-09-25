@@ -512,6 +512,7 @@ def test_una_autorizacion_de_la_oci_sale_en_cargos(store_oci, tmp_path):
     assert persona["nombre"] == "Montoro Romero, Cristobal"
     [periodo] = persona["periodos"]
     assert periodo["hasta"] == "2018-06-01" and "desde" not in periodo
+    assert periodo["fuente"] == "oci"
     [autorizacion] = persona["autorizaciones"]
     assert autorizacion["actividad"] == "CONSEJERO-ASESOR DE LA JUNTA DIRECTIVA DEL FORO"
     assert autorizacion["fecha"] == "2020-01-09"

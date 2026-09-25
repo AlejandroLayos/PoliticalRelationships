@@ -51,8 +51,15 @@ export function tramo(p) {
  */
 export function huecoDelPeriodo(p) {
   if (p.desde && !p.hasta) return 'no consta cese'
-  if (!p.desde && p.hasta) return 'nombramiento anterior a lo leído'
+  // La Oficina de Conflictos de Intereses da la fecha de cese y no la del
+  // nombramiento: no es que sea anterior a lo leído, es que no la publica.
+  if (!p.desde && p.hasta) return p.fuente === 'oci' ? 'la fuente no da el nombramiento' : 'nombramiento anterior a lo leído'
   return ''
+}
+
+/** Cómo se nombra la fuente de un periodo. */
+export function nombreFuente(p) {
+  return p.fuente === 'oci' ? 'Oficina de Conflictos de Intereses' : 'BOE'
 }
 
 /**
@@ -64,13 +71,27 @@ export function movimientos(datos, limite = 20) {
   for (const persona of datos?.personas ?? []) {
     for (const p of persona.periodos ?? []) {
       if (p.desde) actos.push({ tipo: 'nombramiento', fecha: p.desde, boe: p.boeDesde, url: p.urlDesde, persona, periodo: p })
-      if (p.hasta) actos.push({ tipo: 'cese', fecha: p.hasta, boe: p.boeHasta, url: p.urlHasta, persona, periodo: p })
+      if (p.hasta) actos.push({ tipo: 'cese', fecha: p.hasta, boe: p.boeHasta || nombreFuente(p), url: p.urlHasta, persona, periodo: p })
+    }
+    // Las autorizaciones de actividad privada, en la misma columna: son lo
+    // que pasa después del cese.
+    for (const a of persona.autorizaciones ?? []) {
+      if (a.fecha) {
+        actos.push({
+          tipo: 'autorizacion',
+          fecha: a.fecha,
+          boe: 'Oficina de Conflictos de Intereses',
+          url: a.url,
+          persona,
+          periodo: { cargo: a.actividad },
+        })
+      }
     }
   }
   // A igual fecha, el nombramiento arriba: al formarse un gobierno se cesa
   // y se vuelve a nombrar el mismo día, y en una columna de lo más reciente
   // a lo más antiguo lo último que pasó va primero.
-  const orden = { nombramiento: 0, cese: 1 }
+  const orden = { autorizacion: 0, nombramiento: 1, cese: 2 }
   actos.sort((a, b) => (a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : orden[a.tipo] - orden[b.tipo]))
   return actos.slice(0, limite)
 }
