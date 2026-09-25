@@ -392,7 +392,11 @@ Estado a 25/9/2026:
   Decreto que nombra a cada presidente autonómico, en la edición de cada
   comunidad. Falta su partido —el BOE no lo dice y el Congreso no sirve para
   quien no fue diputado— y el de los gobiernos locales.
-- Línea 2: sin empezar.
+- Línea 2: reconocida y parada. Las resoluciones de la Comisión Mixta sobre
+  las cuentas de los partidos están en el BOE, pero el informe con las
+  cifras va como imágenes de página; sin OCR no hay cifras, y con OCR serían
+  cifras dudosas. Ver `docs/data-sources.md` §2.quinquies. En el mapa siguen
+  las subvenciones a partidos de la BDNS y las sanciones del Tribunal.
 
 ## 16. Tests
 

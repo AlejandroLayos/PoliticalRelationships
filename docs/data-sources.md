@@ -437,6 +437,32 @@ entidad del mapa: no entra en el grafo ni en el índice, igual que la
 
 ---
 
+## 2.quinquies Cuentas de los partidos (Tribunal de Cuentas) — reconocida, sin conector
+
+Para la línea 2 de la fase 7. El Tribunal de Cuentas fiscaliza cada año los
+estados contables de los partidos, y la Comisión Mixta Congreso-Senado
+aprueba una resolución sobre cada informe que se publica en el BOE.
+
+**Lo que hay** (reconocimiento del 25/9/2026,
+`docs/fuentes/partidos-boe-reconocimiento.md`, `scripts/explorar_partidos_boe.py`):
+35 disposiciones de «Cortes Generales» desde 1990, la última de julio de
+2026, localizables con el buscador del BOE por título (`campo[1]=TITULOS`;
+los códigos se leen del propio formulario, no se suponen).
+
+**Por qué no hay conector.** En el BOE sólo es texto la resolución —las
+recomendaciones de la Comisión—. El informe con las cifras de cada partido va
+como **imágenes de página**: 530 PNG en la de 2024
+(`ingest/tests/golden/partidos_boe/BOE-A-2024-13379.xml`, `<p class="imagen">`).
+Sacar cifras de ahí exigiría OCR, y un error de OCR en el dinero de un partido
+es un dato inventado. El buscador del propio Tribunal va con JavaScript y no
+se deja leer (`docs/fuentes/tcu-reconocimiento.md`). Queda pendiente dar con
+el PDF del Tribunal con capa de texto.
+
+Lo que sí está en el mapa: las subvenciones públicas a partidos que registra
+la BDNS, y los expedientes sancionadores del Tribunal (sección 4).
+
+---
+
 ## 3. BORME — Boletín Oficial del Registro Mercantil
 
 **Aporta:** actos societarios inscritos — constituciones, ceses y nombramientos
