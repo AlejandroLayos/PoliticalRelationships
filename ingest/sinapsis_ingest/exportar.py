@@ -26,7 +26,6 @@ from typing import Any
 
 import structlog
 
-from sinapsis_ingest.exportar_cargos import FUENTE as FUENTE_CARGOS
 from sinapsis_ingest.exportar_cargos import exportar_cargos
 from sinapsis_ingest.store import Store
 from sinapsis_ingest.territorio import clasificar_entidad
@@ -319,6 +318,10 @@ def exportar(
           -- colgando con su titular retirado por la regla de personas.
           AND r.ftm_schema <> 'Occupancy'
           AND es.ftm_schema <> 'Position' AND et.ftm_schema <> 'Position'
+          -- Las autorizaciones de la Oficina de Conflictos de Intereses
+          -- también: su «actividad» es el texto de la autorización, no una
+          -- entidad del mapa del dinero.
+          AND es.dedupe_key NOT LIKE 'oci:%' AND et.dedupe_key NOT LIKE 'oci:%'
         ORDER BY r.amount DESC NULLS LAST, r.id
         """
     ).fetchall()
@@ -676,8 +679,9 @@ def exportar(
     # su fuente no aporta ningún nodo aquí. Contarla como cero haría que la
     # web anunciara «hoy falta el BOE» el día que el BOE sí respondió.
     cargos = exportar_cargos(store, destino.with_name("cargos.json"))
-    if cargos["cargos_personas"]:
-        aporte[FUENTE_CARGOS] = aporte.get(FUENTE_CARGOS, 0) + cargos["cargos_personas"]
+    for fuente, n in cargos["cargos_por_fuente"].items():
+        if n:
+            aporte[fuente] = aporte.get(fuente, 0) + n
 
     fuentes = [
         {**dict(f), "entidades": aporte.get(f["id"], 0)}
@@ -791,6 +795,7 @@ def _exportar_indice(
               -- el índice serían un segundo «Ministerio de Hacienda» con
               -- cero euros al lado del que sí paga.
               AND e.dedupe_key NOT LIKE 'boe:%%'
+              AND e.dedupe_key NOT LIKE 'oci:%%'
             GROUP BY e.id
         ),
         -- Órgano -> (UnknownLink) -> expediente -> (ContractAward) -> empresa.

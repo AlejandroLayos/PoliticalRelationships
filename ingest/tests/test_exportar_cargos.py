@@ -178,6 +178,28 @@ def _nombramiento_boe(nombre: str, identificador: str, cargo: str) -> Normalizad
     return n
 
 
+def _cese_boe(nombre: str, identificador: str, cargo: str, fecha: str) -> Normalizado:
+    registro = ParsedRecord(
+        raw_content_hash="x",
+        extractor_version=BOEConnector.extractor_version,
+        data={
+            "identificador": identificador,
+            "titulo": "",
+            "departamento": "Ministerio de Pruebas",
+            "fecha_publicacion": fecha,
+            "fecha_disposicion": fecha,
+            "tipo": "cese",
+            "cargo": cargo,
+            "nombre": nombre,
+            "numero": "1/2018",
+            "motivo": "",
+        },
+    )
+    n = BOEConnector().normalize(registro)
+    assert n is not None
+    return n
+
+
 def _persona(clave: str, nombre: str, props: dict[str, Any], nif: str = "") -> Normalizado:
     """Una persona con un acto de cargo, construida a mano: para probar que la
     puerta mira la base y no se fía de que lo haya creado el conector."""
@@ -434,3 +456,178 @@ def test_un_organo_autonomico_con_el_mismo_nombre_no_se_enlaza(store, tmp_path):
     _, _, cargos = _volcar(store, tmp_path)
     assert "organo" not in cargos["personas"][0]["periodos"][0]
     assert cargos["organos"] == {}
+
+
+# --- Oficina de Conflictos de Intereses -------------------------------------
+
+
+def _autorizacion_oci(
+    nombre: str, cargo: str, cese: str, actividad: str, fecha: str
+) -> Normalizado:
+    """Lo que produce el conector de la OCI para una fila de su tabla."""
+    from sinapsis_ingest.connectors.oci import OCIConnector
+
+    registro = ParsedRecord(
+        raw_content_hash="x",
+        extractor_version=OCIConnector.extractor_version,
+        data={
+            "nombre": nombre,
+            "cargo": cargo,
+            "ministerio": "HACIENDA",
+            "fecha_cese": cese,
+            "actividad": actividad,
+            "fecha_autorizacion": fecha,
+            "curriculum": "",
+            "url": "https://transparencia.gob.es/x",
+        },
+    )
+    n = OCIConnector().normalize(registro)
+    assert n is not None
+    return n
+
+
+@pytest.fixture
+def store_oci(store):
+    store.upsert_source(Source(id="oci", name="OCI", url="https://ejemplo.test"))
+    store.conn.commit()
+    return store
+
+
+@con_base
+def test_una_autorizacion_de_la_oci_sale_en_cargos(store_oci, tmp_path):
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "MONTORO ROMERO, CRISTOBAL",
+            "MINISTRO DE HACIENDA Y FUNCION PUBLICA",
+            "2018/06/01",
+            "CONSEJERO-ASESOR DE LA JUNTA DIRECTIVA DEL FORO",
+            "2020/01/09",
+        ),
+        b"<html>1</html>",
+    )
+    grafo, indice, cargos = _volcar(store_oci, tmp_path)
+    [persona] = cargos["personas"]
+    assert persona["nombre"] == "Montoro Romero, Cristobal"
+    [periodo] = persona["periodos"]
+    assert periodo["hasta"] == "2018-06-01" and "desde" not in periodo
+    [autorizacion] = persona["autorizaciones"]
+    assert autorizacion["actividad"] == "CONSEJERO-ASESOR DE LA JUNTA DIRECTIVA DEL FORO"
+    assert autorizacion["fecha"] == "2020-01-09"
+    # Ni la persona ni el texto de la autorización entran en el mapa del
+    # dinero ni en el buscador general.
+    assert not grafo["nodes"]
+    assert not [e for e in indice["entidades"] if e["clave"].startswith("oci:")]
+    assert next(f for f in grafo["fuentes"] if f["id"] == "oci")["entidades"] == 1
+
+
+@con_base
+def test_la_misma_persona_en_el_boe_y_la_oci_se_une_con_nombre_y_fecha(store_oci, tmp_path):
+    _ingerir(
+        store_oci,
+        "boe",
+        _cese_boe("Cristóbal Montoro Romero", "BOE-A-2", "Ministro de Hacienda", "20180602"),
+        b"<documento>2</documento>",
+    )
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "MONTORO ROMERO, CRISTOBAL",
+            "MINISTRO DE HACIENDA",
+            "2018/06/01",
+            "ASESOR",
+            "2020/01/09",
+        ),
+        b"<html>1</html>",
+    )
+    _, _, cargos = _volcar(store_oci, tmp_path)
+    [persona] = cargos["personas"]
+    assert persona["clave"].startswith("boe:")
+    [autorizacion] = persona["autorizaciones"]
+    assert autorizacion["cruce"] == "nombre y fecha de cese"
+
+
+@con_base
+def test_con_el_nombre_solo_no_se_une(store_oci, tmp_path):
+    """Mismo nombre, cese de otro año: pueden ser dos personas."""
+    _ingerir(
+        store_oci,
+        "boe",
+        _cese_boe("Cristóbal Montoro Romero", "BOE-A-2", "Ministro de Hacienda", "20120101"),
+        b"<documento>2</documento>",
+    )
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "MONTORO ROMERO, CRISTOBAL",
+            "MINISTRO DE HACIENDA",
+            "2018/06/01",
+            "ASESOR",
+            "2020/01/09",
+        ),
+        b"<html>1</html>",
+    )
+    _, _, cargos = _volcar(store_oci, tmp_path)
+    assert len(cargos["personas"]) == 2
+
+
+@con_base
+def test_la_autorizacion_nombra_una_sociedad_del_mapa(store_oci, tmp_path):
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "SANCHEZ GONZALEZ, LUIS MARIA",
+            "DIRECTOR DEL DEPARTAMENTO DE INSPECCION FINANCIERA",
+            "2018/07/02",
+            "EL CORTE INGLES, S.A.",
+            "2019/11/21",
+        ),
+        b"<html>1</html>",
+    )
+    _ingerir(
+        store_oci,
+        "bdns",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada("PublicBody", "Ministerio de Prueba", "test:min"),
+                EntidadNormalizada("Company", "El Corte Inglés, S.A.", "nif:A28017895"),
+            ],
+            aristas=[AristaNormalizada("Payment", "test:min", "nif:A28017895", "p1", 1.0)],
+        ),
+        b"<documento>3</documento>",
+    )
+    _, _, cargos = _volcar(store_oci, tmp_path)
+    [autorizacion] = cargos["personas"][0]["autorizaciones"]
+    assert autorizacion["empresa"] == {"clave": "nif:A28017895", "nombre": "El Corte Inglés, S.A."}
+    assert cargos["empresas"]["nif:A28017895"][0]["nombre"] == "Sanchez Gonzalez, Luis Maria"
+
+
+def test_una_sociedad_se_reconoce_entera_y_sin_dudas():
+    from sinapsis_ingest.exportar_cargos import empresa_en
+
+    mapa = {
+        "ey abogados s l p": [("nif:B1", "EY ABOGADOS, S.L.P.")],
+        "laboratorios farmaceuticos rovi s a": [
+            ("nif:A2", "LABORATORIOS FARMACEUTICOS ROVI, S.A.")
+        ],
+        "grupo x s a": [("nif:A3", "GRUPO X, S.A.")],
+        "x s a": [("nif:A4", "X, S.A.")],
+        "duplicada s l": [("nif:B5", "DUPLICADA, S.L."), ("nif:B6", "Duplicada SL")],
+    }
+    assert empresa_en("SOCIO DE EY ABOGADOS, S.L.P.", mapa)["clave"] == "nif:B1"
+    assert (
+        empresa_en(
+            "MIEMBRO DEL CONSEJO DE ADMINISTRACION DE LABORATORIOS FARMACEUTICOS ROVI, S.A.", mapa
+        )["clave"]
+        == "nif:A2"
+    )
+    # La más larga manda: «GRUPO X, S.A.» no es «X, S.A.».
+    assert empresa_en("CONSEJERO DE GRUPO X, S.A.", mapa)["clave"] == "nif:A3"
+    # Dos fichas con el mismo nombre: no se elige.
+    assert empresa_en("ASESOR DE DUPLICADA, S.L.", mapa) is None
+    # Sin denominación del mapa: nada.
+    assert empresa_en("ECONOMISTA POR CUENTA PROPIA", mapa) is None

@@ -1,0 +1,124 @@
+"""Autorizaciones de actividad privada tras el cese, contra páginas reales.
+
+Golden tests (CLAUDE.md): `tests/golden/oci/*.html` son páginas del Portal de
+Transparencia tal cual las sirvió, guardadas por el reconocimiento.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from pathlib import Path
+
+import pytest
+
+from sinapsis_ingest.connectors.base import RawDocument
+from sinapsis_ingest.connectors.oci import (
+    OCIConnector,
+    en_minusculas,
+    leer_tablas,
+    nombre_para_cruzar,
+)
+
+GOLDEN = Path(__file__).parent / "golden" / "oci"
+PAGINA_2020 = GOLDEN / (
+    "publicidad-activa-por-materias-altos-cargos-actividad-privada-cese-seguimiento20200121.html"
+)
+
+
+def _filas(ruta: Path) -> list[dict]:
+    return leer_tablas(ruta.read_text(encoding="utf-8"))
+
+
+def test_la_tabla_real_se_lee_entera():
+    filas = _filas(PAGINA_2020)
+    assert len(filas) == 15
+    primera = filas[0]
+    assert primera["nombre"] == "VELA OLMO, CARMEN"
+    assert primera["cargo"] == "SECRETARIA DE ESTADO DE INVESTIGACION, DESARROLLO E INNOVACION"
+    assert primera["fecha_cese"] == "2018/06/18"
+    assert primera["actividad"] == "PATRONATO DE LA FUNDACION ASTRAZENECA"
+    assert primera["fecha_autorizacion"] == "2020/01/16"
+    assert primera["curriculum"].startswith("/servicios-buscador/contenido/curriculums?id=")
+
+
+def test_una_persona_con_dos_autorizaciones_son_dos_filas():
+    banez = [f for f in _filas(PAGINA_2020) if f["nombre"] == "BAÑEZ GARCIA, FATIMA"]
+    assert [f["actividad"] for f in banez] == [
+        "MIEMBRO DEL CONSEJO DE ADMINISTRACION DE LABORATORIOS FARMACEUTICOS ROVI, S.A.",
+        "AUTONOMO CONSULTORIA Y ASESORIA EMPRESAS",
+    ]
+
+
+def test_todas_las_paginas_guardadas_tienen_tabla():
+    for ruta in sorted(GOLDEN.glob("*.html")):
+        assert _filas(ruta), ruta.name
+
+
+def test_la_tabla_de_la_fuente_de_los_datos_no_se_confunde():
+    html = (
+        "<table><tr><th>Fuente de los datos</th><th>Oficina</th></tr>"
+        "<tr><td>a</td><td>b</td></tr></table>"
+    )
+    assert leer_tablas(html) == []
+
+
+def test_el_nombre_se_publica_en_el_orden_de_la_fuente():
+    assert en_minusculas("VELA OLMO, CARMEN") == "Vela Olmo, Carmen"
+    assert en_minusculas("ROSA CORDON, RUFINO DE LA") == "Rosa Cordon, Rufino de la"
+    # Sin nombre de pila en la fuente: no se inventa uno reordenando.
+    assert en_minusculas("LORA-TAMAYO, D\u00b4OCON") == "Lora-Tamayo, D\u00b4Ocon"
+
+
+@pytest.mark.parametrize(
+    ("fuente", "cruce"),
+    [
+        ("BAÑEZ GARCIA, FATIMA", "fatima banez garcia"),
+        ("ROSA CORDON, RUFINO DE LA", "rufino de la rosa cordon"),
+        ("MONTORO ROMERO, CRISTOBAL", "cristobal montoro romero"),
+    ],
+)
+def test_el_nombre_para_cruzar_con_el_boe(fuente, cruce):
+    assert nombre_para_cruzar(fuente) == cruce
+
+
+def test_normaliza_la_autorizacion_y_el_cese():
+    raw = RawDocument(
+        source_id="oci",
+        url="https://transparencia.gob.es/x",
+        content=PAGINA_2020.read_bytes(),
+        media_type="text/html",
+    )
+    conector = OCIConnector()
+    registros = list(conector.parse(raw))
+    montoro = next(r for r in registros if r.data["nombre"] == "MONTORO ROMERO, CRISTOBAL")
+    n = conector.normalize(montoro)
+    assert n is not None
+    n.validar()
+    persona = next(e for e in n.entidades if e.ftm_schema == "Person")
+    assert persona.caption == "Montoro Romero, Cristobal"
+    assert persona.properties["cargo_publico"] is True
+    assert persona.dedupe_key.startswith("oci:persona:")
+    cese = next(a for a in n.aristas if a.ftm_schema == "Occupancy")
+    assert cese.end_date == date(2018, 6, 1) and cese.start_date is None
+    assert cese.properties["cargo"] == "MINISTRO DE HACIENDA Y FUNCION PUBLICA"
+    autorizacion = next(a for a in n.aristas if a.ftm_schema == "UnknownLink")
+    assert autorizacion.start_date == date(2020, 1, 9)
+    assert autorizacion.properties["relacion"] == "autorizacion_actividad_privada"
+    assert autorizacion.properties["actividad"].startswith("CONSEJERO-ASESOR DE LA JUNTA DIRECTIVA")
+    assert autorizacion.confidence == 1.0 and autorizacion.status == "asserted"
+    # Cada autorización tiene su clave; el cese, en cambio, es uno por persona
+    # y cargo aunque tenga dos autorizaciones.
+    autorizaciones = [
+        a.dedupe_key
+        for r in registros
+        for a in (conector.normalize(r) or n).aristas
+        if a.ftm_schema == "UnknownLink"
+    ]
+    assert len(autorizaciones) == len(set(autorizaciones)) == 15
+    ceses = {
+        a.dedupe_key
+        for r in registros
+        for a in (conector.normalize(r) or n).aristas
+        if a.ftm_schema == "Occupancy"
+    }
+    assert len(ceses) == 13
