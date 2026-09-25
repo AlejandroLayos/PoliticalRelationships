@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<GruposYpartidos>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[801]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO POPULAR EN EL SENADO]]></nombre>
+<siglas><![CDATA[GPP]]></siglas>
+<notasWeb><![CDATA[]]></notasWeb>
+<fechaConstitucion><![CDATA[17/08/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[144]]></total>
+<totalElectos><![CDATA[120]]></totalElectos>
+<totalDesignados><![CDATA[24]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[PP]]></partidoCod>
+<partidoSiglas><![CDATA[PP]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIDO POPULAR]]></partidoNombre>
+<partidoUrl><![CDATA[www.pp.es]]></partidoUrl>
+<partidoTotal><![CDATA[144]]></partidoTotal>
+<partidoTotalElectos><![CDATA[120]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[24]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[800]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO SOCIALISTA]]></nombre>
+<siglas><![CDATA[GPS]]></siglas>
+<notasWeb><![CDATA[]]></notasWeb>
+<fechaConstitucion><![CDATA[17/08/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[87]]></total>
+<totalElectos><![CDATA[69]]></totalElectos>
+<totalDesignados><![CDATA[18]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[PSOE]]></partidoCod>
+<partidoSiglas><![CDATA[PSOE]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIDO SOCIALISTA OBRERO ESPAÑOL]]></partidoNombre>
+<partidoUrl><![CDATA[www.psoe.es]]></partidoUrl>
+<partidoTotal><![CDATA[66]]></partidoTotal>
+<partidoTotalElectos><![CDATA[52]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[14]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[PSC]]></partidoCod>
+<partidoSiglas><![CDATA[PSC]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIT DELS SOCIALISTES DE CATALUNYA (PSC-PSOE)]]></partidoNombre>
+<partidoUrl><![CDATA[www.socialistes.cat]]></partidoUrl>
+<partidoTotal><![CDATA[14]]></partidoTotal>
+<partidoTotalElectos><![CDATA[11]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[3]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[PSE-EE-PSOE-]]></partidoCod>
+<partidoSiglas><![CDATA[PSE-EE(PSOE)]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIDO SOCIALISTA DE EUSKADI-EUSKADIKO EZKERRA (PSOE)]]></partidoNombre>
+<partidoUrl><![CDATA[www.socialistasvascos.com]]></partidoUrl>
+<partidoTotal><![CDATA[5]]></partidoTotal>
+<partidoTotalElectos><![CDATA[4]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[PSdeG-PSOE]]></partidoCod>
+<partidoSiglas><![CDATA[PSdeG-PSOE]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIDO DOS SOCIALISTAS DE GALICIA-PSOE]]></partidoNombre>
+<partidoUrl><![CDATA[www.psdeg-psoe.org]]></partidoUrl>
+<partidoTotal><![CDATA[2]]></partidoTotal>
+<partidoTotalElectos><![CDATA[2]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[805]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO IZQUIERDAS POR LA INDEPENDENCIA (ESQUERRA REPUBLICANA-EUSKAL HERRIA BILDU)]]></nombre>
+<siglas><![CDATA[GPERB]]></siglas>
+<notasWeb><![CDATA[]]></notasWeb>
+<fechaConstitucion><![CDATA[17/08/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[9]]></total>
+<totalElectos><![CDATA[7]]></totalElectos>
+<totalDesignados><![CDATA[2]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[EH Bildu]]></partidoCod>
+<partidoSiglas><![CDATA[EH Bildu]]></partidoSiglas>
+<partidoNombre><![CDATA[EUSKAL HERRIA BILDU]]></partidoNombre>
+<partidoUrl><![CDATA[ehbildu.eus/es/]]></partidoUrl>
+<partidoTotal><![CDATA[5]]></partidoTotal>
+<partidoTotalElectos><![CDATA[4]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[ERC/ESQUERRA]]></partidoCod>
+<partidoSiglas><![CDATA[ERC/ESQUERRA]]></partidoSiglas>
+<partidoNombre><![CDATA[ESQUERRA REPUBLICANA DE CATALUNYA]]></partidoNombre>
+<partidoUrl><![CDATA[www.esquerra.cat/]]></partidoUrl>
+<partidoTotal><![CDATA[4]]></partidoTotal>
+<partidoTotalElectos><![CDATA[3]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[807]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO PLURAL EN EL SENADO JUNTS PER CATALUNYA-COALICIÓN CANARIA-AGRUPACIÓN HERREÑA INDEPENDIENTE-BLOQUE NACIONALISTA GALEGO]]></nombre>
+<siglas><![CDATA[GPPLU]]></siglas>
+<notasWeb><![CDATA[]]></notasWeb>
+<fechaConstitucion><![CDATA[17/08/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[7]]></total>
+<totalElectos><![CDATA[2]]></totalElectos>
+<totalDesignados><![CDATA[5]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[JxCat]]></partidoCod>
+<partidoSiglas><![CDATA[JxCat]]></partidoSiglas>
+<partidoNombre><![CDATA[JUNTS PER CATALUNYA]]></partidoNombre>
+<partidoUrl><![CDATA[junts.cat/]]></partidoUrl>
+<partidoTotal><![CDATA[4]]></partidoTotal>
+<partidoTotalElectos><![CDATA[1]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[3]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[BNG]]></partidoCod>
+<partidoSiglas><![CDATA[BNG]]></partidoSiglas>
+<partidoNombre><![CDATA[BLOQUE NACIONALISTA GALEGO]]></partidoNombre>
+<partidoUrl><![CDATA[bng.gal/]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[0]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[CCa]]></partidoCod>
+<partidoSiglas><![CDATA[CCa]]></partidoSiglas>
+<partidoNombre><![CDATA[COALICIÓN CANARIA]]></partidoNombre>
+<partidoUrl><![CDATA[coalicioncanaria.org/]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[0]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[AHI]]></partidoCod>
+<partidoSiglas><![CDATA[AHI]]></partidoSiglas>
+<partidoNombre><![CDATA[AGRUPACIÓN HERREÑA INDEPENDIENTE]]></partidoNombre>
+<partidoUrl><![CDATA[ahi-elhierro.es/]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[1]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[803]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO VASCO EN EL SENADO (EAJ-PNV)]]></nombre>
+<siglas><![CDATA[GPV]]></siglas>
+<notasWeb><![CDATA[]]></notasWeb>
+<fechaConstitucion><![CDATA[17/08/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[6]]></total>
+<totalElectos><![CDATA[5]]></totalElectos>
+<totalDesignados><![CDATA[1]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[EAJ-PNV]]></partidoCod>
+<partidoSiglas><![CDATA[EAJ-PNV]]></partidoSiglas>
+<partidoNombre><![CDATA[EUZKO ALDERDI JELTZALEA-PARTIDO NACIONALISTA VASCO]]></partidoNombre>
+<partidoUrl><![CDATA[www.eaj-pnv.eus/es/]]></partidoUrl>
+<partidoTotal><![CDATA[5]]></partidoTotal>
+<partidoTotalElectos><![CDATA[4]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[PSC]]></partidoCod>
+<partidoSiglas><![CDATA[PSC]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIT DELS SOCIALISTES DE CATALUNYA (PSC-PSOE)]]></partidoNombre>
+<partidoUrl><![CDATA[www.socialistes.cat]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[1]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[804]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO IZQUIERDA CONFEDERAL (MÁS MADRID, EIVISSA I FORMENTERA AL SENAT, COMPROMÍS, AGRUPACIÓN SOCIALISTA GOMERA Y GEROA BAI)]]></nombre>
+<siglas><![CDATA[GPIC]]></siglas>
+<notasWeb><![CDATA[(del 17/08/2023 al 02/10/2023 su denominación fue GRUPO PARLAMENTARIO IZQUIERDA CONFEDERAL (MÁS MADRID, EIVISSA I FORMENTERA AL SENAT, COMPROMÍS Y AGRUPACIÓN SOCIALISTA GOMERA))]]></notasWeb>
+<fechaConstitucion><![CDATA[17/08/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[7]]></total>
+<totalElectos><![CDATA[4]]></totalElectos>
+<totalDesignados><![CDATA[3]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[PSOE]]></partidoCod>
+<partidoSiglas><![CDATA[PSOE]]></partidoSiglas>
+<partidoNombre><![CDATA[PARTIDO SOCIALISTA OBRERO ESPAÑOL]]></partidoNombre>
+<partidoUrl><![CDATA[www.psoe.es]]></partidoUrl>
+<partidoTotal><![CDATA[2]]></partidoTotal>
+<partidoTotalElectos><![CDATA[2]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[ASG]]></partidoCod>
+<partidoSiglas><![CDATA[ASG]]></partidoSiglas>
+<partidoNombre><![CDATA[AGRUPACIÓN SOCIALISTA GOMERA]]></partidoNombre>
+<partidoUrl><![CDATA[www.agrupacionsocialistagomera.es/]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[1]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[INDEP]]></partidoCod>
+<partidoSiglas><![CDATA[INDEP]]></partidoSiglas>
+<partidoNombre><![CDATA[INDEPENDIENTE]]></partidoNombre>
+<partidoUrl><![CDATA[]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[1]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[CCPV]]></partidoCod>
+<partidoSiglas><![CDATA[CCPV]]></partidoSiglas>
+<partidoNombre><![CDATA[COALICIÓ COMPROMÍS]]></partidoNombre>
+<partidoUrl><![CDATA[compromis.net/]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[0]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[GBAI]]></partidoCod>
+<partidoSiglas><![CDATA[GBAI]]></partidoSiglas>
+<partidoNombre><![CDATA[GEROA BAI]]></partidoNombre>
+<partidoUrl><![CDATA[www.geroabai.com]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[0]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[MÁS MADRID]]></partidoCod>
+<partidoSiglas><![CDATA[MÁS MADRID]]></partidoSiglas>
+<partidoNombre><![CDATA[MÁS MADRID]]></partidoNombre>
+<partidoUrl><![CDATA[www.masmadrid.org/]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[0]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[1]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+<Grupo>
+<datosCabecera>
+<codigo><![CDATA[806]]></codigo>
+<nombre><![CDATA[GRUPO PARLAMENTARIO MIXTO]]></nombre>
+<siglas><![CDATA[GPMX]]></siglas>
+<notasWeb><![CDATA[]]></notasWeb>
+<fechaConstitucion><![CDATA[19/09/2023]]></fechaConstitucion>
+<fechaBaja><![CDATA[]]></fechaBaja>
+<total><![CDATA[4]]></total>
+<totalElectos><![CDATA[1]]></totalElectos>
+<totalDesignados><![CDATA[3]]></totalDesignados>
+</datosCabecera>
+<listaPartidosPoliticos>
+<partido>
+<partidoCod><![CDATA[VOX]]></partidoCod>
+<partidoSiglas><![CDATA[VOX]]></partidoSiglas>
+<partidoNombre><![CDATA[VOX]]></partidoNombre>
+<partidoUrl><![CDATA[www.voxespana.es/]]></partidoUrl>
+<partidoTotal><![CDATA[3]]></partidoTotal>
+<partidoTotalElectos><![CDATA[0]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[3]]></partidoTotalDesignados>
+</partido>
+<partido>
+<partidoCod><![CDATA[UPN]]></partidoCod>
+<partidoSiglas><![CDATA[UPN]]></partidoSiglas>
+<partidoNombre><![CDATA[UNIÓN DEL PUEBLO NAVARRO]]></partidoNombre>
+<partidoUrl><![CDATA[www.upn.org]]></partidoUrl>
+<partidoTotal><![CDATA[1]]></partidoTotal>
+<partidoTotalElectos><![CDATA[1]]></partidoTotalElectos>
+<partidoTotalDesignados><![CDATA[0]]></partidoTotalDesignados>
+</partido>
+</listaPartidosPoliticos>
+</Grupo>
+</GruposYpartidos>
+
