@@ -36,6 +36,14 @@ except ImportError:  # pragma: no cover
     sys.exit("falta httpx: pip install httpx")
 
 CATALOGO = "https://www.senado.es/web/relacionesciudadanos/datosabiertos/catalogodatos/index.html"
+
+# Los ficheros que la primera vuelta encontró en el catálogo y que hacen falta
+# para el conector: la composición desde 1977 y los grupos con sus partidos.
+# Se guardan enteros como muestra y se describe un registro de cada uno.
+FIJOS = {
+    "composicion-desde-1977.xml": "https://www.senado.es/web/ficopendataservlet?tipoFich=10",
+    "grupos-y-partidos-xv.xml": "https://www.senado.es/web/ficopendataservlet?tipoFich=4&legis=15",
+}
 CABECERAS = {"User-Agent": "Sinapsis/0.1 (reconocimiento; proyecto abierto de transparencia)"}
 TOPE = 90.0
 
@@ -70,7 +78,8 @@ def describir_xml(texto: str) -> list[str]:
     # Los valores de las etiquetas que suenan a formación o procedencia.
     for etiqueta in [e for e in etiquetas if re.search(r"(?i)part|grup|form|proc|circ|legis|alta|baja", e)][:10]:
         valores = Counter(
-            " ".join(v.split())[:40] for v in re.findall(rf"<{etiqueta}[^>]*>([^<]*)</{etiqueta}>", texto)
+            " ".join(re.sub(r"<!\[CDATA\[|\]\]>", "", v).split())[:40]
+            for v in re.findall(rf"<{etiqueta}[^>]*>(.*?)</{etiqueta}>", texto, flags=re.S)
         )
         lineas.append(f"- `{etiqueta}`: {len(valores)} valores; {valores.most_common(8)}")
     return lineas
@@ -141,6 +150,25 @@ def main() -> int:
                 destino.write_bytes(contenido)
                 informe.append(f"- guardado como `{destino}`")
                 guardados += 1
+            informe.append("")
+            time.sleep(0.5)
+
+        informe += ["## Ficheros para el conector", ""]
+        for nombre, url in FIJOS.items():
+            codigo, contenido, tipo, final = pedir(c, url)
+            informe += [f"### `{nombre}`", "", f"`{url}` → HTTP {codigo} · `{tipo}` · {len(contenido):,} bytes", ""]
+            if codigo != 200 or not contenido:
+                continue
+            texto = contenido.decode("iso-8859-1" if b"ISO-8859-1" in contenido[:200] else "utf-8", errors="replace")
+            informe += describir_xml(texto)
+            # Un registro entero, tal cual, para ver la forma.
+            primero = re.search(r"<(senador|grupo|grupoParlamentario|partido)\b.*?</\1>", texto, flags=re.S)
+            if primero:
+                informe += ["", "Primer registro:", "", "```xml", primero.group(0)[:2500], "```"]
+            if len(contenido) < 4_000_000:
+                golden.mkdir(parents=True, exist_ok=True)
+                (golden / nombre).write_bytes(contenido)
+                informe.append(f"- guardado como `{golden / nombre}`")
             informe.append("")
             time.sleep(0.5)
 
