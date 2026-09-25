@@ -624,8 +624,8 @@ function pintar() {
     // más salían pintados y sin nombre, que es justo lo que no puede pasar
     // —el color existe para poder saltar del mapa a la lista de al lado—.
     labelRenderedSizeThreshold: 8,
-    labelFont: 'system-ui, sans-serif',
-    labelColor: { color: '#f2f5fa' },
+    labelFont: "'Public Sans Variable', system-ui, sans-serif",
+    labelColor: { color: '#ecebe6' }, // = --visor-tinta
     labelSize: 12,
     labelWeight: '600',
     // Sigma dibuja el texto a pelo. Encima de una mancha de color claro

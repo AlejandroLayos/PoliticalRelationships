@@ -10,7 +10,7 @@
 import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
 import { resumenEnPalabras } from '../influencia.js'
-import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
+import { colorTipo, etiquetaEsquema } from '../esquemas.js'
 import { enumerar, fechaCorta, nombreDocumento, nombreFuente } from '../procedencia.js'
 
 const props = defineProps({
@@ -190,7 +190,7 @@ function pct(v, max) {
 }
 
 function color(schema) {
-  return COLOR_POR_ESQUEMA[schema] ?? COLOR_POR_DEFECTO
+  return colorTipo(schema)
 }
 
 /**

@@ -20,7 +20,7 @@
  */
 
 /** El fondo del lienzo del grafo, en las tres componentes. */
-export const FONDO_LIENZO = [0x10, 0x10, 0x12]
+export const FONDO_LIENZO = [0x12, 0x13, 0x15] // = --visor en estilos.css
 
 /**
  * El color opaco equivalente a pintar `[r,g,b]` con opacidad `alfa` sobre el

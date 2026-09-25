@@ -14,7 +14,7 @@ import { computed, ref } from 'vue'
 import { construirDirectorio, construirDirectorioDesdeIndice } from '../directorio.js'
 import { contratosDeMedios } from '../medios.js'
 import { dineroCorto } from '../nucleos.js'
-import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
+import { colorTipo, etiquetaEsquema } from '../esquemas.js'
 
 const props = defineProps({
   /** El grafo YA colapsado. */
@@ -143,7 +143,7 @@ function proporcion(f, lista) {
 }
 
 function color(schema) {
-  return COLOR_POR_ESQUEMA[schema] ?? COLOR_POR_DEFECTO
+  return colorTipo(schema)
 }
 
 /*

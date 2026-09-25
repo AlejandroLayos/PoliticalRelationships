@@ -12,6 +12,9 @@
     "humo": "vite build && (vite preview --port 4190 --strictPort & echo $! > /tmp/sinapsis-humo.pid) && sleep 5 && node e2e/humo.mjs; c=$?; kill \"$(cat /tmp/sinapsis-humo.pid)\" 2>/dev/null; exit $c"
   },
   "dependencies": {
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@fontsource-variable/public-sans": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
     "@sigma/edge-curve": "^3.1.0",
     "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",

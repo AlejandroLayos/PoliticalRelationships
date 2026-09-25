@@ -116,7 +116,7 @@ await paso('la dirección lleva la clave estable, no el UUID', async () => {
 })
 
 await paso('conexiones dibuja el vecindario', async () => {
-  await pagina.click('text=Conexiones')
+  await pagina.click('text=Ver sus conexiones')
   await pagina.waitForTimeout(9000)
   if (!(await pagina.innerText('body')).includes('CONEXIONES')) throw new Error('sin panel')
 })

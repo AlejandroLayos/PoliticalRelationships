@@ -20,7 +20,7 @@ import {
   vecinos,
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
-import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA } from './esquemas.js'
+import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA, colorTipo } from './esquemas.js'
 import { accionDeEstado, direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
 import { areaDeInfluencia } from './influencia.js'
 import { contratosDeMedios } from './medios.js'
@@ -95,6 +95,40 @@ function alAnalizar({ nucleos: n, totalDinero: d, visibles, entidades, pequenos 
 const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
 
 /**
+ * Las vistas de red van en el visor oscuro (docs/diseno.md §5): los nodos se
+ * iluminan al pasar, y una luz sólo se ve sobre negro. El mapa de bloques y
+ * la ficha son papel: se leen, no se exploran.
+ */
+const enVisor = computed(
+  () =>
+    (vista.value === 'mapa' && nucleoEnfocado.value !== null) ||
+    vista.value === 'vecindario' ||
+    (!hayMapa.value && vista.value !== 'ficha'),
+)
+
+/** «25 de septiembre de 2026»: la fecha de la edición, como en un periódico. */
+const fechaEdicion = computed(() =>
+  instantanea.value?.generado
+    ? new Date(instantanea.value.generado).toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : '',
+)
+
+/**
+ * La sigla con que se conoce cada fuente, para su sello.
+ *
+ * «Base de Datos Nacional de Subvenciones» no cabe en un sello; BDNS es como
+ * la llama todo el que la usa, y el nombre entero está en el detalle.
+ */
+const SIGLAS = { bdns: 'BDNS', placsp: 'PLACSP', tcu: 'Tribunal de Cuentas' }
+function siglaFuente(f) {
+  return SIGLAS[f.id] ?? f.name
+}
+
+/**
  * Los tipos de entidad que hay dentro del grupo abierto, de más a menos.
  *
  * Agrupados POR COLOR, no por esquema: «Empresa» y «Persona jurídica»
@@ -106,7 +140,7 @@ const tiposDelGrupo = computed(() => {
   const porColor = new Map()
   const tipos = Object.entries(nucleoAbierto.value?.tipos ?? {}).sort((a, b) => b[1] - a[1])
   for (const [esquema] of tipos) {
-    const tono = COLOR_POR_ESQUEMA[esquema] ?? COLOR_POR_DEFECTO
+    const tono = colorTipo(esquema)
     if (!porColor.has(tono)) porColor.set(tono, [])
     porColor.get(tono).push(NOMBRE_ESQUEMA[esquema] ?? esquema)
   }
@@ -487,29 +521,46 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
       Ahora: una línea con lo imprescindible, el aviso de fuente caída aparte
       y siempre visible, y el resto a un clic.
     -->
-    <div v-if="instantanea && !esDemo" class="banda-info">
-      <div class="banda-linea">
-        <span class="banda-dicho">
-          <strong>Instantánea del {{ new Date(instantanea.generado).toLocaleDateString('es-ES') }}</strong>
-          · no es una consulta en vivo
+    <!--
+      La franja de edición.
+
+      Un periódico no dice «instantánea, no es una consulta en vivo»: dice
+      «edición del 25 de septiembre». Es lo mismo —una foto de un día, no un
+      grifo abierto— dicho como lo entiende cualquiera, y además fecha lo que
+      se está leyendo, que es lo primero que hay que saber de un dato público.
+
+      Lo demás —de dónde sale, qué cubre, qué NO lleva— queda a un clic, pero
+      a la vista: antes era un párrafo fijo de cuatro líneas en todas las
+      vistas y en un móvil se comía la primera pantalla.
+    -->
+    <div v-if="instantanea && !esDemo" class="franja">
+      <div class="franja-linea">
+        <span class="franja-edicion">
+          <span class="ancho">Edición del </span>{{ fechaEdicion }}
         </span>
-        <details class="banda-mas">
-          <summary>De dónde salen estos datos</summary>
-          <div class="banda-detalle">
+        <span class="franja-fuentes ancho">
+          <span
+            v-for="f in instantanea.fuentesConDatos ?? instantanea.fuentes"
+            :key="f.id ?? f.name"
+            class="sello"
+          >{{ siglaFuente(f) }}</span>
+        </span>
+        <details class="franja-mas">
+          <summary><span class="ancho">De dónde salen estos datos</span><span class="estrecho">Las fuentes</span></summary>
+          <div class="franja-detalle">
             <p>
-              Datos reales de
+              Documentos oficiales de
               {{ (instantanea.fuentesConDatos ?? instantanea.fuentes).map((f) => f.name).join(', ') }},
-              descargados y enlazados por la ingesta automática. Cada cifra
-              lleva el documento del que salió.
+              descargados y enlazados cada noche. Es una edición, no una
+              consulta en vivo: lo que ves es lo que había publicado ese día.
+              Cada cifra lleva el documento del que salió.
             </p>
             <!--
-              «La base entera tiene 23.892 entidades y la búsqueda las cubre
-              todas» era falso, y encima contradecía la cifra de la portada.
-              Las 23.892 son todo lo ingerido, expedientes de contratación
-              incluidos —que son papeles, no actores—; el buscador cubre el
-              índice, que son las entidades que mueven dinero. Dos números
-              distintos para lo mismo en la misma pantalla, y el que se
-              afirmaba era el que no valía.
+              Lo que cubre, con los dos números que se leen en la portada: el
+              mapa y el buscador. Una versión anterior decía «la base tiene
+              23.892 entidades y el buscador las cubre todas», que era falso
+              —las 23.892 incluyen los expedientes, que son papeles— y
+              contradecía la cifra de arriba.
             -->
             <p v-if="instantanea.truncado">
               El mapa dibuja
@@ -517,38 +568,32 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
               entidades, las de más dinero, para que el navegador pueda con él.
               El buscador cubre las
               {{ (indice?.total ?? 0).toLocaleString('es-ES') }} que mueven
-              dinero público en esta instantánea.
+              dinero público en esta edición.
             </p>
             <!--
-              Lo que NO hay, y dicho con el dato delante.
-
-              Un hueco que el lector no conoce se lee como un hecho: quien
-              busca una empresa y no ve ningún vínculo con un partido puede
-              concluir que no lo hay, cuando lo que pasa es que esta
-              instantánea no lleva propiedad ni cargos — el Registro Mercantil
-              no está ingerido todavía. Lo que se publica es dinero público
-              yendo de un sitio a otro, y nada más. La frase sale de mirar los
-              esquemas que hay de verdad en la instantánea, no de una lista
-              escrita a mano que podría quedarse vieja.
+              Lo que NO hay. Un hueco que el lector no conoce se lee como un
+              hecho: quien busca una empresa y no ve ningún vínculo con un
+              partido puede concluir que no lo hay. Sale de mirar los esquemas
+              que hay de verdad en la edición, así que desaparece solo el día
+              que entre el Registro Mercantil.
             -->
-            <p v-if="!hayVinculosDeControl">
-              <strong>Lo que no hay:</strong> esta instantánea sólo lleva
-              dinero público —adjudicaciones, subvenciones y expedientes del
-              Tribunal de Cuentas—. No lleva propiedad de empresas, cargos ni
-              consejos de administración, así que no ver un vínculo aquí no
-              significa que no exista: significa que esta fuente no lo publica.
+            <p v-if="!hayVinculosDeControl" class="nota">
+              Esta edición sólo lleva dinero público —adjudicaciones,
+              subvenciones y expedientes del Tribunal de Cuentas—. No lleva
+              propiedad de empresas, cargos ni consejos de administración: no
+              ver un vínculo aquí no significa que no exista, sino que estas
+              fuentes no lo publican.
             </p>
           </div>
         </details>
       </div>
       <p v-if="instantanea.fuentesSinDatos?.length" class="fuente-caida">
-        ⚠ Hoy falta {{ instantanea.fuentesSinDatos.map((f) => f.name).join(' y ') }}:
-        no respondió al generar esta instantánea, así que este mapa no incluye
-        sus datos.
+        Hoy falta {{ instantanea.fuentesSinDatos.map((f) => f.name).join(' y ') }}:
+        no respondió al preparar esta edición, así que no incluye sus datos.
       </p>
     </div>
 
-    <div v-else-if="esDemo" class="banda-demo">
+    <div v-else-if="esDemo" class="franja franja-demo">
       <strong>Datos de demostración.</strong>
       Ninguna entidad mostrada es real: los nombres son ficticios y las cifras
       inventadas.
@@ -563,16 +608,39 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
     </div>
 
     <header class="cabecera">
-      <div class="marca">
-        <h1>Sinapsis</h1>
-        <p>Financiación e influencia en la política española</p>
-      </div>
+      <!--
+        La marca: dos nodos y un trazo. El de la izquierda con el color de
+        la administración y el de la derecha con el de la empresa, así que el
+        propio logotipo dice lo que la web enseña —dinero público que va de un
+        sitio a otro— con los mismos colores con que lo enseña.
+      -->
+      <a class="marca" href="./" @click.prevent="volverAlMapa">
+        <svg class="logo" viewBox="0 0 40 24" aria-hidden="true">
+          <path d="M7 16 C 15 2, 25 2, 33 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          <circle cx="7" cy="16" r="4.2" fill="var(--adm)" />
+          <circle cx="33" cy="12" r="4.2" fill="var(--emp)" />
+        </svg>
+        <span class="marca-texto">
+          <span class="marca-nombre">Sinapsis</span>
+          <!--
+            Antes: «Financiación e influencia en la política española». La
+            influencia no está en los datos —no hay propiedad ni cargos, ver
+            la franja—, y un lema no puede prometer lo que la web no enseña.
+            Esto es lo que enseña.
+          -->
+          <span class="marca-lema">El dinero público, de quién sale y a quién llega</span>
+        </span>
+      </a>
 
       <div class="buscador">
+        <svg class="lupa" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+          <path d="M12.6 12.6 L17 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
         <input
           v-model="consulta"
           type="search"
-          placeholder="Busca tu ayuntamiento, una empresa o un partido…"
+          placeholder="Un ayuntamiento, una empresa, un partido…"
           aria-label="Buscar entidad"
           :aria-activedescendant="resaltado >= 0 ? `sug-${resaltado}` : undefined"
           @keydown.down.prevent="mover(1)"
@@ -596,7 +664,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
             </li>
             <li :id="`sug-${i}`">
             <button :class="{ resaltada: i === resaltado }" @click="elegir(r.id)">
-              <span class="punto" :style="{ background: COLOR_POR_ESQUEMA[r.schema] ?? COLOR_POR_DEFECTO }" />
+              <span class="punto" :style="{ background: colorTipo(r.schema) }" />
               <span class="nombre">{{ r.caption }}</span>
               <!--
                 La cifra, aquí. Sin ella, buscar «ayuntamiento de» devuelve
@@ -628,68 +696,55 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           </li>
         </ul>
         <p v-if="consulta.trim().length >= 3 && !buscando && !resultados.length" class="sin-resultados">
-          Sin resultados en lo ingerido hasta hoy.
+          Nada con «{{ consulta.trim() }}» en lo publicado hasta hoy.
+          <span>Prueba con una sola palabra del nombre oficial: los organismos
+          salen como órgano de contratación, no por su nombre corriente.</span>
         </p>
       </div>
 
-      <div v-if="hayMapa" class="controles">
-        <button v-if="vista !== 'portada'" class="volver" @click="volverAlMapa">
-          ← Portada
-        </button>
-        <button v-if="vista !== 'mapa'" class="volver" @click="verMapa">
-          <!-- En estrecho no caben las tres etiquetas largas en un renglón. -->
-          <span class="ancho">Mapa del dinero</span>
-          <span class="estrecho">Mapa</span>
-        </button>
+      <!--
+        La navegación es de secciones, como en un periódico: siempre las dos,
+        y la que se está leyendo, subrayada. Antes eran botones que aparecían
+        y desaparecían según la vista —«← Portada» sólo fuera de la portada,
+        «Mapa» sólo fuera del mapa—, así que no había manera de saber dónde
+        estabas mirando la cabecera.
+      -->
+      <nav v-if="hayMapa" class="secciones" aria-label="Secciones">
+        <a
+          href="./"
+          :aria-current="vista === 'portada' ? 'page' : undefined"
+          @click.prevent="volverAlMapa"
+        >Portada</a>
+        <a
+          href="?v=mapa"
+          :aria-current="vista === 'mapa' ? 'page' : undefined"
+          @click.prevent="verMapa"
+        ><span class="ancho">Mapa del dinero</span><span class="estrecho">Mapa</span></a>
+      </nav>
+    </header>
 
+    <!--
+      La barra de la vista: los controles de lo que se está mirando, y sólo
+      ésos, debajo del filete. Antes iban en la misma fila que la marca y la
+      navegación, todos con el mismo peso, y en el mapa eran siete cosas en
+      línea sin que se supiera cuáles llevaban a otra página y cuáles
+      cambiaban el dibujo.
+    -->
+    <div v-if="hayMapa && vista !== 'portada'" class="barra-vista">
+      <template v-if="vista === 'mapa'">
         <!--
-          Sin red que enseñar no hay vecindario al que bajar: pulsarlo daría
-          «entidad no encontrada», que parece un fallo de la web y es
-          exactamente lo contrario de lo que pasa.
+          En un teléfono los filtros van plegados: son ajustes, no la puerta,
+          y abiertos se comían media pantalla. En ancho siempre a la vista.
         -->
         <button
-          v-if="vista === 'ficha' && !fueraDelMapa"
-          class="volver"
-          title="La red alrededor de esta entidad y el documento del que sale cada dato"
-          @click="verProcedencia"
-        >
-          <!--
-            «Conexiones y procedencia» no cabía junto a los otros dos botones y
-            se llevaba un renglón entero de la cabecera en móvil. La vista
-            lleva su propio título dentro.
-          -->
-          Conexiones
-        </button>
-
-        <!--
-          Cinco controles en fila, todos con el mismo peso y ninguno diciendo
-          qué hace. «Desde» ¿desde cuándo? —era el importe—. «Relaciones
-          sueltas» no significa nada si no sabes que el mapa esconde los
-          grupos de menos de tres. Y no había forma de saber si estabas
-          mirando el mapa entero o uno filtrado.
-
-          Ahora van en dos grupos con su rótulo —lo que AÑADE al mapa y lo que
-          lo RECORTA—, cada uno con su explicación al pasar por encima, y con
-          un aviso aparte cuando hay algo puesto.
-        -->
-        <!--
-          En un teléfono los cinco controles ocupaban tres renglones de los
-          seis que tiene la cabecera, y el mapa se quedaba con menos de media
-          pantalla. Son ajustes, no la puerta: quien entra quiere ver el mapa,
-          y el que quiera filtrar abre esto. En pantalla ancha siguen a la
-          vista, que ahí no le quitan sitio a nada.
-        -->
-        <button
-          v-if="vista === 'mapa'"
-          class="mas-filtros estrecho"
+          class="boton tenue estrecho"
           :class="{ puesto: filtrosPuestos.length }"
           :aria-expanded="filtrosAbiertos"
           @click="filtrosAbiertos = !filtrosAbiertos"
         >
           Filtros<span v-if="filtrosPuestos.length"> ({{ filtrosPuestos.length }})</span>
         </button>
-        <template v-if="vista === 'mapa'">
-          <div class="filtros" :class="{ plegados: !filtrosAbiertos }">
+        <div class="filtros" :class="{ plegados: !filtrosAbiertos }">
           <label class="control" title="Oculta las relaciones por debajo de este importe">
             Importe mínimo
             <select v-model.number="minImporte">
@@ -726,10 +781,31 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
               partidos
             </label>
           </span>
-          </div>
-        </template>
+        </div>
+      </template>
 
-        <label v-else-if="vista === 'vecindario'" class="control">
+      <template v-else-if="vista === 'ficha'">
+        <span class="barra-rotulo">Ficha</span>
+        <!--
+          Sin red que enseñar no hay vecindario al que bajar: pulsarlo daría
+          «entidad no encontrada», que parece un fallo y es lo contrario.
+        -->
+        <button
+          v-if="!fueraDelMapa"
+          class="boton tenue"
+          title="La red alrededor de esta entidad, contrato a contrato, y el documento de cada dato"
+          @click="verProcedencia"
+        >
+          Ver sus conexiones
+        </button>
+      </template>
+
+      <template v-else-if="vista === 'vecindario'">
+        <span class="barra-rotulo">Conexiones</span>
+        <button v-if="seleccionId" class="boton tenue" @click="enfocar(seleccionId)">
+          ← Volver a la ficha
+        </button>
+        <label class="control">
           Saltos
           <select v-model.number="profundidad">
             <option :value="1">1</option>
@@ -737,12 +813,12 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
             <option :value="3">3</option>
           </select>
         </label>
-      </div>
-    </header>
+      </template>
+    </div>
 
     <main>
       <div class="vista-grafo">
-      <div class="lienzo-wrap">
+      <div class="lienzo-wrap" :class="{ visor: enVisor }">
         <!--
           El mapa no se desmonta al abrir una ficha: recalcular el layout de
           fuerzas de cuatro mil nodos tarda segundos, y volver atrás tiene que
@@ -869,7 +945,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         -->
         <div v-else-if="vista === 'vecindario'" class="leyenda">
           <span v-for="esquema in esquemasEnPantalla" :key="esquema">
-            <i :style="{ background: COLOR_POR_ESQUEMA[esquema] ?? COLOR_POR_DEFECTO }" />
+            <i :style="{ background: colorTipo(esquema) }" />
             {{ NOMBRE_ESQUEMA[esquema] ?? esquema }}
           </span>
           <span v-if="hayInferidas" class="leyenda-inferido">
@@ -985,18 +1061,12 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
   La portada desplaza el DOCUMENTO; el mapa no.
 
   Todo iba dentro de un `height: 100vh` con la portada haciendo scroll en un
-  div suyo. En un ordenador se nota poco; en un móvil es media pantalla
-  perdida. La barra de direcciones del navegador sólo se retrae cuando lo que
-  se desplaza es el documento, así que se quedaba fija arriba todo el rato, y
-  además `100vh` en iOS mide MÁS que lo visible: el final del div no se podía
-  alcanzar ni desplazándolo del todo. Los últimos párrafos —de dónde salen los
-  datos, qué no dice esta lista— quedaban bajo la barra, sin manera de leerlos.
+  div suyo. En un móvil eso es media pantalla perdida —la barra de
+  direcciones sólo se retrae cuando lo que se desplaza es el documento— y en
+  iOS `100vh` mide más que lo visible: el final no se alcanzaba nunca. La
+  barra espaciadora tampoco hacía nada, porque el foco estaba en el `body`.
 
-  Tampoco funcionaba la barra espaciadora: el foco está en el `body`, que no
-  tiene nada que desplazar, y la página no se movía.
-
-  En el mapa sí hace falta alto fijo: el lienzo ocupa lo que queda y no debe
-  crecer. Por eso la altura fija se quita sólo en la portada.
+  En el mapa sí hace falta alto fijo: el lienzo ocupa lo que queda.
 */
 .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 .app.desplaza { height: auto; min-height: 100vh; min-height: 100dvh; }
@@ -1004,262 +1074,317 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 .app.desplaza .vista-grafo { display: none; }
 .app.desplaza .portada-encima { position: static; }
 .app.desplaza :deep(.portada) { height: auto; overflow: visible; }
-/* Buscador y vuelta al mapa siempre a mano, aunque la página sea larga. */
+/* Buscador y secciones siempre a mano, aunque la página sea larga. */
 .app.desplaza .cabecera { position: sticky; top: 0; z-index: 30; }
 
-.banda-demo {
-  background: var(--aviso-fondo); color: var(--aviso-texto);
-  padding: 0.55rem 1rem; font-size: 0.82rem; line-height: 1.4;
-  border-bottom: 1px solid var(--aviso-borde);
+/* --- Franja de edición --------------------------------------------------- */
+
+.franja {
+  font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.45;
+  padding: 0.45rem var(--e5);
+  border-bottom: 1px solid var(--filete-suave);
 }
-.banda-demo a { color: inherit; margin-left: 0.4rem; }
+.franja-linea { display: flex; align-items: center; gap: var(--e3) var(--e4); flex-wrap: wrap; }
+.franja-edicion {
+  font-family: var(--sans); font-weight: 650; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--tinta-2);
+}
+.franja-fuentes { display: inline-flex; gap: var(--e1); flex-wrap: wrap; }
+.franja-mas { margin-left: auto; }
+.franja-mas summary {
+  cursor: pointer; color: var(--tinta-2); list-style: none;
+  text-decoration: underline; text-decoration-color: var(--filete-medio);
+  text-underline-offset: 0.18em;
+}
+.franja-mas summary::-webkit-details-marker { display: none; }
+.franja-mas summary::after { content: ' ↓'; }
+.franja-mas[open] summary::after { content: ' ↑'; }
+/*
+  El detalle se despliega como una hoja sobre el papel, sin empujar la
+  página: abierto en el flujo, bajaba la cabecera entera y con ella el
+  buscador.
+*/
+.franja-mas[open] .franja-detalle {
+  position: absolute; z-index: 40; right: var(--e5); margin-top: var(--e2);
+  width: min(34rem, calc(100vw - 2rem));
+  background: var(--hoja); border: 1px solid var(--filete-medio);
+  box-shadow: 0 12px 32px rgba(28, 26, 22, 0.12);
+  padding: var(--e4) var(--e5); font-size: var(--t-s); color: var(--tinta-2);
+}
+.franja-detalle p { margin: 0 0 var(--e3); }
+.franja-detalle p:last-child { margin-bottom: 0; }
+.franja-detalle .nota { font-size: var(--t-s); }
+.fuente-caida {
+  margin: var(--e2) 0 0; color: var(--aviso); font-weight: 600;
+}
+.fuente-caida::before { content: '▲ '; }
+
+.franja-demo {
+  background: #fbecc8; color: #5c3d00; border-bottom-color: #e5c47a;
+  font-size: var(--t-s);
+}
+.franja-demo a { color: inherit; margin-left: var(--e2); }
+
+/* --- Cabecera ------------------------------------------------------------ */
 
 /*
-  La banda ya no es azul marino. Con las superficies neutras del sistema, un
-  azul saturado arriba del todo era lo más llamativo de la página y lo que
-  dice es «esto es una instantánea»: información de contexto que no debe
-  competir con el dato.
+  Una cabecera de periódico: la marca a la izquierda, el buscador en medio y
+  las secciones a la derecha, y debajo el filete grueso que separa la
+  cabecera de la página. El filete no es adorno: es lo que dice «aquí acaba
+  lo que es siempre igual y empieza lo que estás leyendo».
 */
-.banda-info {
-  background: var(--superficie); color: var(--tinta-3);
-  padding: 0.4rem 1.25rem; font-size: var(--t-xs); line-height: 1.45;
-  border-bottom: 1px solid var(--linea);
-}
-.banda-dicho strong { color: var(--tinta-2); }
-.banda-mas summary { color: var(--tinta-2); }
-.banda-linea {
-  display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap;
-}
-.banda-dicho strong { font-weight: 600; }
-.banda-mas summary {
-  cursor: pointer; color: #8fb6d4; text-decoration: underline;
-  text-underline-offset: 2px; font-size: 0.74rem;
-}
-.banda-mas summary::marker { color: #6d8ba4; }
-.banda-detalle { padding: 0.4rem 0 0.2rem; max-width: 62ch; }
-.banda-detalle p { margin: 0 0 0.35rem; }
-.banda-detalle p:last-child { margin-bottom: 0; }
-
 .cabecera {
-  display: flex; align-items: center; gap: var(--e5); flex-wrap: wrap;
-  padding: var(--e3) var(--e5); border-bottom: 1px solid var(--linea);
-  background: var(--superficie);
+  display: grid; align-items: center; gap: var(--e3) var(--e6);
+  grid-template-columns: auto minmax(14rem, 34rem) 1fr;
+  padding: var(--e4) var(--e5) var(--e3);
+  background: var(--papel);
+  border-bottom: 3px double var(--filete);
 }
-.marca h1 { font-size: var(--t-l); margin: 0; letter-spacing: -0.02em; }
-.marca p { font-size: var(--t-xs); color: var(--tinta-3); margin: 0.1rem 0 0; }
 
-.buscador { position: relative; flex: 1; min-width: 240px; max-width: 480px; }
-.buscador input {
-  width: 100%; padding: 0.5rem 0.7rem; border-radius: 7px;
-  border: 1px solid var(--borde); background: var(--fondo-boton); color: var(--texto); font-size: 0.9rem;
+.marca {
+  display: flex; align-items: center; gap: var(--e3);
+  color: var(--tinta); text-decoration: none;
 }
-.buscador input:focus { outline: 2px solid var(--acento); outline-offset: -1px; }
+.logo { width: 2.5rem; height: 1.5rem; flex: none; color: var(--tinta); }
+.marca-texto { display: flex; flex-direction: column; }
+.marca-nombre {
+  font-family: var(--serif); font-weight: 650; font-size: 1.75rem;
+  letter-spacing: -0.025em; line-height: 1; font-optical-sizing: auto;
+}
+.marca-lema {
+  font-family: var(--serif); font-style: italic; font-size: var(--t-s);
+  color: var(--tinta-2); margin-top: 0.2rem; white-space: nowrap;
+}
+
+.buscador { position: relative; min-width: 0; }
+.lupa {
+  position: absolute; left: 0.7rem; top: 50%; width: 1rem; height: 1rem;
+  transform: translateY(-50%); color: var(--tinta-3); pointer-events: none;
+}
+.buscador input {
+  width: 100%; font: inherit; font-size: var(--t-m); color: var(--tinta);
+  padding: 0.55rem 0.8rem 0.55rem 2.2rem;
+  background: var(--hoja); border: 1px solid var(--filete-medio); border-radius: var(--radio);
+}
+.buscador input::placeholder { color: var(--tinta-3); }
+.buscador input:focus { outline: none; border-color: var(--tinta); box-shadow: 0 0 0 1px var(--tinta); }
+
+.secciones { display: flex; gap: var(--e5); justify-self: end; }
+.secciones a {
+  font-family: var(--sans); font-weight: 600; font-size: var(--t-s);
+  color: var(--tinta-2); text-decoration: none; padding: 0.3rem 0;
+  border-bottom: 2px solid transparent;
+}
+.secciones a:hover { color: var(--tinta); }
+.secciones a[aria-current='page'] { color: var(--tinta); border-bottom-color: var(--tinta); }
+
+/* --- Sugerencias del buscador ------------------------------------------- */
 
 .sugerencias {
-  position: absolute; z-index: 20; top: calc(100% + 4px); left: 0; right: 0;
-  list-style: none; margin: 0; padding: 0.25rem; max-height: 340px; overflow-y: auto;
-  background: var(--fondo-panel); border: 1px solid var(--borde); border-radius: 8px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; right: 0;
+  list-style: none; margin: 0; padding: var(--e1) 0; max-height: 380px; overflow-y: auto;
+  background: var(--hoja); border: 1px solid var(--filete-medio);
+  box-shadow: 0 14px 36px rgba(28, 26, 22, 0.14);
 }
 .sugerencias button {
-  display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.45rem 0.5rem;
-  background: none; border: none; color: var(--texto); cursor: pointer; text-align: left; font: inherit;
-  border-radius: 5px;
-}
-.separador {
-  padding: 0.45rem 0.5rem 0.2rem; font-size: var(--t-xs); color: var(--tinta-3);
-  text-transform: uppercase; letter-spacing: 0.06em;
-  border-top: 1px solid var(--linea); margin-top: 0.25rem;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: baseline;
+  gap: 0 var(--e2); width: 100%; padding: 0.5rem 0.8rem;
+  background: none; border: none; color: var(--tinta); cursor: pointer; text-align: left; font: inherit;
 }
 .sugerencias button:hover,
-.sugerencias button.resaltada { background: var(--superficie-2); }
-.sugerencias button.resaltada { box-shadow: inset 0 0 0 1px var(--serie-1); }
-.punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.sugerencias button.resaltada { background: var(--papel-2); }
+.sugerencias button.resaltada { box-shadow: inset 3px 0 0 var(--tinta); }
+.separador {
+  padding: var(--e3) 0.8rem var(--e1); border-top: 1px solid var(--filete-suave); margin-top: var(--e1);
+  font-size: var(--t-xs); font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tinta-3);
+}
+.punto { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex: none; align-self: center; }
 /*
   Dos renglones como mucho. «Área de Gobierno de Políticas Sociales, Familia e
   Igualdad del Ayuntamiento de Madrid» ocupaba CINCO en el desplegable, así
   que tres sugerencias llenaban la pantalla y no se podían comparar.
 */
 .nombre {
-  flex: 1; font-size: var(--t-m); min-width: 0; line-height: 1.3;
+  font-size: var(--t-m); min-width: 0; line-height: 1.3;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .mueve {
-  font-size: var(--t-s); color: var(--tinta); font-weight: 620;
+  font-size: var(--t-s); color: var(--tinta); font-weight: 650;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.tipo { font-size: var(--t-xs); color: var(--tinta-3); white-space: nowrap; }
-.sin-resultados { position: absolute; top: calc(100% + 6px); font-size: 0.8rem; color: var(--texto-tenue); }
-.pie-sugerencias {
-  font-size: 0.7rem; color: var(--texto-tenue); line-height: 1.35;
-  padding: 0.4rem 0.5rem; border-top: 1px solid var(--borde-suave); margin-top: 0.2rem;
+.tipo { grid-column: 2 / -1; font-size: var(--t-xs); color: var(--tinta-3); }
+.sin-resultados {
+  position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; right: 0; margin: 0;
+  padding: var(--e3) 0.9rem;
+  background: var(--hoja); border: 1px solid var(--filete-medio);
+  box-shadow: 0 14px 36px rgba(28, 26, 22, 0.14);
+  font-family: var(--serif); font-size: var(--t-m); color: var(--tinta);
 }
-.fuera {
-  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em;
-  color: var(--aviso); border: 1px solid var(--aviso-borde); border-radius: 4px;
-  padding: 0.05rem 0.28rem; white-space: nowrap;
+.sin-resultados span {
+  display: block; margin-top: var(--e1);
+  font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.45;
+}
+.pie-sugerencias {
+  font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.4;
+  padding: var(--e2) 0.8rem; border-top: 1px solid var(--filete-suave); margin-top: var(--e1);
 }
 
-.profundidad { font-size: 0.78rem; color: var(--texto-tenue); display: flex; align-items: center; gap: 0.4rem; }
-.profundidad select {
-  background: var(--fondo-boton); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: 5px; padding: 0.3rem 0.4rem;
+/* --- Barra de la vista --------------------------------------------------- */
+
+.barra-vista {
+  display: flex; align-items: center; gap: var(--e3) var(--e5); flex-wrap: wrap;
+  padding: var(--e2) var(--e5); min-height: 2.9rem;
+  background: var(--papel); border-bottom: 1px solid var(--filete-suave);
+  font-size: var(--t-s);
 }
+.barra-rotulo {
+  font-family: var(--serif); font-weight: 650; font-size: var(--t-l); color: var(--tinta);
+}
+.filtros { display: contents; }
+.grupo { display: flex; align-items: center; gap: var(--e3); }
+.grupo + .grupo, .control + .grupo { padding-left: var(--e5); border-left: 1px solid var(--filete-suave); }
+.rotulo {
+  font-size: var(--t-xs); font-weight: 650; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tinta-3);
+}
+.control { display: flex; align-items: center; gap: var(--e2); color: var(--tinta-2); }
+.control select {
+  font: inherit; color: var(--tinta); background: var(--hoja);
+  border: 1px solid var(--filete-medio); border-radius: var(--radio); padding: 0.25rem 0.4rem;
+}
+.control.check { cursor: pointer; }
+.control.check input { accent-color: var(--tinta); }
+.boton.puesto { border-color: var(--tinta); color: var(--tinta); }
+
+/* --- Cuerpo -------------------------------------------------------------- */
 
 main { flex: 1; position: relative; min-height: 0; }
-.vista-grafo { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 340px; }
-.portada-encima { position: absolute; inset: 0; background: var(--fondo); z-index: 5; }
-.lienzo-wrap { position: relative; min-height: 0; }
-.encima { position: absolute; inset: 0; background: var(--fondo-grafo); }
+.vista-grafo { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 380px; }
+.portada-encima { position: absolute; inset: 0; background: var(--papel); z-index: 5; }
+.lienzo-wrap { position: relative; min-height: 0; background: var(--papel); }
+.encima { position: absolute; inset: 0; background: var(--papel); }
+.lienzo-wrap.visor .encima { background: var(--visor); }
 
 .estado-flotante {
-  position: absolute; inset: 0; display: grid; place-items: center;
-  color: var(--texto-tenue); font-size: 0.9rem; pointer-events: none; margin: 0;
+  position: absolute; inset: 0; display: grid; place-items: center; margin: 0;
+  font-family: var(--serif); font-style: italic; font-size: var(--t-l);
+  color: var(--tinta-3); pointer-events: none;
 }
 .estado-flotante.error { color: var(--aviso); }
 
 .recorte {
-  position: absolute; top: 0.6rem; left: 50%; transform: translateX(-50%);
-  background: var(--aviso-fondo); color: var(--aviso-texto);
-  padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.74rem; margin: 0;
+  position: absolute; top: var(--e3); left: 50%; transform: translateX(-50%); margin: 0;
+  background: var(--hoja); color: var(--aviso); border: 1px solid var(--filete-medio);
+  padding: 0.3rem 0.7rem; font-size: var(--t-xs);
 }
 
+/* --- Leyendas y rótulos sobre el dibujo --------------------------------- */
+
 .leyenda {
-  position: absolute; bottom: 0.6rem; left: 0.7rem;
-  display: flex; flex-wrap: wrap; gap: 0.55rem 0.9rem; max-width: 70%;
-  font-size: 0.7rem; color: var(--texto-tenue);
+  position: absolute; bottom: var(--e3); left: var(--e4);
+  display: flex; flex-wrap: wrap; gap: var(--e2) var(--e4); max-width: 72%;
+  font-size: var(--t-xs); color: var(--tinta-2);
 }
 /*
   `>` y no descendiente: las entradas con cuadrito de color son flex, pero la
   regla alcanzaba también a los `span` de dentro del texto corrido — y un
   `display: flex` de (0,1,1) le ganaba al `display: none` de `.ancho`, que es
-  (0,1,0). El detalle que sólo debía verse en pantalla ancha salía también en
-  el teléfono, y ahí son cuatro renglones encima del mapa.
+  (0,1,0). El detalle de pantalla ancha salía también en el teléfono.
 */
-.leyenda > span { display: flex; align-items: center; gap: 0.3rem; }
+.leyenda > span { display: flex; align-items: center; gap: 0.35rem; }
 .leyenda > span.corrida { display: block; }
+.leyenda i { width: 0.55rem; height: 0.55rem; border-radius: 50%; display: inline-block; }
+.leyenda i.linea-inferida { width: 18px; height: 2px; border-radius: 1px; background: #e0a33a; }
 /*
-  La explicación va sobre placa también en pantalla ancha: cae encima del
-  bloque de abajo a la izquierda —que es grande y lleva su nombre escrito— y
-  sin fondo se leían los dos textos mezclados.
+  La explicación va sobre placa: cae encima del bloque de abajo a la
+  izquierda —que es grande y lleva su nombre escrito— y sin fondo se leían
+  los dos textos mezclados.
 */
 .leyenda-texto {
-  max-width: min(78ch, calc(100% - 1.4rem)); line-height: 1.45;
-  background: var(--plano); padding: 0.35rem 0.5rem; border-radius: var(--radio-s);
+  max-width: min(76ch, calc(100% - 2rem)); line-height: 1.5; font-size: var(--t-s);
+  background: var(--hoja); border: 1px solid var(--filete-suave);
+  padding: var(--e2) var(--e3);
 }
-.leyenda-texto b { color: var(--tinta-2); }
-.leyenda i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.leyenda i.linea-inferida {
-  width: 18px; height: 2px; border-radius: 1px;
-  background: rgba(224, 163, 58, 0.75);
+.leyenda-texto b { color: var(--tinta); }
+.ayuda {
+  position: absolute; bottom: var(--e3); right: var(--e4); margin: 0;
+  font-size: var(--t-xs); color: var(--tinta-3); font-style: italic; font-family: var(--serif);
 }
 
-.ayuda { position: absolute; bottom: 0.6rem; right: 0.8rem; font-size: 0.7rem; color: var(--texto-tenue); margin: 0; }
-
-@media (max-width: 820px) {
-  .vista-grafo { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; }
-  /*
-    En estrecho la leyenda envolvía a tres líneas y se cruzaba con la ayuda de
-    la esquina: dos textos superpuestos e ilegibles los dos. La ayuda sobra en
-    táctil —no hay ratón que pasar por encima— y la leyenda se pone sobre
-    fondo para no leerse encima del diagrama.
-  */
-  .ayuda { display: none; }
-  .leyenda {
-    max-width: calc(100% - 1.4rem);
-    /* Opaca del todo: translúcida, el texto se leía sobre los bloques. */
-    background: var(--plano);
-    padding: 0.35rem 0.5rem;
-    border-radius: 6px;
-  }
-  .banda-info, .banda-demo { font-size: 0.72rem; padding: 0.35rem 0.7rem; }
-
-  /*
-    En estrecho la cabecera ocupaba cuatro renglones —marca, lema, buscador y
-    una fila por cada botón— y empujaba el primer dato por debajo del pliegue.
-    La marca y los botones comparten renglón, y el lema sobra: el buscador que
-    hay justo debajo dice lo mismo con un ejemplo.
-  */
-  .cabecera { gap: 0.6rem 0.9rem; padding: 0.55rem 0.8rem; }
-  .cabecera .marca { flex: 1; min-width: 0; }
-  .marca p { display: none; }
-  .buscador { order: 3; flex-basis: 100%; max-width: none; }
-  .controles { gap: 0.5rem; }
-  .volver, .controles .volver { padding: 0.3rem 0.6rem; font-size: 0.74rem; }
-  .marca h1 { font-size: 0.98rem; }
+.recuento {
+  position: absolute; top: var(--e3); left: var(--e4); margin: 0;
+  font-size: var(--t-s); color: var(--tinta-2);
+  background: var(--hoja); border: 1px solid var(--filete-suave); padding: var(--e1) var(--e3);
 }
+.filtrado { color: var(--tinta); }
+.quitar-filtros {
+  margin-left: var(--e2); background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; color: var(--tinta); text-decoration: underline; text-underline-offset: 0.18em;
+}
+
+/* La barra de «dentro de un grupo», en el visor. */
+.dentro-de {
+  position: absolute; top: var(--e3); left: var(--e4); right: var(--e4); z-index: 2;
+  display: flex; align-items: center; gap: var(--e4); flex-wrap: wrap;
+}
+.salir {
+  font: inherit; font-size: var(--t-s); font-weight: 600; cursor: pointer; white-space: nowrap;
+  color: var(--tinta); background: var(--papel-2);
+  border: 1px solid var(--filete-medio); border-radius: var(--radio); padding: 0.35rem 0.7rem;
+}
+.salir:hover { border-color: var(--tinta); }
+.nombre-grupo {
+  font-family: var(--serif); font-size: var(--t-h3); font-weight: 600; color: var(--tinta);
+  min-width: 0;
+}
+.nombre-grupo .cifra {
+  font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); font-weight: 400;
+  margin-left: var(--e2);
+}
+
+/* --- Pantalla ancha / estrecha ------------------------------------------ */
 
 .estrecho { display: none; }
+
+@media (max-width: 1100px) {
+  .cabecera { grid-template-columns: auto 1fr auto; gap: var(--e3) var(--e4); }
+  .marca-lema { display: none; }
+}
+
 @media (max-width: 820px) {
   .ancho { display: none; }
   .estrecho { display: inline; }
+
+  .franja { padding: 0.4rem var(--e4); }
+  .franja-linea { flex-wrap: nowrap; }
+  .franja-mas[open] .franja-detalle { right: var(--e3); left: var(--e3); width: auto; }
+
   /*
-    `display: contents` hace que los controles sean hijos directos de la
-    cabecera y se coloquen ellos solos; plegados, desaparecen enteros. En
-    ancho la clase `plegados` no existe, así que no hay nada que abrir.
+    En estrecho: marca y secciones en un renglón, el buscador en el
+    siguiente a todo lo ancho. Antes eran cuatro renglones —marca, lema,
+    buscador y una fila por botón— y el primer dato caía bajo el pliegue.
+  */
+  .cabecera {
+    grid-template-columns: 1fr auto; padding: var(--e3) var(--e4) var(--e3);
+  }
+  .buscador { grid-column: 1 / -1; grid-row: 2; }
+  .marca-nombre { font-size: 1.45rem; }
+  .logo { width: 2.1rem; height: 1.25rem; }
+
+  .barra-vista { padding: var(--e2) var(--e4); }
+  /*
+    Los filtros del mapa, plegados. `display: contents` hace que en ancho los
+    controles sean hijos directos de la barra; aquí se agrupan y se pliegan.
   */
   .filtros.plegados { display: none; }
-  .filtros { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; width: 100%; }
-}
+  .filtros { display: flex; align-items: center; gap: var(--e3); flex-wrap: wrap; width: 100%; }
+  .grupo + .grupo, .control + .grupo { padding-left: 0; border-left: none; }
 
-.controles { display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap; }
-.filtros { display: contents; }
-.mas-filtros {
-  background: var(--fondo-boton); border: 1px solid var(--borde); color: var(--texto);
-  font: inherit; font-size: 0.82rem; padding: 0.35rem 0.7rem; border-radius: 7px; cursor: pointer;
+  .vista-grafo { grid-template-columns: 1fr; grid-template-rows: 58vh 1fr; }
+  .ayuda { display: none; }
+  .leyenda { max-width: calc(100% - 1.4rem); left: var(--e3); bottom: var(--e2); }
+  .leyenda:not(.leyenda-texto) { background: var(--hoja); padding: var(--e1) var(--e2); }
 }
-.mas-filtros.puesto { border-color: var(--serie-1); color: var(--tinta); }
-.grupo {
-  display: flex; align-items: center; gap: 0.55rem;
-  padding-left: 0.6rem; border-left: 1px solid var(--borde);
-}
-.rotulo {
-  font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em;
-  color: var(--texto-tenue);
-}
-.control { font-size: 0.78rem; color: var(--texto-tenue); display: flex; align-items: center; gap: 0.4rem; }
-.control select {
-  background: var(--fondo-boton); color: var(--texto);
-  border: 1px solid var(--borde); border-radius: 6px; padding: 0.25rem 0.4rem; font: inherit;
-}
-.control.check { cursor: pointer; }
-.volver {
-  background: var(--fondo-boton); color: var(--texto); border: 1px solid var(--borde);
-  border-radius: 6px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.78rem; cursor: pointer;
-}
-.volver:hover { border-color: var(--acento); }
-.fuente-caida {
-  display: block;
-  margin-top: 0.3rem;
-  color: #e8c37a;
-}
-.filtrado { color: var(--aviso); }
-.quitar-filtros {
-  background: none; border: none; padding: 0; margin-left: 0.3rem;
-  color: var(--acento); font: inherit; cursor: pointer; text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.recuento {
-  position: absolute; top: 0.6rem; left: 0.9rem; margin: 0;
-  font-size: 0.75rem; color: var(--texto-tenue);
-  background: rgba(10, 14, 20, 0.72); padding: 0.25rem 0.55rem; border-radius: 6px;
-}
-
-.dentro-de {
-  position: absolute; top: 0.6rem; left: 0.9rem; right: 0.9rem;
-  display: flex; align-items: center; gap: var(--e3); flex-wrap: wrap;
-  background: rgba(13, 13, 13, 0.86); padding: 0.3rem 0.4rem; border-radius: var(--radio-s);
-}
-.salir {
-  background: var(--superficie-2); border: 1px solid var(--linea-fuerte);
-  color: var(--tinta); font: inherit; font-size: var(--t-s);
-  padding: 0.3rem 0.6rem; border-radius: var(--radio-s); cursor: pointer; white-space: nowrap;
-}
-.salir:hover { background: var(--superficie); }
-.salir:focus-visible { outline: 2px solid var(--serie-1); outline-offset: 2px; }
-.nombre-grupo {
-  font-size: var(--t-s); color: var(--tinta); font-weight: 600; min-width: 0;
-}
-.nombre-grupo .cifra { color: var(--tinta-3); font-weight: 400; }
 </style>

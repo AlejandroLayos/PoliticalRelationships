@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { COLOR_POR_ESQUEMA, COLOR_POR_DEFECTO, etiquetaArista, etiquetaEsquema, NOMBRE_ESTADO } from '../esquemas.js'
+import { NOMBRE_ESTADO, colorTipo, etiquetaArista, etiquetaEsquema } from '../esquemas.js'
 
 const props = defineProps({
   entidad: { type: Object, default: null },
@@ -9,7 +9,7 @@ const props = defineProps({
 const emit = defineEmits(['ir', 'expandir'])
 
 const color = computed(() =>
-  props.entidad ? (COLOR_POR_ESQUEMA[props.entidad.schema] ?? COLOR_POR_DEFECTO) : COLOR_POR_DEFECTO,
+  props.entidad ? colorTipo(props.entidad.schema) : 'var(--neutro)',
 )
 
 const porId = computed(() => {
@@ -127,7 +127,7 @@ function importe(a) {
               texto entero está en el `title` y en la procedencia.
             -->
             <button class="otro" :title="c.otro.caption" @click="emit('ir', c.otro.id)">
-              <span class="punto pequeno" :style="{ background: COLOR_POR_ESQUEMA[c.otro.schema] ?? COLOR_POR_DEFECTO }" />
+              <span class="punto pequeno" :style="{ background: colorTipo(c.otro.schema) }" />
               <span class="nombre-otro">{{ c.otro.caption }}</span>
             </button>
             <div class="meta">

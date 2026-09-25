@@ -278,8 +278,8 @@ function pintar() {
     labelDensity: 0.5,
     labelGridCellSize: 180,
     labelRenderedSizeThreshold: 9,
-    labelFont: 'system-ui, sans-serif',
-    labelColor: { color: '#f2f5fa' },
+    labelFont: "'Public Sans Variable', system-ui, sans-serif",
+    labelColor: { color: '#ecebe6' }, // = --visor-tinta
     labelSize: 12,
     labelWeight: '600',
     defaultDrawNodeLabel: dibujarEtiquetaConPlaca,

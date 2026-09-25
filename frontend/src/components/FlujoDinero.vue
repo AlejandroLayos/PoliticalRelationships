@@ -11,7 +11,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { disponerFlujo, recortarAAncho } from '../flujo.js'
 import { dineroCorto } from '../nucleos.js'
-import { COLOR_POR_DEFECTO, COLOR_POR_ESQUEMA, etiquetaEsquema } from '../esquemas.js'
+import { colorTipo, etiquetaEsquema } from '../esquemas.js'
 
 const props = defineProps({
   area: { type: Object, default: null },
@@ -157,7 +157,7 @@ function apagada(id) {
 }
 
 const colorCentro = computed(
-  () => COLOR_POR_ESQUEMA[props.area?.entidad?.schema] ?? COLOR_POR_DEFECTO,
+  () => colorTipo(props.area?.entidad?.schema),
 )
 
 /**

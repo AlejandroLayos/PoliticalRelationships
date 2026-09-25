@@ -13,10 +13,10 @@
  * arriba sea legible en vez de quedar los dos ilegibles.
  */
 
-const FONDO_PLACA = 'rgba(9, 13, 19, 0.82)'
+const FONDO_PLACA = 'rgba(18, 19, 21, 0.84)' // --visor, casi opaco
 const MARGEN_X = 4
 const MARGEN_Y = 3
-const RADIO = 4
+const RADIO = 2
 
 /**
  * Firma de Sigma 3: `(contexto, datos, ajustes)`. `datos` trae ya las

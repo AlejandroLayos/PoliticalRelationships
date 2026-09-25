@@ -1,40 +1,65 @@
 /**
  * Colores y etiquetas de los esquemas FollowTheMoney que usamos.
  *
- * Los colores están MEDIDOS. La tabla anterior tenía seis tonos elegidos a
- * ojo y no pasaba: `#6aa9d9` («persona jurídica») y `#3d8bd4` («empresa»)
- * estaban a ΔE 9,8 en visión NORMAL —el suelo es 15—, o sea que dos tipos
- * distintos se veían casi del mismo color sin necesidad de ninguna
- * deficiencia de visión; con deuteranopia eran el mismo color.
+ * ## El color es dato
  *
- * Ahora son tres, y los tres pasan las seis comprobaciones con todos los
- * pares en juego, que es el caso de este mapa —se ven todos a la vez—:
- * peor par ΔE 9,4 con deuteranopia, 20,9 en visión normal, contraste ≥ 3:1.
+ * Tres tonos, y los tres dicen QUIÉN es cada cosa: administración (quien
+ * paga), empresa (quien cobra) y partido u organización. En toda la web
+ * significan lo mismo —en las listas, en el flujo de la ficha, en el visor de
+ * red—, así que se aprenden una vez. Ver docs/diseno.md.
  *
- * Tres y no cinco porque con cuatro o más no hay orden que pase todos los
- * pares. Las dos fusiones son deliberadas y dicen algo:
+ * Están medidos con daltonismo simulado y CIEDE2000, todos los pares a la
+ * vez: peor par ΔE 22,9 con deuteranopia y 32,4 en visión normal (la paleta
+ * anterior daba 9,4 con deuteranopia). Tres y no más: con cuatro no hay
+ * juego que pase todos los pares.
+ *
+ * Dos fusiones deliberadas:
  *
  * - `LegalEntity` comparte el azul con `Company`: a efectos de este mapa son
- *   lo mismo, alguien privado que cobra dinero público. La diferencia la dice
- *   la etiqueta, que es donde tiene que estar.
+ *   lo mismo, alguien privado que cobra dinero público.
  * - `Contract` va en gris porque no es un actor: es el papel que une al
  *   órgano que adjudica con la empresa que cobra.
  *
  * `Person` conserva entrada por si un conector la crea, pero no se publica
- * nunca (spec §12), así que no gasta un color categórico.
+ * nunca (spec §12), así que no gasta un color.
+ *
+ * ## Dos formas del mismo color
+ *
+ * - `VAR_POR_ESQUEMA` da una variable CSS. Es lo que usa todo lo que se pinta
+ *   con HTML o SVG: sobre papel sale el tono de papel y dentro del visor el
+ *   del visor, sin que el componente tenga que saber dónde está.
+ * - `COLOR_POR_ESQUEMA` da el hexadecimal del visor, para el lienzo de Sigma,
+ *   que pinta con WebGL y no sabe leer una variable CSS.
  */
 
-/** Gris de lo que no es un actor. */
-export const COLOR_POR_DEFECTO = '#6f6f78'
+/** Gris de lo que no es un actor, en el visor. */
+export const COLOR_POR_DEFECTO = '#7b7a80'
 
+/** Hexadecimales del VISOR. Sólo para el lienzo; en HTML, `VAR_POR_ESQUEMA`. */
 export const COLOR_POR_ESQUEMA = {
-  PublicBody: '#d95926', // naranja: dinero público
-  Company: '#3987e5', // azul: quien cobra
-  LegalEntity: '#3987e5', // el mismo azul: también es quien cobra
-  Organization: '#199e70', // verde azulado: partidos y asociaciones
-  Person: '#6f6f78', // no se publica; si aparece, no finge ser una serie
-  Contract: '#6f6f78', // el expediente no es un actor
-  Position: '#6f6f78',
+  PublicBody: '#e5703d', // administración
+  Company: '#5d9ded', // empresa
+  LegalEntity: '#5d9ded', // el mismo azul: también es quien cobra
+  Organization: '#35b28c', // partido u organización
+  Person: '#7b7a80', // no se publica; si aparece, no finge ser una serie
+  Contract: '#7b7a80', // el expediente no es un actor
+  Position: '#7b7a80',
+}
+
+/** El token CSS de cada tipo. Sirve igual en papel y en el visor. */
+export const VAR_POR_ESQUEMA = {
+  PublicBody: 'var(--adm)',
+  Company: 'var(--emp)',
+  LegalEntity: 'var(--emp)',
+  Organization: 'var(--par)',
+  Person: 'var(--neutro)',
+  Contract: 'var(--neutro)',
+  Position: 'var(--neutro)',
+}
+
+/** El color de un tipo, para HTML y SVG. */
+export function colorTipo(esquema) {
+  return VAR_POR_ESQUEMA[esquema] ?? 'var(--neutro)'
 }
 
 export const NOMBRE_ESQUEMA = {

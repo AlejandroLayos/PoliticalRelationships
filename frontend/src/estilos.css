@@ -1,76 +1,95 @@
 /*
- * Sistema visual de Sinapsis.
+ * Sistema visual de Sinapsis: un diario de datos con archivo.
  *
- * Tema oscuro, y no por gusto: el mapa de fuerzas y el diagrama de flujo se
- * leen mucho mejor sobre fondo oscuro, y es lo que hace que la red parezca lo
- * que es. Lo que sí cambia respecto a la primera versión es todo lo demás.
+ * Las reglas están explicadas en docs/diseno.md. Aquí va sólo lo que hace
+ * falta para leer este fichero.
  *
- * ## Por qué estos colores y no otros
+ * ## Papel y tinta
  *
- * Los categóricos están MEDIDOS, no elegidos a ojo. La paleta anterior
- * —seis tonos puestos a mano— falla: `#6aa9d9` (persona jurídica) y `#3d8bd4`
- * (empresa) están a ΔE 9,8 en visión normal, por debajo del suelo de 15. O
- * sea que dos tipos de entidad distintos se veían casi del mismo color
- * incluso sin ninguna deficiencia de visión, y con deuteranopia eran el mismo.
+ * La página es papel y el texto es tinta. Antes era un tablero oscuro, y un
+ * tablero oscuro con nombres de empresas y cifras en rojo y naranja dice
+ * «vigilancia», que es exactamente lo que este proyecto no puede decir: lo
+ * que publica son documentos oficiales, y se tiene que leer como se lee una
+ * sección de datos de un periódico. La credibilidad aquí es la mitad del
+ * producto (spec §12).
  *
- * Los tres de ahora pasan las seis comprobaciones sobre esta superficie, con
- * TODOS los pares en juego (que es el caso aquí: en el mapa se ven todos a la
- * vez, no por parejas adyacentes):
+ * ## El color es dato
  *
- *   peor par ΔE 9,4 con deuteranopia · 20,9 en visión normal · contraste ≥ 3:1
+ * Nunca decora. Tres tonos, y los tres dicen QUIÉN es cada cosa:
  *
- * Tres y no cinco. Con cuatro o más no hay orden que pase todos los pares, y
- * el cuarto tipo —el expediente— no es un actor: es el papel que une a dos, y
- * va en gris. «Persona jurídica» comparte el azul con «empresa» porque son lo
- * mismo a efectos de este mapa: alguien privado que cobra. La diferencia la
- * dice la etiqueta, que es donde debe estar.
+ *   --adm  administración: quien paga
+ *   --emp  empresa o persona jurídica: quien cobra
+ *   --par  partido u organización
  *
- * ## Tipografía
+ * Medidos con daltonismo simulado (Machado 2009) y CIEDE2000, con todos los
+ * pares en juego: peor par ΔE 22,9 con deuteranopia, 17,6 con protanopia,
+ * 32,4 en visión normal. La paleta anterior daba 9,4 con deuteranopia. Los
+ * tres pasan contraste AA de texto sobre papel, así que se pueden usar para
+ * escribir, no sólo para rellenar.
  *
- * Una sola familia, la del sistema. La escala existe para que haya jerarquía:
- * antes el título de una sección medía 0,95rem y el cuerpo 0,75rem, así que
- * todo pesaba lo mismo y la página no decía por dónde empezar.
+ * Todo lo demás —enlaces, botones, reglas— es tinta. Un enlace es tinta
+ * subrayada, como en un periódico: si fuera azul, se confundiría con una
+ * empresa.
+ *
+ * ## El visor
+ *
+ * Las vistas de red se abren en un visor oscuro, encajado en la página como
+ * una lámina a sangre: es donde los nodos se iluminan al pasar por encima, y
+ * una luz sólo se ve sobre negro. `.visor` redefine los MISMOS tokens, así
+ * que un componente no necesita saber si está en papel o en el visor.
  */
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* --- Superficies ------------------------------------------------------ */
-  --plano: #0d0d0d;
-  --superficie: #17171a;
-  --superficie-2: #202024;
-  --lienzo: #101012;
+  /* --- Papel y tinta ---------------------------------------------------- */
+  --papel: #f4f0e6;
+  --papel-2: #ebe6d9; /* filas, bloques, lo que se pulsa al pasar */
+  --papel-3: #e0d9c8; /* rellenos de barra, pistas */
+  --hoja: #fbf9f3; /* lo que va encima del papel: desplegables, avisos */
 
-  /* --- Tinta ------------------------------------------------------------ */
-  --tinta: #ffffff;
-  --tinta-2: #c3c2b7;
-  --tinta-3: #898781;
+  --tinta: #1c1a16;
+  --tinta-2: #4a463d; /* 8,3:1 sobre papel */
+  --tinta-3: #6e685b; /* 4,9:1: el mínimo para texto pequeño */
 
-  /* --- Líneas ----------------------------------------------------------- */
-  --linea: rgba(255, 255, 255, 0.09);
-  --linea-fuerte: #34343a;
+  --filete: #1c1a16; /* la regla de cabecera, gruesa */
+  --filete-medio: #b7af9c;
+  --filete-suave: #d8d1bf;
 
-  /* --- Categóricos: TIPO de entidad ------------------------------------- */
-  --serie-1: #3987e5; /* empresa · persona jurídica */
-  --serie-2: #d95926; /* organismo público */
-  --serie-3: #199e70; /* organización · partido */
-  --neutro: #6f6f78; /* expediente: no es un actor */
+  /* --- El color es dato ------------------------------------------------- */
+  --adm: #b8461c; /* administración · 4,7:1 sobre papel */
+  --emp: #2563a6; /* empresa · 5,4:1 */
+  --par: #0e7c66; /* partido u organización · 4,5:1 */
+  --neutro: #857f72; /* el expediente: no es un actor */
+  --sancion: #9b2226; /* lacre: expediente sancionador del Tribunal de Cuentas */
+  --aviso: #8a5a00; /* una fuente que hoy no respondió */
 
-  /* --- Flujo: DIRECCIÓN del dinero -------------------------------------- */
-  /* Sólo en el diagrama de la ficha, donde no hay marcas de tipo con las que
-     confundirse y las cabeceras dicen con palabras cuál es cuál. */
-  --entra: #199e70;
-  --sale: #d95926;
+  /* --- El visor --------------------------------------------------------- */
+  --visor: #121315;
+  --visor-2: #1c1d20;
+  --visor-3: #2a2b2f;
+  --visor-tinta: #ecebe6;
+  --visor-tinta-2: #a9a69d;
+  --visor-tinta-3: #8a877f;
+  --visor-adm: #e5703d;
+  --visor-emp: #5d9ded;
+  --visor-par: #35b28c;
 
-  /* --- Estado (reservado: nunca hace de serie) -------------------------- */
-  --aviso: #fab219;
-  --grave: #d03b3b;
+  /* --- Tipografía ------------------------------------------------------- */
+  /* Alojadas aquí, no pedidas a Google: cargar fuentes de sus servidores
+     manda la IP de cada visitante a un tercero, y un tribunal alemán ya lo
+     consideró una infracción del RGPD en 2022. */
+  --serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+  --sans: 'Public Sans Variable', 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-  /* --- Escala tipográfica ----------------------------------------------- */
-  --t-hero: 3.25rem;
-  --t-xl: 1.375rem;
+  --t-titular: clamp(2.35rem, 1.6rem + 3vw, 3.9rem);
+  --t-h1: clamp(1.75rem, 1.4rem + 1.4vw, 2.4rem);
+  --t-h2: 1.5rem;
+  --t-h3: 1.15rem;
   --t-l: 1.0625rem;
   --t-m: 0.9375rem;
-  --t-s: 0.8125rem;
+  --t-s: 0.84375rem;
   --t-xs: 0.75rem;
 
   /* --- Espacio ---------------------------------------------------------- */
@@ -81,27 +100,73 @@
   --e5: 1.5rem;
   --e6: 2rem;
   --e7: 3rem;
+  --e8: 4.5rem;
 
-  --radio: 12px;
-  --radio-s: 8px;
+  --radio: 3px;
+  --radio-s: 2px;
 
-  /* --- Compatibilidad --------------------------------------------------- */
-  /* Los componentes se escribieron contra estos nombres. Se mantienen como
-     alias para no reescribir seis ficheros de una vez; lo nuevo usa los de
-     arriba. */
-  --fondo: var(--plano);
-  --fondo-panel: var(--superficie);
-  --fondo-grafo: var(--lienzo);
-  --fondo-boton: var(--superficie-2);
-  --borde: var(--linea-fuerte);
-  --borde-suave: var(--linea);
+  /* Ancho de lectura: por encima, el ojo pierde el renglón al volver. */
+  --medida: 64ch;
+}
+
+/*
+  El visor redefine los tokens base, no los componentes. Todo lo que se pinte
+  dentro —leyendas, botones, placas— sale oscuro solo.
+*/
+.visor {
+  color-scheme: dark;
+  --papel: var(--visor);
+  --papel-2: var(--visor-2);
+  --papel-3: var(--visor-3);
+  --hoja: var(--visor-2);
+  --tinta: var(--visor-tinta);
+  --tinta-2: var(--visor-tinta-2);
+  --tinta-3: var(--visor-tinta-3);
+  --filete: var(--visor-tinta);
+  --filete-medio: #45464b;
+  --filete-suave: #2c2d31;
+  --adm: var(--visor-adm);
+  --emp: var(--visor-emp);
+  --par: var(--visor-par);
+  --neutro: #7b7a80;
+  --aviso: #e9b44c;
+  background: var(--papel);
+  color: var(--tinta-2);
+}
+
+/*
+  Nombres viejos, apuntando a los nuevos. Van en `:root` Y en `.visor` a la
+  vez, y no es redundante: una propiedad personalizada que vale `var(--x)` se
+  resuelve en el elemento donde se declara. Si sólo estuvieran en `:root`,
+  dentro del visor seguirían valiendo el papel claro.
+*/
+:root,
+.visor {
+  --plano: var(--papel);
+  --superficie: var(--papel);
+  --superficie-2: var(--papel-2);
+  --lienzo: var(--visor);
+  --linea: var(--filete-suave);
+  --linea-fuerte: var(--filete-medio);
+  --serie-1: var(--emp);
+  --serie-2: var(--adm);
+  --serie-3: var(--par);
+  --grave: var(--sancion);
+  --fondo: var(--papel);
+  --fondo-panel: var(--papel);
+  --fondo-grafo: var(--visor);
+  --fondo-boton: var(--hoja);
+  --borde: var(--filete-medio);
+  --borde-suave: var(--filete-suave);
   --texto: var(--tinta);
   --texto-tenue: var(--tinta-3);
-  --acento: var(--serie-1);
-  --aviso-fondo: #3a2e12;
-  --aviso-texto: #f0d49a;
-  --aviso-borde: #5c4a1e;
-  --aviso-suave: #202024;
+  --acento: var(--tinta);
+  --aviso-fondo: var(--hoja);
+  --aviso-texto: var(--aviso);
+  --aviso-borde: var(--aviso);
+  --aviso-suave: var(--papel-2);
+  --t-hero: var(--t-titular);
+  --t-xl: var(--t-h3);
 }
 
 * {
@@ -110,6 +175,7 @@
 
 html {
   height: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 /*
@@ -124,35 +190,181 @@ body,
 }
 
 body {
-  background: var(--plano);
+  background: var(--papel);
   color: var(--tinta-2);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--sans);
   font-size: var(--t-m);
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern';
 }
 
 h1,
 h2,
-h3,
-h4 {
+h3 {
+  font-family: var(--serif);
   color: var(--tinta);
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  font-optical-sizing: auto;
+  text-wrap: balance;
+}
+
+h4 {
+  font-family: var(--sans);
+  color: var(--tinta);
   font-weight: 650;
+  line-height: 1.25;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 button {
   font-family: inherit;
 }
+
+/* Un enlace es tinta subrayada. Si fuera azul, se leería como una empresa. */
 a {
-  color: var(--serie-1);
+  color: var(--tinta);
+  text-decoration: underline;
+  text-decoration-color: var(--filete-medio);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  text-decoration-color: currentColor;
 }
 
-/* Las cifras grandes van con las cifras proporcionales de la fuente. Las
-   tabulares sólo donde hay que alinear una columna: a tamaño grande, un «121»
-   con todas las cifras del ancho de un cero se ve suelto. */
+:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #f2d9a8;
+  color: var(--tinta);
+}
+
+/* Las cifras grandes van con las proporcionales de la fuente; las tabulares
+   sólo donde hay que alinear una columna. */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* --- Piezas de imprenta ------------------------------------------------- */
+
+/* El antetítulo: lo que va encima del título y dice de qué sección es. */
+.antetitulo {
+  font-family: var(--sans);
+  font-size: var(--t-xs);
+  font-weight: 650;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+  margin: 0 0 var(--e2);
+}
+
+/*
+  La nota: lo que un dato NO significa. En cursiva y con su filete, como una
+  nota del editor. Antes era texto gris a pie de lista y se leía como letra
+  pequeña de contrato — que es justo lo contrario de lo que tiene que parecer.
+*/
+.nota {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--t-m);
+  line-height: 1.45;
+  color: var(--tinta-2);
+  border-left: 2px solid var(--filete-medio);
+  padding-left: var(--e3);
+  margin: var(--e4) 0 0;
+}
+
+/*
+  El sello: de qué documento sale un dato. En mono y recuadrado, como el
+  sello de registro de entrada de un papel oficial. Es la promesa del
+  proyecto —cada cifra con su documento— hecha visible.
+*/
+.sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--tinta-2);
+  border: 1px solid var(--filete-medio);
+  border-radius: var(--radio-s);
+  padding: 0.05em 0.45em;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-decoration: none;
+}
+a.sello:hover {
+  border-color: var(--tinta);
+  color: var(--tinta);
+}
+
+/* El número de puesto de una lista, en mono: 01, 02… */
+.puesto-num {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  color: var(--tinta-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Botón de imprenta: recuadrado en tinta, sin relleno. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--sans);
+  font-size: var(--t-s);
+  font-weight: 600;
+  color: var(--tinta);
+  background: transparent;
+  border: 1px solid var(--tinta);
+  border-radius: var(--radio);
+  padding: 0.38rem 0.75rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.boton:hover {
+  background: var(--tinta);
+  color: var(--papel);
+}
+.boton.tenue {
+  border-color: var(--filete-medio);
+  color: var(--tinta-2);
+}
+.boton.tenue:hover {
+  border-color: var(--tinta);
+  background: transparent;
+  color: var(--tinta);
+}
+
+/* El punto de color que dice qué tipo de actor es. */
+.punto-tipo {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  flex: none;
+  vertical-align: 0.08em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
