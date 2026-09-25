@@ -343,3 +343,19 @@ def test_el_nombre_del_cargo_se_sigue_tapando_en_el_texto_del_grafo(store, tmp_p
     grafo, _, _ = _volcar(store, tmp_path)
     teatro = next(n for n in grafo["nodes"] if n["caption"] == "Teatro Estable SL")
     assert "Sara Hernández" not in teatro["properties"]["descripcion"]
+
+
+@con_base
+def test_la_fuente_de_los_cargos_no_se_anuncia_como_caida(store, tmp_path):
+    """El BOE no aporta nodos al grafo —van a cargos.json—, y contarlo como
+    cero hacía que la web dijera «hoy falta el BOE» el día que respondió."""
+    _ingerir(
+        store,
+        "boe",
+        _nombramiento_boe("Sara Hernández del Olmo", "BOE-A-1", "Directora General de X"),
+        b"<documento>1</documento>",
+    )
+    grafo, _, _ = _volcar(store, tmp_path)
+    boe = next(f for f in grafo["fuentes"] if f["id"] == "boe")
+    assert boe["entidades"] == 1
+    assert grafo["cargos"] == {"personas": 1, "actos": 1}

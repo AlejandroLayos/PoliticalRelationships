@@ -26,6 +26,7 @@ from typing import Any
 
 import structlog
 
+from sinapsis_ingest.exportar_cargos import FUENTE as FUENTE_CARGOS
 from sinapsis_ingest.exportar_cargos import exportar_cargos
 from sinapsis_ingest.store import Store
 from sinapsis_ingest.territorio import clasificar_entidad
@@ -671,6 +672,13 @@ def exportar(
         else {}
     )
 
+    # Los cargos públicos van en su propio fichero y no en el grafo, así que
+    # su fuente no aporta ningún nodo aquí. Contarla como cero haría que la
+    # web anunciara «hoy falta el BOE» el día que el BOE sí respondió.
+    cargos = exportar_cargos(store, destino.with_name("cargos.json"))
+    if cargos["cargos_personas"]:
+        aporte[FUENTE_CARGOS] = aporte.get(FUENTE_CARGOS, 0) + cargos["cargos_personas"]
+
     fuentes = [
         {**dict(f), "entidades": aporte.get(f["id"], 0)}
         for f in store.conn.execute("SELECT id, name, url FROM sources ORDER BY id").fetchall()
@@ -691,6 +699,9 @@ def exportar(
             "fichas": len(omitidas),
             "menciones_en_texto": menciones[0],
         },
+        # Lo justo para que la web sepa si hay sección de cargos sin tener
+        # que descargarla: el fichero entero se pide al entrar en ella.
+        "cargos": {"personas": cargos["cargos_personas"], "actos": cargos["cargos_actos"]},
     }
 
     destino.parent.mkdir(parents=True, exist_ok=True)
@@ -700,7 +711,6 @@ def exportar(
     )
 
     indice = _exportar_indice(store, destino, {str(n["id"]) for n in nodos}, patron)
-    cargos = exportar_cargos(store, destino.with_name("cargos.json"))
 
     resumen = {
         "entidades": len(nodos),
