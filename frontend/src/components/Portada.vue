@@ -35,8 +35,27 @@ const props = defineProps({
   territorios: { type: Array, default: () => [] },
   /** Organismos que no se han podido situar en ninguna comunidad. */
   sinTerritorio: { type: Number, default: 0 },
+  /**
+   * Del cargo a la empresa: autorizaciones de la Oficina de Conflictos de
+   * Intereses que nombran una sociedad del mapa. Vienen con el grafo.
+   */
+  cruces: { type: Array, default: () => [] },
+  nCruces: { type: Number, default: 0 },
 })
-const emit = defineEmits(['seleccionar', 'verMapa', 'territorio'])
+const emit = defineEmits(['seleccionar', 'verMapa', 'territorio', 'verCargo', 'verClave', 'verCargos'])
+
+/** Lo que cobra una sociedad, si está en el extracto del índice. Contexto, no ranking. */
+function cobraDe(clave) {
+  const e = (props.indice?.entidades ?? []).find((x) => x.clave === clave)
+  return e?.recibido ? Number(e.recibido) : 0
+}
+
+function fechaCorta(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? '')
+  if (!m) return ''
+  const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  return `${Number(m[3])} ${meses[Number(m[2]) - 1]} ${m[1]}`
+}
 
 /**
  * Los rankings de dinero salen del índice cuando lo hay, porque el índice
@@ -445,6 +464,50 @@ function filasVisibles(l) {
         de publicidad y ninguno de los cuatro es un medio de comunicación.
         Por eso el título no lo afirma y el matiz va arriba, en la nota.
       -->
+      <!--
+        Del cargo a la empresa. Es la pregunta que trajo el proyecto hasta
+        aquí —¿dónde acaban los que mandaron?—, contestada sólo con lo que
+        afirma una fuente oficial: la Oficina de Conflictos de Intereses
+        autorizó a esta persona a trabajar en esta sociedad. Por fecha, no
+        por dinero: ordenada por euros se leería como una lista de
+        sospechosos, y no lo es.
+      -->
+      <section v-if="cruces.length && !territorio" class="seccion puertas">
+        <header class="seccion-cabeza">
+          <p class="antetitulo">Puertas giratorias</p>
+          <h2>Del cargo a la empresa</h2>
+          <p class="que">
+            Ex altos cargos a los que la Oficina de Conflictos de Intereses
+            autorizó a trabajar, tras su cese, en una sociedad que cobra dinero
+            público en esta edición.
+          </p>
+          <p class="nota">
+            Una autorización no dice que la persona llegara a ocupar el puesto,
+            y que la sociedad cobre de una administración no dice nada de ella.
+          </p>
+        </header>
+        <ol class="cruces">
+          <li v-for="(c, i) in cruces.slice(0, desplegadas.has('puertas') ? cruces.length : VISIBLES)" :key="i" class="cruce">
+            <p class="cruce-quien">
+              <a href="#" @click.prevent="emit('verCargo', c.persona)">{{ c.nombre }}</a>
+              <span v-if="c.cargoAnterior" class="cruce-cargo">{{ c.cargoAnterior.toLowerCase() }}</span>
+            </p>
+            <p class="cruce-donde">
+              <span class="flecha" aria-hidden="true">→</span>
+              <a href="#" class="cruce-empresa" @click.prevent="emit('verClave', c.empresa.clave)">{{ c.empresa.nombre }}</a>
+              <span v-if="cobraDe(c.empresa.clave)" class="cruce-cobra">cobra {{ dineroCorto(cobraDe(c.empresa.clave)) }} públicos</span>
+            </p>
+            <p class="cruce-que">{{ c.actividad }}<template v-if="c.fecha"> · autorización del {{ fechaCorta(c.fecha) }}</template></p>
+          </li>
+        </ol>
+        <button v-if="cruces.length > VISIBLES" class="mas" @click="alternar('puertas')">
+          {{ desplegadas.has('puertas') ? 'Ver menos' : `Ver los ${cruces.length}` }}
+        </button>
+        <button class="mas" @click="emit('verCargos')">
+          Todos los altos cargos y sus autorizaciones →
+        </button>
+      </section>
+
       <section v-if="medios.contratos.length && !territorio" class="seccion medios">
         <header class="seccion-cabeza">
           <p class="antetitulo">Publicidad</p>
@@ -721,6 +784,19 @@ function filasVisibles(l) {
   text-underline-offset: 0.18em;
 }
 .mas:hover { text-decoration-color: currentColor; }
+
+/* --- Puertas giratorias -------------------------------------------------- */
+
+.cruces { list-style: none; margin: 0; padding: 0; }
+.cruce { padding: 0.65rem 0; border-bottom: 1px solid var(--filete-suave); }
+.cruce p { margin: 0; }
+.cruce-quien { display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; }
+.cruce-quien a { color: var(--tinta); font-weight: 600; font-size: var(--t-m); }
+.cruce-cargo { font-size: var(--t-xs); color: var(--tinta-3); }
+.cruce-donde { display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; margin-top: 0.15rem !important; }
+.cruce-empresa { color: var(--emp); font-weight: 600; }
+.cruce-cobra { font-size: var(--t-xs); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.cruce-que { font-size: var(--t-xs); color: var(--tinta-2); margin-top: 0.2rem !important; line-height: 1.45; }
 
 /* --- Publicidad ---------------------------------------------------------- */
 

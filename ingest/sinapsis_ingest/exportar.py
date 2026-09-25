@@ -705,7 +705,14 @@ def exportar(
         },
         # Lo justo para que la web sepa si hay sección de cargos sin tener
         # que descargarla: el fichero entero se pide al entrar en ella.
-        "cargos": {"personas": cargos["cargos_personas"], "actos": cargos["cargos_actos"]},
+        "cargos": {
+            "personas": cargos["cargos_personas"],
+            "actos": cargos["cargos_actos"],
+            # Del cargo a la empresa: autorizaciones de la Oficina de
+            # Conflictos de Intereses que nombran una sociedad del mapa.
+            "cruces": cargos["cruces"],
+            "nCruces": cargos["n_cruces"],
+        },
     }
 
     destino.parent.mkdir(parents=True, exist_ok=True)
@@ -725,7 +732,7 @@ def exportar(
         "truncado": documento["truncado"],
         "bytes": destino.stat().st_size,
         **indice,
-        **cargos,
+        **{k: v for k, v in cargos.items() if k != "cruces"},
     }
     log.info("grafo exportado", destino=str(destino), **resumen)
     return resumen

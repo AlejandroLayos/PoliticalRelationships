@@ -126,6 +126,8 @@ def _plano(texto: str) -> str:
     sin = "".join(
         c for c in unicodedata.normalize("NFKD", texto or "") if unicodedata.category(c) != "Mn"
     )
+    # El guion une: «BESS-BEYOND» es una palabra, no dos.
+    sin = re.sub(r"(?<=\w)-(?=\w)", "", sin)
     return re.sub(r"[^a-z0-9]+", " ", sin.lower()).strip()
 
 
@@ -185,6 +187,10 @@ PUERTAS = {"boe:persona:": "boe", "oci:persona:": "oci"}
 #: Intereses y la que publica el BOE: la una es la del cese y la otra la de su
 #: publicación, que suele ser el día siguiente.
 MARGEN_CESE = 10
+
+#: Cuántos cruces del cargo a la empresa viajan con el grafo, para la portada.
+#: El resto está en cargos.json, en la ficha de cada persona y sociedad.
+MAX_CRUCES_EN_PORTADA = 40
 
 
 def _filas_de_la_puerta(store: Store, esquema: str, extra: str = "") -> list[Any]:
@@ -266,22 +272,64 @@ def empresas_por_nombre(store: Store) -> dict[str, list[tuple[str, str]]]:
     return mapa
 
 
+# Lo que puede ir justo antes del nombre de una sociedad en el texto de una
+# autorización: «socio DE Ey Abogados», «consejero DEL grupo», «EN Indra».
+_ANTES_DEL_NOMBRE = frozenset(
+    {"de", "del", "la", "el", "los", "las", "en", "para", "con", "y", "a", "al"}
+)
+
+# Las formas societarias, ya normalizadas: son el final de una denominación.
+_FORMAS = frozenset(
+    {
+        "sa",
+        "sau",
+        "sl",
+        "slu",
+        "slp",
+        "sll",
+        "sal",
+        "sme",
+        "mp",
+        "scoop",
+        "coop",
+        "aie",
+        "ute",
+        "sad",
+        "se",
+    }
+)
+
+
 def empresa_en(texto: str, mapa: dict[str, list[tuple[str, str]]]) -> dict[str, str] | None:
     """La sociedad del mapa que nombra un texto, entera y sin dudas.
 
     Se busca la denominación completa, palabra a palabra: «SOCIO DE EY
-    ABOGADOS, S.L.P.» contiene «EY ABOGADOS, S.L.P.». Si caben dos
-    sociedades distintas, o el nombre es de varias fichas, no se elige.
+    ABOGADOS, S.L.P.» contiene «EY ABOGADOS, S.L.P.». Pero entera de verdad:
+
+    - por delante, el principio del texto o una preposición o artículo.
+      «BESS-BEYOND SOLUCIONES Y SERVICIOS, S.L.» contiene las palabras de
+      «BEYOND SOLUCIONES Y SERVICIOS S.L.», que es OTRA sociedad; salió así
+      en el primer cruce con los datos reales;
+    - por detrás, una forma societaria, que cierra la denominación, o el
+      final del texto.
+
+    Si caben dos sociedades distintas, o el nombre es de varias fichas, no
+    se elige.
     """
     palabras = _palabras(texto)
     halladas: dict[str, tuple[str, str]] = {}
     for i in range(len(palabras)):
+        if i > 0 and palabras[i - 1] not in _ANTES_DEL_NOMBRE:
+            continue
         for j in range(len(palabras), i, -1):
             nombre = " ".join(palabras[i:j])
-            if nombre in mapa:
-                if len(mapa[nombre]) == 1:
-                    halladas[nombre] = mapa[nombre][0]
-                break
+            if nombre not in mapa:
+                continue
+            if palabras[j - 1] not in _FORMAS and j != len(palabras):
+                continue
+            if len(mapa[nombre]) == 1:
+                halladas[nombre] = mapa[nombre][0]
+            break
     # Una denominación dentro de otra («X, S.A.» y «GRUPO X, S.A.») cuenta
     # como la más larga.
     largas = [n for n in halladas if not any(n != m and n in m for m in halladas)]
@@ -458,11 +506,37 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         fuente: sum(1 for c in personas if c.startswith(prefijo))
         for prefijo, fuente in PUERTAS.items()
     }
+    # Los cruces del cargo a la empresa, para la portada: cada autorización
+    # que nombra una sociedad del mapa del dinero. Van en el grafo, que la
+    # portada ya tiene, para no hacerle descargar todos los cargos.
+    cruces = sorted(
+        (
+            {
+                "persona": p["clave"],
+                "nombre": p["nombre"],
+                "cargoAnterior": a.get("cargoAnterior", ""),
+                "actividad": a["actividad"],
+                "empresa": a["empresa"],
+                **({"fecha": a["fecha"]} if a.get("fecha") else {}),
+            }
+            for p in salida
+            for a in p.get("autorizaciones", [])
+            if a.get("empresa")
+        ),
+        key=lambda c: c.get("fecha", ""),
+        reverse=True,
+    )
     resumen = {
         "cargos_personas": len(salida),
         "cargos_actos": len(fechas),
         "cargos_organos": len(al_frente),
         "cargos_por_fuente": por_fuente,
+        "cruces": cruces[:MAX_CRUCES_EN_PORTADA],
+        "n_cruces": len(cruces),
     }
-    log.info("cargos exportados", destino=str(destino), **resumen)
+    log.info(
+        "cargos exportados",
+        destino=str(destino),
+        **{k: v for k, v in resumen.items() if k != "cruces"},
+    )
     return resumen

@@ -285,7 +285,13 @@ const sinDatos = computed(
         <ul class="lista">
           <li v-for="(a, n) in exAltosCargos.slice(0, 8)" :key="n">
             <a href="#" @click.prevent="emit('verCargo', a.persona)">{{ a.nombre }}</a>
-            <span class="cargo-frente">{{ a.actividad }}</span>
+            <!--
+              Lo que fue, no el nombre de esta sociedad, que ya está arriba.
+              El texto entero de la autorización, al pasar por encima.
+            -->
+            <span class="cargo-frente" :title="a.actividad">
+              {{ a.cargoAnterior ? `antes, ${a.cargoAnterior.toLowerCase()}` : a.actividad }}
+            </span>
             <span class="tramo-frente">{{ a.fecha ? fechaCortaCargo(a.fecha) : '' }}</span>
           </li>
         </ul>
@@ -444,7 +450,13 @@ const sinDatos = computed(
         <ul class="lista">
           <li v-for="(a, n) in exAltosCargos.slice(0, 8)" :key="n">
             <a href="#" @click.prevent="emit('verCargo', a.persona)">{{ a.nombre }}</a>
-            <span class="cargo-frente">{{ a.actividad }}</span>
+            <!--
+              Lo que fue, no el nombre de esta sociedad, que ya está arriba.
+              El texto entero de la autorización, al pasar por encima.
+            -->
+            <span class="cargo-frente" :title="a.actividad">
+              {{ a.cargoAnterior ? `antes, ${a.cargoAnterior.toLowerCase()}` : a.actividad }}
+            </span>
             <span class="tramo-frente">{{ a.fecha ? fechaCortaCargo(a.fecha) : '' }}</span>
           </li>
         </ul>

@@ -383,7 +383,7 @@ def test_la_fuente_de_los_cargos_no_se_anuncia_como_caida(store, tmp_path):
     grafo, _, _ = _volcar(store, tmp_path)
     boe = next(f for f in grafo["fuentes"] if f["id"] == "boe")
     assert boe["entidades"] == 1
-    assert grafo["cargos"] == {"personas": 1, "actos": 1}
+    assert grafo["cargos"]["personas"] == 1 and grafo["cargos"]["actos"] == 1
 
 
 @con_base
@@ -601,10 +601,15 @@ def test_la_autorizacion_nombra_una_sociedad_del_mapa(store_oci, tmp_path):
         ),
         b"<documento>3</documento>",
     )
-    _, _, cargos = _volcar(store_oci, tmp_path)
+    grafo, _, cargos = _volcar(store_oci, tmp_path)
     [autorizacion] = cargos["personas"][0]["autorizaciones"]
     assert autorizacion["empresa"] == {"clave": "nif:A28017895", "nombre": "El Corte Inglés, S.A."}
     assert cargos["empresas"]["nif:A28017895"][0]["nombre"] == "Sanchez Gonzalez, Luis Maria"
+    # Y viaja con el grafo, para la portada.
+    [cruce] = grafo["cargos"]["cruces"]
+    assert cruce["empresa"]["clave"] == "nif:A28017895"
+    assert cruce["fecha"] == "2019-11-21"
+    assert grafo["cargos"]["nCruces"] == 1
 
 
 def test_una_sociedad_se_reconoce_entera_y_sin_dudas():
@@ -631,6 +636,10 @@ def test_una_sociedad_se_reconoce_entera_y_sin_dudas():
     )
     # La más larga manda: «GRUPO X, S.A.» no es «X, S.A.».
     assert empresa_en("CONSEJERO DE GRUPO X, S.A.", mapa)["clave"] == "nif:A3"
+    # Pegado a otra palabra, es otra sociedad. Salió así con los datos reales.
+    otras = {" ".join(_palabras("BEYOND SOLUCIONES Y SERVICIOS S.L.")): [("nif:B7", "BEYOND")]}
+    assert empresa_en("BESS-BEYOND SOLUCIONES Y SERVICIOS, S.L.", otras) is None
+    assert empresa_en("ASESOR EN BEYOND SOLUCIONES Y SERVICIOS S.L.", otras)["clave"] == "nif:B7"
     # Dos fichas con el mismo nombre: no se elige.
     assert empresa_en("ASESOR DE DUPLICADA, S.L.", mapa) is None
     # Sin denominación del mapa: nada.

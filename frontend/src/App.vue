@@ -1306,9 +1306,14 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :territorio="territorio"
         :territorios="territorios"
         :sin-territorio="indice?.organismosSinTerritorio ?? 0"
+        :cruces="instantanea?.cargos?.cruces ?? []"
+        :n-cruces="instantanea?.cargos?.nCruces ?? 0"
         @seleccionar="enfocar"
         @ver-mapa="verMapa"
         @territorio="(t) => (territorio = t)"
+        @ver-cargo="verCargos"
+        @ver-clave="abrirPorClave"
+        @ver-cargos="verCargos()"
       />
       <Cargos
         v-if="vista === 'cargos'"
