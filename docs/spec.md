@@ -256,6 +256,25 @@ Reglas:
   jurídicas y cargos públicos. Una persona física aparece cuando ejerce
   función pública o representa a una entidad en un hecho documentado — y esa
   es la base de interés público (art. 6.1.e/f RGPD y LO 3/2018).
+
+  **Regla concreta, acordada el 25/9/2026** para las puertas giratorias:
+  sale con nombre **sólo quien tiene un cargo público acreditado por una
+  fuente oficial** —BOE, Oficina de Conflictos de Intereses, Congreso o
+  Senado—, y sólo en ese papel y en lo que se enlace a él. Todos los demás
+  siguen bloqueados en el volcado, como desde septiembre.
+
+  - **El vínculo lo afirma la fuente, o no se publica solo.** Cuando un
+    documento dice «X, ex secretario de Estado, autorizado para trabajar en
+    Y», el vínculo es un hecho. Cuando se deduce porque el nombre del BOE
+    coincide con el de un administrador del BORME, es un candidato: va a
+    `review_queue` y no se publica hasta que una persona lo confirme. Con
+    dos apellidos los homónimos son menos, no ninguno, y un homónimo
+    publicado es una acusación falsa.
+  - **Familias, no.** Ninguna fuente oficial publica parentescos, y
+    deducirlos por apellidos da falsos positivos por construcción. Un
+    familiar aparece sólo por lo que él mismo hace —si administra una
+    empresa que cobra de una administración, eso se ve—, nunca por ser
+    familiar de nadie.
 - **Base legal documentada** por fuente en `data-sources.md`.
 - **Rectificación.** Canal público para solicitar corrección. Toda corrección
   se resuelve contra el documento original: si la fuente está mal, se marca la
@@ -320,6 +339,30 @@ siguiente.
 | **4** | Resolución de entidades + sync a Neo4j + API de grafo | `review_queue` poblada; fusiones reversibles; `/entity/{id}/neighbors` responde |
 | **5** | Frontend Vue + Sigma.js | Ego-red navegable con procedencia y confianza visibles |
 | **6** | Más fuentes: Tribunal de Cuentas, BORME, lobbies, medios | Cada una con su golden test |
+| **7** | Mapa de poder (ver abajo) | Cada línea con su criterio |
+
+### Fase 7 — Mapa de poder
+
+El objetivo: que la web sirva para investigar las relaciones de poder en
+España —entre administraciones, empresas y partidos— con cada vínculo
+atado a su documento. Sigue valiendo §1: se enseñan hechos documentados; la
+conclusión de que «hay intereses» es del lector.
+
+Cuatro líneas, en este orden:
+
+1. **Gobiernos autonómicos.** Cada organismo pagador lleva su nivel
+   (Estado, autonómico, local) y su territorio, sacados de la jerarquía que
+   publica la propia fuente, no del nombre. El mapa y las listas se filtran
+   por comunidad. *Criterio:* lo clasificado sale de la fuente; lo que no
+   encaja en ninguna regla se enseña como «sin clasificar», no se adivina.
+2. **Financiación de partidos.** Ingresos, donaciones declaradas e
+   irregularidades de los informes de fiscalización del Tribunal de
+   Cuentas. La financiación por gobiernos extranjeros está prohibida, así
+   que sólo aparece si el Tribunal la documenta.
+3. **Puertas giratorias.** Oficina de Conflictos de Intereses, BOE y BORME,
+   con la regla de personas de §12.
+4. **Contexto de gobierno.** Qué partido gobernaba una administración cuando
+   pagó, con fuente para cada periodo.
 
 ## 16. Tests
 
