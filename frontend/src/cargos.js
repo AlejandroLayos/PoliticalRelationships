@@ -376,3 +376,22 @@ export function nombreDeGobierno(g) {
   if (!g) return ''
   return `Gobierno de ${g.nombre}${g.formacion ? ` · ${g.formacion}` : ''}`
 }
+
+/**
+ * Lo que un órgano pagó o adjudicó a una sociedad (`delOrgano`, de
+ * exportar_cargos.py), en palabras: el verbo según de dónde sale el dinero,
+ * cuántas veces, y los años. Las fechas son las que da cada fuente —concesión
+ * en BDNS, publicación del expediente en PLACSP—, así que se dicen en años.
+ */
+export function delOrganoEnPalabras(d) {
+  const pagos = d?.pagos ?? 0
+  const adjudicaciones = d?.adjudicaciones ?? 0
+  const verbo = pagos && adjudicaciones ? 'pagó o adjudicó' : pagos ? 'pagó' : 'adjudicó'
+  const partes = []
+  if (pagos) partes.push(`${pagos} ${pagos === 1 ? 'pago' : 'pagos'}`)
+  if (adjudicaciones) partes.push(`${adjudicaciones} ${adjudicaciones === 1 ? 'adjudicación' : 'adjudicaciones'}`)
+  const a = (d?.desde ?? '').slice(0, 4)
+  const b = (d?.hasta ?? '').slice(0, 4)
+  const cuando = a && b ? (a === b ? `en ${a}` : `entre ${a} y ${b}`) : ''
+  return { verbo, cuantos: partes.join(' y '), cuando }
+}

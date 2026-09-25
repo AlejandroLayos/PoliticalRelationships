@@ -14,10 +14,12 @@
  * borde del eje, deshilachado, no en una fecha inventada.
  */
 import { computed, nextTick, ref, watch } from 'vue'
+import { dineroCorto } from '../nucleos.js'
 import {
   bajoGobierno,
   buscarCargos,
   dePapel,
+  delOrganoEnPalabras,
   fechaCorta,
   fechaLarga,
   gobiernos as gobiernosDe,
@@ -290,6 +292,9 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
           Según la Oficina de Conflictos de Intereses, que autoriza a quien deja
           un alto cargo a trabajar en una entidad privada en los dos años
           siguientes. Una autorización no dice que llegara a ocupar el puesto.
+          Si el órgano que dirigía pagó a esa sociedad, se dice al lado: son dos
+          hechos documentados y ninguno dice nada del otro. Las fechas son las
+          de concesión o de publicación del expediente, no las del contrato.
         </p>
         <ul>
           <li v-for="(a, i) in abierta.autorizaciones" :key="i" class="autorizacion">
@@ -308,6 +313,19 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
               En el mapa del dinero:
               <a href="#" @click.prevent="emit('entidad', a.empresa.clave)">{{ a.empresa.nombre }}</a>
               — ver de quién cobra →
+            </p>
+            <!--
+              El órgano que dirigió, cuando pagó a esa misma sociedad. Dos
+              hechos documentados, uno al lado del otro; la nota de arriba
+              dice lo que no significan.
+            -->
+            <p v-for="(d, k) in a.delOrgano ?? []" :key="k" class="del-organo">
+              <a href="#" @click.prevent="emit('entidad', d.organo.clave)">{{ d.organo.nombre }}</a>,
+              que dirigía, {{ delOrganoEnPalabras(d).verbo }} a esta sociedad
+              <strong>{{ dineroCorto(d.importe) }}</strong>
+              <span class="tramo">
+                · {{ delOrganoEnPalabras(d).cuantos }}<template v-if="delOrganoEnPalabras(d).cuando"> · {{ delOrganoEnPalabras(d).cuando }}</template>
+              </span>
             </p>
             <p class="periodo-fuentes">
               <a v-if="a.url" :href="a.url" target="_blank" rel="noopener" class="sello">Oficina de Conflictos de Intereses</a>
@@ -719,6 +737,12 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 .periodo-gobierno a { color: var(--tinta); }
 .periodo-gobierno abbr { text-decoration: none; }
 .gobierno-autorizacion { color: var(--tinta-2); }
+.del-organo {
+  font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.35rem !important;
+  padding-left: 0.6rem; border-left: 2px solid var(--adm);
+}
+.del-organo a { color: var(--adm); font-weight: 600; }
+.del-organo strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
 .mov-texto { font-size: var(--t-s); line-height: 1.45; color: var(--tinta-2); margin: 0.2rem 0 0.35rem !important; }
 .mov-texto a { color: var(--tinta); font-weight: 600; }
 

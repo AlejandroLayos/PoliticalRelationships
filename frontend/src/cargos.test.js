@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   bajoGobierno,
   buscarCargos,
+  delOrganoEnPalabras,
   dePapel,
   fechaCorta,
   fechaLarga,
@@ -377,5 +378,22 @@ describe('gobiernos', () => {
     expect(nombreDeGobierno(rajoy)).toBe('Gobierno de Mariano Rajoy Brey · PP')
     expect(nombreDeGobierno(sanchez)).toBe('Gobierno de Pedro Sánchez Pérez-Castejón')
     expect(nombreDeGobierno(null)).toBe('')
+  })
+})
+
+describe('delOrganoEnPalabras', () => {
+  it('el verbo según de dónde sale el dinero, y los años', () => {
+    expect(delOrganoEnPalabras({ pagos: 1, adjudicaciones: 0, desde: '2016-03-01', hasta: '2016-03-01' })).toEqual({
+      verbo: 'pagó',
+      cuantos: '1 pago',
+      cuando: 'en 2016',
+    })
+    expect(delOrganoEnPalabras({ pagos: 0, adjudicaciones: 3, desde: '2015-01-01', hasta: '2018-12-31' })).toEqual({
+      verbo: 'adjudicó',
+      cuantos: '3 adjudicaciones',
+      cuando: 'entre 2015 y 2018',
+    })
+    expect(delOrganoEnPalabras({ pagos: 2, adjudicaciones: 1 }).verbo).toBe('pagó o adjudicó')
+    expect(delOrganoEnPalabras({ pagos: 2, adjudicaciones: 1 }).cuando).toBe('')
   })
 })

@@ -121,6 +121,12 @@ empresa para lo que es sector privado: una autorización para trabajar en una
 sociedad, el nombre de esa sociedad, y la etiqueta «sector privado» de una
 actividad declarada al Congreso.
 
+Cuando el órgano que alguien dirigió pagó a la sociedad en la que se le
+autorizó a trabajar, va debajo de la autorización con un filete cobrizo a la
+izquierda: el color del órgano, no una alarma. Sin rojo, sin icono, sin
+negrita más que en la cifra. Son dos hechos al lado; la nota de la sección
+dice que ninguno dice nada del otro, y el diseño no puede decir lo contrario.
+
 Lo que declara un diputado se enseña con sus palabras y en su caja: el
 empleador en la serif, como la actividad de una autorización, y la
 descripción y el periodo tal cual los escribió, en mayúsculas si las puso.

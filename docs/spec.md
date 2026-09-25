@@ -376,8 +376,12 @@ Estado a 25/9/2026:
   puesto ↔ órgano del Estado que contrata, y autorización ↔ sociedad del mapa
   por denominación completa. Y el otro sentido, de la empresa al escaño: las
   actividades que los diputados de la legislatura en curso declararon al
-  Congreso, con el empleador cruzado con el mapa por la misma regla. Falta el
-  BORME, que sólo daría candidatos a revisión, nunca vínculos publicados.
+  Congreso, con el empleador cruzado con el mapa por la misma regla. Y los
+  dos juntos: si el órgano que la persona dirigió —por el BOE, o por el cargo
+  abreviado de la OCI con la misma regla estricta— pagó o adjudicó algo a la
+  sociedad en la que se le autorizó a trabajar, se dice al lado, con importe,
+  número y años. Falta el BORME, que sólo daría candidatos a revisión, nunca
+  vínculos publicados.
 - Línea 4: empezada. Diputados de cada legislatura desde la IX con su
   formación (Congreso), unidos a los altos cargos del BOE con dos señales;
   la franja de presidencias del Gobierno dice con qué formación fue elegido

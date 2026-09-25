@@ -17,6 +17,7 @@ import {
   construirDirectorioDesdeIndice,
 } from '../directorio.js'
 import { contratosDeMedios } from '../medios.js'
+import { delOrganoEnPalabras } from '../cargos.js'
 import { cifraDeTitular, dineroCorto } from '../nucleos.js'
 import { colorTipo, etiquetaEsquema } from '../esquemas.js'
 
@@ -490,6 +491,8 @@ function filasVisibles(l) {
           <p class="nota">
             Una autorización no dice que la persona llegara a ocupar el puesto,
             y que la sociedad cobre de una administración no dice nada de ella.
+            Tampoco que la pagara el órgano que la persona dirigía, cuando se
+            dice: son hechos documentados puestos uno al lado del otro.
           </p>
         </header>
         <ol class="cruces">
@@ -508,6 +511,11 @@ function filasVisibles(l) {
               <span v-if="cobraDe(c.empresa.clave)" class="cruce-cobra">cobra {{ dineroCorto(cobraDe(c.empresa.clave)) }} públicos</span>
             </p>
             <p class="cruce-que">{{ c.actividad }}<template v-if="c.fecha"> · autorización del {{ fechaCorta(c.fecha) }}</template></p>
+            <!-- El órgano que dirigía, si pagó a esa sociedad: dos hechos, uno al lado del otro. -->
+            <p v-for="(d, k) in c.delOrgano ?? []" :key="k" class="cruce-organo">
+              {{ d.organo.nombre }}, que dirigía, le {{ delOrganoEnPalabras(d).verbo }}
+              {{ [dineroCorto(d.importe), delOrganoEnPalabras(d).cuando].filter(Boolean).join(' ') }}
+            </p>
           </li>
         </ol>
         <button v-if="cruces.length > VISIBLES" class="mas" @click="alternar('puertas')">
@@ -847,6 +855,10 @@ function filasVisibles(l) {
 .cruce-empresa { color: var(--emp); font-weight: 600; }
 .cruce-cobra { font-size: var(--t-xs); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
 .cruce-que { font-size: var(--t-xs); color: var(--tinta-2); margin-top: 0.2rem !important; line-height: 1.45; }
+.cruce-organo {
+  font-size: var(--t-xs); color: var(--tinta-2); margin-top: 0.25rem !important;
+  padding-left: 0.5rem; border-left: 2px solid var(--adm);
+}
 
 /* --- Publicidad ---------------------------------------------------------- */
 

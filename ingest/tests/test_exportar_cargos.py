@@ -1086,3 +1086,115 @@ def test_gobierno_en():
     assert "formacion" not in gobierno_en(presidencias, "2020-01-01")
     # Antes de lo leído, nada.
     assert gobierno_en(presidencias[1:], "2010-01-01") is None
+
+
+# --- del órgano que dirigió a la sociedad donde se le autorizó ------------------
+
+
+def test_puesto_de_la_oci():
+    from sinapsis_ingest.exportar_cargos import puesto_de_la_oci
+
+    assert puesto_de_la_oci("D. GRAL. DE ORDENACION PROFESIONAL") == (
+        "Director General de ordenacion profesional"
+    )
+    assert (
+        puesto_de_la_oci("S.E. PARA LA AGENDA 2030") == "Secretario de Estado para la agenda 2030"
+    )
+    assert puesto_de_la_oci("DIRECTORA GENERAL DE CARRETERAS") == "Director General de carreteras"
+    assert puesto_de_la_oci("SUBSECRETARIA DE HACIENDA") == "Subsecretario de hacienda"
+    # Lo que no dirige un órgano, nada: un embajador, una consejera de la CNMC.
+    assert puesto_de_la_oci("EMBAJADOR EN EL REINO DE MARRUECOS") == ""
+    assert puesto_de_la_oci("CONSEJERA DE LA CNMC") == ""
+
+
+def _organo_que_paga(store: Store, empresa: str, nif: str, importe: float) -> None:
+    """La Dirección General de Carreteras del Estado, que paga a `empresa`."""
+    _ingerir(
+        store,
+        "bdns",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    "PublicBody",
+                    "Dirección General de Carreteras",
+                    "test:dgc-estado",
+                    properties={
+                        "jerarquia_placsp": [
+                            "Sector Público",
+                            "ADMINISTRACIÓN GENERAL DEL ESTADO",
+                            "Ministerio de Transportes y Movilidad Sostenible",
+                        ]
+                    },
+                ),
+                EntidadNormalizada("Company", empresa, f"nif:{nif}", nif=nif),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    "Payment",
+                    "test:dgc-estado",
+                    f"nif:{nif}",
+                    f"pago:{nif}",
+                    confidence=1.0,
+                    amount=importe,
+                    currency="EUR",
+                    start_date=date(2016, 3, 1),
+                )
+            ],
+        ),
+        f"<pago>{nif}</pago>".encode(),
+    )
+
+
+@con_base
+def test_el_organo_que_dirigio_pago_a_la_sociedad_donde_se_le_autorizo(store_oci, tmp_path):
+    _organo_que_paga(store_oci, "ASFALTOS DEL NORTE, S.A.", "A11111111", 250000)
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "PEREZ GIL, ANA",
+            "D. GRAL. DE CARRETERAS",
+            "2018/06/20",
+            "CONSEJERA DE ASFALTOS DEL NORTE, S.A.",
+            "2019/01/15",
+        ),
+        b"<html>1</html>",
+    )
+    grafo, _, cargos = _volcar(store_oci, tmp_path)
+    [persona] = cargos["personas"]
+    # El cargo abreviado de la OCI lleva a su órgano, con el mismo rigor que el BOE.
+    [periodo] = persona["periodos"]
+    assert periodo["organo"]["clave"] == "test:dgc-estado"
+    assert cargos["organos"]["test:dgc-estado"][0]["fuente"] == "oci"
+    # Y el órgano pagó a la sociedad en la que se le autorizó a trabajar.
+    [autorizacion] = persona["autorizaciones"]
+    [del_organo] = autorizacion["delOrgano"]
+    assert del_organo["organo"]["nombre"] == "Dirección General de Carreteras"
+    assert float(del_organo["importe"]) == 250000
+    assert del_organo["pagos"] == 1 and del_organo["adjudicaciones"] == 0
+    assert del_organo["desde"] == "2016-03-01"
+    # Viaja con el cruce de la portada.
+    [cruce] = grafo["cargos"]["cruces"]
+    assert float(cruce["delOrgano"][0]["importe"]) == 250000
+
+
+@con_base
+def test_sin_dinero_del_organo_a_la_sociedad_no_se_dice_nada(store_oci, tmp_path):
+    _organo_que_paga(store_oci, "OTRA EMPRESA, S.L.", "B22222222", 1000)
+    _sociedad_del_mapa(store_oci, "ASFALTOS DEL NORTE, S.A.", "A11111111")
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "PEREZ GIL, ANA",
+            "D. GRAL. DE CARRETERAS",
+            "2018/06/20",
+            "CONSEJERA DE ASFALTOS DEL NORTE, S.A.",
+            "2019/01/15",
+        ),
+        b"<html>1</html>",
+    )
+    _, _, cargos = _volcar(store_oci, tmp_path)
+    [autorizacion] = cargos["personas"][0]["autorizaciones"]
+    assert autorizacion["empresa"]["clave"] == "nif:A11111111"
+    assert "delOrgano" not in autorizacion

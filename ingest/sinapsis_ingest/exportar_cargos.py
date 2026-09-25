@@ -182,6 +182,55 @@ def organos_del_estado(store: Store) -> dict[str, list[tuple[str, str]]]:
     return por_nombre
 
 
+# Las abreviaturas con que la Oficina de Conflictos de Intereses escribe los
+# cargos, en mayúsculas y sin tildes: «D. GRAL. DE ORDENACION PROFESIONAL»,
+# «S.E. PARA LA AGENDA 2030». En orden: «D. GRAL.» antes que «D.».
+_ABREVIATURAS_OCI = (
+    (re.compile(r"^D\. ?GRAL\.? "), "DIRECTOR GENERAL "),
+    (re.compile(r"^S\. ?E\.? "), "SECRETARIO DE ESTADO "),
+    (re.compile(r"^D\. "), "DIRECTOR "),
+)
+
+# El principio del cargo, sin género, con la forma que esperan los patrones
+# de `organo_del_puesto`. Lo que no empieza por uno de éstos no se busca.
+_ROLES_OCI = {
+    "director general": "Director General",
+    "directora general": "Director General",
+    "secretario de estado": "Secretario de Estado",
+    "secretaria de estado": "Secretario de Estado",
+    "secretario general": "Secretario General",
+    "secretaria general": "Secretario General",
+    "subsecretario": "Subsecretario",
+    "subsecretaria": "Subsecretario",
+    "ministro": "Ministro",
+    "ministra": "Ministro",
+    "delegado del gobierno en": "Delegado del Gobierno en",
+    "delegada del gobierno en": "Delegado del Gobierno en",
+    "presidente": "Presidente",
+    "presidenta": "Presidente",
+    "director": "Director",
+    "directora": "Director",
+}
+
+
+def puesto_de_la_oci(cargo: str) -> str:
+    """«D. GRAL. DE ORDENACION PROFESIONAL» → «Director General de ordenacion
+    profesional», o '' si no es un cargo que dirija un órgano.
+
+    SÓLO para buscar el órgano, que se compara sin tildes ni mayúsculas
+    (`_plano`) y exige el nombre exacto de UNO del Estado: igual de estricto
+    que con el BOE. Para enseñar, el cargo sigue siendo el de la fuente.
+    """
+    texto = " ".join((cargo or "").split()).upper()
+    for patron, forma in _ABREVIATURAS_OCI:
+        texto = patron.sub(forma, texto, count=1)
+    bajo = texto.lower()
+    for rol in sorted(_ROLES_OCI, key=len, reverse=True):
+        if bajo.startswith(rol + " "):
+            return _ROLES_OCI[rol] + bajo[len(rol) :]
+    return ""
+
+
 def organo_de(puesto: str, organos: dict[str, list[tuple[str, str]]]) -> dict[str, str] | None:
     """El órgano que dirigía el puesto, si su nombre es el de UNO del Estado."""
     nombre = organo_del_puesto(puesto)
@@ -470,6 +519,47 @@ def empresa_en(texto: str, mapa: dict[str, list[tuple[str, str]]]) -> dict[str, 
     return {"clave": clave, "nombre": nombre}
 
 
+def dinero_del_organo(store: Store, organo: str, empresa: str) -> dict[str, Any] | None:
+    """Lo que el órgano `organo` pagó o adjudicó a la sociedad `empresa` (claves),
+    en lo leído; None si nada.
+
+    El mismo puente que el índice: el dinero de un expediente es del órgano
+    que lo adjudicó. Las fechas son las que trae cada fuente —la concesión
+    en BDNS, la publicación del expediente en PLACSP—, no la del contrato, y
+    así se dicen.
+    """
+    filas = store.conn.execute(
+        """
+        WITH o AS (SELECT id FROM entities WHERE dedupe_key = %s AND canonical_id IS NULL),
+             e AS (SELECT id FROM entities WHERE dedupe_key = %s AND canonical_id IS NULL)
+        SELECT r.amount, r.start_date, 'pago' AS via
+        FROM relationships r, o, e
+        WHERE r.ftm_schema = 'Payment' AND r.status <> 'retracted'
+          AND r.source_entity_id = o.id AND r.target_entity_id = e.id
+        UNION ALL
+        SELECT a.amount, a.start_date, 'adjudicacion'
+        FROM relationships u
+        JOIN entities c ON c.id = u.target_entity_id AND c.ftm_schema = 'Contract'
+        JOIN relationships a ON a.source_entity_id = c.id
+             AND a.ftm_schema = 'ContractAward' AND a.status <> 'retracted',
+             o, e
+        WHERE u.ftm_schema = 'UnknownLink' AND u.status <> 'retracted'
+          AND u.source_entity_id = o.id AND a.target_entity_id = e.id
+        """,
+        (organo, empresa),
+    ).fetchall()
+    filas = [f for f in filas if f["amount"] is not None]
+    if not filas:
+        return None
+    fechas = sorted(f["start_date"] for f in filas if f["start_date"])
+    return {
+        "importe": str(sum(f["amount"] for f in filas)),
+        "pagos": sum(1 for f in filas if f["via"] == "pago"),
+        "adjudicaciones": sum(1 for f in filas if f["via"] == "adjudicacion"),
+        **({"desde": fechas[0].isoformat(), "hasta": fechas[-1].isoformat()} if fechas else {}),
+    }
+
+
 def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     """Escribe `destino` con las personas que pasan las condiciones de §12."""
     filas = _filas_de_la_puerta(store, "Occupancy")
@@ -595,6 +685,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     en_empresas: dict[str, list[dict[str, Any]]] = {}
     declarantes: dict[str, list[dict[str, Any]]] = {}
     formacion_de: dict[str, str] = {}
+    dinero_cache: dict[tuple[str, str], dict[str, Any] | None] = {}
 
     salida = []
     for clave, persona in personas.items():
@@ -612,7 +703,15 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                 ]
         ps = periodos(propios_actos)
         for p in ps:
-            organo = organo_de(p["puesto"], organos)
+            # El cargo de la OCI viene abreviado y en mayúsculas; el del BOE,
+            # como se escribe. Un escaño del Congreso no dirige nada.
+            if p.get("fuente") == "oci":
+                puesto_p = puesto_de_la_oci(p["puesto"])
+            elif p.get("fuente") == "congreso":
+                puesto_p = ""
+            else:
+                puesto_p = p["puesto"]
+            organo = organo_de(puesto_p, organos) if puesto_p else None
             if organo is None:
                 continue
             p["organo"] = organo
@@ -623,6 +722,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                         "nombre": persona["nombre"],
                         "cargo": p["cargo"],
                         **{k: p[k] for k in ("desde", "hasta") if k in p},
+                        **_fuente_no_boe(p),
                     }
                 )
             )
@@ -646,6 +746,23 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                     }
                 )
             )
+        # Y la pregunta de las puertas giratorias, con dos hechos documentados
+        # uno al lado del otro: el órgano que la persona dirigió, ¿pagó a la
+        # sociedad en la que se le autorizó a trabajar? Sólo con los dos
+        # enlaces estrictos —el órgano por su nombre exacto, la sociedad por su
+        # denominación completa—; ninguno de los dos dice nada del otro.
+        con_organo = [p for p in ps if p.get("organo")]
+        for a in propias:
+            if not a.get("empresa"):
+                continue
+            for p in con_organo:
+                par = (p["organo"]["clave"], a["empresa"]["clave"])
+                if par not in dinero_cache:
+                    dinero_cache[par] = dinero_del_organo(store, *par)
+                if dinero_cache[par]:
+                    a.setdefault("delOrgano", []).append(
+                        {"organo": p["organo"], "cargo": p["cargo"], **dinero_cache[par]}
+                    )
         propias.sort(key=lambda a: a.get("fecha") or date.min, reverse=True)
         declaradas = list(declaraciones.get(clave, []))
         for c in cruces:
@@ -769,6 +886,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                 "empresa": a["empresa"],
                 **({"fecha": a["fecha"]} if a.get("fecha") else {}),
                 **({"gobierno": a["gobierno"]} if a.get("gobierno") else {}),
+                **({"delOrgano": a["delOrgano"]} if a.get("delOrgano") else {}),
             }
             for p in salida
             for a in p.get("autorizaciones", [])
