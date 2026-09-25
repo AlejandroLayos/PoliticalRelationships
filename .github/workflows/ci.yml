@@ -101,8 +101,25 @@ jobs:
       - name: ruff format
         run: ruff format --check .
 
+      # El log del contenedor de Postgres se vuelca ENTERO al final del job, y
+      # cada test de integración reaplica las migraciones —las que ya están
+      # fallan a propósito, y Postgres escribe el error con la sentencia
+      # entera—. Eran treinta mil líneas, y lo único que se puede leer de un
+      # job fallido es el final: el fallo de pytest quedaba enterrado debajo
+      # y no había forma de saber qué test se había roto.
+      - name: el log de Postgres, sólo lo grave
+        env:
+          PGPASSWORD: sinapsis
+        run: |
+          psql -h localhost -U sinapsis -d sinapsis \
+            -c "ALTER SYSTEM SET log_min_messages = 'fatal'" \
+            -c "ALTER SYSTEM SET log_min_error_statement = 'panic'" \
+            -c "SELECT pg_reload_conf()"
+
+      # `-rfE`: el resumen de lo que falló, al final de la salida, que es lo
+      # que se puede leer después.
       - name: pytest
-        run: pytest --cov=sinapsis_ingest
+        run: pytest --cov=sinapsis_ingest -rfE --tb=short
 
       # Si los tests de integración se saltasen por falta de BD, el job pasaría
       # sin haberlos ejecutado. Esto lo convierte en un fallo ruidoso.
