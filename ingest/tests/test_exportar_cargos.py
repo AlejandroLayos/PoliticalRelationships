@@ -19,7 +19,7 @@ from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.connectors.boe import BOEConnector
 from sinapsis_ingest.connectors.boe import clave as clave_boe
 from sinapsis_ingest.exportar import exportar
-from sinapsis_ingest.exportar_cargos import periodos
+from sinapsis_ingest.exportar_cargos import es_sociedad_mercantil, nombre_natural, periodos
 from sinapsis_ingest.normalizado import AristaNormalizada, EntidadNormalizada, Normalizado
 from sinapsis_ingest.pipeline import Resultado, ingerir_documento
 from sinapsis_ingest.store import Source, Store
@@ -509,7 +509,7 @@ def test_una_autorizacion_de_la_oci_sale_en_cargos(store_oci, tmp_path):
     )
     grafo, indice, cargos = _volcar(store_oci, tmp_path)
     [persona] = cargos["personas"]
-    assert persona["nombre"] == "Montoro Romero, Cristobal"
+    assert persona["nombre"] == "Cristobal Montoro Romero"
     [periodo] = persona["periodos"]
     assert periodo["hasta"] == "2018-06-01" and "desde" not in periodo
     assert periodo["fuente"] == "oci"
@@ -604,7 +604,7 @@ def test_la_autorizacion_nombra_una_sociedad_del_mapa(store_oci, tmp_path):
     grafo, _, cargos = _volcar(store_oci, tmp_path)
     [autorizacion] = cargos["personas"][0]["autorizaciones"]
     assert autorizacion["empresa"] == {"clave": "nif:A28017895", "nombre": "El Corte Inglés, S.A."}
-    assert cargos["empresas"]["nif:A28017895"][0]["nombre"] == "Sanchez Gonzalez, Luis Maria"
+    assert cargos["empresas"]["nif:A28017895"][0]["nombre"] == "Luis Maria Sanchez Gonzalez"
     # Y viaja con el grafo, para la portada.
     [cruce] = grafo["cargos"]["cruces"]
     assert cruce["empresa"]["clave"] == "nif:A28017895"
@@ -740,3 +740,206 @@ def test_con_el_nombre_solo_un_diputado_no_se_une_ni_se_publica(store_congreso, 
     assert all(p.get("fuente") != "congreso" for p in persona["periodos"])
     # El diputado sí aportó: se leyó, aunque no se publique.
     assert next(f for f in grafo["fuentes"] if f["id"] == "congreso")["entidades"] == 1
+
+
+def _declaracion(nombre: str, empleador: str, descripcion: str, periodo: str) -> Normalizado:
+    from sinapsis_ingest.connectors.congreso import CongresoConnector
+
+    n = CongresoConnector().normalize(
+        ParsedRecord(
+            raw_content_hash="x",
+            extractor_version=CongresoConnector.extractor_version,
+            data={
+                "tipo": "actividad",
+                "url": "https://www.congreso.es/docacteco.json",
+                "nombre": nombre,
+                "empleador": empleador,
+                "sector": "Privado",
+                "periodo": periodo,
+                "descripcion": descripcion,
+                "fecha_registro": "03/08/2023",
+            },
+        )
+    )
+    assert n is not None
+    return n
+
+
+def _sociedad_del_mapa(store: Store, nombre: str, nif: str) -> None:
+    """Una sociedad que cobra de un órgano, como las del mapa del dinero."""
+    _ingerir(
+        store,
+        "bdns",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada("PublicBody", "Ayuntamiento de Pruebas", "nif:P0000000A"),
+                EntidadNormalizada("Company", nombre, f"nif:{nif}", nif=nif),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    "Payment",
+                    "nif:P0000000A",
+                    f"nif:{nif}",
+                    f"pago:{nif}",
+                    confidence=1.0,
+                    amount=1000,
+                    currency="EUR",
+                    start_date=date(2025, 1, 1),
+                )
+            ],
+        ),
+        f"<pago>{nif}</pago>".encode(),
+    )
+
+
+@con_base
+def test_un_diputado_con_declaracion_sale_y_su_empleador_se_cruza(store_congreso, tmp_path):
+    _sociedad_del_mapa(store_congreso, "UNIPREX, S.A.U.", "A28782936")
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Cobo Vega, Manuel", "PP", "17/08/2023", "", []),
+        b"[15]",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _declaracion("Cobo Vega,Manuel", "UNIPREX S.A.U.", "COLABORADOR", "2019-2021"),
+        b"[declaracion]",
+    )
+    grafo, indice, cargos = _volcar(store_congreso, tmp_path)
+    [persona] = cargos["personas"]
+    assert persona["clave"].startswith("congreso:")
+    [declarada] = persona["declaraciones"]
+    assert declarada["empleador"] == "UNIPREX S.A.U."
+    assert declarada["periodo"] == "2019-2021"
+    assert declarada["empresa"]["nombre"] == "UNIPREX, S.A.U."
+    [quien] = cargos["declarantes"][declarada["empresa"]["clave"]]
+    assert quien["nombre"] == "Manuel Cobo Vega" and quien["formacion"] == "PP"
+    assert grafo["cargos"]["nDeclarados"] == 1
+    assert grafo["cargos"]["declarados"][0]["empresa"]["nombre"] == "UNIPREX, S.A.U."
+    # Ni la persona ni el texto declarado entran en el mapa del dinero.
+    # (El resumen de la portada, `cargos`, es aparte: viene de esta puerta.)
+    mapa = {k: v for k, v in grafo.items() if k != "cargos"}
+    texto = json.dumps(mapa, ensure_ascii=False) + json.dumps(indice, ensure_ascii=False)
+    assert "congreso:" not in texto
+    assert "UNIPREX S.A.U." not in texto
+    assert "Cobo" not in texto
+
+
+@con_base
+def test_un_diputado_sin_declaracion_ni_cargo_no_sale(store_congreso, tmp_path):
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Pérez Gil, Ana", "PSOE", "17/08/2023", "", []),
+        b"[15]",
+    )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    assert cargos["personas"] == []
+
+
+@con_base
+def test_lo_declarado_no_se_cruza_consigo_mismo(store_congreso, tmp_path):
+    """El texto declarado se guarda como una entidad aparte; sin excluirla,
+    «X, S.L.» declarado sería él mismo una sociedad del mapa."""
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Pérez Gil, Ana", "PSOE", "17/08/2023", "", []),
+        b"[15]",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _declaracion("Pérez Gil,Ana", "ACME ASESORES, S.L.", "GERENTE", "2019-2023"),
+        b"[declaracion]",
+    )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    [persona] = cargos["personas"]
+    [declarada] = persona["declaraciones"]
+    assert "empresa" not in declarada
+    assert cargos["declarantes"] == {}
+
+
+@con_base
+def test_las_fechas_de_lo_leido_son_solo_las_del_boe(store_congreso, tmp_path):
+    _ingerir(
+        store_congreso,
+        "boe",
+        _nombramiento_boe(
+            "María Fátima Báñez García", "BOE-A-7", "Ministra de Empleo y Seguridad Social"
+        ),
+        b"<documento>7</documento>",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado(
+            "Báñez García, María Fátima",
+            "PP",
+            "15/07/2008",
+            "21/05/2019",
+            ["Ministra de Empleo y Seguridad Social"],
+        ),
+        b"[1]",
+    )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    # El alta de 2008 no es un acto del BOE leído.
+    assert cargos["actosDesde"] == cargos["actosHasta"]
+    assert cargos["nActos"] == 1
+
+
+def test_sociedad_mercantil_es_la_que_acaba_en_su_forma():
+    assert es_sociedad_mercantil("URBASER, S.A.")
+    assert es_sociedad_mercantil("UNIPREX S.A.U")
+    assert es_sociedad_mercantil("SEDENA, S.L.")
+    # Personas jurídicas, pero no sociedades: no van en «sociedades que cobran».
+    assert not es_sociedad_mercantil("UNIVERSIDAD DE CANTABRIA")
+    assert not es_sociedad_mercantil("Fundación ONCE")
+    assert not es_sociedad_mercantil("")
+
+
+@con_base
+def test_en_la_portada_solo_sociedades_y_una_vez_por_persona(store_congreso, tmp_path):
+    _sociedad_del_mapa(store_congreso, "UNIVERSIDAD DE CANTABRIA", "Q3918001C")
+    _sociedad_del_mapa(store_congreso, "URBASER, S.A.", "A79524054")
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Pérez Gil, Ana", "PSOE", "17/08/2023", "", []),
+        b"[15]",
+    )
+    for i, (empleador, periodo) in enumerate(
+        [
+            ("UNIVERSIDAD DE CANTABRIA", "2010-2015"),
+            ("UNIVERSIDAD DE CANTABRIA", "2015-2023"),
+            ("URBASER SA", "2005-2010"),
+            ("URBASER SA", "2001-2005"),
+        ]
+    ):
+        _ingerir(
+            store_congreso,
+            "congreso",
+            _declaracion("Pérez Gil,Ana", empleador, "TÉCNICA", periodo),
+            f"[declaracion {i}]".encode(),
+        )
+    grafo, _, cargos = _volcar(store_congreso, tmp_path)
+    [persona] = cargos["personas"]
+    # En su ficha, todo lo que declaró.
+    assert len(persona["declaraciones"]) == 4
+    # En el panel de cada una, una vez.
+    assert all(len(v) == 1 for v in cargos["declarantes"].values())
+    assert len(cargos["declarantes"]) == 2
+    # En la portada, sólo la sociedad, una vez.
+    [cruce] = grafo["cargos"]["declarados"]
+    assert cruce["empresa"]["nombre"] == "URBASER, S.A."
+
+
+def test_nombre_natural():
+    assert nombre_natural("Báñez García, María Fátima") == "María Fátima Báñez García"
+    assert nombre_natural("Ferrero y de Loma-Osorio, Gabriel") == "Gabriel Ferrero y de Loma-Osorio"
+    # Lo que no tiene la forma «Apellidos, Nombre» se deja como está.
+    assert nombre_natural("María Fátima Báñez García") == "María Fátima Báñez García"
+    assert nombre_natural("A, B, C") == "A, B, C"
+    assert nombre_natural("Báñez García,") == "Báñez García,"

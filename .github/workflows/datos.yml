@@ -302,7 +302,7 @@ jobs:
           print("```")
           PYEOF
             echo
-            echo "## Altos cargos (BOE)"
+            echo "## Cargos públicos (BOE, OCI, Congreso)"
             echo
             echo "- días del BOE en caché: $(find /tmp/cache-boe/sumarios -name '*.json' 2>/dev/null | wc -l)"
             python3 - <<'PYEOF'
@@ -312,8 +312,18 @@ jobs:
           except (OSError, ValueError):
               print("- sin cargos.json en esta edición")
               raise SystemExit(0)
-          print(f"- personas: {len(d.get('personas', []))} · actos: {d.get('nActos', 0)}")
-          print(f"- actos leídos del {d.get('actosDesde')} al {d.get('actosHasta')}")
+          print(f"- personas: {len(d.get('personas', []))} · actos del BOE: {d.get('nActos', 0)}")
+          print(f"- actos del BOE leídos del {d.get('actosDesde')} al {d.get('actosHasta')}")
+          fuentes = {}
+          for p in d.get("personas", []):
+              for f in {x.get("fuente", "boe") for x in p.get("periodos", [])}:
+                  fuentes[f] = fuentes.get(f, 0) + 1
+          print(f"- personas con algo de cada fuente: {fuentes}")
+          print(f"- autorizaciones (OCI): {d.get('nAutorizaciones', 0)}")
+          print(f"- actividades declaradas (Congreso): {d.get('nDeclaraciones', 0)}")
+          print(f"- sociedades del mapa con un ex alto cargo autorizado: {len(d.get('empresas', {}))}")
+          print(f"- entidades del mapa con un diputado que declaró trabajar en ellas: {len(d.get('declarantes', {}))}")
+          print(f"- órganos del mapa con quién los dirigió: {len(d.get('organos', {}))}")
           PYEOF
           } > docs/fuentes/estado-ingesta.md
           cat docs/fuentes/estado-ingesta.md

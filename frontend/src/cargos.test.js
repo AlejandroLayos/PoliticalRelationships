@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buscarCargos,
+  dePapel,
   fechaCorta,
   fechaLarga,
   formacionEn,
@@ -9,10 +10,12 @@ import {
   marcasDeAnios,
   movimientos,
   organismos,
+  papelDeLaFicha,
   personaDeClave,
   presidencias,
   recuento,
   resultadosDeCargos,
+  sectorDeclarado,
   tramo,
 } from './cargos.js'
 
@@ -247,9 +250,11 @@ describe('recuento', () => {
         { periodos: [{ desde: 'x' }] },
         { periodos: [{ hasta: 'x', fuente: 'oci' }] },
         { periodos: [{ hasta: 'x', fuente: 'oci' }, { desde: 'y' }] },
+        { periodos: [{ desde: 'x', fuente: 'congreso' }] },
+        { periodos: [{ desde: 'x', fuente: 'congreso' }, { desde: 'y' }] },
       ],
     }
-    expect(recuento(d)).toEqual({ boe: 2, soloOci: 1 })
+    expect(recuento(d)).toEqual({ boe: 3, soloOci: 1, diputados: 1 })
   })
 })
 
@@ -271,5 +276,75 @@ describe('formacionEn', () => {
   })
   it('el Congreso no dice cese, dice baja', () => {
     expect(huecoDelPeriodo({ fuente: 'congreso', desde: '2023-08-17' })).toBe('sin baja en el Congreso')
+  })
+})
+
+// Una diputada con su declaración de actividades, la forma que escribe
+// exportar_cargos.py; los textos son de la declaración real de un diputado.
+const diputada = {
+  clave: 'congreso:persona:x',
+  nombre: 'Pérez Gil, Ana',
+  periodos: [
+    {
+      puesto: 'Escaño en la XV legislatura',
+      cargo: 'Escaño en la XV legislatura',
+      desde: '2023-08-17',
+      fuente: 'congreso',
+      formacion: 'PP',
+      circunscripcion: 'Cádiz',
+    },
+  ],
+  declaraciones: [
+    { empleador: 'UNIPREX S.A.U.', sector: 'Privado', periodo: '2019-2021', descripcion: 'COLABORADOR' },
+  ],
+}
+
+describe('diputados', () => {
+  it('sus altas no llenan la columna de nombramientos y ceses', () => {
+    expect(movimientos({ personas: [diputada] })).toEqual([])
+  })
+  it('se encuentran por formación, circunscripción y por para quién declararon trabajar', () => {
+    const d = { personas: [diputada, ...datos.personas] }
+    expect(buscarCargos(d, 'pp').map((p) => p.nombre)).toEqual(['Pérez Gil, Ana'])
+    expect(buscarCargos(d, 'cadiz').map((p) => p.nombre)).toEqual(['Pérez Gil, Ana'])
+    expect(buscarCargos(d, 'uniprex').map((p) => p.nombre)).toEqual(['Pérez Gil, Ana'])
+  })
+  it('en el buscador general, con su formación', () => {
+    expect(resultadosDeCargos({ personas: [diputada] }, 'perez')[0].descripcion).toBe(
+      'Escaño en la XV legislatura · PP',
+    )
+  })
+  it('la lista por papel', () => {
+    const d = [diputada, ...datos.personas]
+    expect(dePapel(d, 'congreso')).toEqual([diputada])
+    expect(dePapel(d, 'boe')).not.toContain(diputada)
+    expect(dePapel(d, 'todos')).toHaveLength(d.length)
+  })
+  it('la ficha se llama por lo más alto que se sabe', () => {
+    expect(papelDeLaFicha(diputada)).toBe('Congreso de los Diputados')
+    expect(papelDeLaFicha(datos.personas[0])).toBe('Alto cargo')
+    expect(papelDeLaFicha({ periodos: [{ fuente: 'oci', hasta: '2020-01-01' }] })).toBe('Ex alto cargo')
+  })
+})
+
+describe('sectorDeclarado', () => {
+  it('sólo los dos claros, escritos como se escriban', () => {
+    expect(sectorDeclarado({ sector: 'PRIVADO AGRICOLA' })).toBe('privado')
+    expect(sectorDeclarado({ sector: 'Privado' })).toBe('privado')
+    expect(sectorDeclarado({ sector: 'PÚBLICO' })).toBe('publico')
+    expect(sectorDeclarado({ sector: 'ADMINISTRACIÓN PÚBLICA' })).toBe('publico')
+    expect(sectorDeclarado({ sector: 'Gubernamental' })).toBe('publico')
+    expect(sectorDeclarado({ sector: 'Educación' })).toBe('')
+    expect(sectorDeclarado({})).toBe('')
+  })
+})
+
+describe('lineaDeTiempo fuera del eje', () => {
+  it('lo que empieza o acaba fuera de lo leído sale abierto por ese lado', () => {
+    const [b] = lineaDeTiempo([{ desde: '2023-08-17', hasta: '2027-01-01' }], '2025-05-14', '2026-09-16')
+    expect(b.inicio).toBe(0)
+    expect(b.fin).toBe(1)
+    expect(b.abiertoIzquierda).toBe(true)
+    expect(b.abiertoDerecha).toBe(true)
   })
 })

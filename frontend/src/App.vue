@@ -92,6 +92,8 @@ async function traerCargos() {
 const alFrente = computed(() => cargos.value?.organos?.[claveSeleccionada.value] ?? [])
 /** Ex altos cargos autorizados a trabajar en la sociedad de la ficha abierta. */
 const exAltosCargos = computed(() => cargos.value?.empresas?.[claveSeleccionada.value] ?? [])
+/** Diputados que declararon al Congreso trabajar en la sociedad de la ficha abierta. */
+const declarantes = computed(() => cargos.value?.declarantes?.[claveSeleccionada.value] ?? [])
 watch(
   () => vista.value === 'ficha' && seleccionId.value,
   (abierta) => {
@@ -951,7 +953,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           href="?v=cargos"
           :aria-current="vista === 'cargos' ? 'page' : undefined"
           @click.prevent="verCargos()"
-        ><span class="ancho">Altos cargos</span><span class="estrecho">Cargos</span></a>
+        ><span class="ancho">Cargos públicos</span><span class="estrecho">Cargos</span></a>
       </nav>
     </header>
 
@@ -1261,6 +1263,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :en-mapa="idsDelMapa.has(seleccionId)"
         :al-frente="alFrente"
         :ex-altos-cargos="exAltosCargos"
+        :declarantes="declarantes"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
         @ver-en-mapa="llevarAlMapa(seleccionId)"
@@ -1308,6 +1311,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :sin-territorio="indice?.organismosSinTerritorio ?? 0"
         :cruces="instantanea?.cargos?.cruces ?? []"
         :n-cruces="instantanea?.cargos?.nCruces ?? 0"
+        :declarados="instantanea?.cargos?.declarados ?? []"
+        :n-declarados="instantanea?.cargos?.nDeclarados ?? 0"
         @seleccionar="enfocar"
         @ver-mapa="verMapa"
         @territorio="(t) => (territorio = t)"

@@ -40,6 +40,8 @@ const props = defineProps({
   alFrente: { type: Array, default: () => [] },
   /** Ex altos cargos autorizados a trabajar aquí (`cargos.json`, `empresas`). */
   exAltosCargos: { type: Array, default: () => [] },
+  /** Diputados que declararon al Congreso trabajar aquí (`cargos.json`, `declarantes`). */
+  declarantes: { type: Array, default: () => [] },
 })
 const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo'])
 
@@ -302,6 +304,28 @@ const sinDatos = computed(
         </p>
       </section>
 
+      <!--
+        Diputados que declararon al Congreso haber trabajado en esta sociedad.
+        La nombraron por su denominación completa, que es única en España.
+      -->
+      <section v-if="declarantes.length" class="bloque al-frente">
+        <h3>Diputados que declararon trabajar aquí</h3>
+        <ul class="lista">
+          <li v-for="(d, n) in declarantes.slice(0, 8)" :key="n">
+            <a href="#" @click.prevent="emit('verCargo', d.persona)">{{ d.nombre }}</a>
+            <span class="cargo-frente" :title="d.empleador">
+              {{ [d.formacion, d.descripcion?.toLowerCase()].filter(Boolean).join(' · ') }}
+            </span>
+            <span class="tramo-frente">{{ d.periodo ?? '' }}</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Lo que cada diputado declaró al Congreso de su actividad, con sus
+          palabras. Que haya trabajado aquí no dice nada de esta sociedad ni
+          de él.
+        </p>
+      </section>
+
       <section v-if="alFrente.length" class="bloque al-frente">
         <h3>Al frente, según el BOE</h3>
         <ul class="lista">
@@ -464,6 +488,28 @@ const sinDatos = computed(
           Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
           en el sector privado en los dos años siguientes al cese. Una
           autorización no dice que la persona llegara a ocupar el puesto.
+        </p>
+      </section>
+
+      <!--
+        Diputados que declararon al Congreso haber trabajado en esta sociedad.
+        La nombraron por su denominación completa, que es única en España.
+      -->
+      <section v-if="declarantes.length" class="bloque al-frente">
+        <h3>Diputados que declararon trabajar aquí</h3>
+        <ul class="lista">
+          <li v-for="(d, n) in declarantes.slice(0, 8)" :key="n">
+            <a href="#" @click.prevent="emit('verCargo', d.persona)">{{ d.nombre }}</a>
+            <span class="cargo-frente" :title="d.empleador">
+              {{ [d.formacion, d.descripcion?.toLowerCase()].filter(Boolean).join(' · ') }}
+            </span>
+            <span class="tramo-frente">{{ d.periodo ?? '' }}</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Lo que cada diputado declaró al Congreso de su actividad, con sus
+          palabras. Que haya trabajado aquí no dice nada de esta sociedad ni
+          de él.
         </p>
       </section>
 

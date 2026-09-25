@@ -41,6 +41,12 @@ const props = defineProps({
    */
   cruces: { type: Array, default: () => [] },
   nCruces: { type: Number, default: 0 },
+  /**
+   * De la empresa al escaño: actividades que los diputados declararon al
+   * Congreso en una sociedad del mapa. También vienen con el grafo.
+   */
+  declarados: { type: Array, default: () => [] },
+  nDeclarados: { type: Number, default: 0 },
 })
 const emit = defineEmits(['seleccionar', 'verMapa', 'territorio', 'verCargo', 'verClave', 'verCargos'])
 
@@ -505,6 +511,46 @@ function filasVisibles(l) {
         </button>
         <button class="mas" @click="emit('verCargos')">
           Todos los altos cargos y sus autorizaciones →
+        </button>
+      </section>
+
+      <!--
+        El otro sentido: diputados que declararon al Congreso haber trabajado
+        en una sociedad que cobra dinero público en esta edición. Por orden
+        de sociedad, no de dinero, por lo mismo que arriba.
+      -->
+      <section v-if="declarados.length && !territorio" class="seccion puertas">
+        <header class="seccion-cabeza">
+          <p class="antetitulo">Intereses declarados</p>
+          <h2>De la empresa al escaño</h2>
+          <p class="que">
+            Diputados que declararon al Congreso haber trabajado en una
+            sociedad que cobra dinero público en esta edición.
+          </p>
+          <p class="nota">
+            Es lo que cada diputado declaró de su actividad al tomar posesión,
+            con sus palabras. Que la sociedad cobre de una administración no
+            dice nada de ella ni de él.
+          </p>
+        </header>
+        <ol class="cruces">
+          <li v-for="(c, i) in declarados.slice(0, desplegadas.has('declarados') ? declarados.length : VISIBLES)" :key="i" class="cruce">
+            <p class="cruce-quien">
+              <a href="#" @click.prevent="emit('verCargo', c.persona)">{{ c.nombre }}</a>
+              <span v-if="c.formacion" class="cruce-cargo" title="Formación con la que fue elegido, según el Congreso">{{ c.formacion }}</span>
+            </p>
+            <p class="cruce-donde">
+              <span class="flecha" aria-hidden="true">←</span>
+              <a href="#" class="cruce-empresa" @click.prevent="emit('verClave', c.empresa.clave)">{{ c.empresa.nombre }}</a>
+              <span v-if="cobraDe(c.empresa.clave)" class="cruce-cobra">cobra {{ dineroCorto(cobraDe(c.empresa.clave)) }} públicos</span>
+            </p>
+            <p class="cruce-que">
+              {{ [c.descripcion, c.periodo].filter(Boolean).join(' · ') }}
+            </p>
+          </li>
+        </ol>
+        <button v-if="declarados.length > VISIBLES" class="mas" @click="alternar('declarados')">
+          {{ desplegadas.has('declarados') ? 'Ver menos' : `Ver los ${declarados.length}` }}
         </button>
       </section>
 

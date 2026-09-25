@@ -320,8 +320,10 @@ def exportar(
           AND es.ftm_schema <> 'Position' AND et.ftm_schema <> 'Position'
           -- Las autorizaciones de la Oficina de Conflictos de Intereses
           -- también: su «actividad» es el texto de la autorización, no una
-          -- entidad del mapa del dinero.
+          -- entidad del mapa del dinero. Y lo mismo las actividades que
+          -- declaran los diputados: el destino es el texto que escribieron.
           AND es.dedupe_key NOT LIKE 'oci:%' AND et.dedupe_key NOT LIKE 'oci:%'
+          AND es.dedupe_key NOT LIKE 'congreso:%' AND et.dedupe_key NOT LIKE 'congreso:%'
         ORDER BY r.amount DESC NULLS LAST, r.id
         """
     ).fetchall()
@@ -712,6 +714,10 @@ def exportar(
             # Conflictos de Intereses que nombran una sociedad del mapa.
             "cruces": cargos["cruces"],
             "nCruces": cargos["n_cruces"],
+            # De lo que declararon los diputados al Congreso, lo que nombra una
+            # sociedad del mapa.
+            "declarados": cargos["declarados"],
+            "nDeclarados": cargos["n_declarados"],
         },
     }
 
@@ -732,7 +738,7 @@ def exportar(
         "truncado": documento["truncado"],
         "bytes": destino.stat().st_size,
         **indice,
-        **{k: v for k, v in cargos.items() if k != "cruces"},
+        **{k: v for k, v in cargos.items() if k not in {"cruces", "declarados"}},
     }
     log.info("grafo exportado", destino=str(destino), **resumen)
     return resumen
@@ -803,6 +809,7 @@ def _exportar_indice(
               -- cero euros al lado del que sí paga.
               AND e.dedupe_key NOT LIKE 'boe:%%'
               AND e.dedupe_key NOT LIKE 'oci:%%'
+              AND e.dedupe_key NOT LIKE 'congreso:%%'
             GROUP BY e.id
         ),
         -- Órgano -> (UnknownLink) -> expediente -> (ContractAward) -> empresa.

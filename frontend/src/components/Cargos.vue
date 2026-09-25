@@ -5,7 +5,9 @@
  *
  * Es la única página de la web con nombres de personas, y lo dice arriba y
  * con la regla: salen por haber ocupado un cargo público y sólo por eso
- * (spec §12). Nada aquí habla de lo que alguien hizo antes o después.
+ * (spec §12). De lo que alguien hizo antes o después, sólo lo que afirma una
+ * fuente oficial en ese papel: una autorización de la Oficina de Conflictos
+ * de Intereses, o lo que el diputado declaró al Congreso.
  *
  * Lo que no se sabe se enseña como no sabido: un periodo sin cese es «no
  * consta cese», no «sigue en el cargo»; uno sin nombramiento arranca en el
@@ -14,6 +16,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import {
   buscarCargos,
+  dePapel,
   fechaCorta,
   fechaLarga,
   huecoDelPeriodo,
@@ -22,9 +25,11 @@ import {
   movimientos,
   nombreFuente,
   organismos,
+  papelDeLaFicha,
   personaDeClave,
   presidencias,
   recuento,
+  sectorDeclarado,
   tramo,
 } from '../cargos.js'
 
@@ -38,14 +43,21 @@ const props = defineProps({
 const emit = defineEmits(['persona', 'entidad'])
 
 const filtro = ref('')
+/** Todos, quien tiene un Real Decreto, o los diputados. */
+const papel = ref('todos')
 const VISIBLES = 30
 const cuantas = ref(VISIBLES)
-watch(filtro, () => {
+watch([filtro, papel], () => {
   cuantas.value = VISIBLES
 })
 
 const abierta = computed(() => personaDeClave(props.datos, props.persona))
-const filtradas = computed(() => buscarCargos(props.datos, filtro.value))
+const filtradas = computed(() => dePapel(buscarCargos(props.datos, filtro.value), papel.value))
+const PAPELES = [
+  { id: 'todos', texto: 'Todos' },
+  { id: 'boe', texto: 'Altos cargos' },
+  { id: 'congreso', texto: 'Diputados' },
+]
 const ultimos = computed(() => movimientos(props.datos, 12))
 const porOrganismo = computed(() => organismos(props.datos, 6))
 const gobiernos = computed(() => presidencias(props.datos))
@@ -89,8 +101,8 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
   <div class="cargos">
     <section class="primera">
       <div class="apertura">
-        <p class="antetitulo">Cargos públicos · BOE y Oficina de Conflictos de Intereses</p>
-        <h1 class="titular">Quién ha ocupado los altos cargos del Estado</h1>
+        <p class="antetitulo">Cargos públicos · BOE, Oficina de Conflictos de Intereses y Congreso</p>
+        <h1 class="titular">Quién ha ocupado los cargos del Estado, y de dónde venía</h1>
         <p v-if="datos" class="entradilla">
           {{ cuantos.boe.toLocaleString('es-ES') }} personas nombradas o
           cesadas por Real Decreto entre el {{ fechaLarga(datos.actosDesde) }} y el
@@ -103,6 +115,11 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
             tras el cese<template v-if="cuantos.soloOci">; de
             {{ cuantos.soloOci.toLocaleString('es-ES') }} de las personas autorizadas
             no hay nombramiento en lo leído del BOE</template>.
+          </template>
+          <template v-if="cuantos.diputados">
+            Y {{ cuantos.diputados.toLocaleString('es-ES') }} diputados de la
+            legislatura en curso con lo que declararon al Congreso de su
+            actividad: para quién trabajaban antes de llegar al escaño.
           </template>
         </p>
         <p v-else-if="cargando" class="entradilla">Cargando los cargos…</p>
@@ -118,13 +135,14 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
         <p>
           En el resto de esta web no sale ninguna persona física. Aquí sí, y
           sólo con lo que publican el BOE —quién fue nombrado para qué cargo y
-          cuándo cesó— y la Oficina de Conflictos de Intereses —a qué se le
-          autorizó a dedicarse después—. Ocupar un cargo público es un hecho
-          público.
+          cuándo cesó—, la Oficina de Conflictos de Intereses —a qué se le
+          autorizó a dedicarse después— y el Congreso —quién fue diputado, por
+          qué formación, y lo que cada diputado declaró de su actividad—.
+          Ocupar un cargo público es un hecho público.
         </p>
         <p class="nota">
-          Nada de esta página dice nada de lo que alguien hizo antes o después
-          del cargo.
+          De lo que alguien hizo antes o después del cargo, aquí sólo sale lo
+          que dice una de esas fuentes, y con sus palabras.
         </p>
       </aside>
     </section>
@@ -148,7 +166,7 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
     <!-- La ficha de una persona, encima de todo lo demás. -->
     <article v-if="abierta" ref="ficha" class="ficha" aria-live="polite">
       <header class="ficha-cabeza">
-        <p class="antetitulo">Alto cargo</p>
+        <p class="antetitulo">{{ papelDeLaFicha(abierta) }}</p>
         <h2 class="ficha-nombre">{{ abierta.nombre }}</h2>
         <button class="boton tenue" @click="emit('persona', '')">← Todos los cargos</button>
       </header>
@@ -278,10 +296,47 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
         </ul>
       </section>
 
+      <!--
+        Lo que el diputado declaró al Congreso de su actividad: los años
+        anteriores al escaño y lo que mantiene. Con sus palabras, sin
+        interpretarlas; la sociedad del mapa, sólo si la nombra entera.
+      -->
+      <section v-if="abierta.declaraciones?.length" class="autorizaciones declaraciones">
+        <h3>Lo que declaró al Congreso de su actividad</h3>
+        <p class="nota">
+          Cada diputado declara al tomar posesión para quién ha trabajado y en
+          qué. Es su declaración, tal como la publica el Congreso: aquí no se
+          corrige ni se completa.
+        </p>
+        <ul>
+          <li v-for="(d, i) in abierta.declaraciones" :key="i" class="autorizacion">
+            <p class="actividad">
+              {{ d.empleador || d.descripcion }}
+              <span v-if="sectorDeclarado(d)" class="sector" :class="sectorDeclarado(d)">{{ sectorDeclarado(d) === 'privado' ? 'sector privado' : 'sector público' }}</span>
+            </p>
+            <p class="autorizacion-meta">
+              <span v-if="d.empleador && d.descripcion">{{ d.descripcion }}</span>
+              <span v-if="d.periodo" class="tramo"><template v-if="d.empleador && d.descripcion"> · </template>{{ d.periodo }}</span>
+            </p>
+            <p v-if="d.empresa" class="autorizacion-empresa">
+              En el mapa del dinero:
+              <a href="#" @click.prevent="emit('entidad', d.empresa.clave)">{{ d.empresa.nombre }}</a>
+              — ver de quién cobra →
+            </p>
+            <p class="periodo-fuentes">
+              <a v-if="d.url" :href="d.url" target="_blank" rel="noopener" class="sello">
+                Congreso<template v-if="d.fechaRegistro"> · declarada el {{ fechaCorta(d.fechaRegistro) }}</template>
+              </a>
+              <span v-if="d.cruce" class="motivo">unida a esta ficha por {{ d.cruce }}</span>
+            </p>
+          </li>
+        </ul>
+      </section>
+
       <p class="nota ficha-pie">
         Dos personas con el mismo nombre y los mismos apellidos se juntarían en
-        esta ficha: el BOE no publica ningún identificador en un nombramiento.
-        Cada periodo lleva su Real Decreto para comprobarlo.
+        esta ficha: ni el BOE ni el Congreso publican un identificador. Cada
+        periodo lleva su fuente para comprobarlo.
       </p>
     </article>
 
@@ -291,12 +346,21 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
           <p class="antetitulo">Personas</p>
           <h2>{{ filtradas.length.toLocaleString('es-ES') }} con cargo</h2>
         </header>
+        <div class="papeles" role="group" aria-label="Qué cargos">
+          <button
+            v-for="x in PAPELES"
+            :key="x.id"
+            class="papel"
+            :aria-pressed="papel === x.id"
+            @click="papel = x.id"
+          >{{ x.texto }}</button>
+        </div>
         <label class="filtro">
           <span class="visualmente-oculto">Buscar entre los cargos</span>
           <input
             v-model="filtro"
             type="search"
-            placeholder="Una persona, un cargo o un ministerio"
+            placeholder="Una persona, un cargo, un partido o una empresa"
           />
         </label>
         <ol class="personas">
@@ -320,11 +384,15 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
                 {{ p.autorizaciones.length === 1 ? 'autorización' : 'autorizaciones' }}
                 para el sector privado
               </span>
+              <span v-if="p.declaraciones?.length" class="con-declaracion">
+                {{ p.declaraciones.length }}
+                {{ p.declaraciones.length === 1 ? 'actividad declarada' : 'actividades declaradas' }}
+              </span>
             </button>
           </li>
         </ol>
         <p v-if="!filtradas.length" class="nota">
-          Nadie con «{{ filtro.trim() }}» en lo leído del BOE.
+          Nadie con «{{ filtro.trim() }}» en lo leído.
         </p>
         <button v-if="filtradas.length > cuantas" class="mas" @click="cuantas += VISIBLES * 2">
           Ver más ({{ (filtradas.length - cuantas).toLocaleString('es-ES') }} restantes)
@@ -383,6 +451,14 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
         autonómicos, que publican en sus propios boletines. Por eso un periodo
         puede no tener cese: quiere decir que no consta en lo leído, no que la
         persona siga en el cargo.
+      </p>
+      <p>
+        Del Congreso se leen los diputados de cada legislatura desde la IX
+        (2008), con su formación, y la declaración de actividades de los de la
+        legislatura en curso. Un diputado se une a un alto cargo sólo si tiene
+        su nombre entero y su biografía del Congreso menciona ese cargo; y sale
+        aquí si se une o si hizo declaración. De la declaración se leen sólo
+        las actividades: las donaciones y aportaciones no.
       </p>
       <p>
         El BOE no publica ningún identificador en un nombramiento: una persona
@@ -481,8 +557,15 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
     repeating-linear-gradient(to right, var(--adm) 0 6px, transparent 6px 9px) right / 2.5rem 100% no-repeat,
     linear-gradient(to right, var(--adm), var(--adm)) left / calc(100% - 2.5rem) 100% no-repeat;
 }
+/*
+  Abierto por los dos lados: se funde por la izquierda y se deshilacha por la
+  derecha, con el tramo sabido entero en medio. Todo a rayas se leía como
+  «no se sabe nada», y un escaño de 2023 a hoy se sabe entero.
+*/
 .eje-barra.izq.der {
-  background: repeating-linear-gradient(to right, var(--adm) 0 6px, transparent 6px 9px);
+  background:
+    repeating-linear-gradient(to right, var(--adm) 0 6px, transparent 6px 9px) right / 2.5rem 100% no-repeat,
+    linear-gradient(to right, transparent, var(--adm) 2.5rem) left / calc(100% - 2.5rem) 100% no-repeat;
 }
 
 .periodos { list-style: none; margin: var(--e4) 0 0; padding: 0; }
@@ -576,6 +659,24 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 .autorizacion-empresa a { color: var(--emp); font-weight: 600; }
 .autorizacion .periodo-fuentes { margin-top: var(--e2) !important; }
 .con-autorizacion { font-size: var(--t-xs); color: var(--emp); font-weight: 600; }
+.con-declaracion { font-size: var(--t-xs); color: var(--tinta-2); font-weight: 600; }
+.sector {
+  display: inline-block; vertical-align: middle; margin-left: 0.4rem;
+  font-family: var(--sans); font-size: var(--t-xs); font-weight: 600;
+  letter-spacing: 0.02em; padding: 0 0.35rem; border-radius: 2px;
+  border: 1px solid currentColor;
+}
+.sector.privado { color: var(--emp); }
+.sector.publico { color: var(--adm); }
+.papeles { display: flex; gap: 0; margin: 0 0 var(--e2); }
+.papel {
+  font: inherit; font-size: var(--t-s); cursor: pointer;
+  background: none; color: var(--tinta-2);
+  border: 1px solid var(--filete); padding: 0.25rem 0.7rem;
+}
+.papel + .papel { border-left: 0; }
+.papel[aria-pressed='true'] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+.papel:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
 .mov-texto { font-size: var(--t-s); line-height: 1.45; color: var(--tinta-2); margin: 0.2rem 0 0.35rem !important; }
 .mov-texto a { color: var(--tinta); font-weight: 600; }
 

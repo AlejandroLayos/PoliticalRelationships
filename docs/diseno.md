@@ -112,10 +112,24 @@ del BOE, no de su vida: lo que queda fuera no se dibuja como sabido. Un periodo
 sin nombramiento entra por el borde con un degradado; uno sin cese se sale por
 el otro lado punteado. Cada barra lleva el número de su periodo en la lista.
 Con menos de un año de eje no se dibuja: tres semanas son una raya con una mota.
+Lo que empieza o acaba fuera del eje —el escaño de un diputado desde 2023 en
+un eje del BOE que arranca en 2025— también entra fundido o sale punteado: una
+barra cortada en seco en el borde parecería empezar ahí.
 
 El cobrizo de la administración para lo que es cargo público; el azul de la
 empresa para lo que es sector privado: una autorización para trabajar en una
-sociedad, el nombre de esa sociedad.
+sociedad, el nombre de esa sociedad, y la etiqueta «sector privado» de una
+actividad declarada al Congreso.
+
+Lo que declara un diputado se enseña con sus palabras y en su caja: el
+empleador en la serif, como la actividad de una autorización, y la
+descripción y el periodo tal cual los escribió, en mayúsculas si las puso.
+Nada se corrige ni se completa: es su declaración, y así se dice.
+
+Los nombres, en orden natural en toda la página. El Congreso y la Oficina
+escriben «Apellidos, Nombre» y el BOE no; la misma persona se lee igual venga
+de donde venga. «Escaño en la XV legislatura» y no «Diputado»: la fuente no
+dice el género, y el BOE sí lo escribe en cada cargo.
 
 ## 6. Decir lo que no es
 

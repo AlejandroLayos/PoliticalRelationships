@@ -394,15 +394,40 @@ guarda ni se publica: de ella sólo se extraen los cargos públicos que menciona
 («Ministro de Fomento (2018-2020)»), que sirven de segunda señal para unir al
 diputado con un alto cargo del BOE.
 
+**Declaraciones de actividades.** Cada diputado declara al tomar posesión sus
+actividades de los años anteriores y las que mantiene (art. 18 del Código de
+Conducta de las Cortes Generales); el Congreso las publica en
+`docacteco__<marca>.json`, sólo de la legislatura en curso, una fila por cosa
+declarada. Se guardan **sólo las filas de ACTIVIDAD** —empleador, sector,
+periodo y descripción, con las palabras del diputado—. Las donaciones, las
+aportaciones a fundaciones y las observaciones no se guardan. Con la muestra
+del 25/9/2026: 1.224 actividades de 403 diputados, y los 403 se unen por
+nombre a su escaño de la XV.
+
 **Cruce con el BOE.** Sólo si coinciden el nombre entero y, además, la
-biografía del Congreso menciona uno de sus cargos del BOE. Un diputado que no
-se une a ningún alto cargo no se publica: la sección es de altos cargos.
+biografía del Congreso menciona uno de sus cargos del BOE.
+
+**Qué se publica.** Un diputado sale en la sección de cargos si se une a un
+alto cargo o si hizo declaración de actividades. De quien sólo consta el
+escaño no hay nada que cruzar, y la sección no es un censo de la Cámara.
+
+**Cruce con el mapa del dinero.** El empleador declarado se enlaza con una
+sociedad del mapa con la misma regla que las autorizaciones de la OCI: la
+denominación completa, con su forma societaria, entera y sin dudas
+(`exportar_cargos.empresa_en`). Con el índice del 25/9/2026, 9 actividades
+de 1.217; en la portada sólo salen las que nombran una sociedad mercantil
+(3), y en la ficha de la persona y en el panel de la entidad, todas.
 
 **Mapeo a FollowTheMoney:**
 
 ```
 diputado (Person) --Occupancy--> escaño de la legislatura (Position)   alta → baja
+diputado (Person) --UnknownLink{relacion: actividad_declarada}--> lo que declaró (Organization, texto tal cual)
 ```
+
+El destino de la actividad es el texto que escribió el diputado, no una
+entidad del mapa: no entra en el grafo ni en el índice, igual que la
+«actividad» de una autorización de la OCI.
 
 ---
 

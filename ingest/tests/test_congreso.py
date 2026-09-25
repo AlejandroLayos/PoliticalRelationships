@@ -7,12 +7,18 @@ from pathlib import Path
 
 import httpx
 
-from sinapsis_ingest.connectors.base import RawDocument
-from sinapsis_ingest.connectors.congreso import CongresoConnector, cargos_en_biografia, romano
+from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
+from sinapsis_ingest.connectors.congreso import (
+    CongresoConnector,
+    cargos_en_biografia,
+    nombre_de_fila,
+    romano,
+)
 
 GOLDEN = Path(__file__).parent / "golden" / "congreso"
 XII = GOLDEN / "odsDiputados12__20260925050024.json"
 XIV = GOLDEN / "odsDiputados14__20260925050256.json"
+DECLARACIONES = GOLDEN / "docacteco__20260925050250.json"
 
 
 def _raw(ruta: Path) -> RawDocument:
@@ -118,3 +124,101 @@ def test_fetch_lee_los_enlaces_de_la_pagina_y_deduce_la_legislatura_en_curso():
     docs = list(CongresoConnector(cliente=cliente).fetch())
     # La VIII queda fuera (antes de la IX); la en curso es la XV.
     assert [d.metadata["legislatura"] for d in docs] == [12, 14, 15]
+
+
+# --- declaraciones de actividades --------------------------------------------
+
+
+def test_de_las_declaraciones_solo_se_leen_las_actividades():
+    registros = _registros(DECLARACIONES)
+    # 1.224 filas de ACTIVIDAD; siete sin empleador ni descripción.
+    assert len(registros) == 1217
+    assert {r.data["tipo"] for r in registros} == {"actividad"}
+    # Ni donaciones, ni fundaciones, ni observaciones: ninguna clave suya.
+    for r in registros:
+        assert not {"destinatario", "benefactor", "observaciones"} & {k.lower() for k in r.data}
+
+
+def test_una_actividad_declarada_real():
+    [r] = [x for x in _registros(DECLARACIONES) if x.data["empleador"] == "EFRIASA SA"]
+    d = r.data
+    # La coma sin espacio del fichero, con espacio: la misma ficha que su mandato.
+    assert d["nombre"] == "Gallardo Barrena, Pedro Ignacio"
+    assert d["periodo"] == "2018-2023"
+    assert d["descripcion"] == "CONSEJERO"
+    assert d["sector"] == "PRIVADO AGRICOLA"
+
+
+def test_normaliza_la_actividad_como_arista_afirmada_por_el_diputado():
+    [r] = [x for x in _registros(DECLARACIONES) if x.data["empleador"] == "UNIPREX S.A.U."]
+    n = CongresoConnector().normalize(r)
+    assert n is not None
+    n.validar()
+    persona = next(e for e in n.entidades if e.ftm_schema == "Person")
+    assert persona.dedupe_key == "congreso:persona:" + persona.dedupe_key.split(":", 2)[2]
+    assert persona.caption == "Cobo Vega, Manuel"
+    assert persona.properties["cargo_publico"] is True
+    destino = next(e for e in n.entidades if e.ftm_schema == "Organization")
+    assert destino.dedupe_key.startswith("congreso:empleador:")
+    [arista] = n.aristas
+    assert arista.ftm_schema == "UnknownLink"
+    assert arista.properties["relacion"] == "actividad_declarada"
+    assert arista.properties["empleador"] == "UNIPREX S.A.U."
+    assert arista.properties["fechaRegistro"] == "2023-08-16"
+    assert arista.confidence == 1.0
+
+
+def test_la_misma_persona_en_el_mandato_y_en_la_declaracion():
+    mandato = CongresoConnector().normalize(
+        next(x for x in _registros(XIV) if x.data["nombre"] == "Ábalos Meco, José Luis")
+    )
+    declarada = CongresoConnector().normalize(
+        next(x for x in _registros(DECLARACIONES) if x.data["nombre"] == "Ábalos Meco, José Luis")
+    )
+    assert mandato is not None and declarada is not None
+    clave = lambda n: next(e.dedupe_key for e in n.entidades if e.ftm_schema == "Person")  # noqa: E731
+    assert clave(mandato) == clave(declarada)
+
+
+def test_una_modificacion_que_repite_la_actividad_es_la_misma_arista():
+    base = {
+        "tipo": "actividad",
+        "nombre": "Pérez Gil, Ana",
+        "empleador": "ACME, S.L.",
+        "sector": "Privado",
+        "periodo": "2019-2023",
+        "descripcion": "Gerente",
+        "url": "https://www.congreso.es/x.json",
+    }
+    a = CongresoConnector().normalize(
+        ParsedRecord("x", "t", {**base, "fecha_registro": "01/08/2023"})
+    )
+    b = CongresoConnector().normalize(
+        ParsedRecord("y", "t", {**base, "fecha_registro": "19/09/2023"})
+    )
+    assert a is not None and b is not None
+    assert a.aristas[0].dedupe_key == b.aristas[0].dedupe_key
+
+
+def test_nombre_de_fila():
+    assert nombre_de_fila("Abades Martínez,Cristina") == "Abades Martínez, Cristina"
+    assert nombre_de_fila("  Abades  Martínez ,  Cristina ") == "Abades Martínez, Cristina"
+
+
+def test_fetch_pide_tambien_las_declaraciones():
+    pagina = (
+        '<a href="/webpublica/opendata/diputados/odsDiputados14__1.json">JSON</a>'
+        '<a href="/webpublica/opendata/diputados/docacteco__1.json">JSON</a>'
+    )
+
+    def servidor(peticion: httpx.Request) -> httpx.Response:
+        if peticion.url.path.endswith("/diputados"):
+            return httpx.Response(200, text=pagina)
+        if "docacteco" in peticion.url.path:
+            return httpx.Response(200, content=DECLARACIONES.read_bytes())
+        return httpx.Response(200, content=XIV.read_bytes())
+
+    cliente = httpx.Client(transport=httpx.MockTransport(servidor))
+    docs = list(CongresoConnector(cliente=cliente, desde_legislatura=14).fetch())
+    [declaraciones] = [d for d in docs if d.metadata.get("tipo") == "declaraciones"]
+    assert declaraciones.metadata["legislatura"] == 15

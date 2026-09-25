@@ -12,7 +12,9 @@
  *   anterior a lo que se ha cargado, o no se pudo leer.
  *
  * Y la persona sale aquí por haber ocupado un cargo público, y sólo por eso
- * (spec §12). Nada de esta página habla de lo que hizo antes o después.
+ * (spec §12). De lo que hizo antes o después, sólo lo que afirma una fuente
+ * oficial en ese papel: la autorización de la Oficina de Conflictos de
+ * Intereses y lo que el diputado declaró al Congreso.
  */
 import { normaliza } from './buscador.js'
 
@@ -90,6 +92,10 @@ export function movimientos(datos, limite = 20) {
   const actos = []
   for (const persona of datos?.personas ?? []) {
     for (const p of persona.periodos ?? []) {
+      // Las altas y bajas de diputados no son nombramientos ni ceses: la
+      // columna es la de los Reales Decretos, y cuatrocientas altas del mismo
+      // día la taparían entera.
+      if (p.fuente === 'congreso') continue
       if (p.desde) actos.push({ tipo: 'nombramiento', fecha: p.desde, boe: p.boeDesde, url: p.urlDesde, persona, periodo: p })
       if (p.hasta) actos.push({ tipo: 'cese', fecha: p.hasta, boe: p.boeHasta || nombreFuente(p), url: p.urlHasta, persona, periodo: p })
     }
@@ -131,7 +137,15 @@ export function buscarCargos(datos, consulta) {
       normaliza(
         [
           persona.nombre,
-          ...(persona.periodos ?? []).flatMap((p) => [p.cargo, p.puesto, p.organismo]),
+          ...(persona.periodos ?? []).flatMap((p) => [
+            p.cargo,
+            p.puesto,
+            p.organismo,
+            p.formacion,
+            p.circunscripcion,
+          ]),
+          // Para quién declaró trabajar: «indra» encuentra a quien lo declaró.
+          ...(persona.declaraciones ?? []).map((d) => d.empleador),
         ].join(' '),
       ).replace(/[^\p{L}\p{N}]+/gu, ' ')
     return palabras.every((p) => texto.includes(' ' + p))
@@ -179,7 +193,7 @@ export function resultadosDeCargos(datos, consulta, limite = 5) {
       caption: persona.nombre,
       schema: 'Person',
       cargo: true,
-      descripcion: ultimo?.cargo ?? '',
+      descripcion: [ultimo?.cargo, ultimo?.formacion].filter(Boolean).join(' · '),
     })
     if (salida.length >= limite) break
   }
@@ -217,12 +231,15 @@ export function lineaDeTiempo(periodos, desde, hasta) {
   const b = dia(hasta)
   if (a === null || b === null || b <= a) return []
   const x = (iso) => Math.min(1, Math.max(0, (dia(iso) - a) / (b - a)))
+  // Lo que empieza antes del eje —el escaño de un diputado desde 2023, en un
+  // eje del BOE que arranca en 2025— también sale deshilachado por la
+  // izquierda: cortado en el borde parecería empezar ahí.
   return (periodos ?? []).map((p) => ({
     periodo: p,
     inicio: p.desde ? x(p.desde) : 0,
     fin: p.hasta ? x(p.hasta) : 1,
-    abiertoIzquierda: !p.desde,
-    abiertoDerecha: !p.hasta,
+    abiertoIzquierda: !p.desde || dia(p.desde) < a,
+    abiertoDerecha: !p.hasta || dia(p.hasta) > b,
   }))
 }
 
@@ -275,9 +292,43 @@ export function presidencias(datos) {
 export function recuento(datos) {
   let boe = 0
   let soloOci = 0
+  let diputados = 0
   for (const persona of datos?.personas ?? []) {
-    if ((persona.periodos ?? []).some((p) => (p.fuente ?? 'boe') === 'boe')) boe += 1
+    const fuentes = new Set((persona.periodos ?? []).map((p) => p.fuente ?? 'boe'))
+    if (fuentes.has('boe')) boe += 1
+    else if (fuentes.has('congreso')) diputados += 1
     else soloOci += 1
   }
-  return { boe, soloOci }
+  return { boe, soloOci, diputados }
+}
+
+/**
+ * Quién sale en la lista: todos, quien tiene un Real Decreto (`boe`), o los
+ * diputados (`congreso`: quien tiene un mandato, unido o no a un alto cargo).
+ */
+export function dePapel(personas, papel) {
+  if (!papel || papel === 'todos') return personas
+  return personas.filter((persona) =>
+    (persona.periodos ?? []).some((p) => (p.fuente ?? 'boe') === papel),
+  )
+}
+
+/**
+ * El sector de una actividad declarada, como lo escribió el diputado:
+ * «PÚBLICO», «Privado», «PRIVADO AGRICOLA», «Educación»… Sólo se reconocen
+ * los dos claros; lo demás se enseña tal cual y sin color.
+ */
+export function sectorDeclarado(d) {
+  const s = normaliza(d?.sector ?? '')
+  if (/\bprivad/.test(s)) return 'privado'
+  if (/\b(public|administracion|gubernamental|gobierno)/.test(s)) return 'publico'
+  return ''
+}
+
+/** Cómo se llama la ficha: por lo más alto que se sabe de la persona. */
+export function papelDeLaFicha(persona) {
+  const fuentes = new Set((persona?.periodos ?? []).map((p) => p.fuente ?? 'boe'))
+  if (fuentes.has('boe')) return 'Alto cargo'
+  if (fuentes.has('congreso')) return 'Congreso de los Diputados'
+  return 'Ex alto cargo'
 }
