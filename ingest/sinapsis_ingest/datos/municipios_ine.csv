@@ -1,0 +1,8135 @@
+# Fuente: https://www.ine.es/daco/daco42/codmun/diccionario26.xlsx
+# Capturado: 2026-09-25
+codauto,cpro,cmun,nombre
+16,01,051,Agurain/Salvatierra
+16,01,001,Alegría-Dulantzi
+16,01,002,Amurrio
+16,01,049,Añana
+16,01,003,Aramaio
+16,01,006,Armiñón
+16,01,037,Arraia-Maeztu
+16,01,008,Arratzua-Ubarrundia
+16,01,004,Artziniega
+16,01,009,Asparrena
+16,01,010,Ayala/Aiara
+16,01,011,Baños de Ebro/Mañueta
+16,01,013,Barrundia
+16,01,014,Berantevilla
+16,01,016,Bernedo
+16,01,017,Campezo/Kanpezu
+16,01,021,Elburgo/Burgelu
+16,01,022,Elciego
+16,01,023,Elvillar/Bilar
+16,01,046,Erriberagoitia/Ribera Alta
+16,01,056,Harana/Valle de Arana
+16,01,901,Iruña Oka/Iruña de Oca
+16,01,027,Iruraiz-Gauna
+16,01,019,Kripan
+16,01,020,Kuartango
+16,01,028,Labastida/Bastida
+16,01,030,Lagrán
+16,01,031,Laguardia
+16,01,032,Lanciego/Lantziego
+16,01,902,Lantarón
+16,01,033,Lapuebla de Labarca
+16,01,036,Laudio/Llodio
+16,01,058,Legutio
+16,01,034,Leza
+16,01,039,Moreda de Álava/Moreda Araba
+16,01,041,Navaridas
+16,01,042,Okondo
+16,01,043,Oyón-Oion
+16,01,044,Peñacerrada-Urizaharra
+16,01,047,Ribera Baja/Erriberabeitia
+16,01,052,Samaniego
+16,01,053,San Millán/Donemiliaga
+16,01,054,Urkabustaiz
+16,01,055,Valdegovía/Gaubea
+16,01,057,Villabuena de Álava/Eskuernaga
+16,01,059,Vitoria-Gasteiz
+16,01,060,Yécora/Iekora
+16,01,061,Zalduondo
+16,01,062,Zambrana
+16,01,018,Zigoitia
+16,01,063,Zuia
+08,02,001,Abengibre
+08,02,002,Alatoz
+08,02,003,Albacete
+08,02,004,Albatana
+08,02,005,Alborea
+08,02,006,Alcadozo
+08,02,007,Alcalá del Júcar
+08,02,008,Alcaraz
+08,02,009,Almansa
+08,02,010,Alpera
+08,02,011,Ayna
+08,02,012,Balazote
+08,02,014,"Ballestero, El"
+08,02,013,Balsa de Ves
+08,02,015,Barrax
+08,02,016,Bienservida
+08,02,017,Bogarra
+08,02,018,Bonete
+08,02,019,"Bonillo, El"
+08,02,020,Carcelén
+08,02,021,Casas de Juan Núñez
+08,02,022,Casas de Lázaro
+08,02,023,Casas de Ves
+08,02,024,Casas-Ibáñez
+08,02,025,Caudete
+08,02,026,Cenizate
+08,02,029,Chinchilla de Monte-Aragón
+08,02,027,Corral-Rubio
+08,02,028,Cotillas
+08,02,030,Elche de la Sierra
+08,02,031,Férez
+08,02,032,Fuensanta
+08,02,033,Fuente-Álamo
+08,02,034,Fuentealbilla
+08,02,035,"Gineta, La"
+08,02,036,Golosalvo
+08,02,037,Hellín
+08,02,038,"Herrera, La"
+08,02,039,Higueruela
+08,02,040,Hoya-Gonzalo
+08,02,041,Jorquera
+08,02,042,Letur
+08,02,043,Lezuza
+08,02,044,Liétor
+08,02,045,Madrigueras
+08,02,046,Mahora
+08,02,047,Masegoso
+08,02,048,Minaya
+08,02,049,Molinicos
+08,02,050,Montalvos
+08,02,051,Montealegre del Castillo
+08,02,052,Motilleja
+08,02,053,Munera
+08,02,054,Navas de Jorquera
+08,02,055,Nerpio
+08,02,056,Ontur
+08,02,057,Ossa de Montiel
+08,02,058,Paterna del Madera
+08,02,060,Peñas de San Pedro
+08,02,059,Peñascosa
+08,02,061,Pétrola
+08,02,062,Povedilla
+08,02,901,Pozo Cañada
+08,02,063,Pozohondo
+08,02,064,Pozo-Lorente
+08,02,065,Pozuelo
+08,02,066,"Recueja, La"
+08,02,067,Riópar
+08,02,068,Robledo
+08,02,069,"Roda, La"
+08,02,070,Salobre
+08,02,071,San Pedro
+08,02,072,Socovos
+08,02,073,Tarazona de la Mancha
+08,02,074,Tobarra
+08,02,075,Valdeganga
+08,02,076,Vianos
+08,02,077,Villa de Ves
+08,02,078,Villalgordo del Júcar
+08,02,079,Villamalea
+08,02,080,Villapalacios
+08,02,081,Villarrobledo
+08,02,082,Villatoya
+08,02,083,Villavaliente
+08,02,084,Villaverde de Guadalimar
+08,02,085,Viveros
+08,02,086,Yeste
+10,03,002,Agost
+10,03,003,Agres
+10,03,004,Aigües
+10,03,014,Alacant/Alicante
+10,03,005,Albatera
+10,03,006,Alcalalí
+10,03,009,Alcoi/Alcoy
+10,03,008,Alcoleja
+10,03,007,Alcosser
+10,03,010,Alfafara
+10,03,011,"Alfàs del Pi, l'"
+10,03,012,Algorfa
+10,03,013,Algueña
+10,03,015,Almoradí
+10,03,016,Almudaina
+10,03,017,"Alqueria d'Asnar, l'"
+10,03,018,Altea
+10,03,019,Aspe
+10,03,001,"Atzúbia, l'"
+10,03,020,Balones
+10,03,021,Banyeres de Mariola
+10,03,022,Benasau
+10,03,023,Beneixama
+10,03,024,Benejúzar
+10,03,025,Benferri
+10,03,026,Beniarbeig
+10,03,027,Beniardà
+10,03,028,Beniarrés
+10,03,030,Benidoleig
+10,03,031,Benidorm
+10,03,032,Benifallim
+10,03,033,Benifato
+10,03,029,Benigembla
+10,03,034,Benijófar
+10,03,035,Benilloba
+10,03,036,Benillup
+10,03,037,Benimantell
+10,03,038,Benimarfull
+10,03,039,Benimassot
+10,03,040,Benimeli
+10,03,041,Benissa
+10,03,043,Biar
+10,03,044,Bigastro
+10,03,045,Bolulla
+10,03,046,Busot
+10,03,049,Callosa de Segura
+10,03,048,Callosa d'en Sarrià
+10,03,047,Calp
+10,03,051,"Camp de Mirra, el/Campo de Mirra"
+10,03,050,"Campello, el"
+10,03,052,Cañada
+10,03,053,Castalla
+10,03,054,Castell de Castells
+10,03,075,"Castell de Guadalest, el"
+10,03,055,Catral
+10,03,056,Cocentaina
+10,03,057,Confrides
+10,03,058,Cox
+10,03,059,Crevillent
+10,03,061,Daya Nueva
+10,03,062,Daya Vieja
+10,03,063,Dénia
+10,03,064,Dolores
+10,03,066,Elda
+10,03,065,Elx/Elche
+10,03,067,Fageca
+10,03,068,Famorca
+10,03,069,Finestrat
+10,03,077,"Fondó de les Neus, el/Hondón de las Nieves"
+10,03,070,Formentera del Segura
+10,03,072,Gaianes
+10,03,071,Gata de Gorgos
+10,03,073,Gorga
+10,03,074,Granja de Rocamora
+10,03,076,Guardamar del Segura
+10,03,078,Hondón de los Frailes
+10,03,079,Ibi
+10,03,080,Jacarilla
+10,03,085,Llíber
+10,03,086,Millena
+10,03,088,Monforte del Cid
+10,03,089,Monòver/Monóvar
+10,03,903,"Montesinos, Los"
+10,03,091,Murla
+10,03,092,Muro de Alcoy
+10,03,090,Mutxamel
+10,03,093,Novelda
+10,03,094,"Nucia, la"
+10,03,095,Ondara
+10,03,096,Onil
+10,03,097,Orba
+10,03,099,Orihuela
+10,03,084,"Orxa, l'/Lorcha"
+10,03,098,Orxeta
+10,03,100,Parcent
+10,03,101,Pedreguer
+10,03,102,Pego
+10,03,103,Penàguila
+10,03,104,Petrer
+10,03,902,Pilar de la Horadada
+10,03,105,"Pinós, el/Pinoso"
+10,03,106,Planes
+10,03,042,"Poble Nou de Benitatxell, el/Benitachell"
+10,03,901,"Poblets, els"
+10,03,107,Polop
+10,03,060,Quatretondeta
+10,03,109,Rafal
+10,03,110,"Ràfol d'Almúnia, el"
+10,03,111,Redován
+10,03,112,Relleu
+10,03,113,Rojales
+10,03,114,"Romana, la"
+10,03,115,Sagra
+10,03,116,Salinas
+10,03,118,San Fulgencio
+10,03,904,San Isidro
+10,03,120,San Miguel de Salinas
+10,03,117,Sanet y Negrals
+10,03,119,Sant Joan d'Alacant
+10,03,122,Sant Vicent del Raspeig/San Vicente del Raspeig
+10,03,121,Santa Pola
+10,03,123,Sax
+10,03,124,Sella
+10,03,125,Senija
+10,03,127,Tàrbena
+10,03,128,Teulada
+10,03,129,Tibi
+10,03,130,Tollos
+10,03,131,Tormos
+10,03,132,"Torre de les Maçanes, la/Torremanzanas"
+10,03,133,Torrevieja
+10,03,134,"Vall d'Alcalà, la"
+10,03,136,"Vall de Gallinera, la"
+10,03,137,"Vall de Laguar, la"
+10,03,135,"Vall d'Ebo, la"
+10,03,138,"Verger, el"
+10,03,139,"Vila Joiosa, la/Villajoyosa"
+10,03,140,Villena
+10,03,082,Xàbia/Jávea
+10,03,081,Xaló
+10,03,083,Xixona/Jijona
+01,04,001,Abla
+01,04,002,Abrucena
+01,04,003,Adra
+01,04,004,Albanchez
+01,04,005,Alboloduy
+01,04,006,Albox
+01,04,007,Alcolea
+01,04,008,Alcóntar
+01,04,009,Alcudia de Monteagud
+01,04,010,Alhabia
+01,04,011,Alhama de Almería
+01,04,012,Alicún
+01,04,013,Almería
+01,04,014,Almócita
+01,04,015,Alsodux
+01,04,016,Antas
+01,04,017,Arboleas
+01,04,018,Armuña de Almanzora
+01,04,019,Bacares
+01,04,904,Balanegra
+01,04,020,Bayárcal
+01,04,021,Bayarque
+01,04,022,Bédar
+01,04,023,Beires
+01,04,024,Benahadux
+01,04,026,Benitagla
+01,04,027,Benizalón
+01,04,028,Bentarique
+01,04,029,Berja
+01,04,030,Canjáyar
+01,04,031,Cantoria
+01,04,032,Carboneras
+01,04,033,Castro de Filabres
+01,04,036,Chercos
+01,04,037,Chirivel
+01,04,034,Cóbdar
+01,04,035,Cuevas del Almanzora
+01,04,038,Dalías
+01,04,902,"Ejido, El"
+01,04,041,Enix
+01,04,043,Felix
+01,04,044,Fines
+01,04,045,Fiñana
+01,04,046,Fondón
+01,04,047,Gádor
+01,04,048,"Gallardos, Los"
+01,04,049,Garrucha
+01,04,050,Gérgal
+01,04,051,Huécija
+01,04,052,Huércal de Almería
+01,04,053,Huércal-Overa
+01,04,054,Íllar
+01,04,055,Instinción
+01,04,056,Laroya
+01,04,057,Laujar de Andarax
+01,04,058,Líjar
+01,04,059,Lubrín
+01,04,060,Lucainena de las Torres
+01,04,061,Lúcar
+01,04,062,Macael
+01,04,063,María
+01,04,064,Mojácar
+01,04,903,"Mojonera, La"
+01,04,065,Nacimiento
+01,04,066,Níjar
+01,04,067,Ohanes
+01,04,068,Olula de Castro
+01,04,069,Olula del Río
+01,04,070,Oria
+01,04,071,Padules
+01,04,072,Partaloa
+01,04,073,Paterna del Río
+01,04,074,Pechina
+01,04,075,Pulpí
+01,04,076,Purchena
+01,04,077,Rágol
+01,04,078,Rioja
+01,04,079,Roquetas de Mar
+01,04,080,Santa Cruz de Marchena
+01,04,081,Santa Fe de Mondújar
+01,04,082,Senés
+01,04,083,Serón
+01,04,084,Sierro
+01,04,085,Somontín
+01,04,086,Sorbas
+01,04,087,Suflí
+01,04,088,Tabernas
+01,04,089,Taberno
+01,04,090,Tahal
+01,04,091,Terque
+01,04,092,Tíjola
+01,04,901,"Tres Villas, Las"
+01,04,093,Turre
+01,04,094,Turrillas
+01,04,095,Uleila del Campo
+01,04,096,Urrácal
+01,04,097,Velefique
+01,04,098,Vélez-Blanco
+01,04,099,Vélez-Rubio
+01,04,100,Vera
+01,04,101,Viator
+01,04,102,Vícar
+01,04,103,Zurgena
+07,05,001,Adanero
+07,05,002,"Adrada, La"
+07,05,005,Albornos
+07,05,007,Aldeanueva de Santa Cruz
+07,05,008,Aldeaseca
+07,05,010,"Aldehuela, La"
+07,05,012,Amavida
+07,05,013,"Arenal, El"
+07,05,014,Arenas de San Pedro
+07,05,015,Arevalillo
+07,05,016,Arévalo
+07,05,017,Aveinte
+07,05,018,Avellaneda
+07,05,019,Ávila
+07,05,021,"Barco de Ávila, El"
+07,05,022,"Barraco, El"
+07,05,023,Barromán
+07,05,024,Becedas
+07,05,025,Becedillas
+07,05,026,Bercial de Zapardiel
+07,05,027,"Berlanas, Las"
+07,05,029,Bernuy-Zapardiel
+07,05,030,Berrocalejo de Aragona
+07,05,033,Blascomillán
+07,05,034,Blasconuño de Matacabras
+07,05,035,Blascosancho
+07,05,036,"Bohodón, El"
+07,05,037,Bohoyo
+07,05,038,Bonilla de la Sierra
+07,05,039,Brabos
+07,05,040,Bularros
+07,05,041,Burgohondo
+07,05,042,Cabezas de Alambre
+07,05,043,Cabezas del Pozo
+07,05,044,Cabezas del Villar
+07,05,045,Cabizuela
+07,05,046,Canales
+07,05,047,Candeleda
+07,05,048,Cantiveros
+07,05,049,Cardeñosa
+07,05,051,"Carrera, La"
+07,05,052,Casas del Puerto
+07,05,053,Casasola
+07,05,054,Casavieja
+07,05,055,Casillas
+07,05,056,Castellanos de Zapardiel
+07,05,057,Cebreros
+07,05,058,Cepeda la Mora
+07,05,067,Chamartín
+07,05,059,Cillán
+07,05,060,Cisla
+07,05,061,"Colilla, La"
+07,05,062,Collado de Contreras
+07,05,063,Collado del Mirón
+07,05,064,Constanzana
+07,05,065,Crespos
+07,05,066,Cuevas del Valle
+07,05,903,Diego del Carpio
+07,05,069,Donjimeno
+07,05,070,Donvidas
+07,05,072,Espinosa de los Caballeros
+07,05,073,Flores de Ávila
+07,05,074,Fontiveros
+07,05,075,Fresnedilla
+07,05,076,"Fresno, El"
+07,05,077,Fuente el Saúz
+07,05,078,Fuentes de Año
+07,05,079,Gallegos de Altamiros
+07,05,080,Gallegos de Sobrinos
+07,05,081,Garganta del Villar
+07,05,082,Gavilanes
+07,05,083,Gemuño
+07,05,085,Gil García
+07,05,084,Gilbuena
+07,05,086,Gimialcón
+07,05,087,Gotarrendura
+07,05,088,Grandes y San Martín
+07,05,089,Guisando
+07,05,090,Gutierre-Muñoz
+07,05,092,Hernansancho
+07,05,093,Herradón de Pinares
+07,05,094,Herreros de Suso
+07,05,095,Higuera de las Dueñas
+07,05,096,"Hija de Dios, La"
+07,05,097,"Horcajada, La"
+07,05,099,Horcajo de las Torres
+07,05,100,"Hornillo, El"
+07,05,102,"Hoyo de Pinares, El"
+07,05,101,Hoyocasero
+07,05,103,Hoyorredondo
+07,05,106,Hoyos de Miguel Muñoz
+07,05,104,Hoyos del Collado
+07,05,105,Hoyos del Espino
+07,05,107,Hurtumpascual
+07,05,108,Junciana
+07,05,109,Langa
+07,05,110,Lanzahíta
+07,05,113,"Llanos de Tormes, Los"
+07,05,112,"Losar del Barco, El"
+07,05,114,Madrigal de las Altas Torres
+07,05,115,Maello
+07,05,116,Malpartida de Corneja
+07,05,117,Mamblas
+07,05,118,Mancera de Arriba
+07,05,119,Manjabálago y Ortigosa de Rioalmar
+07,05,120,Marlín
+07,05,121,Martiherrero
+07,05,122,Martínez
+07,05,123,Mediana de Voltoya
+07,05,124,Medinilla
+07,05,125,Mengamuñoz
+07,05,126,Mesegar de Corneja
+07,05,127,Mijares
+07,05,128,Mingorría
+07,05,129,"Mirón, El"
+07,05,130,Mironcillo
+07,05,131,Mirueña de los Infanzones
+07,05,132,Mombeltrán
+07,05,133,Monsalupe
+07,05,134,Moraleja de Matacabras
+07,05,135,Muñana
+07,05,136,Muñico
+07,05,138,Muñogalindo
+07,05,139,Muñogrande
+07,05,140,Muñomer del Peco
+07,05,141,Muñopepe
+07,05,142,Muñosancho
+07,05,143,Muñotello
+07,05,144,Narrillos del Álamo
+07,05,145,Narrillos del Rebollar
+07,05,149,Narros de Saldueña
+07,05,147,Narros del Castillo
+07,05,148,Narros del Puerto
+07,05,152,Nava de Arévalo
+07,05,153,Nava del Barco
+07,05,151,Navacepedilla de Corneja
+07,05,154,Navadijos
+07,05,155,Navaescurial
+07,05,156,Navahondilla
+07,05,157,Navalacruz
+07,05,158,Navalmoral
+07,05,159,Navalonguilla
+07,05,160,Navalosa
+07,05,161,Navalperal de Pinares
+07,05,162,Navalperal de Tormes
+07,05,163,Navaluenga
+07,05,164,Navaquesera
+07,05,165,Navarredonda de Gredos
+07,05,166,Navarredondilla
+07,05,167,Navarrevisca
+07,05,168,"Navas del Marqués, Las"
+07,05,169,Navatalgordo
+07,05,170,Navatejares
+07,05,171,Neila de San Miguel
+07,05,172,Niharra
+07,05,173,Ojos-Albos
+07,05,174,Orbita
+07,05,175,"Oso, El"
+07,05,176,Padiernos
+07,05,177,Pajares de Adaja
+07,05,178,Palacios de Goda
+07,05,179,Papatrigo
+07,05,180,"Parral, El"
+07,05,181,Pascualcobo
+07,05,182,Pedro Bernardo
+07,05,183,Pedro-Rodríguez
+07,05,184,Peguerinos
+07,05,185,Peñalba de Ávila
+07,05,186,Piedrahíta
+07,05,187,Piedralaves
+07,05,188,Poveda
+07,05,189,Poyales del Hoyo
+07,05,190,Pozanco
+07,05,191,Pradosegar
+07,05,192,Puerto Castilla
+07,05,193,Rasueros
+07,05,194,Riocabado
+07,05,195,Riofrío
+07,05,196,Rivilla de Barajas
+07,05,197,Salobral
+07,05,198,Salvadiós
+07,05,199,San Bartolomé de Béjar
+07,05,200,San Bartolomé de Corneja
+07,05,201,San Bartolomé de Pinares
+07,05,206,San Esteban de los Patos
+07,05,208,San Esteban de Zapardiel
+07,05,207,San Esteban del Valle
+07,05,209,San García de Ingelmos
+07,05,901,San Juan de Gredos
+07,05,210,San Juan de la Encinilla
+07,05,211,San Juan de la Nava
+07,05,212,San Juan del Molinillo
+07,05,213,San Juan del Olmo
+07,05,214,San Lorenzo de Tormes
+07,05,215,San Martín de la Vega del Alberche
+07,05,216,San Martín del Pimpollar
+07,05,217,San Miguel de Corneja
+07,05,218,San Miguel de Serrezuela
+07,05,219,San Pascual
+07,05,220,San Pedro del Arroyo
+07,05,231,San Vicente de Arévalo
+07,05,204,Sanchidrián
+07,05,205,Sanchorreja
+07,05,222,Santa Cruz de Pinares
+07,05,221,Santa Cruz del Valle
+07,05,226,Santa María de los Caballeros
+07,05,224,Santa María del Arroyo
+07,05,225,Santa María del Berrocal
+07,05,902,Santa María del Cubillo
+07,05,227,Santa María del Tiétar
+07,05,228,Santiago del Collado
+07,05,904,Santiago del Tormes
+07,05,229,Santo Domingo de las Posadas
+07,05,230,Santo Tomé de Zabarcos
+07,05,232,"Serrada, La"
+07,05,233,Serranillos
+07,05,234,Sigeres
+07,05,235,Sinlabajos
+07,05,236,Solana de Ávila
+07,05,237,Solana de Rioalmar
+07,05,238,Solosancho
+07,05,239,Sotalbo
+07,05,240,Sotillo de la Adrada
+07,05,241,"Tiemblo, El"
+07,05,242,Tiñosillos
+07,05,243,Tolbaños
+07,05,244,Tormellas
+07,05,245,Tornadizos de Ávila
+07,05,247,"Torre, La"
+07,05,246,Tórtoles
+07,05,249,Umbrías
+07,05,251,Vadillo de la Sierra
+07,05,252,Valdecasa
+07,05,253,Vega de Santa María
+07,05,254,Velayos
+07,05,256,Villaflor
+07,05,257,Villafranca de la Sierra
+07,05,905,Villanueva de Ávila
+07,05,258,Villanueva de Gómez
+07,05,259,Villanueva del Aceral
+07,05,260,Villanueva del Campillo
+07,05,261,Villar de Corneja
+07,05,262,Villarejo del Valle
+07,05,263,Villatoro
+07,05,264,Viñegra de Moraña
+07,05,265,Vita
+07,05,266,Zapardiel de la Cañada
+07,05,267,Zapardiel de la Ribera
+11,06,001,Acedera
+11,06,002,Aceuchal
+11,06,003,Ahillones
+11,06,004,Alange
+11,06,005,"Albuera, La"
+11,06,006,Alburquerque
+11,06,007,Alconchel
+11,06,008,Alconera
+11,06,009,Aljucén
+11,06,010,Almendral
+11,06,011,Almendralejo
+11,06,012,Arroyo de San Serván
+11,06,013,Atalaya
+11,06,014,Azuaga
+11,06,015,Badajoz
+11,06,016,Barcarrota
+11,06,017,Baterno
+11,06,018,Benquerencia de la Serena
+11,06,019,Berlanga
+11,06,020,Bienvenida
+11,06,021,Bodonal de la Sierra
+11,06,022,Burguillos del Cerro
+11,06,023,Cabeza del Buey
+11,06,024,Cabeza la Vaca
+11,06,025,Calamonte
+11,06,026,Calera de León
+11,06,027,Calzadilla de los Barros
+11,06,028,Campanario
+11,06,029,Campillo de Llerena
+11,06,030,Capilla
+11,06,031,Carmonita
+11,06,032,"Carrascalejo, El"
+11,06,033,Casas de Don Pedro
+11,06,034,Casas de Reina
+11,06,035,Castilblanco
+11,06,036,Castuera
+11,06,042,Cheles
+11,06,037,"Codosera, La"
+11,06,038,Cordobilla de Lácara
+11,06,039,"Coronada, La"
+11,06,040,Corte de Peleas
+11,06,041,Cristina
+11,06,043,Don Álvaro
+11,06,044,Don Benito
+11,06,045,Entrín Bajo
+11,06,046,Esparragalejo
+11,06,047,Esparragosa de la Serena
+11,06,048,Esparragosa de Lares
+11,06,049,Feria
+11,06,050,Fregenal de la Sierra
+11,06,051,Fuenlabrada de los Montes
+11,06,052,Fuente de Cantos
+11,06,053,Fuente del Arco
+11,06,054,Fuente del Maestre
+11,06,055,Fuentes de León
+11,06,056,Garbayuela
+11,06,057,Garlitos
+11,06,058,"Garrovilla, La"
+11,06,059,Granja de Torrehermosa
+11,06,903,Guadiana
+11,06,060,Guareña
+11,06,061,"Haba, La"
+11,06,062,Helechosa de los Montes
+11,06,063,Herrera del Duque
+11,06,064,Higuera de la Serena
+11,06,065,Higuera de Llerena
+11,06,066,Higuera de Vargas
+11,06,067,Higuera la Real
+11,06,068,Hinojosa del Valle
+11,06,069,Hornachos
+11,06,070,Jerez de los Caballeros
+11,06,071,"Lapa, La"
+11,06,073,Llera
+11,06,074,Llerena
+11,06,072,Lobón
+11,06,075,Magacela
+11,06,076,Maguilla
+11,06,077,Malcocinado
+11,06,078,Malpartida de la Serena
+11,06,079,Manchita
+11,06,080,Medellín
+11,06,081,Medina de las Torres
+11,06,082,Mengabril
+11,06,083,Mérida
+11,06,084,Mirandilla
+11,06,085,Monesterio
+11,06,086,Montemolín
+11,06,087,Monterrubio de la Serena
+11,06,088,Montijo
+11,06,089,"Morera, La"
+11,06,090,"Nava de Santiago, La"
+11,06,091,Navalvillar de Pela
+11,06,092,Nogales
+11,06,093,Oliva de la Frontera
+11,06,094,Oliva de Mérida
+11,06,095,Olivenza
+11,06,096,Orellana de la Sierra
+11,06,097,Orellana la Vieja
+11,06,098,Palomas
+11,06,099,"Parra, La"
+11,06,100,Peñalsordo
+11,06,101,Peraleda del Zaucejo
+11,06,102,Puebla de Alcocer
+11,06,103,Puebla de la Calzada
+11,06,104,Puebla de la Reina
+11,06,107,Puebla de Obando
+11,06,108,Puebla de Sancho Pérez
+11,06,105,Puebla del Maestre
+11,06,106,Puebla del Prior
+11,06,902,Pueblonuevo del Guadiana
+11,06,109,Quintana de la Serena
+11,06,110,Reina
+11,06,111,Rena
+11,06,112,Retamal de Llerena
+11,06,113,Ribera del Fresno
+11,06,114,Risco
+11,06,115,"Roca de la Sierra, La"
+11,06,116,Salvaleón
+11,06,117,Salvatierra de los Barros
+11,06,119,San Pedro de Mérida
+11,06,123,San Vicente de Alcántara
+11,06,118,Sancti-Spíritus
+11,06,120,Santa Amalia
+11,06,121,Santa Marta
+11,06,122,"Santos de Maimona, Los"
+11,06,124,Segura de León
+11,06,125,Siruela
+11,06,126,Solana de los Barros
+11,06,127,Talarrubias
+11,06,128,Talavera la Real
+11,06,129,Táliga
+11,06,130,Tamurejo
+11,06,131,Torre de Miguel Sesmero
+11,06,132,Torremayor
+11,06,133,Torremejía
+11,06,134,Trasierra
+11,06,135,Trujillanos
+11,06,136,Usagre
+11,06,137,Valdecaballeros
+11,06,901,Valdelacalzada
+11,06,138,Valdetorres
+11,06,139,Valencia de las Torres
+11,06,140,Valencia del Mombuey
+11,06,141,Valencia del Ventoso
+11,06,146,Valle de la Serena
+11,06,147,Valle de Matamoros
+11,06,148,Valle de Santa Ana
+11,06,142,Valverde de Burguillos
+11,06,143,Valverde de Leganés
+11,06,144,Valverde de Llerena
+11,06,145,Valverde de Mérida
+11,06,149,Villafranca de los Barros
+11,06,150,Villagarcía de la Torre
+11,06,151,Villagonzalo
+11,06,152,Villalba de los Barros
+11,06,153,Villanueva de la Serena
+11,06,154,Villanueva del Fresno
+11,06,156,Villar de Rena
+11,06,155,Villar del Rey
+11,06,157,Villarta de los Montes
+11,06,158,Zafra
+11,06,159,Zahínos
+11,06,160,Zalamea de la Serena
+11,06,162,"Zarza, La"
+11,06,161,Zarza-Capilla
+04,07,002,Alaior
+04,07,001,Alaró
+04,07,003,Alcúdia
+04,07,004,Algaida
+04,07,005,Andratx
+04,07,901,Ariany
+04,07,006,Artà
+04,07,007,Banyalbufar
+04,07,008,Binissalem
+04,07,009,Búger
+04,07,010,Bunyola
+04,07,011,Calvià
+04,07,012,Campanet
+04,07,013,Campos
+04,07,014,Capdepera
+04,07,064,"Castell, Es"
+04,07,015,Ciutadella de Menorca
+04,07,016,Consell
+04,07,017,Costitx
+04,07,018,Deià
+04,07,026,Eivissa
+04,07,019,Escorca
+04,07,020,Esporles
+04,07,021,Estellencs
+04,07,022,Felanitx
+04,07,023,Ferreries
+04,07,024,Formentera
+04,07,025,Fornalutx
+04,07,027,Inca
+04,07,028,Lloret de Vistalegre
+04,07,029,Lloseta
+04,07,030,Llubí
+04,07,031,Llucmajor
+04,07,033,Manacor
+04,07,034,Mancor de la Vall
+04,07,032,Maó
+04,07,035,Maria de la Salut
+04,07,036,Marratxí
+04,07,037,"Mercadal, Es"
+04,07,902,"Migjorn Gran, Es"
+04,07,038,Montuïri
+04,07,039,Muro
+04,07,040,Palma
+04,07,041,Petra
+04,07,044,"Pobla, Sa"
+04,07,042,Pollença
+04,07,043,Porreres
+04,07,045,Puigpunyent
+04,07,059,"Salines, Ses"
+04,07,046,Sant Antoni de Portmany
+04,07,049,Sant Joan
+04,07,050,Sant Joan de Labritja
+04,07,048,Sant Josep de sa Talaia
+04,07,051,Sant Llorenç des Cardassar
+04,07,052,Sant Lluís
+04,07,053,Santa Eugènia
+04,07,054,Santa Eulària des Riu
+04,07,055,Santa Margalida
+04,07,056,Santa María del Camí
+04,07,057,Santanyí
+04,07,058,Selva
+04,07,047,Sencelles
+04,07,060,Sineu
+04,07,061,Sóller
+04,07,062,Son Servera
+04,07,063,Valldemossa
+04,07,065,Vilafranca de Bonany
+09,08,001,Abrera
+09,08,002,Aguilar de Segarra
+09,08,014,Aiguafreda
+09,08,003,Alella
+09,08,004,Alpens
+09,08,005,"Ametlla del Vallès, L'"
+09,08,006,Arenys de Mar
+09,08,007,Arenys de Munt
+09,08,008,Argençola
+09,08,009,Argentona
+09,08,010,Artés
+09,08,011,Avià
+09,08,012,Avinyó
+09,08,013,Avinyonet del Penedès
+09,08,015,Badalona
+09,08,904,Badia del Vallès
+09,08,016,Bagà
+09,08,017,Balenyà
+09,08,018,Balsareny
+09,08,252,Barberà del Vallès
+09,08,019,Barcelona
+09,08,020,Begues
+09,08,021,Bellprat
+09,08,022,Berga
+09,08,023,Bigues i Riells del Fai
+09,08,024,Borredà
+09,08,025,"Bruc, El"
+09,08,026,"Brull, El"
+09,08,027,"Cabanyes, Les"
+09,08,028,Cabrera d'Anoia
+09,08,029,Cabrera de Mar
+09,08,030,Cabrils
+09,08,031,Calaf
+09,08,034,Calders
+09,08,033,Caldes de Montbui
+09,08,032,Caldes d'Estrac
+09,08,035,Calella
+09,08,037,Calldetenes
+09,08,038,Callús
+09,08,036,Calonge de Segarra
+09,08,039,Campins
+09,08,040,Canet de Mar
+09,08,041,Canovelles
+09,08,042,Cànoves i Samalús
+09,08,043,Canyelles
+09,08,044,Capellades
+09,08,045,Capolat
+09,08,046,Cardedeu
+09,08,047,Cardona
+09,08,048,Carme
+09,08,049,Casserres
+09,08,057,Castell de l'Areny
+09,08,052,Castellar de n'Hug
+09,08,050,Castellar del Riu
+09,08,051,Castellar del Vallès
+09,08,053,Castellbell i el Vilar
+09,08,054,Castellbisbal
+09,08,055,Castellcir
+09,08,056,Castelldefels
+09,08,058,Castellet i la Gornal
+09,08,060,Castellfollit de Riubregós
+09,08,059,Castellfollit del Boix
+09,08,061,Castellgalí
+09,08,062,Castellnou de Bages
+09,08,063,Castellolí
+09,08,064,Castellterçol
+09,08,065,Castellví de la Marca
+09,08,066,Castellví de Rosanes
+09,08,067,Centelles
+09,08,268,Cercs
+09,08,266,Cerdanyola del Vallès
+09,08,068,Cervelló
+09,08,069,Collbató
+09,08,070,Collsuspina
+09,08,071,Copons
+09,08,072,Corbera de Llobregat
+09,08,073,Cornellà de Llobregat
+09,08,074,Cubelles
+09,08,075,Dosrius
+09,08,076,Esparreguera
+09,08,077,Esplugues de Llobregat
+09,08,078,"Espunyola, L'"
+09,08,254,"Esquirol, L'"
+09,08,079,"Estany, L'"
+09,08,134,Figaró-Montmany
+09,08,080,Fígols
+09,08,082,Fogars de la Selva
+09,08,081,Fogars de Montclús
+09,08,083,Folgueroles
+09,08,084,Fonollosa
+09,08,085,Font-rubí
+09,08,086,"Franqueses del Vallès, Les"
+09,08,090,Gaià
+09,08,087,Gallifa
+09,08,088,"Garriga, La"
+09,08,089,Gavà
+09,08,091,Gelida
+09,08,092,Gironella
+09,08,093,Gisclareny
+09,08,094,"Granada, La"
+09,08,095,Granera
+09,08,096,Granollers
+09,08,097,Gualba
+09,08,099,Guardiola de Berguedà
+09,08,100,Gurb
+09,08,101,"Hospitalet de Llobregat, L'"
+09,08,162,"Hostalets de Pierola, Els"
+09,08,102,Igualada
+09,08,103,Jorba
+09,08,104,"Llacuna, La"
+09,08,105,"Llagosta, La"
+09,08,107,Lliçà d'Amunt
+09,08,108,Lliçà de Vall
+09,08,106,Llinars del Vallès
+09,08,109,Lluçà
+09,08,110,Malgrat de Mar
+09,08,111,Malla
+09,08,112,Manlleu
+09,08,113,Manresa
+09,08,242,Marganell
+09,08,114,Martorell
+09,08,115,Martorelles
+09,08,116,"Masies de Roda, Les"
+09,08,117,"Masies de Voltregà, Les"
+09,08,118,"Masnou, El"
+09,08,119,Masquefa
+09,08,120,Matadepera
+09,08,121,Mataró
+09,08,122,Mediona
+09,08,138,Moià
+09,08,123,Molins de Rei
+09,08,124,Mollet del Vallès
+09,08,128,Monistrol de Calders
+09,08,127,Monistrol de Montserrat
+09,08,125,Montcada i Reixac
+09,08,130,Montclar
+09,08,131,Montesquiu
+09,08,126,Montgat
+09,08,132,Montmajor
+09,08,133,Montmaneu
+09,08,135,Montmeló
+09,08,136,Montornès del Vallès
+09,08,137,Montseny
+09,08,129,Muntanyola
+09,08,139,Mura
+09,08,140,Navarcles
+09,08,141,Navàs
+09,08,142,"Nou de Berguedà, La"
+09,08,143,Òdena
+09,08,145,Olèrdola
+09,08,146,Olesa de Bonesvalls
+09,08,147,Olesa de Montserrat
+09,08,148,Olivella
+09,08,149,Olost
+09,08,144,Olvan
+09,08,150,Orís
+09,08,151,Oristà
+09,08,152,Orpí
+09,08,153,Òrrius
+09,08,154,Pacs del Penedès
+09,08,155,Palafolls
+09,08,156,Palau-solità i Plegamans
+09,08,157,Pallejà
+09,08,905,"Palma de Cervelló, La"
+09,08,158,"Papiol, El"
+09,08,159,Parets del Vallès
+09,08,160,Perafita
+09,08,161,Piera
+09,08,163,Pineda de Mar
+09,08,164,"Pla del Penedès, El"
+09,08,165,"Pobla de Claramunt, La"
+09,08,166,"Pobla de Lillet, La"
+09,08,167,Polinyà
+09,08,182,"Pont de Vilomara i Rocafort, El"
+09,08,168,Pontons
+09,08,169,"Prat de Llobregat, El"
+09,08,171,Prats de Lluçanès
+09,08,170,"Prats de Rei, Els"
+09,08,230,Premià de Dalt
+09,08,172,Premià de Mar
+09,08,174,Puigdàlber
+09,08,175,Puig-reig
+09,08,176,Pujalt
+09,08,177,"Quar, La"
+09,08,178,Rajadell
+09,08,179,Rellinars
+09,08,180,Ripollet
+09,08,181,"Roca del Vallès, La"
+09,08,183,Roda de Ter
+09,08,184,Rubí
+09,08,185,Rubió
+09,08,901,Rupit i Pruit
+09,08,187,Sabadell
+09,08,188,Sagàs
+09,08,190,Saldes
+09,08,191,Sallent
+09,08,194,Sant Adrià de Besòs
+09,08,195,Sant Agustí de Lluçanès
+09,08,196,Sant Andreu de la Barca
+09,08,197,Sant Andreu de Llavaneres
+09,08,198,Sant Antoni de Vilamajor
+09,08,199,Sant Bartomeu del Grau
+09,08,200,Sant Boi de Llobregat
+09,08,201,Sant Boi de Lluçanès
+09,08,203,Sant Cebrià de Vallalta
+09,08,202,Sant Celoni
+09,08,204,Sant Climent de Llobregat
+09,08,205,Sant Cugat del Vallès
+09,08,206,Sant Cugat Sesgarrigues
+09,08,207,Sant Esteve de Palautordera
+09,08,208,Sant Esteve Sesrovires
+09,08,210,Sant Feliu de Codines
+09,08,211,Sant Feliu de Llobregat
+09,08,212,Sant Feliu Sasserra
+09,08,209,Sant Fost de Campsentelles
+09,08,213,Sant Fruitós de Bages
+09,08,215,Sant Hipòlit de Voltregà
+09,08,193,Sant Iscle de Vallalta
+09,08,216,Sant Jaume de Frontanyà
+09,08,218,Sant Joan de Vilatorrada
+09,08,217,Sant Joan Despí
+09,08,903,Sant Julià de Cerdanyola
+09,08,220,Sant Julià de Vilatorta
+09,08,221,Sant Just Desvern
+09,08,222,Sant Llorenç d'Hortons
+09,08,223,Sant Llorenç Savall
+09,08,225,Sant Martí d'Albars
+09,08,224,Sant Martí de Centelles
+09,08,226,Sant Martí de Tous
+09,08,227,Sant Martí Sarroca
+09,08,228,Sant Martí Sesgueioles
+09,08,229,Sant Mateu de Bages
+09,08,231,Sant Pere de Ribes
+09,08,232,Sant Pere de Riudebitlles
+09,08,233,Sant Pere de Torelló
+09,08,234,Sant Pere de Vilamajor
+09,08,189,Sant Pere Sallavinera
+09,08,235,Sant Pol de Mar
+09,08,236,Sant Quintí de Mediona
+09,08,237,Sant Quirze de Besora
+09,08,238,Sant Quirze del Vallès
+09,08,239,Sant Quirze Safaja
+09,08,240,Sant Sadurní d'Anoia
+09,08,241,Sant Sadurní d'Osormort
+09,08,098,Sant Salvador de Guardiola
+09,08,262,Sant Vicenç de Castellet
+09,08,264,Sant Vicenç de Montalt
+09,08,265,Sant Vicenç de Torelló
+09,08,263,Sant Vicenç dels Horts
+09,08,243,Santa Cecília de Voltregà
+09,08,244,Santa Coloma de Cervelló
+09,08,245,Santa Coloma de Gramenet
+09,08,246,Santa Eugènia de Berga
+09,08,247,Santa Eulàlia de Riuprimer
+09,08,248,Santa Eulàlia de Ronçana
+09,08,249,Santa Fe del Penedès
+09,08,250,Santa Margarida de Montbui
+09,08,251,Santa Margarida i els Monjos
+09,08,253,Santa Maria de Besora
+09,08,256,Santa Maria de Martorelles
+09,08,255,Santa Maria de Merlès
+09,08,257,Santa Maria de Miralles
+09,08,259,Santa Maria de Palautordera
+09,08,258,Santa Maria d'Oló
+09,08,260,Santa Perpètua de Mogoda
+09,08,261,Santa Susanna
+09,08,192,Santpedor
+09,08,267,Sentmenat
+09,08,269,Seva
+09,08,270,Sitges
+09,08,271,Sobremunt
+09,08,272,Sora
+09,08,273,Subirats
+09,08,274,Súria
+09,08,276,Tagamanent
+09,08,277,Talamanca
+09,08,278,Taradell
+09,08,275,Tavèrnoles
+09,08,280,Tavertet
+09,08,281,Teià
+09,08,279,Terrassa
+09,08,282,Tiana
+09,08,283,Tona
+09,08,284,Tordera
+09,08,285,Torelló
+09,08,286,"Torre de Claramunt, La"
+09,08,287,Torrelavit
+09,08,288,Torrelles de Foix
+09,08,289,Torrelles de Llobregat
+09,08,290,Ullastrell
+09,08,291,Vacarisses
+09,08,292,Vallbona d'Anoia
+09,08,293,Vallcebre
+09,08,294,Vallgorguina
+09,08,295,Vallirana
+09,08,296,Vallromanes
+09,08,297,Veciana
+09,08,298,Vic
+09,08,299,Vilada
+09,08,301,Viladecans
+09,08,300,Viladecavalls
+09,08,305,Vilafranca del Penedès
+09,08,306,Vilalba Sasserra
+09,08,303,Vilanova de Sau
+09,08,302,Vilanova del Camí
+09,08,902,Vilanova del Vallès
+09,08,307,Vilanova i la Geltrú
+09,08,214,Vilassar de Dalt
+09,08,219,Vilassar de Mar
+09,08,304,Vilobí del Penedès
+09,08,308,Viver i Serrateix
+07,09,001,Abajas
+07,09,003,Adrada de Haza
+07,09,006,Aguas Cándidas
+07,09,007,Aguilar de Bureba
+07,09,009,Albillos
+07,09,010,Alcocero de Mola
+07,09,011,Alfoz de Bricia
+07,09,907,Alfoz de Quintanadueñas
+07,09,012,Alfoz de Santa Gadea
+07,09,013,Altable
+07,09,014,"Altos, Los"
+07,09,016,Ameyugo
+07,09,017,Anguix
+07,09,018,Aranda de Duero
+07,09,019,Arandilla
+07,09,020,Arauzo de Miel
+07,09,021,Arauzo de Salce
+07,09,022,Arauzo de Torre
+07,09,023,Arcos
+07,09,024,Arenillas de Riopisuerga
+07,09,025,Arija
+07,09,026,Arlanzón
+07,09,027,Arraya de Oca
+07,09,029,Atapuerca
+07,09,030,"Ausines, Los"
+07,09,032,Avellanosa de Muñó
+07,09,033,Bahabón de Esgueva
+07,09,034,"Balbases, Los"
+07,09,035,Baños de Valdearados
+07,09,036,Bañuelos de Bureba
+07,09,037,Barbadillo de Herreros
+07,09,038,Barbadillo del Mercado
+07,09,039,Barbadillo del Pez
+07,09,041,Barrio de Muñó
+07,09,043,"Barrios de Bureba, Los"
+07,09,044,Barrios de Colina
+07,09,045,Basconcillos del Tozo
+07,09,046,Bascuñana
+07,09,047,Belbimbre
+07,09,048,Belorado
+07,09,050,Berberana
+07,09,051,Berlangas de Roa
+07,09,052,Berzosa de Bureba
+07,09,054,Bozoó
+07,09,055,Brazacorta
+07,09,056,Briviesca
+07,09,057,Bugedo
+07,09,058,Buniel
+07,09,059,Burgos
+07,09,060,Busto de Bureba
+07,09,061,Cabañes de Esgueva
+07,09,062,Cabezón de la Sierra
+07,09,064,Caleruega
+07,09,065,Campillo de Aranda
+07,09,066,Campolara
+07,09,067,Canicosa de la Sierra
+07,09,068,Cantabrana
+07,09,070,Carazo
+07,09,071,Carcedo de Bureba
+07,09,072,Carcedo de Burgos
+07,09,073,Cardeñadijo
+07,09,074,Cardeñajimeno
+07,09,075,Cardeñuela Riopico
+07,09,076,Carrias
+07,09,077,Cascajares de Bureba
+07,09,078,Cascajares de la Sierra
+07,09,079,Castellanos de Castro
+07,09,083,Castil de Peones
+07,09,082,Castildelgado
+07,09,084,Castrillo de la Reina
+07,09,085,Castrillo de la Vega
+07,09,088,Castrillo de Riopisuerga
+07,09,086,Castrillo del Val
+07,09,090,Castrillo Mota de Judíos
+07,09,091,Castrojeriz
+07,09,063,Cavia
+07,09,093,Cayuela
+07,09,094,Cebrecos
+07,09,095,Celada del Camino
+07,09,098,Cerezo de Río Tirón
+07,09,100,Cerratón de Juarros
+07,09,101,Ciadoncha
+07,09,102,Cillaperlata
+07,09,103,Cilleruelo de Abajo
+07,09,104,Cilleruelo de Arriba
+07,09,105,Ciruelos de Cervera
+07,09,108,Cogollos
+07,09,109,Condado de Treviño
+07,09,110,Contreras
+07,09,112,Coruña del Conde
+07,09,113,Covarrubias
+07,09,114,Cubillo del Campo
+07,09,115,Cubo de Bureba
+07,09,117,"Cueva de Roa, La"
+07,09,119,Cuevas de San Clemente
+07,09,120,Encío
+07,09,122,Espinosa de Cervera
+07,09,124,Espinosa de los Monteros
+07,09,123,Espinosa del Camino
+07,09,125,Estépar
+07,09,127,Fontioso
+07,09,128,Frandovínez
+07,09,129,Fresneda de la Sierra Tirón
+07,09,130,Fresneña
+07,09,131,Fresnillo de las Dueñas
+07,09,132,Fresno de Río Tirón
+07,09,133,Fresno de Rodilla
+07,09,134,Frías
+07,09,135,Fuentebureba
+07,09,136,Fuentecén
+07,09,137,Fuentelcésped
+07,09,138,Fuentelisendo
+07,09,139,Fuentemolinos
+07,09,140,Fuentenebro
+07,09,141,Fuentespina
+07,09,143,Galbarros
+07,09,144,"Gallega, La"
+07,09,148,Grijalba
+07,09,149,Grisaleña
+07,09,151,Gumiel de Izán
+07,09,152,Gumiel de Mercado
+07,09,154,Hacinas
+07,09,155,Haza
+07,09,159,Hontanas
+07,09,160,Hontangas
+07,09,162,Hontoria de la Cantera
+07,09,164,Hontoria de Valdearados
+07,09,163,Hontoria del Pinar
+07,09,166,"Hormazas, Las"
+07,09,167,Hornillos del Camino
+07,09,168,"Horra, La"
+07,09,169,Hortigüela
+07,09,170,Hoyales de Roa
+07,09,172,Huérmeces
+07,09,173,Huerta de Arriba
+07,09,174,Huerta de Rey
+07,09,175,Humada
+07,09,176,Hurones
+07,09,177,Ibeas de Juarros
+07,09,178,Ibrillos
+07,09,179,Iglesiarrubia
+07,09,180,Iglesias
+07,09,181,Isar
+07,09,182,Itero del Castillo
+07,09,183,Jaramillo de la Fuente
+07,09,184,Jaramillo Quemado
+07,09,189,Junta de Traslaloma
+07,09,190,Junta de Villalba de Losa
+07,09,191,Jurisdicción de Lara
+07,09,192,Jurisdicción de San Zadornil
+07,09,194,Lerma
+07,09,195,Llano de Bureba
+07,09,196,Madrigal del Monte
+07,09,197,Madrigalejo del Monte
+07,09,198,Mahamud
+07,09,199,Mambrilla de Castrejón
+07,09,200,Mambrillas de Lara
+07,09,201,Mamolar
+07,09,202,Manciles
+07,09,206,Mazuela
+07,09,208,Mecerreyes
+07,09,209,Medina de Pomar
+07,09,211,Melgar de Fernamental
+07,09,213,Merindad de Cuesta-Urria
+07,09,214,Merindad de Montija
+07,09,906,Merindad de Río Ubierna
+07,09,215,Merindad de Sotoscueva
+07,09,216,Merindad de Valdeporres
+07,09,217,Merindad de Valdivielso
+07,09,218,Milagros
+07,09,219,Miranda de Ebro
+07,09,220,Miraveche
+07,09,221,Modúbar de la Emparedada
+07,09,223,Monasterio de la Sierra
+07,09,224,Monasterio de Rodilla
+07,09,225,Moncalvillo
+07,09,226,Monterrubio de la Demanda
+07,09,227,Montorio
+07,09,228,Moradillo de Roa
+07,09,229,Nava de Roa
+07,09,230,Navas de Bureba
+07,09,231,Nebreda
+07,09,232,Neila
+07,09,235,Olmedillo de Roa
+07,09,236,Olmillos de Muñó
+07,09,238,Oña
+07,09,239,Oquillas
+07,09,241,Orbaneja Riopico
+07,09,242,Padilla de Abajo
+07,09,243,Padilla de Arriba
+07,09,244,Padrones de Bureba
+07,09,246,Palacios de la Sierra
+07,09,247,Palacios de Riopisuerga
+07,09,248,Palazuelos de la Sierra
+07,09,249,Palazuelos de Muñó
+07,09,250,Pampliega
+07,09,251,Pancorbo
+07,09,253,Pardilla
+07,09,255,Partido de la Sierra en Tobalina
+07,09,256,Pedrosa de Duero
+07,09,259,Pedrosa de Río Úrbel
+07,09,257,Pedrosa del Páramo
+07,09,258,Pedrosa del Príncipe
+07,09,261,Peñaranda de Duero
+07,09,262,Peral de Arlanza
+07,09,265,Piérnigas
+07,09,266,Pineda de la Sierra
+07,09,267,Pineda Trasmonte
+07,09,268,Pinilla de los Barruecos
+07,09,269,Pinilla de los Moros
+07,09,270,Pinilla Trasmonte
+07,09,272,Poza de la Sal
+07,09,273,Prádanos de Bureba
+07,09,274,Pradoluengo
+07,09,275,Presencio
+07,09,276,"Puebla de Arganzón, La"
+07,09,277,Puentedura
+07,09,279,Quemada
+07,09,281,Quintana del Pidio
+07,09,280,Quintanabureba
+07,09,283,Quintanaélez
+07,09,287,Quintanaortuño
+07,09,288,Quintanapalla
+07,09,289,Quintanar de la Sierra
+07,09,292,Quintanavides
+07,09,294,Quintanilla de la Mata
+07,09,901,Quintanilla del Agua y Tordueles
+07,09,295,Quintanilla del Coco
+07,09,298,Quintanilla San García
+07,09,301,Quintanilla Vivar
+07,09,297,"Quintanillas, Las"
+07,09,302,Rabanera del Pinar
+07,09,303,Rábanos
+07,09,304,Rabé de las Calzadas
+07,09,306,Rebolledo de la Torre
+07,09,307,Redecilla del Camino
+07,09,308,Redecilla del Campo
+07,09,309,Regumiel de la Sierra
+07,09,310,Reinoso
+07,09,311,Retuerta
+07,09,314,Revilla del Campo
+07,09,316,Revilla Vallejera
+07,09,312,"Revilla y Ahedo, La"
+07,09,315,Revillarruz
+07,09,317,Rezmondo
+07,09,318,Riocavado de la Sierra
+07,09,321,Roa
+07,09,323,Rojas
+07,09,325,Royuela de Río Franco
+07,09,326,Rubena
+07,09,327,Rublacedo de Abajo
+07,09,328,Rucandio
+07,09,329,Salas de Bureba
+07,09,330,Salas de los Infantes
+07,09,332,Saldaña de Burgos
+07,09,334,Salinillas de Bureba
+07,09,335,San Adrián de Juarros
+07,09,337,San Juan del Monte
+07,09,338,San Mamés de Burgos
+07,09,339,San Martín de Rubiales
+07,09,340,San Millán de Lara
+07,09,360,San Vicente del Valle
+07,09,343,Santa Cecilia
+07,09,345,Santa Cruz de la Salceda
+07,09,346,Santa Cruz del Valle Urbión
+07,09,347,Santa Gadea del Cid
+07,09,348,Santa Inés
+07,09,350,Santa María del Campo
+07,09,351,Santa María del Invierno
+07,09,352,Santa María del Mercadillo
+07,09,353,Santa María Ribarredonda
+07,09,354,Santa Olalla de Bureba
+07,09,355,Santibáñez de Esgueva
+07,09,356,Santibáñez del Val
+07,09,358,Santo Domingo de Silos
+07,09,361,Sargentes de la Lora
+07,09,362,Sarracín
+07,09,363,Sasamón
+07,09,365,"Sequera de Haza, La"
+07,09,366,Solarana
+07,09,368,Sordillos
+07,09,369,Sotillo de la Ribera
+07,09,372,Sotragero
+07,09,373,Sotresgudo
+07,09,374,Susinos del Páramo
+07,09,375,Tamarón
+07,09,377,Tardajos
+07,09,378,Tejada
+07,09,380,Terradillos de Esgueva
+07,09,381,Tinieblas de la Sierra
+07,09,382,Tobar
+07,09,384,Tordómar
+07,09,386,Torrecilla del Monte
+07,09,387,Torregalindo
+07,09,388,Torrelara
+07,09,389,Torrepadre
+07,09,390,Torresandino
+07,09,391,Tórtoles de Esgueva
+07,09,392,Tosantos
+07,09,394,Trespaderne
+07,09,395,Tubilla del Agua
+07,09,396,Tubilla del Lago
+07,09,398,Úrbel del Castillo
+07,09,400,Vadocondes
+07,09,403,Valdeande
+07,09,405,Valdezate
+07,09,406,Valdorros
+07,09,408,Vallarta de Bureba
+07,09,904,Valle de las Navas
+07,09,908,Valle de Losa
+07,09,409,Valle de Manzanedo
+07,09,410,Valle de Mena
+07,09,411,Valle de Oca
+07,09,902,Valle de Santibáñez
+07,09,905,Valle de Sedano
+07,09,412,Valle de Tobalina
+07,09,413,Valle de Valdebezana
+07,09,414,Valle de Valdelaguna
+07,09,415,Valle de Valdelucio
+07,09,416,Valle de Zamanzas
+07,09,417,Vallejera
+07,09,418,Valles de Palenzuela
+07,09,419,Valluércanes
+07,09,407,Valmala
+07,09,422,"Vid de Bureba, La"
+07,09,421,"Vid y Barrios, La"
+07,09,423,Vileña
+07,09,427,Villadiego
+07,09,428,Villaescusa de Roa
+07,09,429,Villaescusa la Sombría
+07,09,430,Villaespasa
+07,09,431,Villafranca Montes de Oca
+07,09,432,Villafruela
+07,09,433,Villagalijo
+07,09,434,Villagonzalo Pedernales
+07,09,437,Villahoz
+07,09,438,Villalba de Duero
+07,09,439,Villalbilla de Burgos
+07,09,440,Villalbilla de Gumiel
+07,09,441,Villaldemiro
+07,09,442,Villalmanzo
+07,09,443,Villamayor de los Montes
+07,09,444,Villamayor de Treviño
+07,09,445,Villambistia
+07,09,446,Villamedianilla
+07,09,447,Villamiel de la Sierra
+07,09,448,Villangómez
+07,09,449,Villanueva de Argaño
+07,09,450,Villanueva de Carazo
+07,09,451,Villanueva de Gumiel
+07,09,454,Villanueva de Teba
+07,09,455,Villaquirán de la Puebla
+07,09,456,Villaquirán de los Infantes
+07,09,903,Villarcayo de Merindad de Castilla la Vieja
+07,09,458,Villariezo
+07,09,460,Villasandino
+07,09,463,Villasur de Herreros
+07,09,464,Villatuelda
+07,09,466,Villaverde del Monte
+07,09,467,Villaverde-Mogina
+07,09,471,Villayerno Morquillas
+07,09,472,Villazopeque
+07,09,473,Villegas
+07,09,476,Villoruebo
+07,09,424,Viloria de Rioja
+07,09,425,Vilviestre del Pinar
+07,09,478,Vizcaínos
+07,09,480,Zael
+07,09,482,Zarzosa de Río Pisuerga
+07,09,483,Zazuar
+07,09,485,Zuñeda
+11,10,001,Abadía
+11,10,002,Abertura
+11,10,003,Acebo
+11,10,004,Acehúche
+11,10,005,Aceituna
+11,10,006,Ahigal
+11,10,903,Alagón del Río
+11,10,007,Albalá
+11,10,008,Alcántara
+11,10,009,Alcollarín
+11,10,010,Alcuéscar
+11,10,012,Aldea del Cano
+11,10,013,"Aldea del Obispo, La"
+11,10,011,Aldeacentenera
+11,10,014,Aldeanueva de la Vera
+11,10,015,Aldeanueva del Camino
+11,10,016,Aldehuela del Jerte
+11,10,017,Alía
+11,10,018,Aliseda
+11,10,019,Almaraz
+11,10,020,Almoharín
+11,10,021,Arroyo de la Luz
+11,10,023,Arroyomolinos
+11,10,022,Arroyomolinos de la Vera
+11,10,024,Baños de Montemayor
+11,10,025,Barrado
+11,10,026,Belvís de Monroy
+11,10,027,Benquerencia
+11,10,028,Berrocalejo
+11,10,029,Berzocana
+11,10,030,Bohonal de Ibor
+11,10,031,Botija
+11,10,032,Brozas
+11,10,033,Cabañas del Castillo
+11,10,034,Cabezabellosa
+11,10,035,Cabezuela del Valle
+11,10,036,Cabrero
+11,10,037,Cáceres
+11,10,038,Cachorrilla
+11,10,039,Cadalso
+11,10,040,Calzadilla
+11,10,041,Caminomorisco
+11,10,042,Campillo de Deleitosa
+11,10,043,Campo Lugar
+11,10,044,Cañamero
+11,10,045,Cañaveral
+11,10,046,Carbajo
+11,10,047,Carcaboso
+11,10,048,Carrascalejo
+11,10,049,Casar de Cáceres
+11,10,050,Casar de Palomero
+11,10,051,Casares de las Hurdes
+11,10,052,Casas de Don Antonio
+11,10,053,Casas de Don Gómez
+11,10,056,Casas de Millán
+11,10,057,Casas de Miravete
+11,10,054,Casas del Castañar
+11,10,055,Casas del Monte
+11,10,058,Casatejada
+11,10,059,Casillas de Coria
+11,10,060,Castañar de Ibor
+11,10,061,Ceclavín
+11,10,062,Cedillo
+11,10,063,Cerezo
+11,10,064,Cilleros
+11,10,065,Collado de la Vera
+11,10,066,Conquista de la Sierra
+11,10,067,Coria
+11,10,068,Cuacos de Yuste
+11,10,069,"Cumbre, La"
+11,10,070,Deleitosa
+11,10,071,Descargamaría
+11,10,072,Eljas
+11,10,073,Escurial
+11,10,075,Fresnedoso de Ibor
+11,10,076,Galisteo
+11,10,077,Garciaz
+11,10,079,Garganta la Olla
+11,10,078,"Garganta, La"
+11,10,080,Gargantilla
+11,10,081,Gargüera
+11,10,082,Garrovillas de Alconétar
+11,10,083,Garvín
+11,10,084,Gata
+11,10,085,"Gordo, El"
+11,10,086,"Granja, La"
+11,10,087,Guadalupe
+11,10,088,Guijo de Coria
+11,10,089,Guijo de Galisteo
+11,10,090,Guijo de Granadilla
+11,10,091,Guijo de Santa Bárbara
+11,10,092,Herguijuela
+11,10,093,Hernán-Pérez
+11,10,094,Herrera de Alcántara
+11,10,095,Herreruela
+11,10,096,Hervás
+11,10,097,Higuera de Albalat
+11,10,098,Hinojal
+11,10,099,Holguera
+11,10,100,Hoyos
+11,10,101,Huélaga
+11,10,102,Ibahernando
+11,10,103,Jaraicejo
+11,10,104,Jaraíz de la Vera
+11,10,105,Jarandilla de la Vera
+11,10,106,Jarilla
+11,10,107,Jerte
+11,10,108,Ladrillar
+11,10,109,Logrosán
+11,10,110,Losar de la Vera
+11,10,111,Madrigal de la Vera
+11,10,112,Madrigalejo
+11,10,113,Madroñera
+11,10,114,Majadas
+11,10,115,Malpartida de Cáceres
+11,10,116,Malpartida de Plasencia
+11,10,117,Marchagaz
+11,10,118,Mata de Alcántara
+11,10,119,Membrío
+11,10,120,Mesas de Ibor
+11,10,121,Miajadas
+11,10,122,Millanes
+11,10,123,Mirabel
+11,10,124,Mohedas de Granadilla
+11,10,125,Monroy
+11,10,126,Montánchez
+11,10,127,Montehermoso
+11,10,128,Moraleja
+11,10,129,Morcillo
+11,10,130,Navaconcejo
+11,10,131,Navalmoral de la Mata
+11,10,132,Navalvillar de Ibor
+11,10,133,Navas del Madroño
+11,10,134,Navezuelas
+11,10,135,Nuñomoral
+11,10,136,Oliva de Plasencia
+11,10,137,Palomero
+11,10,138,Pasarón de la Vera
+11,10,139,Pedroso de Acim
+11,10,140,Peraleda de la Mata
+11,10,141,Peraleda de San Román
+11,10,142,Perales del Puerto
+11,10,143,Pescueza
+11,10,144,"Pesga, La"
+11,10,145,Piedras Albas
+11,10,146,Pinofranqueado
+11,10,147,Piornal
+11,10,148,Plasencia
+11,10,149,Plasenzuela
+11,10,150,Portaje
+11,10,151,Portezuelo
+11,10,152,Pozuelo de Zarzón
+11,10,905,Pueblonuevo de Miramontes
+11,10,153,Puerto de Santa Cruz
+11,10,154,Rebollar
+11,10,155,Riolobos
+11,10,156,Robledillo de Gata
+11,10,157,Robledillo de la Vera
+11,10,158,Robledillo de Trujillo
+11,10,159,Robledollano
+11,10,160,Romangordo
+11,10,901,Rosalejo
+11,10,161,Ruanes
+11,10,162,Salorino
+11,10,163,Salvatierra de Santiago
+11,10,164,San Martín de Trevejo
+11,10,165,Santa Ana
+11,10,166,Santa Cruz de la Sierra
+11,10,167,Santa Cruz de Paniagua
+11,10,168,Santa Marta de Magasca
+11,10,169,Santiago de Alcántara
+11,10,170,Santiago del Campo
+11,10,171,Santibáñez el Alto
+11,10,172,Santibáñez el Bajo
+11,10,173,Saucedilla
+11,10,174,Segura de Toro
+11,10,175,Serradilla
+11,10,176,Serrejón
+11,10,177,Sierra de Fuentes
+11,10,178,Talaván
+11,10,179,Talaveruela de la Vera
+11,10,180,Talayuela
+11,10,181,Tejeda de Tiétar
+11,10,904,Tiétar
+11,10,182,Toril
+11,10,183,Tornavacas
+11,10,184,"Torno, El"
+11,10,187,Torre de Don Miguel
+11,10,188,Torre de Santa María
+11,10,185,Torrecilla de los Ángeles
+11,10,186,Torrecillas de la Tiesa
+11,10,190,Torrejón el Rubio
+11,10,189,Torrejoncillo
+11,10,191,Torremenga
+11,10,192,Torremocha
+11,10,193,Torreorgaz
+11,10,194,Torrequemada
+11,10,195,Trujillo
+11,10,196,Valdastillas
+11,10,197,Valdecañas de Tajo
+11,10,198,Valdefuentes
+11,10,199,Valdehúncar
+11,10,200,Valdelacasa de Tajo
+11,10,201,Valdemorales
+11,10,202,Valdeobispo
+11,10,203,Valencia de Alcántara
+11,10,204,Valverde de la Vera
+11,10,205,Valverde del Fresno
+11,10,902,Vegaviana
+11,10,206,Viandar de la Vera
+11,10,207,Villa del Campo
+11,10,208,Villa del Rey
+11,10,209,Villamesías
+11,10,210,Villamiel
+11,10,211,Villanueva de la Sierra
+11,10,212,Villanueva de la Vera
+11,10,214,Villar de Plasencia
+11,10,213,Villar del Pedroso
+11,10,215,Villasbuenas de Gata
+11,10,216,Zarza de Granadilla
+11,10,217,Zarza de Montánchez
+11,10,218,Zarza la Mayor
+11,10,219,Zorita
+01,11,001,Alcalá de los Gazules
+01,11,002,Alcalá del Valle
+01,11,003,Algar
+01,11,004,Algeciras
+01,11,005,Algodonales
+01,11,006,Arcos de la Frontera
+01,11,007,Barbate
+01,11,008,"Barrios, Los"
+01,11,901,Benalup-Casas Viejas
+01,11,009,Benaocaz
+01,11,010,Bornos
+01,11,011,"Bosque, El"
+01,11,012,Cádiz
+01,11,013,Castellar de la Frontera
+01,11,015,Chiclana de la Frontera
+01,11,016,Chipiona
+01,11,014,Conil de la Frontera
+01,11,017,Espera
+01,11,018,"Gastor, El"
+01,11,019,Grazalema
+01,11,020,Jerez de la Frontera
+01,11,021,Jimena de la Frontera
+01,11,022,"Línea de la Concepción, La"
+01,11,023,Medina Sidonia
+01,11,024,Olvera
+01,11,025,Paterna de Rivera
+01,11,026,Prado del Rey
+01,11,027,"Puerto de Santa María, El"
+01,11,028,Puerto Real
+01,11,029,Puerto Serrano
+01,11,030,Rota
+01,11,031,San Fernando
+01,11,902,San José del Valle
+01,11,903,San Martín del Tesorillo
+01,11,033,San Roque
+01,11,032,Sanlúcar de Barrameda
+01,11,034,Setenil de las Bodegas
+01,11,035,Tarifa
+01,11,036,Torre Alháquime
+01,11,037,Trebujena
+01,11,038,Ubrique
+01,11,039,Vejer de la Frontera
+01,11,040,Villaluenga del Rosario
+01,11,041,Villamartín
+01,11,042,Zahara
+10,12,002,Aín
+10,12,003,Albocàsser
+10,12,004,Alcalà de Xivert
+10,12,005,"Alcora, l'"
+10,12,006,Alcudia de Veo
+10,12,007,Alfondeguilla
+10,12,008,Algimia de Almonacid
+10,12,009,Almassora
+10,12,010,Almedíjar
+10,12,011,Almenara
+10,12,901,"Alqueries, les/Alquerías del Niño Perdido"
+10,12,012,Altura
+10,12,013,Arañuel
+10,12,014,Ares del Maestrat
+10,12,015,Argelita
+10,12,016,Artana
+10,12,001,Atzeneta del Maestrat
+10,12,017,Ayódar
+10,12,018,Azuébar
+10,12,020,Barracas
+10,12,022,Bejís
+10,12,024,Benafer
+10,12,025,Benafigos
+10,12,026,Benassal
+10,12,027,Benicarló
+10,12,028,Benicàssim/Benicasim
+10,12,029,Benlloc
+10,12,021,Betxí
+10,12,032,Borriana/Burriana
+10,12,031,Borriol
+10,12,033,Cabanes
+10,12,034,Càlig
+10,12,036,Canet lo Roig
+10,12,037,Castell de Cabres
+10,12,038,Castellfort
+10,12,039,Castellnovo
+10,12,040,Castelló de la Plana/Castellón de la Plana
+10,12,041,Castillo de Villamalefa
+10,12,042,Catí
+10,12,043,Caudiel
+10,12,044,Cervera del Maestre
+10,12,053,Chilches/Xilxes
+10,12,056,Chóvar
+10,12,045,Cinctorres
+10,12,046,Cirat
+10,12,048,Cortes de Arenoso
+10,12,049,Costur
+10,12,050,"Coves de Vinromà, les"
+10,12,051,Culla
+10,12,057,Eslida
+10,12,058,Espadilla
+10,12,059,Fanzara
+10,12,060,Figueroles
+10,12,061,Forcall
+10,12,063,Fuente la Reina
+10,12,064,Fuentes de Ayódar
+10,12,065,Gaibiel
+10,12,067,Geldo
+10,12,068,Herbers
+10,12,069,Higueras
+10,12,070,"Jana, la"
+10,12,071,Jérica
+10,12,074,"Llosa, la"
+10,12,072,Llucena/Lucena del Cid
+10,12,073,Ludiente
+10,12,075,"Mata de Morella, la"
+10,12,076,Matet
+10,12,077,Moncofa
+10,12,078,Montán
+10,12,079,Montanejos
+10,12,080,Morella
+10,12,081,Navajas
+10,12,082,Nules
+10,12,083,Olocau del Rey
+10,12,084,Onda
+10,12,085,Orpesa/Oropesa del Mar
+10,12,087,Palanques
+10,12,088,Pavías
+10,12,089,Peníscola/Peñíscola
+10,12,090,Pina de Montalgrao
+10,12,093,"Pobla de Benifassà, la"
+10,12,094,"Pobla Tornesa, la"
+10,12,091,Portell de Morella
+10,12,092,Puebla de Arenoso
+10,12,095,Ribesalbes
+10,12,096,Rossell
+10,12,097,Sacañet
+10,12,098,"Salzadella, la"
+10,12,101,San Rafael del Río
+10,12,902,Sant Joan de Moró
+10,12,099,Sant Jordi/San Jorge
+10,12,100,Sant Mateu
+10,12,102,Santa Magdalena de Pulpis
+10,12,104,Segorbe
+10,12,103,"Serratella, la"
+10,12,105,Sierra Engarcerán
+10,12,106,Soneja
+10,12,107,Sot de Ferrer
+10,12,108,Suera/Sueras
+10,12,109,Tales
+10,12,110,Teresa
+10,12,111,Tírig
+10,12,112,Todolella
+10,12,113,Toga
+10,12,114,Torás
+10,12,115,"Toro, El"
+10,12,116,Torralba del Pinar
+10,12,119,"Torre d'en Besora, la"
+10,12,120,"Torre d'en Doménec, la"
+10,12,117,Torreblanca
+10,12,118,Torrechiva
+10,12,121,Traiguera
+10,12,122,"Useres, les/Useras"
+10,12,124,Vall d'Alba
+10,12,125,Vall de Almonacid
+10,12,126,"Vall d'Uixó, la"
+10,12,123,Vallat
+10,12,127,Vallibona
+10,12,128,Vilafamés
+10,12,129,Vilafranca/Villafranca del Cid
+10,12,132,Vilanova d'Alcolea
+10,12,134,Vilar de Canes
+10,12,135,Vila-real
+10,12,136,"Vilavella, la"
+10,12,130,Villahermosa del Río
+10,12,131,Villamalur
+10,12,133,Villanueva de Viver
+10,12,137,Villores
+10,12,138,Vinaròs
+10,12,139,Vistabella del Maestrat
+10,12,140,Viver
+10,12,052,Xert
+10,12,055,Xodos/Chodos
+10,12,141,Zorita del Maestrazgo
+10,12,142,Zucaina
+08,13,001,Abenójar
+08,13,002,Agudo
+08,13,003,Alamillo
+08,13,004,Albaladejo
+08,13,005,Alcázar de San Juan
+08,13,006,Alcoba
+08,13,007,Alcolea de Calatrava
+08,13,008,Alcubillas
+08,13,009,Aldea del Rey
+08,13,010,Alhambra
+08,13,011,Almadén
+08,13,012,Almadenejos
+08,13,013,Almagro
+08,13,014,Almedina
+08,13,015,Almodóvar del Campo
+08,13,016,Almuradiel
+08,13,017,Anchuras
+08,13,903,Arenales de San Gregorio
+08,13,018,Arenas de San Juan
+08,13,019,Argamasilla de Alba
+08,13,020,Argamasilla de Calatrava
+08,13,021,Arroba de los Montes
+08,13,022,Ballesteros de Calatrava
+08,13,023,Bolaños de Calatrava
+08,13,024,Brazatortas
+08,13,025,Cabezarados
+08,13,026,Cabezarrubias del Puerto
+08,13,027,Calzada de Calatrava
+08,13,028,Campo de Criptana
+08,13,029,Cañada de Calatrava
+08,13,030,Caracuel de Calatrava
+08,13,031,Carrión de Calatrava
+08,13,032,Carrizosa
+08,13,033,Castellar de Santiago
+08,13,038,Chillón
+08,13,034,Ciudad Real
+08,13,035,Corral de Calatrava
+08,13,036,"Cortijos, Los"
+08,13,037,Cózar
+08,13,039,Daimiel
+08,13,040,Fernán Caballero
+08,13,041,Fontanarejo
+08,13,042,Fuencaliente
+08,13,043,Fuenllana
+08,13,044,Fuente el Fresno
+08,13,045,Granátula de Calatrava
+08,13,046,Guadalmez
+08,13,047,Herencia
+08,13,048,Hinojosas de Calatrava
+08,13,049,Horcajo de los Montes
+08,13,050,"Labores, Las"
+08,13,904,Llanos del Caudillo
+08,13,051,Luciana
+08,13,052,Malagón
+08,13,053,Manzanares
+08,13,054,Membrilla
+08,13,055,Mestanza
+08,13,056,Miguelturra
+08,13,057,Montiel
+08,13,058,Moral de Calatrava
+08,13,059,Navalpino
+08,13,060,Navas de Estena
+08,13,061,Pedro Muñoz
+08,13,062,Picón
+08,13,063,Piedrabuena
+08,13,064,Poblete
+08,13,065,Porzuna
+08,13,066,Pozuelo de Calatrava
+08,13,067,"Pozuelos de Calatrava, Los"
+08,13,068,Puebla de Don Rodrigo
+08,13,069,Puebla del Príncipe
+08,13,070,Puerto Lápice
+08,13,071,Puertollano
+08,13,072,Retuerta del Bullaque
+08,13,901,"Robledo, El"
+08,13,902,Ruidera
+08,13,073,Saceruela
+08,13,074,San Carlos del Valle
+08,13,075,San Lorenzo de Calatrava
+08,13,076,Santa Cruz de los Cáñamos
+08,13,077,Santa Cruz de Mudela
+08,13,078,Socuéllamos
+08,13,080,Solana del Pino
+08,13,079,"Solana, La"
+08,13,081,Terrinches
+08,13,082,Tomelloso
+08,13,083,Torralba de Calatrava
+08,13,084,Torre de Juan Abad
+08,13,085,Torrenueva
+08,13,086,Valdemanco del Esteras
+08,13,087,Valdepeñas
+08,13,088,Valenzuela de Calatrava
+08,13,089,Villahermosa
+08,13,090,Villamanrique
+08,13,091,Villamayor de Calatrava
+08,13,092,Villanueva de la Fuente
+08,13,093,Villanueva de los Infantes
+08,13,094,Villanueva de San Carlos
+08,13,095,Villar del Pozo
+08,13,096,Villarrubia de los Ojos
+08,13,097,Villarta de San Juan
+08,13,098,Viso del Marqués
+01,14,001,Adamuz
+01,14,002,Aguilar de la Frontera
+01,14,003,Alcaracejos
+01,14,004,Almedinilla
+01,14,005,Almodóvar del Río
+01,14,006,Añora
+01,14,007,Baena
+01,14,008,Belalcázar
+01,14,009,Belmez
+01,14,010,Benamejí
+01,14,011,"Blázquez, Los"
+01,14,012,Bujalance
+01,14,013,Cabra
+01,14,014,Cañete de las Torres
+01,14,015,Carcabuey
+01,14,016,Cardeña
+01,14,017,"Carlota, La"
+01,14,018,"Carpio, El"
+01,14,019,Castro del Río
+01,14,020,Conquista
+01,14,021,Córdoba
+01,14,022,Doña Mencía
+01,14,023,Dos Torres
+01,14,024,Encinas Reales
+01,14,025,Espejo
+01,14,026,Espiel
+01,14,027,Fernán-Núñez
+01,14,901,Fuente Carreteros
+01,14,028,Fuente la Lancha
+01,14,029,Fuente Obejuna
+01,14,030,Fuente Palmera
+01,14,031,Fuente-Tójar
+01,14,032,"Granjuela, La"
+01,14,033,Guadalcázar
+01,14,902,"Guijarrosa, La"
+01,14,034,"Guijo, El"
+01,14,035,Hinojosa del Duque
+01,14,036,Hornachuelos
+01,14,037,Iznájar
+01,14,038,Lucena
+01,14,039,Luque
+01,14,040,Montalbán de Córdoba
+01,14,041,Montemayor
+01,14,042,Montilla
+01,14,043,Montoro
+01,14,044,Monturque
+01,14,045,Moriles
+01,14,046,Nueva Carteya
+01,14,047,Obejo
+01,14,048,Palenciana
+01,14,049,Palma del Río
+01,14,050,Pedro Abad
+01,14,051,Pedroche
+01,14,052,Peñarroya-Pueblonuevo
+01,14,053,Posadas
+01,14,054,Pozoblanco
+01,14,055,Priego de Córdoba
+01,14,056,Puente Genil
+01,14,057,"Rambla, La"
+01,14,058,Rute
+01,14,059,San Sebastián de los Ballesteros
+01,14,061,Santa Eufemia
+01,14,060,Santaella
+01,14,062,Torrecampo
+01,14,063,Valenzuela
+01,14,064,Valsequillo
+01,14,065,"Victoria, La"
+01,14,066,Villa del Río
+01,14,067,Villafranca de Córdoba
+01,14,068,Villaharta
+01,14,069,Villanueva de Córdoba
+01,14,070,Villanueva del Duque
+01,14,071,Villanueva del Rey
+01,14,072,Villaralto
+01,14,073,Villaviciosa de Córdoba
+01,14,074,"Viso, El"
+01,14,075,Zuheros
+12,15,001,Abegondo
+12,15,002,Ames
+12,15,003,Aranga
+12,15,004,Ares
+12,15,005,Arteixo
+12,15,006,Arzúa
+12,15,007,"Baña, A"
+12,15,008,Bergondo
+12,15,009,Betanzos
+12,15,010,Boimorto
+12,15,011,Boiro
+12,15,012,Boqueixón
+12,15,013,Brión
+12,15,014,Cabana de Bergantiños
+12,15,015,Cabanas
+12,15,016,Camariñas
+12,15,017,Cambre
+12,15,018,"Capela, A"
+12,15,019,Carballo
+12,15,901,Cariño
+12,15,020,Carnota
+12,15,021,Carral
+12,15,022,Cedeira
+12,15,023,Cee
+12,15,024,Cerceda
+12,15,025,Cerdido
+12,15,027,Coirós
+12,15,028,Corcubión
+12,15,029,Coristanco
+12,15,030,"Coruña, A"
+12,15,031,Culleredo
+12,15,032,Curtis
+12,15,033,Dodro
+12,15,034,Dumbría
+12,15,035,Fene
+12,15,036,Ferrol
+12,15,037,Fisterra
+12,15,038,Frades
+12,15,039,Irixoa
+12,15,041,"Laracha, A"
+12,15,040,Laxe
+12,15,042,Lousame
+12,15,043,Malpica de Bergantiños
+12,15,044,Mañón
+12,15,045,Mazaricos
+12,15,046,Melide
+12,15,047,Mesía
+12,15,048,Miño
+12,15,049,Moeche
+12,15,050,Monfero
+12,15,051,Mugardos
+12,15,053,Muros
+12,15,052,Muxía
+12,15,054,Narón
+12,15,055,Neda
+12,15,056,Negreira
+12,15,057,Noia
+12,15,058,Oleiros
+12,15,059,Ordes
+12,15,060,Oroso
+12,15,061,Ortigueira
+12,15,062,Outes
+12,15,902,Oza-Cesuras
+12,15,064,Paderne
+12,15,065,Padrón
+12,15,066,"Pino, O"
+12,15,067,"Pobra do Caramiñal, A"
+12,15,068,Ponteceso
+12,15,069,Pontedeume
+12,15,070,"Pontes de García Rodríguez, As"
+12,15,071,Porto do Son
+12,15,072,Rianxo
+12,15,073,Ribeira
+12,15,074,Rois
+12,15,075,Sada
+12,15,076,San Sadurniño
+12,15,077,Santa Comba
+12,15,078,Santiago de Compostela
+12,15,079,Santiso
+12,15,080,Sobrado
+12,15,081,"Somozas, As"
+12,15,082,Teo
+12,15,083,Toques
+12,15,084,Tordoia
+12,15,085,Touro
+12,15,086,Trazo
+12,15,088,Val do Dubra
+12,15,087,Valdoviño
+12,15,089,Vedra
+12,15,091,Vilarmaior
+12,15,090,Vilasantar
+12,15,092,Vimianzo
+12,15,093,Zas
+08,16,001,Abia de la Obispalía
+08,16,002,"Acebrón, El"
+08,16,003,Alarcón
+08,16,004,Albaladejo del Cuende
+08,16,005,Albalate de las Nogueras
+08,16,006,Albendea
+08,16,007,"Alberca de Záncara, La"
+08,16,008,Alcalá de la Vega
+08,16,009,Alcantud
+08,16,010,Alcázar del Rey
+08,16,011,Alcohujate
+08,16,012,Alconchel de la Estrella
+08,16,013,Algarra
+08,16,014,Aliaguilla
+08,16,015,"Almarcha, La"
+08,16,016,Almendros
+08,16,017,Almodóvar del Pinar
+08,16,018,Almonacid del Marquesado
+08,16,019,Altarejos
+08,16,020,Arandilla del Arroyo
+08,16,905,Arcas
+08,16,022,Arcos de la Sierra
+08,16,024,Arguisuelas
+08,16,025,Arrancacepas
+08,16,026,Atalaya del Cañavate
+08,16,027,Barajas de Melo
+08,16,029,Barchín del Hoyo
+08,16,030,Bascuñana de San Pedro
+08,16,031,Beamud
+08,16,032,Belinchón
+08,16,033,Belmonte
+08,16,034,Belmontejo
+08,16,035,Beteta
+08,16,036,Boniches
+08,16,038,Buciegas
+08,16,039,Buenache de Alarcón
+08,16,040,Buenache de la Sierra
+08,16,041,Buendía
+08,16,042,Campillo de Altobuey
+08,16,043,Campillos-Paravientos
+08,16,044,Campillos-Sierra
+08,16,901,Campos del Paraíso
+08,16,045,Canalejas del Arroyo
+08,16,046,Cañada del Hoyo
+08,16,047,Cañada Juncosa
+08,16,048,Cañamares
+08,16,049,"Cañavate, El"
+08,16,050,Cañaveras
+08,16,051,Cañaveruelas
+08,16,052,Cañete
+08,16,053,Cañizares
+08,16,055,Carboneras de Guadazaón
+08,16,056,Cardenete
+08,16,057,Carrascosa
+08,16,058,Carrascosa de Haro
+08,16,060,Casas de Benítez
+08,16,061,Casas de Fernando Alonso
+08,16,062,Casas de Garcimolina
+08,16,063,Casas de Guijarro
+08,16,064,Casas de Haro
+08,16,065,Casas de los Pinos
+08,16,066,Casasimarro
+08,16,067,Castejón
+08,16,068,Castillejo de Iniesta
+08,16,070,Castillejo-Sierra
+08,16,072,Castillo de Garcimuñoz
+08,16,071,Castillo-Albaráñez
+08,16,073,Cervera del Llano
+08,16,023,Chillarón de Cuenca
+08,16,081,Chumillas
+08,16,074,"Cierva, La"
+08,16,078,Cuenca
+08,16,079,Cueva del Hierro
+08,16,082,Enguídanos
+08,16,083,Fresneda de Altarejos
+08,16,084,Fresneda de la Sierra
+08,16,085,"Frontera, La"
+08,16,086,Fuente de Pedro Naharro
+08,16,087,Fuentelespino de Haro
+08,16,088,Fuentelespino de Moya
+08,16,904,Fuentenava de Jábaga
+08,16,089,Fuentes
+08,16,091,Fuertescusa
+08,16,092,Gabaldón
+08,16,093,Garaballa
+08,16,094,Gascueña
+08,16,095,Graja de Campalbo
+08,16,096,Graja de Iniesta
+08,16,097,Henarejos
+08,16,098,"Herrumblar, El"
+08,16,099,"Hinojosa, La"
+08,16,100,"Hinojosos, Los"
+08,16,101,"Hito, El"
+08,16,102,Honrubia
+08,16,103,Hontanaya
+08,16,104,Hontecillas
+08,16,106,Horcajo de Santiago
+08,16,107,Huélamo
+08,16,108,Huelves
+08,16,109,Huérguina
+08,16,110,Huerta de la Obispalía
+08,16,111,Huerta del Marquesado
+08,16,112,Huete
+08,16,113,Iniesta
+08,16,115,Laguna del Marquesado
+08,16,116,Lagunaseca
+08,16,117,Landete
+08,16,118,Ledaña
+08,16,119,Leganiel
+08,16,121,"Majadas, Las"
+08,16,122,Mariana
+08,16,123,Masegosa
+08,16,124,"Mesas, Las"
+08,16,125,Minglanilla
+08,16,126,Mira
+08,16,128,Monreal del Llano
+08,16,129,Montalbanejo
+08,16,130,Montalbo
+08,16,131,Monteagudo de las Salinas
+08,16,132,Mota de Altarejos
+08,16,133,Mota del Cuervo
+08,16,134,Motilla del Palancar
+08,16,135,Moya
+08,16,137,Narboneta
+08,16,139,Olivares de Júcar
+08,16,140,Olmeda de la Cuesta
+08,16,141,Olmeda del Rey
+08,16,142,Olmedilla de Alarcón
+08,16,143,Olmedilla de Eliz
+08,16,145,Osa de la Vega
+08,16,146,Pajarón
+08,16,147,Pajaroncillo
+08,16,148,Palomares del Campo
+08,16,149,Palomera
+08,16,150,Paracuellos
+08,16,151,Paredes
+08,16,152,"Parra de las Vegas, La"
+08,16,153,"Pedernoso, El"
+08,16,154,"Pedroñeras, Las"
+08,16,155,"Peral, El"
+08,16,156,"Peraleja, La"
+08,16,157,"Pesquera, La"
+08,16,158,"Picazo, El"
+08,16,159,Pinarejo
+08,16,160,Pineda de Gigüela
+08,16,161,Piqueras del Castillo
+08,16,162,Portalrubio de Guadamejud
+08,16,163,Portilla
+08,16,165,Poyatos
+08,16,166,Pozoamargo
+08,16,908,Pozorrubielos de la Mancha
+08,16,167,Pozorrubio de Santiago
+08,16,169,"Pozuelo, El"
+08,16,170,Priego
+08,16,171,"Provencio, El"
+08,16,172,Puebla de Almenara
+08,16,174,Puebla del Salvador
+08,16,175,Quintanar del Rey
+08,16,176,Rada de Haro
+08,16,177,Reíllo
+08,16,181,Rozalén del Monte
+08,16,185,Saceda-Trasierra
+08,16,186,Saelices
+08,16,187,Salinas del Manzano
+08,16,188,Salmeroncillos
+08,16,189,Salvacañete
+08,16,190,San Clemente
+08,16,191,San Lorenzo de la Parrilla
+08,16,192,San Martín de Boniches
+08,16,193,San Pedro Palmiches
+08,16,194,Santa Cruz de Moya
+08,16,196,Santa María de los Llanos
+08,16,195,Santa María del Campo Rus
+08,16,197,Santa María del Val
+08,16,198,Sisante
+08,16,199,Solera de Gabaldón
+08,16,909,Sotorribas
+08,16,202,Talayuelas
+08,16,203,Tarancón
+08,16,204,Tébar
+08,16,205,Tejadillos
+08,16,206,Tinajas
+08,16,209,Torralba
+08,16,211,Torrejoncillo del Rey
+08,16,212,Torrubia del Campo
+08,16,213,Torrubia del Castillo
+08,16,215,Tragacete
+08,16,216,Tresjuncos
+08,16,217,Tribaldos
+08,16,218,Uclés
+08,16,219,Uña
+08,16,906,"Valdecolmenas, Los"
+08,16,224,Valdemeca
+08,16,225,Valdemorillo de la Sierra
+08,16,227,Valdemoro-Sierra
+08,16,228,Valdeolivas
+08,16,902,Valdetórtola
+08,16,903,"Valeras, Las"
+08,16,231,Valhermoso de la Fuente
+08,16,173,"Valle de Altomira, El"
+08,16,234,Valsalobre
+08,16,236,Valverde de Júcar
+08,16,237,Valverdejo
+08,16,238,Vara de Rey
+08,16,239,Vega del Codorno
+08,16,240,Vellisca
+08,16,242,Villaconejos de Trabaque
+08,16,243,Villaescusa de Haro
+08,16,244,Villagarcía del Llano
+08,16,245,Villalba de la Sierra
+08,16,246,Villalba del Rey
+08,16,247,Villalgordo del Marquesado
+08,16,248,Villalpardo
+08,16,249,Villamayor de Santiago
+08,16,250,Villanueva de Guadamejud
+08,16,251,Villanueva de la Jara
+08,16,253,Villar de Cañas
+08,16,254,Villar de Domingo García
+08,16,255,Villar de la Encina
+08,16,263,Villar de Olalla
+08,16,258,Villar del Humo
+08,16,259,Villar del Infantado
+08,16,910,Villar y Velasco
+08,16,264,Villarejo de Fuentes
+08,16,265,Villarejo de la Peñuela
+08,16,266,Villarejo-Periesteban
+08,16,269,Villares del Saz
+08,16,270,Villarrubio
+08,16,271,Villarta
+08,16,272,Villas de la Ventosa
+08,16,273,Villaverde y Pasaconsol
+08,16,274,Víllora
+08,16,275,Vindel
+08,16,276,Yémeda
+08,16,277,Zafra de Záncara
+08,16,278,Zafrilla
+08,16,279,Zarza de Tajo
+08,16,280,Zarzuela
+09,17,001,Agullana
+09,17,002,Aiguaviva
+09,17,003,Albanyà
+09,17,004,Albons
+09,17,006,Alp
+09,17,007,Amer
+09,17,008,Anglès
+09,17,009,Arbúcies
+09,17,010,Argelaguer
+09,17,011,"Armentera, L'"
+09,17,012,Avinyonet de Puigventós
+09,17,015,Banyoles
+09,17,016,Bàscara
+09,17,013,Begur
+09,17,018,Bellcaire d'Empordà
+09,17,019,Besalú
+09,17,020,Bescanó
+09,17,021,Beuda
+09,17,022,"Bisbal d'Empordà, La"
+09,17,234,Biure
+09,17,023,Blanes
+09,17,029,Boadella i les Escaules
+09,17,024,Bolvir
+09,17,025,Bordils
+09,17,026,Borrassà
+09,17,027,Breda
+09,17,028,Brunyola i Sant Martí Sapresa
+09,17,031,Cabanelles
+09,17,030,Cabanes
+09,17,032,Cadaqués
+09,17,033,Caldes de Malavella
+09,17,034,Calonge i Sant Antoni
+09,17,035,Camós
+09,17,036,Campdevànol
+09,17,037,Campelles
+09,17,038,Campllong
+09,17,039,Camprodon
+09,17,040,Canet d'Adri
+09,17,041,Cantallops
+09,17,042,Capmany
+09,17,044,Cassà de la Selva
+09,17,048,"Castell d'Aro, Platja d'Aro i s'Agaró"
+09,17,046,Castellfollit de la Roca
+09,17,047,Castelló d'Empúries
+09,17,189,"Cellera de Ter, La"
+09,17,049,Celrà
+09,17,050,Cervià de Ter
+09,17,051,Cistella
+09,17,054,Colera
+09,17,055,Colomers
+09,17,057,Corçà
+09,17,056,Cornellà del Terri
+09,17,058,Crespià
+09,17,901,"Cruïlles, Monells i Sant Sadurní de l'Heura"
+09,17,060,Darnius
+09,17,061,Das
+09,17,062,"Escala, L'"
+09,17,063,Espinelves
+09,17,064,Espolla
+09,17,065,Esponellà
+09,17,005,"Far d'Empordà, El"
+09,17,066,Figueres
+09,17,067,Flaçà
+09,17,068,Foixà
+09,17,069,Fontanals de Cerdanya
+09,17,070,Fontanilles
+09,17,071,Fontcoberta
+09,17,902,Forallac
+09,17,073,Fornells de la Selva
+09,17,074,Fortià
+09,17,075,Garrigàs
+09,17,076,Garrigoles
+09,17,077,Garriguella
+09,17,078,Ger
+09,17,079,Girona
+09,17,080,Gombrèn
+09,17,081,Gualta
+09,17,082,Guils de Cerdanya
+09,17,083,Hostalric
+09,17,084,Isòvol
+09,17,085,Jafre
+09,17,086,"Jonquera, La"
+09,17,087,Juià
+09,17,088,Lladó
+09,17,089,Llagostera
+09,17,090,Llambilles
+09,17,091,Llanars
+09,17,092,Llançà
+09,17,093,Llers
+09,17,094,Llívia
+09,17,095,Lloret de Mar
+09,17,096,"Llosses, Les"
+09,17,102,Maçanet de Cabrenys
+09,17,103,Maçanet de la Selva
+09,17,097,Madremanya
+09,17,098,Maià de Montcal
+09,17,100,Masarac i Vilarnadal
+09,17,101,Massanes
+09,17,099,Meranges
+09,17,105,Mieres
+09,17,106,Mollet de Peralada
+09,17,107,Molló
+09,17,109,Montagut i Oix
+09,17,110,Mont-ras
+09,17,111,Navata
+09,17,112,Ogassa
+09,17,114,Olot
+09,17,115,Ordis
+09,17,116,Osor
+09,17,117,Palafrugell
+09,17,118,Palamós
+09,17,119,Palau de Santa Eulàlia
+09,17,121,Palau-sator
+09,17,120,Palau-saverdera
+09,17,123,Palol de Revardit
+09,17,124,Pals
+09,17,125,Pardines
+09,17,126,Parlavà
+09,17,128,Pau
+09,17,129,Pedret i Marzà
+09,17,130,"Pera, La"
+09,17,132,Peralada
+09,17,133,"Planes d'Hostoles, Les"
+09,17,134,Planoles
+09,17,135,Pont de Molins
+09,17,136,Pontós
+09,17,137,Porqueres
+09,17,140,"Port de la Selva, El"
+09,17,138,Portbou
+09,17,139,"Preses, Les"
+09,17,141,Puigcerdà
+09,17,142,Quart
+09,17,043,Queralbs
+09,17,143,Rabós
+09,17,144,Regencós
+09,17,145,Ribes de Freser
+09,17,146,Riells i Viabrea
+09,17,147,Ripoll
+09,17,148,Riudarenes
+09,17,149,Riudaura
+09,17,150,Riudellots de la Selva
+09,17,151,Riumors
+09,17,152,Roses
+09,17,153,Rupià
+09,17,154,Sales de Llierca
+09,17,155,Salt
+09,17,157,Sant Andreu Salou
+09,17,183,Sant Aniol de Finestres
+09,17,158,Sant Climent Sescebes
+09,17,159,Sant Feliu de Buixalleu
+09,17,160,Sant Feliu de Guíxols
+09,17,161,Sant Feliu de Pallerols
+09,17,162,Sant Ferriol
+09,17,163,Sant Gregori
+09,17,164,Sant Hilari Sacalm
+09,17,165,Sant Jaume de Llierca
+09,17,167,Sant Joan de les Abadesses
+09,17,168,Sant Joan de Mollet
+09,17,185,Sant Joan les Fonts
+09,17,166,Sant Jordi Desvalls
+09,17,169,Sant Julià de Ramis
+09,17,903,Sant Julià del Llor i Bonmatí
+09,17,171,Sant Llorenç de la Muga
+09,17,172,Sant Martí de Llémena
+09,17,173,Sant Martí Vell
+09,17,174,Sant Miquel de Campmajor
+09,17,175,Sant Miquel de Fluvià
+09,17,176,Sant Mori
+09,17,177,Sant Pau de Segúries
+09,17,178,Sant Pere Pescador
+09,17,180,Santa Coloma de Farners
+09,17,181,Santa Cristina d'Aro
+09,17,182,Santa Llogaia d'Àlguema
+09,17,184,Santa Pau
+09,17,186,Sarrià de Ter
+09,17,187,"Saus, Camallera i Llampaies"
+09,17,188,"Selva de Mar, La"
+09,17,190,Serinyà
+09,17,191,Serra de Daró
+09,17,192,Setcases
+09,17,193,Sils
+09,17,052,Siurana
+09,17,194,Susqueda
+09,17,195,"Tallada d'Empordà, La"
+09,17,196,Terrades
+09,17,197,Torrent
+09,17,198,Torroella de Fluvià
+09,17,199,Torroella de Montgrí
+09,17,200,Tortellà
+09,17,201,Toses
+09,17,202,Tossa de Mar
+09,17,204,Ullà
+09,17,205,Ullastret
+09,17,203,Ultramort
+09,17,206,Urús
+09,17,014,"Vajol, La"
+09,17,208,"Vall de Bianya, La"
+09,17,207,"Vall d'en Bas, La"
+09,17,170,Vallfogona de Ripollès
+09,17,209,Vall-llobrega
+09,17,210,Ventalló
+09,17,211,Verges
+09,17,212,Vidrà
+09,17,213,Vidreres
+09,17,214,Vilabertran
+09,17,215,Vilablareix
+09,17,217,Viladamat
+09,17,216,Viladasens
+09,17,218,Vilademuls
+09,17,220,Viladrau
+09,17,221,Vilafant
+09,17,223,Vilajuïga
+09,17,224,Vilallonga de Ter
+09,17,225,Vilamacolum
+09,17,226,Vilamalla
+09,17,227,Vilamaniscle
+09,17,228,Vilanant
+09,17,230,Vila-sacra
+09,17,222,Vilaür
+09,17,233,Vilobí d'Onyar
+09,17,232,Vilopriu
+01,18,001,Agrón
+01,18,002,Alamedilla
+01,18,003,Albolote
+01,18,004,Albondón
+01,18,005,Albuñán
+01,18,006,Albuñol
+01,18,007,Albuñuelas
+01,18,010,Aldeire
+01,18,011,Alfacar
+01,18,012,Algarinejo
+01,18,013,Alhama de Granada
+01,18,014,Alhendín
+01,18,015,Alicún de Ortega
+01,18,016,Almegíjar
+01,18,017,Almuñécar
+01,18,904,Alpujarra de la Sierra
+01,18,018,Alquife
+01,18,020,Arenas del Rey
+01,18,021,Armilla
+01,18,022,Atarfe
+01,18,023,Baza
+01,18,024,Beas de Granada
+01,18,025,Beas de Guadix
+01,18,027,Benalúa
+01,18,028,Benalúa de las Villas
+01,18,029,Benamaurel
+01,18,030,Bérchules
+01,18,032,Bubión
+01,18,033,Busquístar
+01,18,034,Cacín
+01,18,035,Cádiar
+01,18,036,Cájar
+01,18,114,"Calahorra, La"
+01,18,037,Calicasas
+01,18,038,Campotéjar
+01,18,039,Caniles
+01,18,040,Cáñar
+01,18,042,Capileira
+01,18,043,Carataunas
+01,18,044,Cástaras
+01,18,045,Castilléjar
+01,18,046,Castril
+01,18,047,Cenes de la Vega
+01,18,059,Chauchina
+01,18,061,Chimeneas
+01,18,062,Churriana de la Vega
+01,18,048,Cijuela
+01,18,049,Cogollos de Guadix
+01,18,050,Cogollos de la Vega
+01,18,051,Colomera
+01,18,053,Cortes de Baza
+01,18,054,Cortes y Graena
+01,18,912,Cuevas del Campo
+01,18,056,Cúllar
+01,18,057,Cúllar Vega
+01,18,063,Darro
+01,18,064,Dehesas de Guadix
+01,18,065,Dehesas Viejas
+01,18,066,Deifontes
+01,18,067,Diezma
+01,18,068,Dílar
+01,18,069,Dólar
+01,18,915,Domingo Pérez de Granada
+01,18,070,Dúdar
+01,18,071,Dúrcal
+01,18,072,Escúzar
+01,18,074,Ferreira
+01,18,076,Fonelas
+01,18,077,Fornes
+01,18,078,Freila
+01,18,079,Fuente Vaqueros
+01,18,905,"Gabias, Las"
+01,18,082,Galera
+01,18,083,Gobernador
+01,18,084,Gójar
+01,18,085,Gor
+01,18,086,Gorafe
+01,18,087,Granada
+01,18,088,Guadahortuna
+01,18,089,Guadix
+01,18,906,"Guájares, Los"
+01,18,093,Gualchos
+01,18,094,Güéjar Sierra
+01,18,095,Güevéjar
+01,18,096,Huélago
+01,18,097,Huéneja
+01,18,098,Huéscar
+01,18,099,Huétor de Santillán
+01,18,100,Huétor Tájar
+01,18,101,Huétor Vega
+01,18,102,Íllora
+01,18,103,Ítrabo
+01,18,105,Iznalloz
+01,18,106,Játar
+01,18,107,Jayena
+01,18,108,Jérez del Marquesado
+01,18,109,Jete
+01,18,111,Jun
+01,18,112,Juviles
+01,18,115,Láchar
+01,18,116,Lanjarón
+01,18,117,Lanteira
+01,18,119,Lecrín
+01,18,120,Lentegí
+01,18,121,Lobras
+01,18,122,Loja
+01,18,123,Lugros
+01,18,124,Lújar
+01,18,126,"Malahá, La"
+01,18,127,Maracena
+01,18,128,Marchal
+01,18,132,Moclín
+01,18,133,Molvízar
+01,18,134,Monachil
+01,18,135,Montefrío
+01,18,136,Montejícar
+01,18,137,Montillana
+01,18,138,Moraleda de Zafayona
+01,18,909,Morelábor
+01,18,140,Motril
+01,18,141,Murtas
+01,18,903,Nevada
+01,18,143,Nigüelas
+01,18,144,Nívar
+01,18,145,Ogíjares
+01,18,146,Orce
+01,18,147,Órgiva
+01,18,148,Otívar
+01,18,150,Padul
+01,18,151,Pampaneira
+01,18,152,Pedro Martínez
+01,18,153,Peligros
+01,18,154,"Peza, La"
+01,18,910,"Pinar, El"
+01,18,157,Pinos Genil
+01,18,158,Pinos Puente
+01,18,159,Píñar
+01,18,161,Polícar
+01,18,162,Polopos
+01,18,163,Pórtugos
+01,18,164,Puebla de Don Fadrique
+01,18,165,Pulianas
+01,18,167,Purullena
+01,18,168,Quéntar
+01,18,170,Rubite
+01,18,171,Salar
+01,18,173,Salobreña
+01,18,174,Santa Cruz del Comercio
+01,18,175,Santa Fe
+01,18,176,Soportújar
+01,18,177,Sorvilán
+01,18,901,"Taha, La"
+01,18,178,Torre-Cardela
+01,18,916,Torrenueva Costa
+01,18,179,Torvizcón
+01,18,180,Trevélez
+01,18,181,Turón
+01,18,182,Ugíjar
+01,18,914,Valderrubio
+01,18,907,Valle del Zalabí
+01,18,902,"Valle, El"
+01,18,183,Válor
+01,18,911,Vegas del Genil
+01,18,184,Vélez de Benaudalla
+01,18,185,Ventas de Huelma
+01,18,149,Villa de Otura
+01,18,908,Villamena
+01,18,187,Villanueva de las Torres
+01,18,188,Villanueva Mesía
+01,18,189,Víznar
+01,18,192,Zafarraya
+01,18,913,Zagra
+01,18,193,"Zubia, La"
+01,18,194,Zújar
+08,19,001,Abánades
+08,19,002,Ablanque
+08,19,003,Adobes
+08,19,004,Alaminos
+08,19,005,Alarilla
+08,19,006,Albalate de Zorita
+08,19,007,Albares
+08,19,008,Albendiego
+08,19,009,Alcocer
+08,19,010,Alcolea de las Peñas
+08,19,011,Alcolea del Pinar
+08,19,013,Alcoroches
+08,19,015,Aldeanueva de Guadalajara
+08,19,016,Algar de Mesa
+08,19,017,Algora
+08,19,018,Alhóndiga
+08,19,019,Alique
+08,19,020,Almadrones
+08,19,021,Almoguera
+08,19,022,Almonacid de Zorita
+08,19,023,Alocén
+08,19,024,Alovera
+08,19,027,Alustante
+08,19,031,Angón
+08,19,032,Anguita
+08,19,033,Anquela del Ducado
+08,19,034,Anquela del Pedregal
+08,19,036,Aranzueque
+08,19,037,Arbancón
+08,19,038,Arbeteta
+08,19,039,Argecilla
+08,19,040,Armallones
+08,19,041,Armuña de Tajuña
+08,19,042,Arroyo de las Fraguas
+08,19,043,Atanzón
+08,19,044,Atienza
+08,19,045,Auñón
+08,19,046,Azuqueca de Henares
+08,19,047,Baides
+08,19,048,Baños de Tajo
+08,19,049,Bañuelos
+08,19,050,Barriopedro
+08,19,051,Berninches
+08,19,052,"Bodera, La"
+08,19,053,Brihuega
+08,19,054,Budia
+08,19,055,Bujalaro
+08,19,057,Bustares
+08,19,058,Cabanillas del Campo
+08,19,059,Campillo de Dueñas
+08,19,060,Campillo de Ranas
+08,19,061,Campisábalos
+08,19,064,Canredondo
+08,19,065,Cantalojas
+08,19,066,Cañizar
+08,19,067,"Cardoso de la Sierra, El"
+08,19,070,Casa de Uceda
+08,19,071,"Casar, El"
+08,19,073,Casas de San Galindo
+08,19,074,Caspueñas
+08,19,075,Castejón de Henares
+08,19,076,Castellar de la Muela
+08,19,078,Castilforte
+08,19,079,Castilnuevo
+08,19,080,Cendejas de Enmedio
+08,19,081,Cendejas de la Torre
+08,19,082,Centenera
+08,19,103,Checa
+08,19,104,Chequilla
+08,19,106,Chillarón del Rey
+08,19,105,Chiloeches
+08,19,086,Cifuentes
+08,19,087,Cincovillas
+08,19,088,Ciruelas
+08,19,089,Ciruelos del Pinar
+08,19,090,Cobeta
+08,19,091,Cogollor
+08,19,092,Cogolludo
+08,19,095,Condemios de Abajo
+08,19,096,Condemios de Arriba
+08,19,097,Congostrina
+08,19,098,Copernal
+08,19,099,Corduente
+08,19,102,"Cubillo de Uceda, El"
+08,19,107,Driebes
+08,19,108,Durón
+08,19,109,Embid
+08,19,110,Escamilla
+08,19,111,Escariche
+08,19,112,Escopete
+08,19,113,Espinosa de Henares
+08,19,114,Esplegares
+08,19,115,Establés
+08,19,116,Estriégana
+08,19,117,Fontanar
+08,19,118,Fuembellida
+08,19,119,Fuencemillán
+08,19,120,Fuentelahiguera de Albatages
+08,19,121,Fuentelencina
+08,19,122,Fuentelsaz
+08,19,123,Fuentelviejo
+08,19,124,Fuentenovilla
+08,19,125,Gajanejos
+08,19,126,Galápagos
+08,19,127,Galve de Sorbe
+08,19,129,Gascueña de Bornova
+08,19,130,Guadalajara
+08,19,132,Henche
+08,19,133,Heras de Ayuso
+08,19,134,Herrería
+08,19,135,Hiendelaencina
+08,19,136,Hijes
+08,19,138,Hita
+08,19,139,Hombrados
+08,19,142,Hontoba
+08,19,143,Horche
+08,19,145,Hortezuela de Océn
+08,19,146,"Huerce, La"
+08,19,147,Huérmeces del Cerro
+08,19,148,Huertahernando
+08,19,150,Hueva
+08,19,151,Humanes
+08,19,152,Illana
+08,19,153,Iniéstola
+08,19,154,"Inviernas, Las"
+08,19,155,Irueste
+08,19,156,Jadraque
+08,19,157,Jirueque
+08,19,159,Ledanca
+08,19,160,Loranca de Tajuña
+08,19,161,Lupiana
+08,19,162,Luzaga
+08,19,163,Luzón
+08,19,165,Majaelrayo
+08,19,166,Málaga del Fresno
+08,19,167,Malaguilla
+08,19,168,Mandayona
+08,19,169,Mantiel
+08,19,170,Maranchón
+08,19,171,Marchamalo
+08,19,172,Masegoso de Tajuña
+08,19,173,Matarrubia
+08,19,174,Matillas
+08,19,175,Mazarete
+08,19,176,Mazuecos
+08,19,177,Medranda
+08,19,178,Megina
+08,19,179,Membrillera
+08,19,181,Miedes de Atienza
+08,19,182,"Mierla, La"
+08,19,184,Millana
+08,19,183,Milmarcos
+08,19,185,"Miñosa, La"
+08,19,186,Mirabueno
+08,19,187,Miralrío
+08,19,188,Mochales
+08,19,189,Mohernando
+08,19,190,Molina de Aragón
+08,19,191,Monasterio
+08,19,192,Mondéjar
+08,19,193,Montarrón
+08,19,194,Moratilla de los Meleros
+08,19,195,Morenilla
+08,19,196,Muduex
+08,19,197,"Navas de Jadraque, Las"
+08,19,198,Negredo
+08,19,199,Ocentejo
+08,19,200,"Olivar, El"
+08,19,201,Olmeda de Cobeta
+08,19,202,"Olmeda de Jadraque, La"
+08,19,203,"Ordial, El"
+08,19,204,Orea
+08,19,208,Pálmaces de Jadraque
+08,19,209,Pardos
+08,19,210,Paredes de Sigüenza
+08,19,211,Pareja
+08,19,212,Pastrana
+08,19,213,"Pedregal, El"
+08,19,214,Peñalén
+08,19,215,Peñalver
+08,19,216,Peralejos de las Truchas
+08,19,217,Peralveche
+08,19,218,Pinilla de Jadraque
+08,19,219,Pinilla de Molina
+08,19,220,Pioz
+08,19,221,Piqueras
+08,19,222,"Pobo de Dueñas, El"
+08,19,223,Poveda de la Sierra
+08,19,224,Pozo de Almoguera
+08,19,225,Pozo de Guadalajara
+08,19,226,Prádena de Atienza
+08,19,227,Prados Redondos
+08,19,228,Puebla de Beleña
+08,19,229,Puebla de Valles
+08,19,230,Quer
+08,19,231,Rebollosa de Jadraque
+08,19,232,"Recuenco, El"
+08,19,233,Renera
+08,19,234,Retiendas
+08,19,235,Riba de Saelices
+08,19,237,Rillo de Gallo
+08,19,238,Riofrío del Llano
+08,19,239,Robledillo de Mohernando
+08,19,240,Robledo de Corpes
+08,19,241,Romanillos de Atienza
+08,19,242,Romanones
+08,19,243,Rueda de la Sierra
+08,19,244,Sacecorbo
+08,19,245,Sacedón
+08,19,246,Saelices de la Sal
+08,19,247,Salmerón
+08,19,248,San Andrés del Congosto
+08,19,249,San Andrés del Rey
+08,19,250,Santiuste
+08,19,251,Saúca
+08,19,252,Sayatón
+08,19,254,Selas
+08,19,901,Semillas
+08,19,255,Setiles
+08,19,256,Sienes
+08,19,257,Sigüenza
+08,19,258,Solanillos del Extremo
+08,19,259,Somolinos
+08,19,260,"Sotillo, El"
+08,19,261,Sotodosos
+08,19,262,Tamajón
+08,19,263,Taragudo
+08,19,264,Taravilla
+08,19,265,Tartanedo
+08,19,266,Tendilla
+08,19,267,Terzaga
+08,19,268,Tierzo
+08,19,269,"Toba, La"
+08,19,271,Tordellego
+08,19,270,Tordelrábano
+08,19,272,Tordesilos
+08,19,274,Torija
+08,19,279,Torre del Burgo
+08,19,277,Torrecuadrada de Molina
+08,19,278,Torrecuadradilla
+08,19,280,Torrejón del Rey
+08,19,281,Torremocha de Jadraque
+08,19,282,Torremocha del Campo
+08,19,283,Torremocha del Pinar
+08,19,284,Torremochuela
+08,19,285,Torrubia
+08,19,286,Tórtola de Henares
+08,19,287,Tortuera
+08,19,288,Tortuero
+08,19,289,Traíd
+08,19,290,Trijueque
+08,19,291,Trillo
+08,19,293,Uceda
+08,19,294,Ujados
+08,19,296,Utande
+08,19,297,Valdarachas
+08,19,298,Valdearenas
+08,19,299,Valdeavellano
+08,19,300,Valdeaveruelo
+08,19,301,Valdeconcha
+08,19,302,Valdegrudas
+08,19,303,Valdelcubo
+08,19,304,Valdenuño Fernández
+08,19,305,Valdepeñas de la Sierra
+08,19,306,Valderrebollo
+08,19,307,Valdesotos
+08,19,308,Valfermoso de Tajuña
+08,19,309,Valhermoso
+08,19,310,Valtablado del Río
+08,19,311,Valverde de los Arroyos
+08,19,314,Viana de Jadraque
+08,19,317,Villanueva de Alcorón
+08,19,318,Villanueva de Argecilla
+08,19,319,Villanueva de la Torre
+08,19,321,Villares de Jadraque
+08,19,322,Villaseca de Henares
+08,19,323,Villaseca de Uceda
+08,19,324,Villel de Mesa
+08,19,325,Viñuelas
+08,19,326,Yebes
+08,19,327,Yebra
+08,19,329,Yélamos de Abajo
+08,19,330,Yélamos de Arriba
+08,19,331,Yunquera de Henares
+08,19,332,"Yunta, La"
+08,19,333,Zaorejas
+08,19,334,Zarzuela de Jadraque
+08,19,335,Zorita de los Canes
+16,20,001,Abaltzisketa
+16,20,002,Aduna
+16,20,016,Aia
+16,20,003,Aizarnazabal
+16,20,004,Albiztur
+16,20,005,Alegia
+16,20,006,Alkiza
+16,20,906,Altzaga
+16,20,007,Altzo
+16,20,008,Amezketa
+16,20,009,Andoain
+16,20,010,Anoeta
+16,20,011,Antzuola
+16,20,012,Arama
+16,20,013,Aretxabaleta
+16,20,055,Arrasate/Mondragón
+16,20,014,Asteasu
+16,20,903,Astigarraga
+16,20,015,Ataun
+16,20,017,Azkoitia
+16,20,018,Azpeitia
+16,20,904,Baliarrain
+16,20,019,Beasain
+16,20,020,Beizama
+16,20,021,Belauntza
+16,20,022,Berastegi
+16,20,074,Bergara
+16,20,023,Berrobi
+16,20,024,Bidania-Goiatz
+16,20,029,Deba
+16,20,069,Donostia/San Sebastián
+16,20,030,Eibar
+16,20,031,Elduain
+16,20,033,Elgeta
+16,20,032,Elgoibar
+16,20,067,Errenteria
+16,20,066,Errezil
+16,20,034,Eskoriatza
+16,20,035,Ezkio-Itsaso
+16,20,038,Gabiria
+16,20,037,Gaintza
+16,20,907,Gaztelu
+16,20,039,Getaria
+16,20,040,Hernani
+16,20,041,Hernialde
+16,20,036,Hondarribia
+16,20,042,Ibarra
+16,20,043,Idiazabal
+16,20,044,Ikaztegieta
+16,20,045,Irun
+16,20,046,Irura
+16,20,047,Itsasondo
+16,20,048,Larraul
+16,20,902,Lasarte-Oria
+16,20,049,Lazkao
+16,20,050,Leaburu
+16,20,051,Legazpi
+16,20,052,Legorreta
+16,20,068,Leintz-Gatzaga
+16,20,053,Lezo
+16,20,054,Lizartza
+16,20,901,Mendaro
+16,20,057,Mutiloa
+16,20,056,Mutriku
+16,20,063,Oiartzun
+16,20,058,Olaberria
+16,20,059,Oñati
+16,20,076,Ordizia
+16,20,905,Orendain
+16,20,060,Orexa
+16,20,061,Orio
+16,20,062,Ormaiztegi
+16,20,064,Pasaia
+16,20,070,Segura
+16,20,065,Soraluze-Placencia de las Armas
+16,20,071,Tolosa
+16,20,072,Urnieta
+16,20,077,Urretxu
+16,20,073,Usurbil
+16,20,075,Villabona
+16,20,078,Zaldibia
+16,20,079,Zarautz
+16,20,025,Zegama
+16,20,026,Zerain
+16,20,027,Zestoa
+16,20,028,Zizurkil
+16,20,081,Zumaia
+16,20,080,Zumarraga
+01,21,001,Alájar
+01,21,002,Aljaraque
+01,21,003,"Almendro, El"
+01,21,004,Almonaster la Real
+01,21,005,Almonte
+01,21,006,Alosno
+01,21,007,Aracena
+01,21,008,Aroche
+01,21,009,Arroyomolinos de León
+01,21,010,Ayamonte
+01,21,011,Beas
+01,21,012,Berrocal
+01,21,013,Bollullos Par del Condado
+01,21,014,Bonares
+01,21,015,Cabezas Rubias
+01,21,016,Cala
+01,21,017,Calañas
+01,21,018,"Campillo, El"
+01,21,019,Campofrío
+01,21,020,Cañaveral de León
+01,21,021,Cartaya
+01,21,022,Castaño del Robledo
+01,21,023,"Cerro de Andévalo, El"
+01,21,030,Chucena
+01,21,024,Corteconcepción
+01,21,025,Cortegana
+01,21,026,Cortelazor
+01,21,027,Cumbres de Enmedio
+01,21,028,Cumbres de San Bartolomé
+01,21,029,Cumbres Mayores
+01,21,031,Encinasola
+01,21,032,Escacena del Campo
+01,21,033,Fuenteheridos
+01,21,034,Galaroza
+01,21,035,Gibraleón
+01,21,036,"Granada de Río-Tinto, La"
+01,21,037,"Granado, El"
+01,21,038,Higuera de la Sierra
+01,21,039,Hinojales
+01,21,040,Hinojos
+01,21,041,Huelva
+01,21,042,Isla Cristina
+01,21,043,Jabugo
+01,21,044,Lepe
+01,21,045,Linares de la Sierra
+01,21,046,Lucena del Puerto
+01,21,047,Manzanilla
+01,21,048,"Marines, Los"
+01,21,049,Minas de Riotinto
+01,21,050,Moguer
+01,21,051,"Nava, La"
+01,21,052,Nerva
+01,21,053,Niebla
+01,21,054,"Palma del Condado, La"
+01,21,055,Palos de la Frontera
+01,21,056,Paterna del Campo
+01,21,057,Paymogo
+01,21,058,Puebla de Guzmán
+01,21,059,Puerto Moral
+01,21,060,Punta Umbría
+01,21,061,Rociana del Condado
+01,21,062,Rosal de la Frontera
+01,21,063,San Bartolomé de la Torre
+01,21,064,San Juan del Puerto
+01,21,066,San Silvestre de Guzmán
+01,21,065,Sanlúcar de Guadiana
+01,21,067,Santa Ana la Real
+01,21,068,Santa Bárbara de Casa
+01,21,069,Santa Olalla del Cala
+01,21,070,Trigueros
+01,21,071,Valdelarco
+01,21,072,Valverde del Camino
+01,21,073,Villablanca
+01,21,074,Villalba del Alcor
+01,21,075,Villanueva de las Cruces
+01,21,076,Villanueva de los Castillejos
+01,21,077,Villarrasa
+01,21,078,Zalamea la Real
+01,21,902,"Zarza-Perrunal, La"
+01,21,079,Zufre
+02,22,001,Abiego
+02,22,002,Abizanda
+02,22,003,Adahuesca
+02,22,004,Agüero
+02,22,907,Aínsa-Sobrarbe
+02,22,006,Aisa
+02,22,007,Albalate de Cinca
+02,22,008,Albalatillo
+02,22,009,Albelda
+02,22,011,Albero Alto
+02,22,012,Albero Bajo
+02,22,013,Alberuela de Tubo
+02,22,014,Alcalá de Gurrea
+02,22,015,Alcalá del Obispo
+02,22,016,Alcampell
+02,22,017,Alcolea de Cinca
+02,22,018,Alcubierre
+02,22,019,Alerre
+02,22,020,Alfántega
+02,22,021,Almudévar
+02,22,022,Almunia de San Juan
+02,22,023,Almuniente
+02,22,024,Alquézar
+02,22,025,Altorricón
+02,22,027,Angüés
+02,22,028,Ansó
+02,22,029,Antillón
+02,22,032,Aragüés del Puerto
+02,22,035,Arén
+02,22,036,Argavieso
+02,22,037,Arguis
+02,22,039,Ayerbe
+02,22,040,Azanuy-Alins
+02,22,041,Azara
+02,22,042,Azlor
+02,22,043,Baélls
+02,22,044,Bailo
+02,22,045,Baldellou
+02,22,046,Ballobar
+02,22,047,Banastás
+02,22,048,Barbastro
+02,22,049,Barbués
+02,22,050,Barbuñales
+02,22,051,Bárcabo
+02,22,052,Belver de Cinca
+02,22,053,Benabarre
+02,22,054,Benasque
+02,22,246,Beranuy
+02,22,055,Berbegal
+02,22,057,Bielsa
+02,22,058,Bierge
+02,22,059,Biescas
+02,22,060,Binaced
+02,22,061,Binéfar
+02,22,062,Bisaurri
+02,22,063,Biscarrués
+02,22,064,Blecua y Torres
+02,22,066,Boltaña
+02,22,067,Bonansa
+02,22,068,Borau
+02,22,069,Broto
+02,22,072,Caldearenas
+02,22,074,Campo
+02,22,075,Camporrélls
+02,22,076,Canal de Berdún
+02,22,077,Candasnos
+02,22,078,Canfranc
+02,22,079,Capdesaso
+02,22,080,Capella
+02,22,081,Casbas de Huesca
+02,22,083,Castejón de Monegros
+02,22,084,Castejón de Sos
+02,22,082,Castejón del Puente
+02,22,085,Castelflorite
+02,22,086,Castiello de Jaca
+02,22,087,Castigaleu
+02,22,088,Castillazuelo
+02,22,089,Castillonroy
+02,22,094,Chalamera
+02,22,095,Chía
+02,22,096,Chimillas
+02,22,090,Colungo
+02,22,099,Esplús
+02,22,102,Estada
+02,22,103,Estadilla
+02,22,105,Estopiñán del Castillo
+02,22,106,Fago
+02,22,107,Fanlo
+02,22,109,Fiscal
+02,22,110,Fonz
+02,22,111,Foradada del Toscar
+02,22,112,Fraga
+02,22,113,"Fueva, La"
+02,22,114,Gistaín
+02,22,115,"Grado, El"
+02,22,116,Grañén
+02,22,117,Graus
+02,22,119,Gurrea de Gállego
+02,22,122,Hoz de Jaca
+02,22,908,Hoz y Costean
+02,22,124,Huerto
+02,22,125,Huesca
+02,22,126,Ibieca
+02,22,127,Igriés
+02,22,128,Ilche
+02,22,129,Isábena
+02,22,130,Jaca
+02,22,131,Jasa
+02,22,133,Labuerda
+02,22,135,Laluenga
+02,22,136,Lalueza
+02,22,137,Lanaja
+02,22,139,Laperdiguera
+02,22,141,Lascellas-Ponzano
+02,22,142,Lascuarre
+02,22,143,Laspaúles
+02,22,144,Laspuña
+02,22,149,Loarre
+02,22,150,Loporzano
+02,22,151,Loscorrales
+02,22,905,Lupiñén-Ortilla
+02,22,155,Monesma y Cajigar
+02,22,156,Monflorite-Lascasas
+02,22,157,Montanuy
+02,22,158,Monzón
+02,22,160,Naval
+02,22,162,Novales
+02,22,163,Nueno
+02,22,164,Olvena
+02,22,165,Ontiñena
+02,22,167,Osso de Cinca
+02,22,168,Palo
+02,22,170,Panticosa
+02,22,172,Peñalba
+02,22,173,"Peñas de Riglos, Las"
+02,22,174,Peralta de Alcofea
+02,22,175,Peralta de Calasanz
+02,22,176,Peraltilla
+02,22,177,Perarrúa
+02,22,178,Pertusa
+02,22,181,Piracés
+02,22,182,Plan
+02,22,184,Poleñino
+02,22,186,Pozán de Vero
+02,22,187,"Puebla de Castro, La"
+02,22,188,Puente de Montañana
+02,22,902,Puente la Reina de Jaca
+02,22,189,Puértolas
+02,22,190,"Pueyo de Araguás, El"
+02,22,193,Pueyo de Santa Cruz
+02,22,195,Quicena
+02,22,197,Robres
+02,22,199,Sabiñánigo
+02,22,200,Sahún
+02,22,201,Salas Altas
+02,22,202,Salas Bajas
+02,22,203,Salillas
+02,22,204,Sallent de Gállego
+02,22,205,San Esteban de Litera
+02,22,207,San Juan de Plan
+02,22,903,San Miguel del Cinca
+02,22,206,Sangarrén
+02,22,208,Santa Cilia
+02,22,209,Santa Cruz de la Serós
+02,22,906,Santa María de Dulcis
+02,22,212,Santaliestra y San Quílez
+02,22,213,Sariñena
+02,22,214,Secastilla
+02,22,215,Seira
+02,22,217,Sena
+02,22,218,Senés de Alcubierre
+02,22,220,Sesa
+02,22,221,Sesué
+02,22,222,Siétamo
+02,22,223,Sopeira
+02,22,904,"Sotonera, La"
+02,22,225,Tamarite de Litera
+02,22,226,Tardienta
+02,22,227,Tella-Sin
+02,22,228,Tierz
+02,22,229,Tolva
+02,22,230,Torla-Ordesa
+02,22,232,Torralba de Aragón
+02,22,233,Torre la Ribera
+02,22,234,Torrente de Cinca
+02,22,235,Torres de Alcanadre
+02,22,236,Torres de Barbués
+02,22,239,Tramaced
+02,22,242,Valfarta
+02,22,243,Valle de Bardají
+02,22,901,Valle de Hecho
+02,22,244,Valle de Lierp
+02,22,245,Velilla de Cinca
+02,22,909,Vencillón
+02,22,247,Viacamp y Litera
+02,22,248,Vicién
+02,22,249,Villanova
+02,22,250,Villanúa
+02,22,251,Villanueva de Sigena
+02,22,252,Yebra de Basa
+02,22,253,Yésero
+02,22,254,Zaidín
+01,23,001,Albanchez de Mágina
+01,23,002,Alcalá la Real
+01,23,003,Alcaudete
+01,23,004,Aldeaquemada
+01,23,005,Andújar
+01,23,006,Arjona
+01,23,007,Arjonilla
+01,23,008,Arquillos
+01,23,905,Arroyo del Ojanco
+01,23,009,Baeza
+01,23,010,Bailén
+01,23,011,Baños de la Encina
+01,23,012,Beas de Segura
+01,23,902,Bedmar y Garcíez
+01,23,014,Begíjar
+01,23,015,Bélmez de la Moraleda
+01,23,016,Benatae
+01,23,017,Cabra del Santo Cristo
+01,23,018,Cambil
+01,23,019,Campillo de Arenas
+01,23,020,Canena
+01,23,021,Carboneros
+01,23,901,Cárcheles
+01,23,024,"Carolina, La"
+01,23,025,Castellar
+01,23,026,Castillo de Locubín
+01,23,027,Cazalilla
+01,23,028,Cazorla
+01,23,029,Chiclana de Segura
+01,23,030,Chilluévar
+01,23,031,Escañuela
+01,23,032,Espeluy
+01,23,033,Frailes
+01,23,034,Fuensanta de Martos
+01,23,035,Fuerte del Rey
+01,23,037,Génave
+01,23,038,"Guardia de Jaén, La"
+01,23,039,Guarromán
+01,23,041,Higuera de Calatrava
+01,23,042,Hinojares
+01,23,043,Hornos
+01,23,044,Huelma
+01,23,045,Huesa
+01,23,046,Ibros
+01,23,047,"Iruela, La"
+01,23,048,Iznatoraf
+01,23,049,Jabalquinto
+01,23,050,Jaén
+01,23,051,Jamilena
+01,23,052,Jimena
+01,23,053,Jódar
+01,23,040,Lahiguera
+01,23,054,Larva
+01,23,055,Linares
+01,23,056,Lopera
+01,23,057,Lupión
+01,23,058,Mancha Real
+01,23,059,Marmolejo
+01,23,060,Martos
+01,23,061,Mengíbar
+01,23,062,Montizón
+01,23,063,Navas de San Juan
+01,23,064,Noalejo
+01,23,065,Orcera
+01,23,066,Peal de Becerro
+01,23,067,Pegalajar
+01,23,069,Porcuna
+01,23,070,Pozo Alcón
+01,23,071,Puente de Génave
+01,23,072,"Puerta de Segura, La"
+01,23,073,Quesada
+01,23,074,Rus
+01,23,075,Sabiote
+01,23,076,Santa Elena
+01,23,077,Santiago de Calatrava
+01,23,904,Santiago-Pontones
+01,23,079,Santisteban del Puerto
+01,23,080,Santo Tomé
+01,23,081,Segura de la Sierra
+01,23,082,Siles
+01,23,084,Sorihuela del Guadalimar
+01,23,085,Torreblascopedro
+01,23,086,Torredelcampo
+01,23,087,Torredonjimeno
+01,23,088,Torreperogil
+01,23,090,Torres
+01,23,091,Torres de Albánchez
+01,23,092,Úbeda
+01,23,093,Valdepeñas de Jaén
+01,23,094,Vilches
+01,23,095,Villacarrillo
+01,23,096,Villanueva de la Reina
+01,23,097,Villanueva del Arzobispo
+01,23,098,Villardompardo
+01,23,099,"Villares, Los"
+01,23,101,Villarrodrigo
+01,23,903,Villatorres
+07,24,001,Acebedo
+07,24,002,Algadefe
+07,24,003,Alija del Infantado
+07,24,004,Almanza
+07,24,005,"Antigua, La"
+07,24,006,Ardón
+07,24,007,Arganza
+07,24,008,Astorga
+07,24,009,Balboa
+07,24,010,"Bañeza, La"
+07,24,011,Barjas
+07,24,012,"Barrios de Luna, Los"
+07,24,014,Bembibre
+07,24,015,Benavides
+07,24,016,Benuza
+07,24,017,Bercianos del Páramo
+07,24,018,Bercianos del Real Camino
+07,24,019,Berlanga del Bierzo
+07,24,020,Boca de Huérgano
+07,24,021,Boñar
+07,24,022,Borrenes
+07,24,023,Brazuelo
+07,24,024,"Burgo Ranero, El"
+07,24,025,Burón
+07,24,026,Bustillo del Páramo
+07,24,027,Cabañas Raras
+07,24,028,Cabreros del Río
+07,24,029,Cabrillanes
+07,24,030,Cacabelos
+07,24,031,Calzada del Coto
+07,24,032,Campazas
+07,24,033,Campo de Villavidel
+07,24,034,Camponaraya
+07,24,037,Cármenes
+07,24,038,Carracedelo
+07,24,039,Carrizo
+07,24,040,Carrocera
+07,24,041,Carucedo
+07,24,042,Castilfalé
+07,24,043,Castrillo de Cabrera
+07,24,044,Castrillo de la Valduerna
+07,24,046,Castrocalbón
+07,24,047,Castrocontrigo
+07,24,049,Castropodame
+07,24,050,Castrotierra de Valmadrigal
+07,24,051,Cea
+07,24,052,Cebanico
+07,24,053,Cebrones del Río
+07,24,065,Chozas de Abajo
+07,24,054,Cimanes de la Vega
+07,24,055,Cimanes del Tejar
+07,24,056,Cistierna
+07,24,057,Congosto
+07,24,058,Corbillos de los Oteros
+07,24,059,Corullón
+07,24,060,Crémenes
+07,24,061,Cuadros
+07,24,062,Cubillas de los Oteros
+07,24,063,Cubillas de Rueda
+07,24,064,Cubillos del Sil
+07,24,066,Destriana
+07,24,067,Encinedo
+07,24,068,"Ercina, La"
+07,24,069,Escobar de Campos
+07,24,070,Fabero
+07,24,071,Folgoso de la Ribera
+07,24,073,Fresno de la Vega
+07,24,074,Fuentes de Carbajal
+07,24,076,Garrafe de Torío
+07,24,077,Gordaliza del Pino
+07,24,078,Gordoncillo
+07,24,079,Gradefes
+07,24,080,Grajal de Campos
+07,24,081,Gusendos de los Oteros
+07,24,082,Hospital de Órbigo
+07,24,083,Igüeña
+07,24,084,Izagre
+07,24,086,Joarilla de las Matas
+07,24,087,Laguna Dalga
+07,24,088,Laguna de Negrillos
+07,24,089,León
+07,24,092,Llamas de la Ribera
+07,24,090,Lucillo
+07,24,091,Luyego
+07,24,093,Magaz de Cepeda
+07,24,094,Mansilla de las Mulas
+07,24,095,Mansilla Mayor
+07,24,096,Maraña
+07,24,097,Matadeón de los Oteros
+07,24,098,Matallana de Torío
+07,24,099,Matanza
+07,24,100,Molinaseca
+07,24,101,Murias de Paredes
+07,24,102,Noceda del Bierzo
+07,24,103,Oencia
+07,24,104,"Omañas, Las"
+07,24,105,Onzonilla
+07,24,106,Oseja de Sajambre
+07,24,107,Pajares de los Oteros
+07,24,108,Palacios de la Valduerna
+07,24,109,Palacios del Sil
+07,24,110,Páramo del Sil
+07,24,112,Peranzanes
+07,24,113,Pobladura de Pelayo García
+07,24,114,"Pola de Gordón, La"
+07,24,115,Ponferrada
+07,24,116,Posada de Valdeón
+07,24,117,Pozuelo del Páramo
+07,24,118,Prado de la Guzpeña
+07,24,119,Priaranza del Bierzo
+07,24,120,Prioro
+07,24,121,Puebla de Lillo
+07,24,122,Puente de Domingo Flórez
+07,24,123,Quintana del Castillo
+07,24,124,Quintana del Marco
+07,24,125,Quintana y Congosto
+07,24,127,Regueras de Arriba
+07,24,129,Reyero
+07,24,130,Riaño
+07,24,131,Riego de la Vega
+07,24,132,Riello
+07,24,133,Rioseco de Tapia
+07,24,134,"Robla, La"
+07,24,136,Roperuelos del Páramo
+07,24,137,Sabero
+07,24,139,Sahagún
+07,24,141,San Adrián del Valle
+07,24,142,San Andrés del Rabanedo
+07,24,144,San Cristóbal de la Polantera
+07,24,145,San Emiliano
+07,24,146,San Esteban de Nogales
+07,24,148,San Justo de la Vega
+07,24,149,San Millán de los Caballeros
+07,24,150,San Pedro Bercianos
+07,24,143,Sancedo
+07,24,151,Santa Colomba de Curueño
+07,24,152,Santa Colomba de Somoza
+07,24,153,Santa Cristina de Valmadrigal
+07,24,154,Santa Elena de Jamuz
+07,24,155,Santa María de la Isla
+07,24,158,Santa María de Ordás
+07,24,156,Santa María del Monte de Cea
+07,24,157,Santa María del Páramo
+07,24,159,Santa Marina del Rey
+07,24,160,Santas Martas
+07,24,161,Santiago Millas
+07,24,162,Santovenia de la Valdoncina
+07,24,163,Sariegos
+07,24,164,Sena de Luna
+07,24,165,Sobrado
+07,24,166,Soto de la Vega
+07,24,167,Soto y Amío
+07,24,168,Toral de los Guzmanes
+07,24,206,Toral de los Vados
+07,24,169,Toreno
+07,24,170,Torre del Bierzo
+07,24,171,Trabadelo
+07,24,172,Truchas
+07,24,173,Turcia
+07,24,174,Urdiales del Páramo
+07,24,185,Val de San Lorenzo
+07,24,175,Valdefresno
+07,24,176,Valdefuentes del Páramo
+07,24,177,Valdelugueros
+07,24,178,Valdemora
+07,24,179,Valdepiélago
+07,24,180,Valdepolo
+07,24,181,Valderas
+07,24,182,Valderrey
+07,24,183,Valderrueda
+07,24,184,Valdesamario
+07,24,187,Valdevimbre
+07,24,188,Valencia de Don Juan
+07,24,036,Valle de Ancares
+07,24,191,Vallecillo
+07,24,189,Valverde de la Virgen
+07,24,190,Valverde-Enrique
+07,24,193,"Vecilla, La"
+07,24,196,Vega de Espinareda
+07,24,197,Vega de Infanzones
+07,24,198,Vega de Valcarce
+07,24,194,Vegacervera
+07,24,199,Vegaquemada
+07,24,201,Vegas del Condado
+07,24,202,Villablino
+07,24,203,Villabraz
+07,24,205,Villadangos del Páramo
+07,24,207,Villademor de la Vega
+07,24,209,Villafranca del Bierzo
+07,24,210,Villagatón
+07,24,211,Villamandos
+07,24,901,Villamanín
+07,24,212,Villamañán
+07,24,213,Villamartín de Don Sancho
+07,24,214,Villamejil
+07,24,215,Villamol
+07,24,216,Villamontán de la Valduerna
+07,24,217,Villamoratiel de las Matas
+07,24,218,Villanueva de las Manzanas
+07,24,219,Villaobispo de Otero
+07,24,902,Villaornate y Castro
+07,24,221,Villaquejida
+07,24,222,Villaquilambre
+07,24,223,Villarejo de Órbigo
+07,24,224,Villares de Órbigo
+07,24,225,Villasabariego
+07,24,226,Villaselán
+07,24,227,Villaturiel
+07,24,228,Villazala
+07,24,229,Villazanzo de Valderaduey
+07,24,230,Zotes del Páramo
+09,25,001,Abella de la Conca
+09,25,002,Àger
+09,25,003,Agramunt
+09,25,038,Aitona
+09,25,004,"Alamús, Els"
+09,25,005,Alàs i Cerc
+09,25,006,"Albagés, L'"
+09,25,007,Albatàrrec
+09,25,008,Albesa
+09,25,009,"Albi, L'"
+09,25,010,Alcanó
+09,25,011,Alcarràs
+09,25,012,Alcoletge
+09,25,013,Alfarràs
+09,25,014,Alfés
+09,25,015,Algerri
+09,25,016,Alguaire
+09,25,017,Alins
+09,25,019,Almacelles
+09,25,020,Almatret
+09,25,021,Almenar
+09,25,022,Alòs de Balaguer
+09,25,023,Alpicat
+09,25,024,Alt Àneu
+09,25,027,Anglesola
+09,25,029,Arbeca
+09,25,031,Arres
+09,25,032,Arsèguel
+09,25,033,Artesa de Lleida
+09,25,034,Artesa de Segre
+09,25,036,Aspa
+09,25,037,"Avellanes i Santa Linya, Les"
+09,25,039,Baix Pallars
+09,25,040,Balaguer
+09,25,041,Barbens
+09,25,042,"Baronia de Rialb, La"
+09,25,044,Bassella
+09,25,045,Bausen
+09,25,046,Belianes
+09,25,170,Bellaguarda
+09,25,047,Bellcaire d'Urgell
+09,25,048,Bell-lloc d'Urgell
+09,25,049,Bellmunt d'Urgell
+09,25,050,Bellpuig
+09,25,051,Bellver de Cerdanya
+09,25,052,Bellvís
+09,25,053,Benavent de Segrià
+09,25,055,Biosca
+09,25,057,"Bòrdes, Es"
+09,25,058,"Borges Blanques, Les"
+09,25,059,Bossòst
+09,25,056,Bovera
+09,25,060,Cabanabona
+09,25,061,Cabó
+09,25,062,Camarasa
+09,25,063,Canejan
+09,25,904,Castell de Mur
+09,25,064,Castellar de la Ribera
+09,25,067,Castelldans
+09,25,068,Castellnou de Seana
+09,25,069,Castelló de Farfanya
+09,25,070,Castellserà
+09,25,071,Cava
+09,25,072,Cervera
+09,25,073,Cervià de les Garrigues
+09,25,074,Ciutadilla
+09,25,075,Clariana de Cardener
+09,25,076,"Cogul, El"
+09,25,077,Coll de Nargó
+09,25,163,"Coma i la Pedra, La"
+09,25,161,Conca de Dalt
+09,25,078,Corbins
+09,25,079,Cubells
+09,25,081,"Espluga Calba, L'"
+09,25,082,Espot
+09,25,088,Estamariu
+09,25,085,Estaràs
+09,25,086,Esterri d'Àneu
+09,25,087,Esterri de Cardós
+09,25,089,Farrera
+09,25,908,Fígols i Alinyà
+09,25,092,"Floresta, La"
+09,25,093,Fondarella
+09,25,094,Foradada
+09,25,096,"Fuliola, La"
+09,25,097,Fulleda
+09,25,098,Gavet de la Conca
+09,25,912,Gimenells i el Pla de la Font
+09,25,099,Golmés
+09,25,100,Gósol
+09,25,101,"Granadella, La"
+09,25,102,"Granja d'Escarp, La"
+09,25,103,Granyanella
+09,25,105,Granyena de les Garrigues
+09,25,104,Granyena de Segarra
+09,25,109,Guimerà
+09,25,903,"Guingueta d'Àneu, La"
+09,25,110,Guissona
+09,25,111,Guixers
+09,25,115,Isona i Conca Dellà
+09,25,112,Ivars de Noguera
+09,25,113,Ivars d'Urgell
+09,25,114,Ivorra
+09,25,910,Josa i Tuixén
+09,25,118,Juncosa
+09,25,119,Juneda
+09,25,121,Les
+09,25,122,Linyola
+09,25,123,Lladorre
+09,25,124,Lladurs
+09,25,125,Llardecans
+09,25,126,Llavorsí
+09,25,120,Lleida
+09,25,127,Lles de Cerdanya
+09,25,128,Llimiana
+09,25,129,Llobera
+09,25,133,Maials
+09,25,130,Maldà
+09,25,131,Massalcoreig
+09,25,132,Massoteres
+09,25,134,Menàrguens
+09,25,135,Miralcamp
+09,25,137,Mollerussa
+09,25,136,"Molsosa, La"
+09,25,139,Montellà i Martinet
+09,25,140,Montferrer i Castellbò
+09,25,138,Montgai
+09,25,142,Montoliu de Lleida
+09,25,141,Montoliu de Segarra
+09,25,143,Montornès de Segarra
+09,25,145,Nalec
+09,25,025,Naut Aran
+09,25,146,Navès
+09,25,148,Odèn
+09,25,149,Oliana
+09,25,150,Oliola
+09,25,151,Olius
+09,25,152,"Oluges, Les"
+09,25,153,"Omellons, Els"
+09,25,154,"Omells de na Gaia, Els"
+09,25,155,Organyà
+09,25,156,Os de Balaguer
+09,25,157,Ossó de Sió
+09,25,158,"Palau d'Anglesola, El"
+09,25,164,Penelles
+09,25,165,Peramola
+09,25,166,Pinell de Solsonès
+09,25,167,Pinós
+09,25,911,"Plans de Sió, Els"
+09,25,168,"Poal, El"
+09,25,169,"Pobla de Cérvoles, La"
+09,25,171,"Pobla de Segur, La"
+09,25,030,"Pont de Bar, El"
+09,25,173,"Pont de Suert, El"
+09,25,172,Ponts
+09,25,174,"Portella, La"
+09,25,175,Prats i Sansor
+09,25,176,Preixana
+09,25,177,Preixens
+09,25,179,Prullans
+09,25,180,Puiggròs
+09,25,181,Puigverd d'Agramunt
+09,25,182,Puigverd de Lleida
+09,25,183,Rialp
+09,25,905,Ribera d'Ondara
+09,25,185,Ribera d'Urgellet
+09,25,186,Riner
+09,25,913,Riu de Cerdanya
+09,25,189,Rosselló
+09,25,190,Salàs de Pallars
+09,25,191,Sanaüja
+09,25,196,Sant Esteve de la Sarga
+09,25,192,Sant Guim de Freixenet
+09,25,197,Sant Guim de la Plana
+09,25,193,Sant Llorenç de Morunys
+09,25,902,Sant Martí de Riucorb
+09,25,194,Sant Ramon
+09,25,201,Sarroca de Bellera
+09,25,200,Sarroca de Lleida
+09,25,202,Senterada
+09,25,035,"Sentiu de Sió, La"
+09,25,204,Seròs
+09,25,203,"Seu d'Urgell, La"
+09,25,205,Sidamon
+09,25,206,"Soleràs, El"
+09,25,207,Solsona
+09,25,208,Soriguera
+09,25,209,Sort
+09,25,210,Soses
+09,25,211,Sudanell
+09,25,212,Sunyer
+09,25,215,Talarn
+09,25,216,Talavera
+09,25,217,Tàrrega
+09,25,218,Tarrés
+09,25,219,Tarroja de Segarra
+09,25,220,Térmens
+09,25,221,Tírvia
+09,25,222,Tiurana
+09,25,223,Torà
+09,25,224,"Torms, Els"
+09,25,225,Tornabous
+09,25,227,"Torre de Cabdella, La"
+09,25,226,Torrebesses
+09,25,228,Torrefarrera
+09,25,907,Torrefeta i Florejacs
+09,25,230,Torregrossa
+09,25,231,Torrelameu
+09,25,232,Torres de Segre
+09,25,233,Torre-serona
+09,25,234,Tremp
+09,25,043,"Vall de Boí, La"
+09,25,901,Vall de Cardós
+09,25,238,Vallbona de les Monges
+09,25,240,Vallfogona de Balaguer
+09,25,906,"Valls d'Aguilar, Les"
+09,25,239,"Valls de Valira, Les"
+09,25,909,"Vansa i Fórnols, La"
+09,25,242,Verdú
+09,25,243,Vielha e Mijaran
+09,25,244,Vilagrassa
+09,25,245,Vilaller
+09,25,247,Vilamòs
+09,25,248,Vilanova de Bellpuig
+09,25,254,Vilanova de la Barca
+09,25,249,Vilanova de l'Aguda
+09,25,250,Vilanova de Meià
+09,25,251,Vilanova de Segrià
+09,25,252,Vila-sana
+09,25,253,"Vilosell, El"
+09,25,255,Vinaixa
+17,26,001,Ábalos
+17,26,002,Agoncillo
+17,26,003,Aguilar del Río Alhama
+17,26,004,Ajamil de Cameros
+17,26,005,Albelda de Iregua
+17,26,006,Alberite
+17,26,007,Alcanadre
+17,26,008,Aldeanueva de Ebro
+17,26,009,Alesanco
+17,26,010,Alesón
+17,26,011,Alfaro
+17,26,012,Almarza de Cameros
+17,26,013,Anguciana
+17,26,014,Anguiano
+17,26,015,Arenzana de Abajo
+17,26,016,Arenzana de Arriba
+17,26,017,Arnedillo
+17,26,018,Arnedo
+17,26,019,Arrúbal
+17,26,020,Ausejo
+17,26,021,Autol
+17,26,022,Azofra
+17,26,023,Badarán
+17,26,024,Bañares
+17,26,026,Baños de Río Tobía
+17,26,025,Baños de Rioja
+17,26,027,Berceo
+17,26,028,Bergasa
+17,26,029,Bergasillas Bajera
+17,26,030,Bezares
+17,26,031,Bobadilla
+17,26,032,Brieva de Cameros
+17,26,033,Briñas
+17,26,034,Briones
+17,26,035,Cabezón de Cameros
+17,26,036,Calahorra
+17,26,037,Camprovín
+17,26,038,Canales de la Sierra
+17,26,039,Canillas de Río Tuerto
+17,26,040,Cañas
+17,26,041,Cárdenas
+17,26,042,Casalarreina
+17,26,043,Castañares de Rioja
+17,26,044,Castroviejo
+17,26,045,Cellorigo
+17,26,046,Cenicero
+17,26,047,Cervera del Río Alhama
+17,26,048,Cidamón
+17,26,049,Cihuri
+17,26,050,Cirueña
+17,26,051,Clavijo
+17,26,052,Cordovín
+17,26,053,Corera
+17,26,054,Cornago
+17,26,055,Corporales
+17,26,056,Cuzcurrita de Río Tirón
+17,26,057,Daroca de Rioja
+17,26,058,Enciso
+17,26,059,Entrena
+17,26,060,Estollo
+17,26,061,Ezcaray
+17,26,062,Foncea
+17,26,063,Fonzaleche
+17,26,064,Fuenmayor
+17,26,065,Galbárruli
+17,26,066,Galilea
+17,26,067,Gallinero de Cameros
+17,26,068,Gimileo
+17,26,069,Grañón
+17,26,070,Grávalos
+17,26,071,Haro
+17,26,072,Herce
+17,26,073,Herramélluri
+17,26,074,Hervías
+17,26,075,Hormilla
+17,26,076,Hormilleja
+17,26,077,Hornillos de Cameros
+17,26,078,Hornos de Moncalvillo
+17,26,079,Huércanos
+17,26,080,Igea
+17,26,081,Jalón de Cameros
+17,26,082,Laguna de Cameros
+17,26,083,Lagunilla del Jubera
+17,26,084,Lardero
+17,26,086,Ledesma de la Cogolla
+17,26,087,Leiva
+17,26,088,Leza de Río Leza
+17,26,089,Logroño
+17,26,091,Lumbreras de Cameros
+17,26,092,Manjarrés
+17,26,093,Mansilla de la Sierra
+17,26,094,Manzanares de Rioja
+17,26,095,Matute
+17,26,096,Medrano
+17,26,098,Munilla
+17,26,099,Murillo de Río Leza
+17,26,100,Muro de Aguas
+17,26,101,Muro en Cameros
+17,26,102,Nájera
+17,26,103,Nalda
+17,26,104,Navajún
+17,26,105,Navarrete
+17,26,106,Nestares
+17,26,107,Nieva de Cameros
+17,26,109,Ochánduri
+17,26,108,Ocón
+17,26,110,Ojacastro
+17,26,111,Ollauri
+17,26,112,Ortigosa de Cameros
+17,26,113,Pazuengos
+17,26,114,Pedroso
+17,26,115,Pinillos
+17,26,117,Pradejón
+17,26,118,Pradillo
+17,26,119,Préjano
+17,26,120,Quel
+17,26,121,Rabanera
+17,26,122,"Rasillo de Cameros, El"
+17,26,123,"Redal, El"
+17,26,124,Ribafrecha
+17,26,125,Rincón de Soto
+17,26,126,Robres del Castillo
+17,26,127,Rodezno
+17,26,128,Sajazarra
+17,26,129,San Asensio
+17,26,130,San Millán de la Cogolla
+17,26,131,San Millán de Yécora
+17,26,132,San Román de Cameros
+17,26,139,San Torcuato
+17,26,142,San Vicente de la Sonsierra
+17,26,134,Santa Coloma
+17,26,135,Santa Engracia del Jubera
+17,26,136,Santa Eulalia Bajera
+17,26,138,Santo Domingo de la Calzada
+17,26,140,Santurde de Rioja
+17,26,141,Santurdejo
+17,26,143,Sojuela
+17,26,144,Sorzano
+17,26,145,Sotés
+17,26,146,Soto en Cameros
+17,26,147,Terroba
+17,26,148,Tirgo
+17,26,149,Tobía
+17,26,150,Tormantos
+17,26,153,Torre en Cameros
+17,26,151,Torrecilla en Cameros
+17,26,152,Torrecilla sobre Alesanco
+17,26,154,Torremontalbo
+17,26,155,Treviana
+17,26,157,Tricio
+17,26,158,Tudelilla
+17,26,160,Uruñuela
+17,26,161,Valdemadera
+17,26,162,Valgañón
+17,26,163,Ventosa
+17,26,164,Ventrosa
+17,26,165,Viguera
+17,26,166,Villalba de Rioja
+17,26,167,Villalobar de Rioja
+17,26,168,Villamediana de Iregua
+17,26,169,Villanueva de Cameros
+17,26,170,"Villar de Arnedo, El"
+17,26,171,Villar de Torre
+17,26,172,Villarejo
+17,26,173,Villarroya
+17,26,174,Villarta-Quintana
+17,26,175,Villavelayo
+17,26,176,Villaverde de Rioja
+17,26,177,Villoslada de Cameros
+17,26,178,Viniegra de Abajo
+17,26,179,Viniegra de Arriba
+17,26,180,Zarratón
+17,26,181,Zarzosa
+17,26,183,Zorraquín
+12,27,001,Abadín
+12,27,002,Alfoz
+12,27,003,Antas de Ulla
+12,27,004,Baleira
+12,27,901,Baralla
+12,27,005,Barreiros
+12,27,006,Becerreá
+12,27,007,Begonte
+12,27,008,Bóveda
+12,27,902,Burela
+12,27,009,Carballedo
+12,27,010,Castro de Rei
+12,27,011,Castroverde
+12,27,012,Cervantes
+12,27,013,Cervo
+12,27,016,Chantada
+12,27,014,"Corgo, O"
+12,27,015,Cospeito
+12,27,017,Folgoso do Courel
+12,27,018,"Fonsagrada, A"
+12,27,019,Foz
+12,27,020,Friol
+12,27,022,Guitiriz
+12,27,023,Guntín
+12,27,024,"Incio, O"
+12,27,026,Láncara
+12,27,027,Lourenzá
+12,27,028,Lugo
+12,27,029,Meira
+12,27,030,Mondoñedo
+12,27,031,Monforte de Lemos
+12,27,032,Monterroso
+12,27,033,Muras
+12,27,034,Navia de Suarna
+12,27,035,Negueira de Muñiz
+12,27,037,"Nogais, As"
+12,27,038,Ourol
+12,27,039,Outeiro de Rei
+12,27,040,Palas de Rei
+12,27,041,Pantón
+12,27,042,Paradela
+12,27,043,"Páramo, O"
+12,27,044,"Pastoriza, A"
+12,27,045,Pedrafita do Cebreiro
+12,27,047,"Pobra do Brollón, A"
+12,27,046,Pol
+12,27,048,"Pontenova, A"
+12,27,049,Portomarín
+12,27,050,Quiroga
+12,27,056,Rábade
+12,27,051,Ribadeo
+12,27,052,Ribas de Sil
+12,27,053,Ribeira de Piquín
+12,27,054,Riotorto
+12,27,055,Samos
+12,27,057,Sarria
+12,27,058,"Saviñao, O"
+12,27,059,Sober
+12,27,060,Taboada
+12,27,061,Trabada
+12,27,062,Triacastela
+12,27,063,"Valadouro, O"
+12,27,064,"Vicedo, O"
+12,27,065,Vilalba
+12,27,066,Viveiro
+12,27,021,Xermade
+12,27,025,Xove
+13,28,001,"Acebeda, La"
+13,28,002,Ajalvir
+13,28,003,Alameda del Valle
+13,28,004,"Álamo, El"
+13,28,005,Alcalá de Henares
+13,28,006,Alcobendas
+13,28,007,Alcorcón
+13,28,008,Aldea del Fresno
+13,28,009,Algete
+13,28,010,Alpedrete
+13,28,011,Ambite
+13,28,012,Anchuelo
+13,28,013,Aranjuez
+13,28,014,Arganda del Rey
+13,28,015,Arroyomolinos
+13,28,016,"Atazar, El"
+13,28,017,Batres
+13,28,018,Becerril de la Sierra
+13,28,019,Belmonte de Tajo
+13,28,021,"Berrueco, El"
+13,28,020,Berzosa del Lozoya
+13,28,022,Boadilla del Monte
+13,28,023,"Boalo, El"
+13,28,024,Braojos
+13,28,025,Brea de Tajo
+13,28,026,Brunete
+13,28,027,Buitrago del Lozoya
+13,28,028,Bustarviejo
+13,28,029,Cabanillas de la Sierra
+13,28,030,"Cabrera, La"
+13,28,031,Cadalso de los Vidrios
+13,28,032,Camarma de Esteruelas
+13,28,033,Campo Real
+13,28,034,Canencia
+13,28,035,Carabaña
+13,28,036,Casarrubuelos
+13,28,037,Cenicientos
+13,28,038,Cercedilla
+13,28,039,Cervera de Buitrago
+13,28,051,Chapinería
+13,28,052,Chinchón
+13,28,040,Ciempozuelos
+13,28,041,Cobeña
+13,28,046,Collado Mediano
+13,28,047,Collado Villalba
+13,28,043,Colmenar de Oreja
+13,28,042,Colmenar del Arroyo
+13,28,045,Colmenar Viejo
+13,28,044,Colmenarejo
+13,28,048,Corpa
+13,28,049,Coslada
+13,28,050,Cubas de la Sagra
+13,28,053,Daganzo de Arriba
+13,28,054,"Escorial, El"
+13,28,055,Estremera
+13,28,056,Fresnedillas de la Oliva
+13,28,057,Fresno de Torote
+13,28,058,Fuenlabrada
+13,28,059,Fuente el Saz de Jarama
+13,28,060,Fuentidueña de Tajo
+13,28,061,Galapagar
+13,28,062,Garganta de los Montes
+13,28,063,Gargantilla del Lozoya y Pinilla de Buitrago
+13,28,064,Gascones
+13,28,065,Getafe
+13,28,066,Griñón
+13,28,067,Guadalix de la Sierra
+13,28,068,Guadarrama
+13,28,069,"Hiruela, La"
+13,28,070,Horcajo de la Sierra-Aoslos
+13,28,071,Horcajuelo de la Sierra
+13,28,072,Hoyo de Manzanares
+13,28,073,Humanes de Madrid
+13,28,074,Leganés
+13,28,075,Loeches
+13,28,076,Lozoya
+13,28,901,Lozoyuela-Navas-Sieteiglesias
+13,28,078,Madarcos
+13,28,079,Madrid
+13,28,080,Majadahonda
+13,28,082,Manzanares el Real
+13,28,083,Meco
+13,28,084,Mejorada del Campo
+13,28,085,Miraflores de la Sierra
+13,28,086,"Molar, El"
+13,28,087,"Molinos, Los"
+13,28,088,Montejo de la Sierra
+13,28,089,Moraleja de Enmedio
+13,28,090,Moralzarzal
+13,28,091,Morata de Tajuña
+13,28,092,Móstoles
+13,28,093,Navacerrada
+13,28,094,Navalafuente
+13,28,095,Navalagamella
+13,28,096,Navalcarnero
+13,28,097,Navarredonda y San Mamés
+13,28,099,Navas del Rey
+13,28,100,Nuevo Baztán
+13,28,101,Olmeda de las Fuentes
+13,28,102,Orusco de Tajuña
+13,28,104,Paracuellos de Jarama
+13,28,106,Parla
+13,28,107,Patones
+13,28,108,Pedrezuela
+13,28,109,Pelayos de la Presa
+13,28,110,Perales de Tajuña
+13,28,111,Pezuela de las Torres
+13,28,112,Pinilla del Valle
+13,28,113,Pinto
+13,28,114,Piñuécar-Gandullas
+13,28,115,Pozuelo de Alarcón
+13,28,116,Pozuelo del Rey
+13,28,117,Prádena del Rincón
+13,28,118,Puebla de la Sierra
+13,28,902,Puentes Viejas
+13,28,119,Quijorna
+13,28,120,Rascafría
+13,28,121,Redueña
+13,28,122,Ribatejada
+13,28,123,Rivas-Vaciamadrid
+13,28,124,Robledillo de la Jara
+13,28,125,Robledo de Chavela
+13,28,126,Robregordo
+13,28,127,"Rozas de Madrid, Las"
+13,28,128,Rozas de Puerto Real
+13,28,129,San Agustín del Guadalix
+13,28,130,San Fernando de Henares
+13,28,131,San Lorenzo de El Escorial
+13,28,132,San Martín de la Vega
+13,28,133,San Martín de Valdeiglesias
+13,28,134,San Sebastián de los Reyes
+13,28,135,Santa María de la Alameda
+13,28,136,Santorcaz
+13,28,137,"Santos de la Humosa, Los"
+13,28,138,"Serna del Monte, La"
+13,28,140,Serranillos del Valle
+13,28,141,Sevilla la Nueva
+13,28,143,Somosierra
+13,28,144,Soto del Real
+13,28,145,Talamanca de Jarama
+13,28,146,Tielmes
+13,28,147,Titulcia
+13,28,148,Torrejón de Ardoz
+13,28,149,Torrejón de la Calzada
+13,28,150,Torrejón de Velasco
+13,28,151,Torrelaguna
+13,28,152,Torrelodones
+13,28,153,Torremocha de Jarama
+13,28,154,Torres de la Alameda
+13,28,903,Tres Cantos
+13,28,155,Valdaracete
+13,28,156,Valdeavero
+13,28,157,Valdelaguna
+13,28,158,Valdemanco
+13,28,159,Valdemaqueda
+13,28,160,Valdemorillo
+13,28,161,Valdemoro
+13,28,162,Valdeolmos-Alalpardo
+13,28,163,Valdepiélagos
+13,28,164,Valdetorres de Jarama
+13,28,165,Valdilecha
+13,28,166,Valverde de Alcalá
+13,28,167,Velilla de San Antonio
+13,28,168,"Vellón, El"
+13,28,169,Venturada
+13,28,171,Villa del Prado
+13,28,170,Villaconejos
+13,28,172,Villalbilla
+13,28,173,Villamanrique de Tajo
+13,28,174,Villamanta
+13,28,175,Villamantilla
+13,28,176,Villanueva de la Cañada
+13,28,178,Villanueva de Perales
+13,28,177,Villanueva del Pardillo
+13,28,179,Villar del Olmo
+13,28,180,Villarejo de Salvanés
+13,28,181,Villaviciosa de Odón
+13,28,182,Villavieja del Lozoya
+13,28,183,Zarzalejo
+01,29,001,Alameda
+01,29,002,Alcaucín
+01,29,003,Alfarnate
+01,29,004,Alfarnatejo
+01,29,005,Algarrobo
+01,29,006,Algatocín
+01,29,007,Alhaurín de la Torre
+01,29,008,Alhaurín el Grande
+01,29,009,Almáchar
+01,29,010,Almargen
+01,29,011,Almogía
+01,29,012,Álora
+01,29,013,Alozaina
+01,29,014,Alpandeire
+01,29,015,Antequera
+01,29,016,Árchez
+01,29,017,Archidona
+01,29,018,Ardales
+01,29,019,Arenas
+01,29,020,Arriate
+01,29,021,Atajate
+01,29,022,Benadalid
+01,29,023,Benahavís
+01,29,024,Benalauría
+01,29,025,Benalmádena
+01,29,026,Benamargosa
+01,29,027,Benamocarra
+01,29,028,Benaoján
+01,29,029,Benarrabá
+01,29,030,"Borge, El"
+01,29,031,"Burgo, El"
+01,29,032,Campillos
+01,29,033,Canillas de Aceituno
+01,29,034,Canillas de Albaida
+01,29,035,Cañete la Real
+01,29,036,Carratraca
+01,29,037,Cartajima
+01,29,038,Cártama
+01,29,039,Casabermeja
+01,29,040,Casarabonela
+01,29,041,Casares
+01,29,042,Coín
+01,29,043,Colmenar
+01,29,044,Comares
+01,29,045,Cómpeta
+01,29,046,Cortes de la Frontera
+01,29,047,Cuevas Bajas
+01,29,049,Cuevas de San Marcos
+01,29,048,Cuevas del Becerro
+01,29,050,Cútar
+01,29,051,Estepona
+01,29,052,Faraján
+01,29,053,Frigiliana
+01,29,054,Fuengirola
+01,29,055,Fuente de Piedra
+01,29,056,Gaucín
+01,29,057,Genalguacil
+01,29,058,Guaro
+01,29,059,Humilladero
+01,29,060,Igualeja
+01,29,061,Istán
+01,29,062,Iznate
+01,29,063,Jimera de Líbar
+01,29,064,Jubrique
+01,29,065,Júzcar
+01,29,066,Macharaviaya
+01,29,067,Málaga
+01,29,068,Manilva
+01,29,069,Marbella
+01,29,070,Mijas
+01,29,071,Moclinejo
+01,29,072,Mollina
+01,29,073,Monda
+01,29,903,Montecorto
+01,29,074,Montejaque
+01,29,075,Nerja
+01,29,076,Ojén
+01,29,077,Parauta
+01,29,079,Periana
+01,29,080,Pizarra
+01,29,081,Pujerra
+01,29,082,Rincón de la Victoria
+01,29,083,Riogordo
+01,29,084,Ronda
+01,29,085,Salares
+01,29,086,Sayalonga
+01,29,087,Sedella
+01,29,904,Serrato
+01,29,088,Sierra de Yeguas
+01,29,089,Teba
+01,29,090,Tolox
+01,29,901,Torremolinos
+01,29,091,Torrox
+01,29,092,Totalán
+01,29,093,Valle de Abdalajís
+01,29,094,Vélez-Málaga
+01,29,095,Villanueva de Algaidas
+01,29,902,Villanueva de la Concepción
+01,29,098,Villanueva de Tapia
+01,29,096,Villanueva del Rosario
+01,29,097,Villanueva del Trabuco
+01,29,099,Viñuela
+01,29,100,Yunquera
+14,30,001,Abanilla
+14,30,002,Abarán
+14,30,003,Águilas
+14,30,004,Albudeite
+14,30,005,Alcantarilla
+14,30,902,"Alcázares, Los"
+14,30,006,Aledo
+14,30,007,Alguazas
+14,30,008,Alhama de Murcia
+14,30,009,Archena
+14,30,010,Beniel
+14,30,011,Blanca
+14,30,012,Bullas
+14,30,013,Calasparra
+14,30,014,Campos del Río
+14,30,015,Caravaca de la Cruz
+14,30,016,Cartagena
+14,30,017,Cehegín
+14,30,018,Ceutí
+14,30,019,Cieza
+14,30,020,Fortuna
+14,30,021,Fuente Álamo de Murcia
+14,30,022,Jumilla
+14,30,023,Librilla
+14,30,024,Lorca
+14,30,025,Lorquí
+14,30,026,Mazarrón
+14,30,027,Molina de Segura
+14,30,028,Moratalla
+14,30,029,Mula
+14,30,030,Murcia
+14,30,031,Ojós
+14,30,032,Pliego
+14,30,033,Puerto Lumbreras
+14,30,034,Ricote
+14,30,035,San Javier
+14,30,036,San Pedro del Pinatar
+14,30,901,Santomera
+14,30,037,Torre-Pacheco
+14,30,038,"Torres de Cotillas, Las"
+14,30,039,Totana
+14,30,040,Ulea
+14,30,041,"Unión, La"
+14,30,042,Villanueva del Río Segura
+14,30,043,Yecla
+15,31,001,Abáigar
+15,31,002,Abárzuza/Abartzuza
+15,31,003,Abaurregaina/Abaurrea Alta
+15,31,004,Abaurrepea/Abaurrea Baja
+15,31,005,Aberin
+15,31,006,Ablitas
+15,31,007,Adiós
+15,31,008,Aguilar de Codés
+15,31,009,Aibar/Oibar
+15,31,011,Allín/Allin
+15,31,012,Allo
+15,31,010,Altsasu/Alsasua
+15,31,013,Améscoa Baja
+15,31,014,Ancín/Antzin
+15,31,015,Andosilla
+15,31,016,Ansoáin/Antsoain
+15,31,017,Anue
+15,31,018,Añorbe
+15,31,019,Aoiz/Agoitz
+15,31,020,Araitz
+15,31,025,Arakil
+15,31,021,Aranarache/Aranaratxe
+15,31,023,Aranguren
+15,31,024,Arano
+15,31,022,Arantza
+15,31,026,Aras
+15,31,027,Arbizu
+15,31,028,Arce/Artzi
+15,31,029,"Arcos, Los"
+15,31,030,Arellano
+15,31,031,Areso
+15,31,032,Arguedas
+15,31,033,Aria
+15,31,034,Aribe
+15,31,035,Armañanzas
+15,31,036,Arróniz
+15,31,037,Arruazu
+15,31,038,Artajona
+15,31,039,Artazu
+15,31,040,Atetz
+15,31,058,Auritz/Burguete
+15,31,041,Ayegui/Aiegi
+15,31,042,Azagra
+15,31,043,Azuelo
+15,31,044,Bakaiku
+15,31,901,Barañáin/Barañain
+15,31,045,Barásoain
+15,31,046,Barbarin
+15,31,047,Bargota
+15,31,048,Barillas
+15,31,049,Basaburua
+15,31,050,Baztan
+15,31,137,Beintza-Labaien
+15,31,051,Beire
+15,31,052,Belascoáin
+15,31,250,Bera
+15,31,053,Berbinzana
+15,31,905,Beriáin
+15,31,902,Berrioplano/Berriobeiti
+15,31,903,Berriozar
+15,31,054,Bertizarana
+15,31,055,Betelu
+15,31,253,Bidaurreta
+15,31,056,Biurrun-Olcoz
+15,31,057,Buñuel
+15,31,059,Burgui/Burgi
+15,31,060,Burlada/Burlata
+15,31,061,"Busto, El"
+15,31,062,Cabanillas
+15,31,063,Cabredo
+15,31,064,Cadreita
+15,31,065,Caparroso
+15,31,066,Cárcar
+15,31,067,Carcastillo
+15,31,068,Cascante
+15,31,069,Cáseda
+15,31,070,Castejón
+15,31,071,Castillonuevo/Gazteluberri
+15,31,193,Cendea de Olza/Oltza Zendea
+15,31,072,Cintruénigo
+15,31,074,Cirauqui/Zirauki
+15,31,075,Ciriza/Ziritza
+15,31,076,Cizur
+15,31,077,Corella
+15,31,078,Cortes
+15,31,079,Desojo
+15,31,080,Dicastillo
+15,31,081,Donamaria
+15,31,221,Doneztebe/Santesteban
+15,31,083,Echarri/Etxarri
+15,31,087,Elgorriaga
+15,31,089,Enériz/Eneritz
+15,31,090,Eratsun
+15,31,091,Ergoiena
+15,31,092,Erro
+15,31,094,Eslava
+15,31,095,Esparza de Salazar/Espartza Zaraitzu
+15,31,096,Espronceda
+15,31,097,Estella-Lizarra
+15,31,098,Esteribar
+15,31,099,Etayo
+15,31,082,Etxalar
+15,31,084,Etxarri Aranatz
+15,31,085,Etxauri
+15,31,100,Eulate
+15,31,101,Ezcabarte
+15,31,093,Ezcároz/Ezkaroze
+15,31,102,Ezkurra
+15,31,103,Ezprogui
+15,31,104,Falces
+15,31,105,Fitero
+15,31,106,Fontellas
+15,31,107,Funes
+15,31,108,Fustiñana
+15,31,109,Galar
+15,31,110,Gallipienzo/Galipentzu
+15,31,111,Gallués/Galoze
+15,31,112,Garaioa
+15,31,113,Garde
+15,31,114,Garínoain
+15,31,115,Garralda
+15,31,116,Genevilla
+15,31,117,Goizueta
+15,31,119,Güesa/Gorza
+15,31,120,Guesálaz/Gesalatz
+15,31,121,Guirguillano
+15,31,256,Hiriberri/Villanueva de Aezkoa
+15,31,122,Huarte/Uharte
+15,31,124,Ibargoiti
+15,31,259,Igantzi
+15,31,125,Igúzquiza
+15,31,126,Imotz
+15,31,127,Irañeta
+15,31,904,Irurtzun
+15,31,128,Isaba/Izaba
+15,31,129,Ituren
+15,31,130,Iturmendi
+15,31,131,Iza/Itza
+15,31,132,Izagaondoa
+15,31,133,Izalzu/Itzaltzu
+15,31,134,Jaurrieta
+15,31,135,Javier
+15,31,136,Juslapeña/Txulapain
+15,31,138,Lakuntza
+15,31,139,Lana
+15,31,140,Lantz
+15,31,141,Lapoblación
+15,31,142,Larraga
+15,31,143,Larraona
+15,31,144,Larraun
+15,31,145,Lazagurría
+15,31,146,Leache/Leatxe
+15,31,147,Legarda
+15,31,148,Legaria
+15,31,149,Leitza
+15,31,908,Lekunberri
+15,31,150,Leoz/Leotz
+15,31,151,Lerga
+15,31,152,Lerín
+15,31,153,Lesaka
+15,31,154,Lezaun
+15,31,155,Liédena
+15,31,156,Lizoain-Arriasgoiti/Lizoainibar-Arriasgoiti
+15,31,157,Lodosa
+15,31,158,Lónguida/Longida
+15,31,159,Lumbier
+15,31,160,Luquin
+15,31,248,Luzaide/Valcarlos
+15,31,161,Mañeru
+15,31,162,Marañón
+15,31,163,Marcilla
+15,31,164,Mélida
+15,31,165,Mendavia
+15,31,166,Mendaza
+15,31,167,Mendigorria
+15,31,168,Metauten
+15,31,169,Milagro
+15,31,170,Mirafuentes
+15,31,171,Miranda de Arga
+15,31,172,Monreal/Elo
+15,31,173,Monteagudo
+15,31,174,Morentin
+15,31,175,Mues
+15,31,176,Murchante
+15,31,177,Murieta
+15,31,178,Murillo el Cuende
+15,31,179,Murillo el Fruto
+15,31,180,Muruzábal
+15,31,181,Navascués/Nabaskoze
+15,31,182,Nazar
+15,31,183,Obanos
+15,31,185,Ochagavía/Otsagabia
+15,31,184,Oco
+15,31,186,Odieta
+15,31,187,Oiz
+15,31,188,Olaibar
+15,31,189,Olazti/Olazagutía
+15,31,190,Olejua
+15,31,191,Olite/Erriberri
+15,31,192,Olóriz/Oloritz
+15,31,195,Orbaizeta
+15,31,196,Orbara
+15,31,197,Orísoain
+15,31,906,Orkoien
+15,31,198,Oronz/Orontze
+15,31,199,Oroz-Betelu/Orotz-Betelu
+15,31,211,Orreaga/Roncesvalles
+15,31,200,Oteiza
+15,31,201,Pamplona/Iruña
+15,31,202,Peralta/Azkoien
+15,31,203,Petilla de Aragón
+15,31,204,Piedramillera
+15,31,205,Pitillas
+15,31,206,Puente la Reina/Gares
+15,31,207,Pueyo/Puiu
+15,31,208,Ribaforada
+15,31,209,Romanzado/Erromantzatua
+15,31,210,Roncal/Erronkari
+15,31,212,Sada
+15,31,213,Saldías
+15,31,214,Salinas de Oro/Jaitz
+15,31,215,San Adrián
+15,31,217,San Martín de Unx
+15,31,216,Sangüesa/Zangoza
+15,31,219,Sansol
+15,31,220,Santacara
+15,31,222,Sarriés/Sartze
+15,31,223,Sartaguda
+15,31,224,Sesma
+15,31,225,Sorlada
+15,31,226,Sunbilla
+15,31,227,Tafalla
+15,31,228,Tiebas-Muruarte de Reta
+15,31,229,Tirapu
+15,31,230,Torralba del Río
+15,31,231,Torres del Río
+15,31,232,Tudela
+15,31,233,Tulebras
+15,31,234,Ucar
+15,31,123,Uharte Arakil
+15,31,235,Ujué/Uxue
+15,31,236,Ultzama
+15,31,237,Unciti
+15,31,238,Unzué/Untzue
+15,31,239,Urdazubi/Urdax
+15,31,240,Urdiain
+15,31,241,Urraul Alto
+15,31,242,Urraul Bajo
+15,31,244,Urroz
+15,31,243,Urroz-Villa
+15,31,245,Urzainqui/Urzainki
+15,31,246,Uterga
+15,31,247,Uztárroz/Uztarroze
+15,31,118,Val de Goñi/Goñerri
+15,31,086,Valle de Egüés/Eguesibar
+15,31,088,Valle de Elorz/Elortzibar
+15,31,194,Valle de Ollo/Ollaran
+15,31,260,Valle de Yerri/Deierri
+15,31,249,Valtierra
+15,31,251,Viana
+15,31,252,Vidángoz/Bidankoze
+15,31,254,Villafranca
+15,31,255,Villamayor de Monjardín
+15,31,257,Villatuerta
+15,31,258,Villava/Atarrabia
+15,31,261,Yesa
+15,31,262,Zabalza/Zabaltza
+15,31,073,Ziordia
+15,31,907,Zizur Mayor/Zizur Nagusia
+15,31,263,Zubieta
+15,31,264,Zugarramurdi
+15,31,265,Zúñiga
+12,32,001,Allariz
+12,32,002,Amoeiro
+12,32,003,"Arnoia, A"
+12,32,004,Avión
+12,32,005,Baltar
+12,32,006,Bande
+12,32,007,Baños de Molgas
+12,32,008,Barbadás
+12,32,009,"Barco de Valdeorras, O"
+12,32,010,Beade
+12,32,011,Beariz
+12,32,012,"Blancos, Os"
+12,32,013,Boborás
+12,32,014,"Bola, A"
+12,32,015,"Bolo, O"
+12,32,016,Calvos de Randín
+12,32,018,Carballeda de Avia
+12,32,017,Carballeda de Valdeorras
+12,32,019,"Carballiño, O"
+12,32,020,Cartelle
+12,32,022,Castrelo de Miño
+12,32,021,Castrelo do Val
+12,32,023,Castro Caldelas
+12,32,024,Celanova
+12,32,025,Cenlle
+12,32,029,Chandrexa de Queixa
+12,32,026,Coles
+12,32,027,Cortegada
+12,32,028,Cualedro
+12,32,030,Entrimo
+12,32,031,Esgos
+12,32,033,Gomesende
+12,32,034,"Gudiña, A"
+12,32,035,"Irixo, O"
+12,32,038,Larouco
+12,32,039,Laza
+12,32,040,Leiro
+12,32,041,Lobeira
+12,32,042,Lobios
+12,32,043,Maceda
+12,32,044,Manzaneda
+12,32,045,Maside
+12,32,046,Melón
+12,32,047,"Merca, A"
+12,32,048,"Mezquita, A"
+12,32,049,Montederramo
+12,32,050,Monterrei
+12,32,051,Muíños
+12,32,052,Nogueira de Ramuín
+12,32,053,Oímbra
+12,32,054,Ourense
+12,32,055,Paderne de Allariz
+12,32,056,Padrenda
+12,32,057,Parada de Sil
+12,32,058,"Pereiro de Aguiar, O"
+12,32,059,"Peroxa, A"
+12,32,060,Petín
+12,32,061,Piñor
+12,32,063,"Pobra de Trives, A"
+12,32,064,Pontedeva
+12,32,062,Porqueira
+12,32,065,Punxín
+12,32,066,Quintela de Leirado
+12,32,067,Rairiz de Veiga
+12,32,068,Ramirás
+12,32,069,Ribadavia
+12,32,071,Riós
+12,32,072,"Rúa, A"
+12,32,073,Rubiá
+12,32,074,San Amaro
+12,32,075,San Cibrao das Viñas
+12,32,076,San Cristovo de Cea
+12,32,070,San Xoán de Río
+12,32,077,Sandiás
+12,32,078,Sarreaus
+12,32,079,Taboadela
+12,32,080,"Teixeira, A"
+12,32,081,Toén
+12,32,082,Trasmiras
+12,32,083,"Veiga, A"
+12,32,084,Verea
+12,32,085,Verín
+12,32,086,Viana do Bolo
+12,32,087,Vilamarín
+12,32,088,Vilamartín de Valdeorras
+12,32,089,Vilar de Barrio
+12,32,090,Vilar de Santos
+12,32,091,Vilardevós
+12,32,092,Vilariño de Conso
+12,32,032,Xinzo de Limia
+12,32,036,Xunqueira de Ambía
+12,32,037,Xunqueira de Espadanedo
+03,33,001,Allande
+03,33,002,Aller
+03,33,003,Amieva
+03,33,004,Avilés
+03,33,005,Belmonte de Miranda
+03,33,006,Bimenes
+03,33,007,Boal
+03,33,008,Cabrales
+03,33,009,Cabranes
+03,33,010,Candamo
+03,33,012,Cangas de Onís
+03,33,011,Cangas del Narcea
+03,33,013,Caravia
+03,33,014,Carreño
+03,33,015,Caso
+03,33,016,Castrillón
+03,33,017,Castropol
+03,33,018,Coaña
+03,33,019,Colunga
+03,33,020,Corvera de Asturias
+03,33,021,Cudillero
+03,33,022,Degaña
+03,33,023,"Franco, El"
+03,33,024,Gijón
+03,33,025,Gozón
+03,33,026,Grado
+03,33,027,Grandas de Salime
+03,33,028,Ibias
+03,33,029,Illano
+03,33,030,Illas
+03,33,031,Langreo
+03,33,032,Laviana
+03,33,033,Lena
+03,33,035,Llanera
+03,33,036,Llanes
+03,33,037,Mieres
+03,33,038,Morcín
+03,33,039,Muros de Nalón
+03,33,040,Nava
+03,33,041,Navia
+03,33,042,Noreña
+03,33,043,Onís
+03,33,044,Oviedo
+03,33,045,Parres
+03,33,046,Peñamellera Alta
+03,33,047,Peñamellera Baja
+03,33,048,Pesoz
+03,33,049,Piloña
+03,33,050,Ponga
+03,33,051,Pravia
+03,33,052,Proaza
+03,33,053,Quirós
+03,33,054,"Regueras, Las"
+03,33,055,Ribadedeva
+03,33,056,Ribadesella
+03,33,057,Ribera de Arriba
+03,33,058,Riosa
+03,33,059,Salas
+03,33,061,San Martín de Oscos
+03,33,060,San Martín del Rey Aurelio
+03,33,063,San Tirso de Abres
+03,33,062,Santa Eulalia de Oscos
+03,33,064,Santo Adriano
+03,33,065,Sariego
+03,33,066,Siero
+03,33,067,Sobrescobio
+03,33,068,Somiedo
+03,33,069,Soto del Barco
+03,33,070,Tapia de Casariego
+03,33,071,Taramundi
+03,33,072,Teverga
+03,33,073,Tineo
+03,33,034,Valdés
+03,33,074,Vegadeo
+03,33,075,Villanueva de Oscos
+03,33,076,Villaviciosa
+03,33,077,Villayón
+03,33,078,Yernes y Tameza
+07,34,001,Abarca de Campos
+07,34,003,Abia de las Torres
+07,34,004,Aguilar de Campoo
+07,34,005,Alar del Rey
+07,34,006,Alba de Cerrato
+07,34,009,Amayuelas de Arriba
+07,34,010,Ampudia
+07,34,011,Amusco
+07,34,012,Antigüedad
+07,34,015,Arconada
+07,34,017,Astudillo
+07,34,018,Autilla del Pino
+07,34,019,Autillo de Campos
+07,34,020,Ayuela
+07,34,022,Baltanás
+07,34,024,Baquerín de Campos
+07,34,025,Bárcena de Campos
+07,34,027,Barruelo de Santullán
+07,34,028,Báscones de Ojeda
+07,34,029,Becerril de Campos
+07,34,031,Belmonte de Campos
+07,34,032,Berzosilla
+07,34,033,Boada de Campos
+07,34,035,Boadilla de Rioseco
+07,34,034,Boadilla del Camino
+07,34,036,Brañosera
+07,34,037,Buenavista de Valdavia
+07,34,038,Bustillo de la Vega
+07,34,039,Bustillo del Páramo de Carrión
+07,34,041,Calahorra de Boedo
+07,34,042,Calzada de los Molinos
+07,34,045,Capillas
+07,34,046,Cardeñosa de Volpejera
+07,34,047,Carrión de los Condes
+07,34,048,Castil de Vela
+07,34,049,Castrejón de la Peña
+07,34,050,Castrillo de Don Juan
+07,34,051,Castrillo de Onielo
+07,34,052,Castrillo de Villavega
+07,34,053,Castromocho
+07,34,055,Cervatos de la Cueza
+07,34,056,Cervera de Pisuerga
+07,34,057,Cevico de la Torre
+07,34,058,Cevico Navero
+07,34,059,Cisneros
+07,34,060,Cobos de Cerrato
+07,34,061,Collazos de Boedo
+07,34,062,Congosto de Valdavia
+07,34,063,Cordovilla la Real
+07,34,066,Cubillas de Cerrato
+07,34,067,Dehesa de Montejo
+07,34,068,Dehesa de Romanos
+07,34,069,Dueñas
+07,34,070,Espinosa de Cerrato
+07,34,071,Espinosa de Villagonzalo
+07,34,072,Frechilla
+07,34,073,Fresno del Río
+07,34,074,Frómista
+07,34,076,Fuentes de Nava
+07,34,077,Fuentes de Valdepero
+07,34,079,Grijota
+07,34,080,Guardo
+07,34,081,Guaza de Campos
+07,34,082,Hérmedes de Cerrato
+07,34,083,Herrera de Pisuerga
+07,34,084,Herrera de Valdecañas
+07,34,086,Hontoria de Cerrato
+07,34,087,Hornillos de Cerrato
+07,34,088,Husillos
+07,34,089,Itero de la Vega
+07,34,091,Lagartos
+07,34,092,Lantadilla
+07,34,094,Ledigos
+07,34,903,Loma de Ucieza
+07,34,096,Lomas
+07,34,098,Magaz de Pisuerga
+07,34,099,Manquillos
+07,34,100,Mantinos
+07,34,101,Marcilla de Campos
+07,34,102,Mazariegos
+07,34,103,Mazuecos de Valdeginate
+07,34,104,Melgar de Yuso
+07,34,106,Meneses de Campos
+07,34,107,Micieces de Ojeda
+07,34,108,Monzón de Campos
+07,34,109,Moratinos
+07,34,110,Mudá
+07,34,112,Nogal de las Huertas
+07,34,113,Olea de Boedo
+07,34,114,Olmos de Ojeda
+07,34,116,Osornillo
+07,34,901,Osorno la Mayor
+07,34,120,Palencia
+07,34,121,Palenzuela
+07,34,122,Páramo de Boedo
+07,34,123,Paredes de Nava
+07,34,124,Payo de Ojeda
+07,34,125,Pedraza de Campos
+07,34,126,Pedrosa de la Vega
+07,34,127,Perales
+07,34,904,"Pernía, La"
+07,34,129,Pino del Río
+07,34,130,Piña de Campos
+07,34,131,Población de Arroyo
+07,34,132,Población de Campos
+07,34,133,Población de Cerrato
+07,34,134,Polentinos
+07,34,135,Pomar de Valdivia
+07,34,136,Poza de la Vega
+07,34,137,Pozo de Urama
+07,34,139,Prádanos de Ojeda
+07,34,140,"Puebla de Valdavia, La"
+07,34,141,Quintana del Puente
+07,34,143,Quintanilla de Onsoña
+07,34,146,Reinoso de Cerrato
+07,34,147,Renedo de la Vega
+07,34,149,Requena de Campos
+07,34,151,Respenda de la Peña
+07,34,152,Revenga de Campos
+07,34,154,Revilla de Collazos
+07,34,155,Ribas de Campos
+07,34,156,Riberos de la Cueza
+07,34,157,Saldaña
+07,34,158,Salinas de Pisuerga
+07,34,159,San Cebrián de Campos
+07,34,160,San Cebrián de Mudá
+07,34,161,San Cristóbal de Boedo
+07,34,163,San Mamés de Campos
+07,34,165,San Román de la Cuba
+07,34,167,Santa Cecilia del Alcor
+07,34,168,Santa Cruz de Boedo
+07,34,169,Santervás de la Vega
+07,34,170,Santibáñez de Ecla
+07,34,171,Santibáñez de la Peña
+07,34,174,Santoyo
+07,34,175,"Serna, La"
+07,34,177,Soto de Cerrato
+07,34,176,Sotobañado y Priorato
+07,34,178,Tabanera de Cerrato
+07,34,179,Tabanera de Valdavia
+07,34,180,Támara de Campos
+07,34,181,Tariego de Cerrato
+07,34,182,Torquemada
+07,34,184,Torremormojón
+07,34,185,Triollo
+07,34,186,Valbuena de Pisuerga
+07,34,189,Valdeolmillos
+07,34,190,Valderrábano
+07,34,192,Valde-Ucieza
+07,34,196,Valle de Cerrato
+07,34,902,Valle del Retortillo
+07,34,199,Velilla del Río Carrión
+07,34,023,Venta de Baños
+07,34,201,Vertavillo
+07,34,093,"Vid de Ojeda, La"
+07,34,202,Villabasta de Valdavia
+07,34,204,Villacidaler
+07,34,205,Villaconancio
+07,34,206,Villada
+07,34,208,Villaeles de Valdavia
+07,34,210,Villahán
+07,34,211,Villaherreros
+07,34,213,Villalaco
+07,34,214,Villalba de Guardo
+07,34,215,Villalcázar de Sirga
+07,34,216,Villalcón
+07,34,217,Villalobón
+07,34,218,Villaluenga de la Vega
+07,34,220,Villamartín de Campos
+07,34,221,Villamediana
+07,34,222,Villameriel
+07,34,223,Villamoronta
+07,34,224,Villamuera de la Cueza
+07,34,225,Villamuriel de Cerrato
+07,34,227,Villanueva del Rebollar
+07,34,228,Villanuño de Valdavia
+07,34,229,Villaprovedo
+07,34,230,Villarmentero de Campos
+07,34,231,Villarrabé
+07,34,232,Villarramiel
+07,34,233,Villasarracino
+07,34,234,Villasila de Valdavia
+07,34,236,Villaturde
+07,34,237,Villaumbrales
+07,34,238,Villaviudas
+07,34,240,Villerías de Campos
+07,34,241,Villodre
+07,34,242,Villodrigo
+07,34,243,Villoldo
+07,34,245,Villota del Páramo
+07,34,246,Villovieco
+05,35,001,Agaete
+05,35,002,Agüimes
+05,35,020,"Aldea de San Nicolás, La"
+05,35,003,Antigua
+05,35,004,Arrecife
+05,35,005,Artenara
+05,35,006,Arucas
+05,35,007,Betancuria
+05,35,008,Firgas
+05,35,009,Gáldar
+05,35,010,Haría
+05,35,011,Ingenio
+05,35,012,Mogán
+05,35,013,Moya
+05,35,014,"Oliva, La"
+05,35,015,Pájara
+05,35,016,"Palmas de Gran Canaria, Las"
+05,35,017,Puerto del Rosario
+05,35,018,San Bartolomé
+05,35,019,San Bartolomé de Tirajana
+05,35,021,Santa Brígida
+05,35,022,Santa Lucía de Tirajana
+05,35,023,Santa María de Guía de Gran Canaria
+05,35,024,Teguise
+05,35,025,Tejeda
+05,35,026,Telde
+05,35,027,Teror
+05,35,028,Tías
+05,35,029,Tinajo
+05,35,030,Tuineje
+05,35,032,Valleseco
+05,35,031,Valsequillo de Gran Canaria
+05,35,033,Vega de San Mateo
+05,35,034,Yaiza
+12,36,020,Agolada
+12,36,001,Arbo
+12,36,003,Baiona
+12,36,002,Barro
+12,36,004,Bueu
+12,36,005,Caldas de Reis
+12,36,006,Cambados
+12,36,007,Campo Lameiro
+12,36,008,Cangas
+12,36,009,"Cañiza, A"
+12,36,010,Catoira
+12,36,902,Cerdedo-Cotobade
+12,36,013,Covelo
+12,36,014,Crecente
+12,36,015,Cuntis
+12,36,016,Dozón
+12,36,017,"Estrada, A"
+12,36,018,Forcarei
+12,36,019,Fornelos de Montes
+12,36,021,Gondomar
+12,36,022,"Grove, O"
+12,36,023,"Guarda, A"
+12,36,901,"Illa de Arousa, A"
+12,36,024,Lalín
+12,36,025,"Lama, A"
+12,36,026,Marín
+12,36,027,Meaño
+12,36,028,Meis
+12,36,029,Moaña
+12,36,030,Mondariz
+12,36,031,Mondariz-Balneario
+12,36,032,Moraña
+12,36,033,Mos
+12,36,034,"Neves, As"
+12,36,035,Nigrán
+12,36,036,Oia
+12,36,037,Pazos de Borbén
+12,36,041,Poio
+12,36,043,Ponte Caldelas
+12,36,042,Ponteareas
+12,36,044,Pontecesures
+12,36,038,Pontevedra
+12,36,039,"Porriño, O"
+12,36,040,Portas
+12,36,045,Redondela
+12,36,046,Ribadumia
+12,36,047,Rodeiro
+12,36,048,"Rosal, O"
+12,36,049,Salceda de Caselas
+12,36,050,Salvaterra de Miño
+12,36,051,Sanxenxo
+12,36,052,Silleda
+12,36,053,Soutomaior
+12,36,054,Tomiño
+12,36,055,Tui
+12,36,056,Valga
+12,36,057,Vigo
+12,36,059,Vila de Cruces
+12,36,058,Vilaboa
+12,36,060,Vilagarcía de Arousa
+12,36,061,Vilanova de Arousa
+07,37,001,Abusejo
+07,37,002,Agallas
+07,37,003,Ahigal de los Aceiteros
+07,37,004,Ahigal de Villarino
+07,37,005,"Alameda de Gardón, La"
+07,37,006,"Alamedilla, La"
+07,37,007,Alaraz
+07,37,008,Alba de Tormes
+07,37,009,Alba de Yeltes
+07,37,010,"Alberca, La"
+07,37,011,"Alberguería de Argañán, La"
+07,37,012,Alconada
+07,37,015,Aldea del Obispo
+07,37,013,Aldeacipreste
+07,37,014,Aldeadávila de la Ribera
+07,37,016,Aldealengua
+07,37,017,Aldeanueva de Figueroa
+07,37,018,Aldeanueva de la Sierra
+07,37,019,Aldearrodrigo
+07,37,020,Aldearrubia
+07,37,021,Aldeaseca de Alba
+07,37,022,Aldeaseca de la Frontera
+07,37,023,Aldeatejada
+07,37,024,Aldeavieja de Tormes
+07,37,025,Aldehuela de la Bóveda
+07,37,026,Aldehuela de Yeltes
+07,37,027,Almenara de Tormes
+07,37,028,Almendra
+07,37,029,Anaya de Alba
+07,37,030,Añover de Tormes
+07,37,031,Arabayona de Mógica
+07,37,032,Arapiles
+07,37,033,Arcediano
+07,37,034,"Arco, El"
+07,37,035,Armenteros
+07,37,037,"Atalaya, La"
+07,37,038,Babilafuente
+07,37,039,Bañobárez
+07,37,040,Barbadillo
+07,37,041,Barbalos
+07,37,042,Barceo
+07,37,044,Barruecopardo
+07,37,045,"Bastida, La"
+07,37,046,Béjar
+07,37,047,Beleña
+07,37,049,Bermellar
+07,37,050,Berrocal de Huebra
+07,37,051,Berrocal de Salvatierra
+07,37,052,Boada
+07,37,054,"Bodón, El"
+07,37,055,Bogajo
+07,37,056,"Bouza, La"
+07,37,057,Bóveda del Río Almar
+07,37,058,Brincones
+07,37,059,Buenamadre
+07,37,060,Buenavista
+07,37,061,"Cabaco, El"
+07,37,063,"Cabeza de Béjar, La"
+07,37,065,Cabeza del Caballo
+07,37,062,Cabezabellosa de la Calzada
+07,37,067,Cabrerizos
+07,37,068,Cabrillas
+07,37,069,Calvarrasa de Abajo
+07,37,070,Calvarrasa de Arriba
+07,37,071,"Calzada de Béjar, La"
+07,37,072,Calzada de Don Diego
+07,37,073,Calzada de Valdunciel
+07,37,074,Campillo de Azaba
+07,37,077,"Campo de Peñaranda, El"
+07,37,078,Candelario
+07,37,079,Canillas de Abajo
+07,37,080,Cantagallo
+07,37,081,Cantalapiedra
+07,37,082,Cantalpino
+07,37,083,Cantaracillo
+07,37,085,Carbajosa de la Sagrada
+07,37,086,Carpio de Azaba
+07,37,087,Carrascal de Barregas
+07,37,088,Carrascal del Obispo
+07,37,089,Casafranca
+07,37,090,"Casas del Conde, Las"
+07,37,091,Casillas de Flores
+07,37,092,Castellanos de Moriscos
+07,37,185,Castellanos de Villiquera
+07,37,096,Castillejo de Martín Viejo
+07,37,097,Castraz
+07,37,098,Cepeda
+07,37,099,Cereceda de la Sierra
+07,37,100,Cerezal de Peñahorcada
+07,37,101,Cerralbo
+07,37,102,"Cerro, El"
+07,37,103,Cespedosa de Tormes
+07,37,114,Chagarcía Medianero
+07,37,104,Cilleros de la Bastida
+07,37,106,Cipérez
+07,37,107,Ciudad Rodrigo
+07,37,108,Coca de Alba
+07,37,109,Colmenar de Montemayor
+07,37,110,Cordovilla
+07,37,112,Cristóbal
+07,37,113,"Cubo de Don Sancho, El"
+07,37,115,Dios le Guarde
+07,37,116,Doñinos de Ledesma
+07,37,117,Doñinos de Salamanca
+07,37,118,Éjeme
+07,37,120,Encina de San Silvestre
+07,37,119,"Encina, La"
+07,37,121,Encinas de Abajo
+07,37,122,Encinas de Arriba
+07,37,123,Encinasola de los Comendadores
+07,37,124,Endrinal
+07,37,125,Escurial de la Sierra
+07,37,126,Espadaña
+07,37,127,Espeja
+07,37,128,Espino de la Orbada
+07,37,129,Florida de Liébana
+07,37,130,Forfoleda
+07,37,131,Frades de la Sierra
+07,37,132,"Fregeneda, La"
+07,37,133,Fresnedoso
+07,37,134,Fresno Alhándiga
+07,37,135,"Fuente de San Esteban, La"
+07,37,136,Fuenteguinaldo
+07,37,137,Fuenteliante
+07,37,138,Fuenterroble de Salvatierra
+07,37,139,Fuentes de Béjar
+07,37,140,Fuentes de Oñoro
+07,37,141,Gajates
+07,37,142,Galindo y Perahuy
+07,37,143,Galinduste
+07,37,144,Galisancho
+07,37,145,Gallegos de Argañán
+07,37,146,Gallegos de Solmirón
+07,37,147,Garcibuey
+07,37,148,Garcihernández
+07,37,149,Garcirrey
+07,37,150,Gejuelo del Barro
+07,37,151,Golpejas
+07,37,152,Gomecello
+07,37,154,Guadramiro
+07,37,155,Guijo de Ávila
+07,37,156,Guijuelo
+07,37,157,Herguijuela de Ciudad Rodrigo
+07,37,158,Herguijuela de la Sierra
+07,37,159,Herguijuela del Campo
+07,37,160,Hinojosa de Duero
+07,37,161,Horcajo de Montemayor
+07,37,162,Horcajo Medianero
+07,37,163,"Hoya, La"
+07,37,164,Huerta
+07,37,165,Iruelos
+07,37,166,Ituero de Azaba
+07,37,167,Juzbado
+07,37,168,Lagunilla
+07,37,169,Larrodrigo
+07,37,170,Ledesma
+07,37,171,Ledrada
+07,37,172,Linares de Riofrío
+07,37,173,Lumbrales
+07,37,175,Machacón
+07,37,174,Macotera
+07,37,176,Madroñal
+07,37,177,"Maíllo, El"
+07,37,178,Malpartida
+07,37,179,Mancera de Abajo
+07,37,180,"Manzano, El"
+07,37,181,Martiago
+07,37,183,Martín de Yeltes
+07,37,182,Martinamor
+07,37,184,Masueco
+07,37,186,"Mata de Ledesma, La"
+07,37,187,Matilla de los Caños del Río
+07,37,188,"Maya, La"
+07,37,189,Membribe de la Sierra
+07,37,190,Mieza
+07,37,191,"Milano, El"
+07,37,192,Miranda de Azán
+07,37,193,Miranda del Castañar
+07,37,194,Mogarraz
+07,37,195,Molinillo
+07,37,196,Monforte de la Sierra
+07,37,197,Monleón
+07,37,198,Monleras
+07,37,199,Monsagro
+07,37,200,Montejo
+07,37,201,Montemayor del Río
+07,37,202,Monterrubio de Armuña
+07,37,203,Monterrubio de la Sierra
+07,37,204,Morasverdes
+07,37,205,Morille
+07,37,206,Moríñigo
+07,37,207,Moriscos
+07,37,208,Moronta
+07,37,209,Mozárbez
+07,37,211,Narros de Matalayegua
+07,37,213,Nava de Béjar
+07,37,214,Nava de Francia
+07,37,215,Nava de Sotrobal
+07,37,212,Navacarros
+07,37,216,Navales
+07,37,217,Navalmoral de Béjar
+07,37,218,Navamorales
+07,37,219,Navarredonda de la Rinconada
+07,37,221,Navasfrías
+07,37,222,Negrilla de Palencia
+07,37,223,Olmedo de Camaces
+07,37,224,"Orbada, La"
+07,37,225,Pajares de la Laguna
+07,37,226,Palacios del Arzobispo
+07,37,228,Palaciosrubios
+07,37,229,Palencia de Negrilla
+07,37,230,Parada de Arriba
+07,37,231,Parada de Rubiales
+07,37,232,Paradinas de San Juan
+07,37,233,Pastores
+07,37,234,"Payo, El"
+07,37,235,Pedraza de Alba
+07,37,236,Pedrosillo de Alba
+07,37,237,Pedrosillo de los Aires
+07,37,238,Pedrosillo el Ralo
+07,37,239,"Pedroso de la Armuña, El"
+07,37,240,Pelabravo
+07,37,241,Pelarrodríguez
+07,37,242,Pelayos
+07,37,243,"Peña, La"
+07,37,244,Peñacaballera
+07,37,245,Peñaparda
+07,37,246,Peñaranda de Bracamonte
+07,37,247,Peñarandilla
+07,37,248,Peralejos de Abajo
+07,37,249,Peralejos de Arriba
+07,37,250,Pereña de la Ribera
+07,37,251,Peromingo
+07,37,252,Pinedas
+07,37,253,"Pino de Tormes, El"
+07,37,254,Pitiegua
+07,37,255,Pizarral
+07,37,256,Poveda de las Cintas
+07,37,257,Pozos de Hinojo
+07,37,258,Puebla de Azaba
+07,37,259,Puebla de San Medel
+07,37,260,Puebla de Yeltes
+07,37,261,Puente del Congosto
+07,37,262,Puertas
+07,37,263,Puerto de Béjar
+07,37,264,Puerto Seguro
+07,37,265,Rágama
+07,37,266,"Redonda, La"
+07,37,267,Retortillo
+07,37,268,"Rinconada de la Sierra, La"
+07,37,269,Robleda
+07,37,270,Robliza de Cojos
+07,37,271,Rollán
+07,37,272,Saelices el Chico
+07,37,273,"Sagrada, La"
+07,37,303,"Sahugo, El"
+07,37,274,Salamanca
+07,37,275,Saldeana
+07,37,276,Salmoral
+07,37,277,Salvatierra de Tormes
+07,37,278,San Cristóbal de la Cuesta
+07,37,284,San Esteban de la Sierra
+07,37,285,San Felices de los Gallegos
+07,37,286,San Martín del Castañar
+07,37,287,San Miguel de Valero
+07,37,036,San Miguel del Robledo
+07,37,288,San Morales
+07,37,289,San Muñoz
+07,37,291,San Pedro de Rozados
+07,37,290,San Pedro del Valle
+07,37,292,San Pelayo de Guareña
+07,37,280,Sanchón de la Ribera
+07,37,281,Sanchón de la Sagrada
+07,37,282,Sanchotello
+07,37,279,Sancti-Spíritus
+07,37,283,Sando
+07,37,293,Santa María de Sando
+07,37,294,Santa Marta de Tormes
+07,37,296,Santiago de la Puebla
+07,37,297,Santibáñez de Béjar
+07,37,298,Santibáñez de la Sierra
+07,37,299,Santiz
+07,37,300,"Santos, Los"
+07,37,301,Sardón de los Frailes
+07,37,302,Saucelle
+07,37,304,Sepulcro-Hilario
+07,37,305,Sequeros
+07,37,306,Serradilla del Arroyo
+07,37,307,Serradilla del Llano
+07,37,309,"Sierpe, La"
+07,37,310,Sieteiglesias de Tormes
+07,37,311,Sobradillo
+07,37,312,Sorihuela
+07,37,313,Sotoserrano
+07,37,314,Tabera de Abajo
+07,37,315,"Tala, La"
+07,37,316,Tamames
+07,37,317,Tarazona de Guareña
+07,37,318,Tardáguila
+07,37,319,"Tejado, El"
+07,37,320,Tejeda y Segoyuela
+07,37,321,Tenebrón
+07,37,322,Terradillos
+07,37,323,Topas
+07,37,324,Tordillos
+07,37,325,"Tornadizo, El"
+07,37,327,Torresmenudas
+07,37,328,Trabanca
+07,37,329,Tremedal de Tormes
+07,37,330,Valdecarros
+07,37,331,Valdefuentes de Sangusín
+07,37,332,Valdehijaderos
+07,37,333,Valdelacasa
+07,37,334,Valdelageve
+07,37,335,Valdelosa
+07,37,336,Valdemierque
+07,37,337,Valderrodrigo
+07,37,338,Valdunciel
+07,37,339,Valero
+07,37,343,Vallejera de Riofrío
+07,37,340,Valsalabroso
+07,37,341,Valverde de Valdelacasa
+07,37,342,Valverdón
+07,37,344,Vecinos
+07,37,345,Vega de Tirados
+07,37,346,"Veguillas, Las"
+07,37,347,"Vellés, La"
+07,37,348,Ventosa del Río Almar
+07,37,349,"Vídola, La"
+07,37,351,Villaflores
+07,37,352,Villagonzalo de Tormes
+07,37,353,Villalba de los Llanos
+07,37,354,Villamayor
+07,37,355,Villanueva del Conde
+07,37,356,Villar de Argañán
+07,37,357,Villar de Ciervo
+07,37,358,Villar de Gallimazo
+07,37,359,Villar de la Yegua
+07,37,360,Villar de Peralonso
+07,37,361,Villar de Samaniego
+07,37,362,Villares de la Reina
+07,37,363,Villares de Yeltes
+07,37,364,Villarino de los Aires
+07,37,365,Villarmayor
+07,37,366,Villarmuerto
+07,37,367,Villasbuenas
+07,37,368,Villasdardo
+07,37,369,Villaseco de los Gamitos
+07,37,370,Villaseco de los Reyes
+07,37,371,Villasrubias
+07,37,372,Villaverde de Guareña
+07,37,373,Villavieja de Yeltes
+07,37,374,Villoria
+07,37,375,Villoruela
+07,37,350,Vilvestre
+07,37,376,Vitigudino
+07,37,377,Yecla de Yeltes
+07,37,378,Zamarra
+07,37,379,Zamayón
+07,37,380,Zarapicos
+07,37,381,"Zarza de Pumareda, La"
+07,37,382,Zorita de la Frontera
+05,38,001,Adeje
+05,38,002,Agulo
+05,38,003,Alajeró
+05,38,004,Arafo
+05,38,005,Arico
+05,38,006,Arona
+05,38,007,Barlovento
+05,38,008,Breña Alta
+05,38,009,Breña Baja
+05,38,010,Buenavista del Norte
+05,38,011,Candelaria
+05,38,012,Fasnia
+05,38,013,Frontera
+05,38,014,Fuencaliente de la Palma
+05,38,015,Garachico
+05,38,016,Garafía
+05,38,017,Granadilla de Abona
+05,38,018,"Guancha, La"
+05,38,019,Guía de Isora
+05,38,020,Güímar
+05,38,021,Hermigua
+05,38,022,Icod de los Vinos
+05,38,024,"Llanos de Aridane, Los"
+05,38,025,"Matanza de Acentejo, La"
+05,38,026,"Orotava, La"
+05,38,027,"Paso, El"
+05,38,901,"Pinar de El Hierro, El"
+05,38,028,Puerto de la Cruz
+05,38,029,Puntagorda
+05,38,030,Puntallana
+05,38,031,"Realejos, Los"
+05,38,032,"Rosario, El"
+05,38,033,San Andrés y Sauces
+05,38,023,San Cristóbal de La Laguna
+05,38,034,San Juan de la Rambla
+05,38,035,San Miguel de Abona
+05,38,036,San Sebastián de la Gomera
+05,38,037,Santa Cruz de la Palma
+05,38,038,Santa Cruz de Tenerife
+05,38,039,Santa Úrsula
+05,38,040,Santiago del Teide
+05,38,041,"Sauzal, El"
+05,38,042,"Silos, Los"
+05,38,043,Tacoronte
+05,38,044,"Tanque, El"
+05,38,045,Tazacorte
+05,38,046,Tegueste
+05,38,047,Tijarafe
+05,38,049,Valle Gran Rey
+05,38,050,Vallehermoso
+05,38,048,Valverde
+05,38,051,"Victoria de Acentejo, La"
+05,38,052,Vilaflor de Chasna
+05,38,053,Villa de Mazo
+06,39,001,Alfoz de Lloredo
+06,39,002,Ampuero
+06,39,003,Anievas
+06,39,004,Arenas de Iguña
+06,39,005,Argoños
+06,39,006,Arnuero
+06,39,007,Arredondo
+06,39,008,"Astillero, El"
+06,39,009,Bárcena de Cicero
+06,39,010,Bárcena de Pie de Concha
+06,39,011,Bareyo
+06,39,012,Cabezón de la Sal
+06,39,013,Cabezón de Liébana
+06,39,014,Cabuérniga
+06,39,015,Camaleño
+06,39,016,Camargo
+06,39,027,Campoo de Enmedio
+06,39,017,Campoo de Yuso
+06,39,018,Cartes
+06,39,019,Castañeda
+06,39,020,Castro-Urdiales
+06,39,021,Cieza
+06,39,022,Cillorigo de Liébana
+06,39,023,Colindres
+06,39,024,Comillas
+06,39,025,"Corrales de Buelna, Los"
+06,39,026,Corvera de Toranzo
+06,39,028,Entrambasaguas
+06,39,029,Escalante
+06,39,030,Guriezo
+06,39,031,Hazas de Cesto
+06,39,032,Hermandad de Campoo de Suso
+06,39,033,Herrerías
+06,39,034,Lamasón
+06,39,035,Laredo
+06,39,036,Liendo
+06,39,037,Liérganes
+06,39,038,Limpias
+06,39,039,Luena
+06,39,040,Marina de Cudeyo
+06,39,041,Mazcuerras
+06,39,042,Medio Cudeyo
+06,39,043,Meruelo
+06,39,044,Miengo
+06,39,045,Miera
+06,39,046,Molledo
+06,39,047,Noja
+06,39,048,Penagos
+06,39,049,Peñarrubia
+06,39,050,Pesaguero
+06,39,051,Pesquera
+06,39,052,Piélagos
+06,39,053,Polaciones
+06,39,054,Polanco
+06,39,055,Potes
+06,39,056,Puente Viesgo
+06,39,057,Ramales de la Victoria
+06,39,058,Rasines
+06,39,059,Reinosa
+06,39,060,Reocín
+06,39,061,Ribamontán al Mar
+06,39,062,Ribamontán al Monte
+06,39,063,Rionansa
+06,39,064,Riotuerto
+06,39,065,"Rozas de Valdearroyo, Las"
+06,39,066,Ruente
+06,39,067,Ruesga
+06,39,068,Ruiloba
+06,39,069,San Felices de Buelna
+06,39,070,San Miguel de Aguayo
+06,39,071,San Pedro del Romeral
+06,39,072,San Roque de Riomiera
+06,39,080,San Vicente de la Barquera
+06,39,073,Santa Cruz de Bezana
+06,39,074,Santa María de Cayón
+06,39,075,Santander
+06,39,076,Santillana del Mar
+06,39,077,Santiurde de Reinosa
+06,39,078,Santiurde de Toranzo
+06,39,079,Santoña
+06,39,081,Saro
+06,39,082,Selaya
+06,39,083,Soba
+06,39,084,Solórzano
+06,39,085,Suances
+06,39,086,"Tojos, Los"
+06,39,087,Torrelavega
+06,39,088,Tresviso
+06,39,089,Tudanca
+06,39,090,Udías
+06,39,095,Val de San Vicente
+06,39,091,Valdáliga
+06,39,092,Valdeolea
+06,39,093,Valdeprado del Río
+06,39,094,Valderredible
+06,39,101,Valle de Villaverde
+06,39,096,Vega de Liébana
+06,39,097,Vega de Pas
+06,39,098,Villacarriedo
+06,39,099,Villaescusa
+06,39,100,Villafufre
+06,39,102,Voto
+07,40,001,Abades
+07,40,002,Adrada de Pirón
+07,40,003,Adrados
+07,40,004,Aguilafuente
+07,40,005,Alconada de Maderuelo
+07,40,012,Aldea Real
+07,40,006,Aldealcorvo
+07,40,007,Aldealengua de Pedraza
+07,40,008,Aldealengua de Santa María
+07,40,009,Aldeanueva de la Serrezuela
+07,40,010,Aldeanueva del Codonal
+07,40,013,Aldeasoña
+07,40,014,Aldehorno
+07,40,015,Aldehuela del Codonal
+07,40,016,Aldeonte
+07,40,017,Anaya
+07,40,018,Añe
+07,40,019,Arahuetes
+07,40,020,Arcones
+07,40,021,Arevalillo de Cega
+07,40,022,Armuña
+07,40,024,Ayllón
+07,40,025,Barbolla
+07,40,026,Basardilla
+07,40,028,Bercial
+07,40,029,Bercimuel
+07,40,030,Bernardos
+07,40,031,Bernuy de Porreros
+07,40,032,Boceguillas
+07,40,033,Brieva
+07,40,034,Caballar
+07,40,035,Cabañas de Polendos
+07,40,036,Cabezuela
+07,40,037,Calabazas de Fuentidueña
+07,40,039,Campo de San Pedro
+07,40,040,Cantalejo
+07,40,041,Cantimpalos
+07,40,161,Carabias
+07,40,043,Carbonero el Mayor
+07,40,044,Carrascal del Río
+07,40,045,Casla
+07,40,046,Castillejo de Mesleón
+07,40,047,Castro de Fuentidueña
+07,40,048,Castrojimeno
+07,40,049,Castroserna de Abajo
+07,40,051,Castroserracín
+07,40,052,Cedillo de la Torre
+07,40,053,Cerezo de Abajo
+07,40,054,Cerezo de Arriba
+07,40,065,Chañe
+07,40,055,Cilleruelo de San Mamés
+07,40,056,Cobos de Fuentidueña
+07,40,057,Coca
+07,40,058,Codorniz
+07,40,059,Collado Hermoso
+07,40,060,Condado de Castilnovo
+07,40,061,Corral de Ayllón
+07,40,902,Cozuelos de Fuentidueña
+07,40,062,Cubillo
+07,40,063,Cuéllar
+07,40,905,Cuevas de Provanco
+07,40,068,Domingo García
+07,40,069,Donhierro
+07,40,070,Duruelo
+07,40,071,Encinas
+07,40,072,Encinillas
+07,40,073,Escalona del Prado
+07,40,074,Escarabajosa de Cabezas
+07,40,075,Escobar de Polendos
+07,40,076,"Espinar, El"
+07,40,077,Espirdo
+07,40,078,Fresneda de Cuéllar
+07,40,079,Fresno de Cantespino
+07,40,080,Fresno de la Fuente
+07,40,081,Frumales
+07,40,082,Fuente de Santa Cruz
+07,40,083,Fuente el Olmo de Fuentidueña
+07,40,084,Fuente el Olmo de Íscar
+07,40,086,Fuentepelayo
+07,40,087,Fuentepiñel
+07,40,088,Fuenterrebollo
+07,40,089,Fuentesaúco de Fuentidueña
+07,40,091,Fuentesoto
+07,40,092,Fuentidueña
+07,40,093,Gallegos
+07,40,094,Garcillán
+07,40,095,Gomezserracín
+07,40,097,Grajera
+07,40,099,Honrubia de la Cuesta
+07,40,100,Hontalbilla
+07,40,101,Hontanares de Eresma
+07,40,103,"Huertos, Los"
+07,40,104,Ituero y Lama
+07,40,105,Juarros de Riomoros
+07,40,106,Juarros de Voltoya
+07,40,107,Labajos
+07,40,108,Laguna de Contreras
+07,40,109,Languilla
+07,40,110,Lastras de Cuéllar
+07,40,111,Lastras del Pozo
+07,40,112,"Lastrilla, La"
+07,40,113,"Losa, La"
+07,40,115,Maderuelo
+07,40,903,Marazoleja
+07,40,118,Marazuela
+07,40,119,Martín Miguel
+07,40,120,Martín Muñoz de la Dehesa
+07,40,121,Martín Muñoz de las Posadas
+07,40,122,Marugán
+07,40,124,Mata de Cuéllar
+07,40,123,Matabuena
+07,40,125,"Matilla, La"
+07,40,126,Melque de Cercos
+07,40,127,Membibre de la Hoz
+07,40,128,Migueláñez
+07,40,129,Montejo de Arévalo
+07,40,130,Montejo de la Vega de la Serrezuela
+07,40,131,Monterrubio
+07,40,132,Moral de Hornuez
+07,40,134,Mozoncillo
+07,40,135,Muñopedro
+07,40,136,Muñoveros
+07,40,138,Nava de la Asunción
+07,40,139,Navafría
+07,40,140,Navalilla
+07,40,141,Navalmanzano
+07,40,142,Navares de Ayuso
+07,40,143,Navares de Enmedio
+07,40,144,Navares de las Cuevas
+07,40,145,Navas de Oro
+07,40,904,Navas de Riofrío
+07,40,146,Navas de San Antonio
+07,40,148,Nieva
+07,40,149,Olombrada
+07,40,150,Orejana
+07,40,151,Ortigosa de Pestaño
+07,40,901,Ortigosa del Monte
+07,40,152,Otero de Herreros
+07,40,154,Pajarejos
+07,40,155,Palazuelos de Eresma
+07,40,156,Pedraza
+07,40,157,Pelayos del Arroyo
+07,40,158,Perosillo
+07,40,159,Pinarejos
+07,40,160,Pinarnegrillo
+07,40,162,Prádena
+07,40,163,Puebla de Pedraza
+07,40,164,Rapariegos
+07,40,181,Real Sitio de San Ildefonso
+07,40,165,Rebollo
+07,40,166,Remondo
+07,40,168,Riaguas de San Bartolomé
+07,40,170,Riaza
+07,40,171,Ribota
+07,40,172,Riofrío de Riaza
+07,40,173,Roda de Eresma
+07,40,174,Sacramenia
+07,40,176,Samboal
+07,40,177,San Cristóbal de Cuéllar
+07,40,178,San Cristóbal de la Vega
+07,40,906,San Cristóbal de Segovia
+07,40,182,San Martín y Mudrián
+07,40,183,San Miguel de Bernuy
+07,40,184,San Pedro de Gaíllos
+07,40,179,Sanchonuño
+07,40,180,Sangarcía
+07,40,185,Santa María la Real de Nieva
+07,40,186,Santa Marta del Cerro
+07,40,188,Santiuste de Pedraza
+07,40,189,Santiuste de San Juan Bautista
+07,40,190,Santo Domingo de Pirón
+07,40,191,Santo Tomé del Puerto
+07,40,192,Sauquillo de Cabezas
+07,40,193,Sebúlcor
+07,40,194,Segovia
+07,40,195,Sepúlveda
+07,40,196,Sequera de Fresno
+07,40,198,Sotillo
+07,40,199,Sotosalbos
+07,40,200,Tabanera la Luenga
+07,40,201,Tolocirio
+07,40,206,Torre Val de San Pedro
+07,40,202,Torreadrada
+07,40,203,Torrecaballeros
+07,40,204,Torrecilla del Pinar
+07,40,205,Torreiglesias
+07,40,207,Trescasas
+07,40,208,Turégano
+07,40,210,Urueñas
+07,40,211,Valdeprados
+07,40,212,Valdevacas de Montejo
+07,40,213,Valdevacas y Guijar
+07,40,218,Valle de Tabladillo
+07,40,219,Vallelado
+07,40,220,Valleruela de Pedraza
+07,40,221,Valleruela de Sepúlveda
+07,40,214,Valseca
+07,40,215,Valtiendas
+07,40,216,Valverde del Majano
+07,40,222,Veganzones
+07,40,223,Vegas de Matute
+07,40,224,Ventosilla y Tejadilla
+07,40,225,Villacastín
+07,40,228,Villaverde de Íscar
+07,40,229,Villaverde de Montejo
+07,40,230,Villeguillo
+07,40,231,Yanguas de Eresma
+07,40,233,Zarzuela del Monte
+07,40,234,Zarzuela del Pinar
+01,41,001,Aguadulce
+01,41,002,Alanís
+01,41,003,Albaida del Aljarafe
+01,41,004,Alcalá de Guadaíra
+01,41,005,Alcalá del Río
+01,41,006,Alcolea del Río
+01,41,007,"Algaba, La"
+01,41,008,Algámitas
+01,41,009,Almadén de la Plata
+01,41,010,Almensilla
+01,41,011,Arahal
+01,41,012,Aznalcázar
+01,41,013,Aznalcóllar
+01,41,014,Badolatosa
+01,41,015,Benacazón
+01,41,016,Bollullos de la Mitación
+01,41,017,Bormujos
+01,41,018,Brenes
+01,41,019,Burguillos
+01,41,020,"Cabezas de San Juan, Las"
+01,41,021,Camas
+01,41,022,"Campana, La"
+01,41,023,Cantillana
+01,41,901,Cañada Rosal
+01,41,024,Carmona
+01,41,025,Carrión de los Céspedes
+01,41,026,Casariche
+01,41,027,Castilblanco de los Arroyos
+01,41,028,Castilleja de Guzmán
+01,41,029,Castilleja de la Cuesta
+01,41,030,Castilleja del Campo
+01,41,031,"Castillo de las Guardas, El"
+01,41,032,Cazalla de la Sierra
+01,41,033,Constantina
+01,41,034,Coria del Río
+01,41,035,Coripe
+01,41,036,"Coronil, El"
+01,41,037,"Corrales, Los"
+01,41,903,"Cuervo de Sevilla, El"
+01,41,038,Dos Hermanas
+01,41,039,Écija
+01,41,040,Espartinas
+01,41,041,Estepa
+01,41,042,Fuentes de Andalucía
+01,41,043,"Garrobo, El"
+01,41,044,Gelves
+01,41,045,Gerena
+01,41,046,Gilena
+01,41,047,Gines
+01,41,048,Guadalcanal
+01,41,049,Guillena
+01,41,050,Herrera
+01,41,051,Huévar del Aljarafe
+01,41,902,Isla Mayor
+01,41,052,Lantejuela
+01,41,053,Lebrija
+01,41,054,Lora de Estepa
+01,41,055,Lora del Río
+01,41,056,"Luisiana, La"
+01,41,057,"Madroño, El"
+01,41,058,Mairena del Alcor
+01,41,059,Mairena del Aljarafe
+01,41,060,Marchena
+01,41,061,Marinaleda
+01,41,062,Martín de la Jara
+01,41,063,"Molares, Los"
+01,41,064,Montellano
+01,41,065,Morón de la Frontera
+01,41,066,"Navas de la Concepción, Las"
+01,41,067,Olivares
+01,41,068,Osuna
+01,41,069,"Palacios y Villafranca, Los"
+01,41,904,"Palmar de Troya, El"
+01,41,070,Palomares del Río
+01,41,071,Paradas
+01,41,072,Pedrera
+01,41,073,"Pedroso, El"
+01,41,074,Peñaflor
+01,41,075,Pilas
+01,41,076,Pruna
+01,41,077,"Puebla de Cazalla, La"
+01,41,078,"Puebla de los Infantes, La"
+01,41,079,"Puebla del Río, La"
+01,41,080,"Real de la Jara, El"
+01,41,081,"Rinconada, La"
+01,41,082,"Roda de Andalucía, La"
+01,41,083,"Ronquillo, El"
+01,41,084,"Rubio, El"
+01,41,085,Salteras
+01,41,086,San Juan de Aznalfarache
+01,41,088,San Nicolás del Puerto
+01,41,087,Sanlúcar la Mayor
+01,41,089,Santiponce
+01,41,090,"Saucejo, El"
+01,41,091,Sevilla
+01,41,092,Tocina
+01,41,093,Tomares
+01,41,094,Umbrete
+01,41,095,Utrera
+01,41,096,Valencina de la Concepción
+01,41,097,Villamanrique de la Condesa
+01,41,100,Villanueva de San Juan
+01,41,098,Villanueva del Ariscal
+01,41,099,Villanueva del Río y Minas
+01,41,101,Villaverde del Río
+01,41,102,"Viso del Alcor, El"
+07,42,001,Abejar
+07,42,003,Adradas
+07,42,004,Ágreda
+07,42,006,Alconaba
+07,42,007,Alcubilla de Avellaneda
+07,42,008,Alcubilla de las Peñas
+07,42,009,Aldealafuente
+07,42,010,Aldealices
+07,42,011,Aldealpozo
+07,42,012,Aldealseñor
+07,42,013,Aldehuela de Periáñez
+07,42,014,"Aldehuelas, Las"
+07,42,015,Alentisque
+07,42,016,Aliud
+07,42,017,Almajano
+07,42,018,Almaluez
+07,42,019,Almarza
+07,42,020,Almazán
+07,42,021,Almazul
+07,42,022,Almenar de Soria
+07,42,023,Alpanseque
+07,42,024,Arancón
+07,42,025,Arcos de Jalón
+07,42,026,Arenillas
+07,42,027,Arévalo de la Sierra
+07,42,028,Ausejo de la Sierra
+07,42,029,Baraona
+07,42,030,Barca
+07,42,031,Barcones
+07,42,032,Bayubas de Abajo
+07,42,033,Bayubas de Arriba
+07,42,034,Beratón
+07,42,035,Berlanga de Duero
+07,42,036,Blacos
+07,42,037,Bliecos
+07,42,038,Borjabad
+07,42,039,Borobia
+07,42,041,Buberos
+07,42,042,Buitrago
+07,42,043,Burgo de Osma-Ciudad de Osma
+07,42,044,Cabrejas del Campo
+07,42,045,Cabrejas del Pinar
+07,42,046,Calatañazor
+07,42,048,Caltojar
+07,42,049,Candilichera
+07,42,050,Cañamaque
+07,42,051,Carabantes
+07,42,052,Caracena
+07,42,053,Carrascosa de Abajo
+07,42,054,Carrascosa de la Sierra
+07,42,055,Casarejos
+07,42,056,Castilfrío de la Sierra
+07,42,058,Castillejo de Robledo
+07,42,057,Castilruiz
+07,42,059,Centenera de Andaluz
+07,42,060,Cerbón
+07,42,061,Cidones
+07,42,062,Cigudosa
+07,42,063,Cihuela
+07,42,064,Ciria
+07,42,065,Cirujales del Río
+07,42,068,Coscurita
+07,42,069,Covaleda
+07,42,070,Cubilla
+07,42,071,Cubo de la Solana
+07,42,073,Cueva de Ágreda
+07,42,075,Dévanos
+07,42,076,Deza
+07,42,078,Duruelo de la Sierra
+07,42,079,Escobosa de Almazán
+07,42,080,Espeja de San Marcelino
+07,42,081,Espejón
+07,42,082,Estepa de San Juan
+07,42,083,Frechilla de Almazán
+07,42,084,Fresno de Caracena
+07,42,085,Fuentearmegil
+07,42,086,Fuentecambrón
+07,42,087,Fuentecantos
+07,42,088,Fuentelmonge
+07,42,089,Fuentelsaz de Soria
+07,42,090,Fuentepinilla
+07,42,092,Fuentes de Magaña
+07,42,093,Fuentestrún
+07,42,094,Garray
+07,42,095,Golmayo
+07,42,096,Gómara
+07,42,097,Gormaz
+07,42,098,Herrera de Soria
+07,42,100,Hinojosa del Campo
+07,42,103,Langa de Duero
+07,42,105,Liceras
+07,42,106,"Losilla, La"
+07,42,107,Magaña
+07,42,108,Maján
+07,42,110,Matalebreras
+07,42,111,Matamala de Almazán
+07,42,113,Medinaceli
+07,42,115,Miño de Medinaceli
+07,42,116,Miño de San Esteban
+07,42,117,Molinos de Duero
+07,42,118,Momblona
+07,42,119,Monteagudo de las Vicarías
+07,42,120,Montejo de Tiermes
+07,42,121,Montenegro de Cameros
+07,42,123,Morón de Almazán
+07,42,124,Muriel de la Fuente
+07,42,125,Muriel Viejo
+07,42,127,Nafría de Ucero
+07,42,128,Narros
+07,42,129,Navaleno
+07,42,130,Nepas
+07,42,131,Nolay
+07,42,132,Noviercas
+07,42,134,Ólvega
+07,42,135,Oncala
+07,42,139,Pinilla del Campo
+07,42,140,Portillo de Soria
+07,42,141,"Póveda de Soria, La"
+07,42,142,Pozalmuro
+07,42,144,Quintana Redonda
+07,42,145,Quintanas de Gormaz
+07,42,148,Quiñonería
+07,42,149,"Rábanos, Los"
+07,42,151,Rebollar
+07,42,152,Recuerda
+07,42,153,Rello
+07,42,154,Renieblas
+07,42,155,Retortillo de Soria
+07,42,156,Reznos
+07,42,157,"Riba de Escalote, La"
+07,42,158,Rioseco de Soria
+07,42,159,Rollamienta
+07,42,160,"Royo, El"
+07,42,161,Salduero
+07,42,162,San Esteban de Gormaz
+07,42,163,San Felices
+07,42,164,San Leonardo de Yagüe
+07,42,165,San Pedro Manrique
+07,42,166,Santa Cruz de Yanguas
+07,42,167,Santa María de Huerta
+07,42,168,Santa María de las Hoyas
+07,42,171,Serón de Nágima
+07,42,172,Soliedra
+07,42,173,Soria
+07,42,174,Sotillo del Rincón
+07,42,175,Suellacabras
+07,42,176,Tajahuerce
+07,42,177,Tajueco
+07,42,178,Talveila
+07,42,181,Tardelcuende
+07,42,182,Taroda
+07,42,183,Tejado
+07,42,184,Torlengua
+07,42,185,Torreblacos
+07,42,187,Torrubia de Soria
+07,42,188,Trévago
+07,42,189,Ucero
+07,42,190,Vadillo
+07,42,191,Valdeavellano de Tera
+07,42,192,Valdegeña
+07,42,193,Valdelagua del Cerro
+07,42,194,Valdemaluque
+07,42,195,Valdenebro
+07,42,196,Valdeprado
+07,42,197,Valderrodilla
+07,42,198,Valtajeros
+07,42,200,Velamazán
+07,42,201,Velilla de la Sierra
+07,42,202,Velilla de los Ajos
+07,42,204,Viana de Duero
+07,42,205,Villaciervos
+07,42,206,Villanueva de Gormaz
+07,42,207,Villar del Ala
+07,42,208,Villar del Campo
+07,42,209,Villar del Río
+07,42,211,"Villares de Soria, Los"
+07,42,212,Villasayas
+07,42,213,Villaseca de Arciel
+07,42,215,Vinuesa
+07,42,216,Vizmanos
+07,42,217,Vozmediano
+07,42,218,Yanguas
+07,42,219,Yelo
+09,43,001,Aiguamúrcia
+09,43,002,Albinyana
+09,43,003,"Albiol, L'"
+09,43,004,Alcanar
+09,43,005,Alcover
+09,43,904,"Aldea, L'"
+09,43,006,Aldover
+09,43,007,"Aleixar, L'"
+09,43,008,Alfara de Carles
+09,43,009,Alforja
+09,43,010,Alió
+09,43,011,Almoster
+09,43,012,Altafulla
+09,43,013,"Ametlla de Mar, L'"
+09,43,906,"Ampolla, L'"
+09,43,014,Amposta
+09,43,016,"Arboç, L'"
+09,43,015,Arbolí
+09,43,017,"Argentera, L'"
+09,43,018,Arnes
+09,43,019,Ascó
+09,43,020,Banyeres del Penedès
+09,43,021,Barberà de la Conca
+09,43,022,Batea
+09,43,023,Bellmunt del Priorat
+09,43,024,Bellvei
+09,43,025,Benifallet
+09,43,026,Benissanet
+09,43,027,"Bisbal de Montsant, La"
+09,43,028,"Bisbal del Penedès, La"
+09,43,029,Blancafort
+09,43,030,Bonastre
+09,43,031,"Borges del Camp, Les"
+09,43,032,Bot
+09,43,033,Botarell
+09,43,034,Bràfim
+09,43,035,Cabacés
+09,43,036,Cabra del Camp
+09,43,037,Calafell
+09,43,903,Camarles
+09,43,038,Cambrils
+09,43,907,"Canonja, La"
+09,43,039,Capafonts
+09,43,040,Capçanes
+09,43,041,Caseres
+09,43,042,Castellvell del Camp
+09,43,043,"Catllar, El"
+09,43,045,Colldejou
+09,43,046,Conesa
+09,43,047,Constantí
+09,43,048,Corbera d'Ebre
+09,43,049,Cornudella de Montsant
+09,43,050,Creixell
+09,43,051,Cunit
+09,43,901,Deltebre
+09,43,053,Duesaigües
+09,43,054,"Espluga de Francolí, L'"
+09,43,055,Falset
+09,43,056,"Fatarella, La"
+09,43,057,"Febró, La"
+09,43,058,"Figuera, La"
+09,43,059,Figuerola del Camp
+09,43,060,Flix
+09,43,061,Forès
+09,43,062,Freginals
+09,43,063,"Galera, La"
+09,43,064,Gandesa
+09,43,065,Garcia
+09,43,066,"Garidells, Els"
+09,43,067,Ginestar
+09,43,068,Godall
+09,43,069,Gratallops
+09,43,070,"Guiamets, Els"
+09,43,071,Horta de Sant Joan
+09,43,072,"Lloar, El"
+09,43,073,Llorac
+09,43,074,Llorenç del Penedès
+09,43,076,Marçà
+09,43,075,Margalef
+09,43,077,Mas de Barberans
+09,43,078,Masdenverge
+09,43,079,Masllorenç
+09,43,080,"Masó, La"
+09,43,081,Maspujols
+09,43,082,"Masroig, El"
+09,43,083,"Milà, El"
+09,43,084,Miravet
+09,43,085,"Molar, El"
+09,43,086,Montblanc
+09,43,088,Montbrió del Camp
+09,43,089,Montferri
+09,43,090,"Montmell, El"
+09,43,091,Mont-ral
+09,43,092,Mont-roig del Camp
+09,43,093,Móra d'Ebre
+09,43,094,Móra la Nova
+09,43,095,"Morell, El"
+09,43,096,"Morera de Montsant, La"
+09,43,097,"Nou de Gaià, La"
+09,43,098,Nulles
+09,43,100,"Pallaresos, Els"
+09,43,099,"Palma d'Ebre, La"
+09,43,101,Passanant i Belltall
+09,43,102,Paüls
+09,43,103,Perafort
+09,43,104,"Perelló, El"
+09,43,105,"Piles, Les"
+09,43,106,"Pinell de Brai, El"
+09,43,107,Pira
+09,43,108,"Pla de Santa Maria, El"
+09,43,109,"Pobla de Mafumet, La"
+09,43,110,"Pobla de Massaluca, La"
+09,43,111,"Pobla de Montornès, La"
+09,43,112,Poboleda
+09,43,113,"Pont d'Armentera, El"
+09,43,141,Pontils
+09,43,114,Porrera
+09,43,115,Pradell de la Teixeta
+09,43,116,Prades
+09,43,117,Prat de Comte
+09,43,118,Pratdip
+09,43,119,Puigpelat
+09,43,120,Querol
+09,43,136,"Ràpita, La"
+09,43,121,Rasquera
+09,43,122,Renau
+09,43,123,Reus
+09,43,124,"Riba, La"
+09,43,125,Riba-roja d'Ebre
+09,43,126,"Riera de Gaià, La"
+09,43,127,Riudecanyes
+09,43,128,Riudecols
+09,43,129,Riudoms
+09,43,130,Rocafort de Queralt
+09,43,131,Roda de Berà
+09,43,132,Rodonyà
+09,43,133,Roquetes
+09,43,134,"Rourell, El"
+09,43,135,Salomó
+09,43,905,Salou
+09,43,137,Sant Jaume dels Domenys
+09,43,902,Sant Jaume d'Enveja
+09,43,138,Santa Bàrbara
+09,43,139,Santa Coloma de Queralt
+09,43,140,Santa Oliva
+09,43,142,Sarral
+09,43,143,Savallà del Comtat
+09,43,144,"Secuita, La"
+09,43,145,"Selva del Camp, La"
+09,43,146,Senan
+09,43,044,"Sénia, La"
+09,43,147,Solivella
+09,43,148,Tarragona
+09,43,149,Tivenys
+09,43,150,Tivissa
+09,43,151,"Torre de Fontaubella, La"
+09,43,152,"Torre de l'Espanyol, La"
+09,43,153,Torredembarra
+09,43,154,Torroja del Priorat
+09,43,155,Tortosa
+09,43,156,Ulldecona
+09,43,157,Ulldemolins
+09,43,158,Vallclara
+09,43,159,Vallfogona de Riucorb
+09,43,160,Vallmoll
+09,43,161,Valls
+09,43,162,Vandellòs i l'Hospitalet de l'Infant
+09,43,163,"Vendrell, El"
+09,43,164,Vespella de Gaià
+09,43,165,Vilabella
+09,43,175,Vilalba dels Arcs
+09,43,166,Vilallonga del Camp
+09,43,168,Vilanova de Prades
+09,43,167,Vilanova d'Escornalbou
+09,43,169,Vilaplana
+09,43,170,Vila-rodona
+09,43,171,Vila-seca
+09,43,172,Vilaverd
+09,43,173,"Vilella Alta, La"
+09,43,174,"Vilella Baixa, La"
+09,43,176,Vimbodí i Poblet
+09,43,177,Vinebre
+09,43,178,Vinyols i els Arcs
+09,43,052,Xerta
+02,44,001,Ababuj
+02,44,002,Abejuela
+02,44,003,Aguatón
+02,44,004,Aguaviva
+02,44,005,Aguilar del Alfambra
+02,44,006,Alacón
+02,44,007,Alba
+02,44,008,Albalate del Arzobispo
+02,44,009,Albarracín
+02,44,010,Albentosa
+02,44,011,Alcaine
+02,44,012,Alcalá de la Selva
+02,44,013,Alcañiz
+02,44,014,Alcorisa
+02,44,016,Alfambra
+02,44,017,Aliaga
+02,44,021,Allepuz
+02,44,022,Alloza
+02,44,023,Allueva
+02,44,018,Almohaja
+02,44,019,Alobras
+02,44,020,Alpeñés
+02,44,024,Anadón
+02,44,025,Andorra
+02,44,026,Arcos de las Salinas
+02,44,027,Arens de Lledó
+02,44,028,Argente
+02,44,029,Ariño
+02,44,031,Azaila
+02,44,032,Bádenas
+02,44,033,Báguena
+02,44,034,Bañón
+02,44,035,Barrachina
+02,44,036,Bea
+02,44,037,Beceite
+02,44,039,Bello
+02,44,038,Belmonte de San José
+02,44,040,Berge
+02,44,041,Bezas
+02,44,042,Blancas
+02,44,043,Blesa
+02,44,044,Bordón
+02,44,045,Bronchales
+02,44,046,Bueña
+02,44,047,Burbáguena
+02,44,048,Cabra de Mora
+02,44,049,Calaceite
+02,44,050,Calamocha
+02,44,051,Calanda
+02,44,052,Calomarde
+02,44,053,Camañas
+02,44,054,Camarena de la Sierra
+02,44,055,Camarillas
+02,44,056,Caminreal
+02,44,059,Cantavieja
+02,44,060,Cañada de Benatanduz
+02,44,061,"Cañada de Verich, La"
+02,44,062,Cañada Vellida
+02,44,063,Cañizar del Olivar
+02,44,064,Cascante del Río
+02,44,065,Castejón de Tornos
+02,44,066,Castel de Cabra
+02,44,070,"Castellar, El"
+02,44,071,Castellote
+02,44,067,Castelnou
+02,44,068,Castelserás
+02,44,074,Cedrillas
+02,44,075,Celadas
+02,44,076,Cella
+02,44,077,"Cerollera, La"
+02,44,080,"Codoñera, La"
+02,44,082,Corbalán
+02,44,084,Cortes de Aragón
+02,44,085,Cosa
+02,44,086,Cretas
+02,44,087,Crivillén
+02,44,088,"Cuba, La"
+02,44,089,Cubla
+02,44,090,Cucalón
+02,44,092,"Cuervo, El"
+02,44,093,Cuevas de Almudén
+02,44,094,Cuevas Labradas
+02,44,096,Ejulve
+02,44,097,Escorihuela
+02,44,099,Escucha
+02,44,100,Estercuel
+02,44,101,Ferreruela de Huerva
+02,44,102,Fonfría
+02,44,103,Formiche Alto
+02,44,105,Fórnoles
+02,44,106,Fortanete
+02,44,107,Foz-Calanda
+02,44,108,"Fresneda, La"
+02,44,109,Frías de Albarracín
+02,44,110,Fuenferrada
+02,44,111,Fuentes Calientes
+02,44,112,Fuentes Claras
+02,44,113,Fuentes de Rubielos
+02,44,114,Fuentespalda
+02,44,115,Galve
+02,44,116,Gargallo
+02,44,117,Gea de Albarracín
+02,44,118,"Ginebrosa, La"
+02,44,119,Griegos
+02,44,120,Guadalaviar
+02,44,121,Gúdar
+02,44,122,Híjar
+02,44,123,Hinojosa de Jarque
+02,44,124,"Hoz de la Vieja, La"
+02,44,125,Huesa del Común
+02,44,126,"Iglesuela del Cid, La"
+02,44,127,Jabaloyas
+02,44,128,Jarque de la Val
+02,44,129,Jatiel
+02,44,130,Jorcas
+02,44,131,Josa
+02,44,132,Lagueruela
+02,44,133,Lanzuela
+02,44,135,Libros
+02,44,136,Lidón
+02,44,137,Linares de Mora
+02,44,141,Lledó
+02,44,138,Loscos
+02,44,142,Maicas
+02,44,143,Manzanera
+02,44,144,Martín del Río
+02,44,145,Mas de las Matas
+02,44,146,"Mata de los Olmos, La"
+02,44,147,Mazaleón
+02,44,148,Mezquita de Jarque
+02,44,149,Mirambel
+02,44,150,Miravete de la Sierra
+02,44,151,Molinos
+02,44,152,Monforte de Moyuela
+02,44,153,Monreal del Campo
+02,44,154,Monroyo
+02,44,155,Montalbán
+02,44,156,Monteagudo del Castillo
+02,44,157,Monterde de Albarracín
+02,44,158,Mora de Rubielos
+02,44,159,Moscardón
+02,44,160,Mosqueruela
+02,44,161,Muniesa
+02,44,163,Noguera de Albarracín
+02,44,164,Nogueras
+02,44,165,Nogueruelas
+02,44,167,Obón
+02,44,168,Odón
+02,44,169,Ojos Negros
+02,44,171,Olba
+02,44,172,Oliete
+02,44,173,"Olmos, Los"
+02,44,174,Orihuela del Tremedal
+02,44,175,Orrios
+02,44,176,Palomar de Arroyos
+02,44,177,Pancrudo
+02,44,178,"Parras de Castellote, Las"
+02,44,179,Peñarroya de Tastavins
+02,44,180,Peracense
+02,44,181,Peralejos
+02,44,182,Perales del Alfambra
+02,44,183,Pitarque
+02,44,184,Plou
+02,44,185,"Pobo, El"
+02,44,187,"Portellada, La"
+02,44,189,Pozondón
+02,44,190,Pozuel del Campo
+02,44,191,"Puebla de Híjar, La"
+02,44,192,"Puebla de Valverde, La"
+02,44,193,Puertomingalvo
+02,44,194,Ráfales
+02,44,195,Rillo
+02,44,196,Riodeva
+02,44,197,Ródenas
+02,44,198,Royuela
+02,44,199,Rubiales
+02,44,200,Rubielos de la Cérida
+02,44,201,Rubielos de Mora
+02,44,203,Salcedillo
+02,44,204,Saldón
+02,44,205,Samper de Calanda
+02,44,206,San Agustín
+02,44,207,San Martín del Río
+02,44,208,Santa Cruz de Nogueras
+02,44,209,Santa Eulalia
+02,44,210,Sarrión
+02,44,211,Segura de los Baños
+02,44,212,Seno
+02,44,213,Singra
+02,44,215,Terriente
+02,44,216,Teruel
+02,44,217,Toril y Masegoso
+02,44,218,Tormón
+02,44,219,Tornos
+02,44,220,Torralba de los Sisones
+02,44,223,Torre de Arcas
+02,44,224,Torre de las Arcas
+02,44,225,Torre del Compte
+02,44,227,Torre los Negros
+02,44,221,Torrecilla de Alcañiz
+02,44,222,Torrecilla del Rebollar
+02,44,226,Torrelacárcel
+02,44,228,Torremocha de Jiloca
+02,44,229,Torres de Albarracín
+02,44,230,Torrevelilla
+02,44,231,Torrijas
+02,44,232,Torrijo del Campo
+02,44,234,Tramacastiel
+02,44,235,Tramacastilla
+02,44,236,Tronchón
+02,44,237,Urrea de Gaén
+02,44,238,Utrillas
+02,44,239,Valacloche
+02,44,240,Valbona
+02,44,241,Valdealgorfa
+02,44,243,Valdecuenca
+02,44,244,Valdelinares
+02,44,245,Valdeltormo
+02,44,246,Valderrobres
+02,44,247,Valjunquera
+02,44,249,"Vallecillo, El"
+02,44,250,Veguillas de la Sierra
+02,44,251,Villafranca del Campo
+02,44,252,Villahermosa del Campo
+02,44,256,Villanueva del Rebollar de la Sierra
+02,44,257,Villar del Cobo
+02,44,258,Villar del Salz
+02,44,260,Villarluengo
+02,44,261,Villarquemado
+02,44,262,Villarroya de los Pinares
+02,44,263,Villastar
+02,44,264,Villel
+02,44,265,Vinaceite
+02,44,266,Visiedo
+02,44,267,Vivel del Río Martín
+02,44,268,"Zoma, La"
+08,45,001,Ajofrín
+08,45,002,Alameda de la Sagra
+08,45,003,Albarreal de Tajo
+08,45,004,Alcabón
+08,45,005,Alcañizo
+08,45,006,Alcaudete de la Jara
+08,45,007,Alcolea de Tajo
+08,45,008,Aldea en Cabo
+08,45,009,Aldeanueva de Barbarroya
+08,45,010,Aldeanueva de San Bartolomé
+08,45,011,Almendral de la Cañada
+08,45,012,Almonacid de Toledo
+08,45,013,Almorox
+08,45,014,Añover de Tajo
+08,45,015,Arcicóllar
+08,45,016,Argés
+08,45,017,Azután
+08,45,018,Barcience
+08,45,019,Bargas
+08,45,020,Belvís de la Jara
+08,45,021,Borox
+08,45,022,Buenaventura
+08,45,023,Burguillos de Toledo
+08,45,024,Burujón
+08,45,025,Cabañas de la Sagra
+08,45,026,Cabañas de Yepes
+08,45,027,Cabezamesada
+08,45,028,Calera y Chozas
+08,45,029,Caleruela
+08,45,030,Calzada de Oropesa
+08,45,031,Camarena
+08,45,032,Camarenilla
+08,45,033,"Campillo de la Jara, El"
+08,45,034,Camuñas
+08,45,035,Cardiel de los Montes
+08,45,036,Carmena
+08,45,037,"Carpio de Tajo, El"
+08,45,038,Carranque
+08,45,039,Carriches
+08,45,040,"Casar de Escalona, El"
+08,45,041,Casarrubios del Monte
+08,45,042,Casasbuenas
+08,45,043,Castillo de Bayuela
+08,45,045,Cazalegas
+08,45,046,Cebolla
+08,45,047,Cedillo del Condado
+08,45,048,"Cerralbos, Los"
+08,45,049,Cervera de los Montes
+08,45,056,Chozas de Canales
+08,45,057,Chueca
+08,45,050,Ciruelos
+08,45,051,Cobeja
+08,45,052,Cobisa
+08,45,053,Consuegra
+08,45,054,Corral de Almaguer
+08,45,055,Cuerva
+08,45,058,Domingo Pérez
+08,45,059,Dosbarrios
+08,45,060,Erustes
+08,45,061,Escalona
+08,45,062,Escalonilla
+08,45,063,Espinoso del Rey
+08,45,064,Esquivias
+08,45,065,"Estrella, La"
+08,45,066,Fuensalida
+08,45,067,Gálvez
+08,45,068,Garciotum
+08,45,069,Gerindote
+08,45,070,Guadamur
+08,45,071,"Guardia, La"
+08,45,072,"Herencias, Las"
+08,45,073,Herreruela de Oropesa
+08,45,074,Hinojosa de San Vicente
+08,45,075,Hontanar
+08,45,076,Hormigos
+08,45,077,Huecas
+08,45,078,Huerta de Valdecarábanos
+08,45,079,"Iglesuela del Tiétar, La"
+08,45,080,Illán de Vacas
+08,45,081,Illescas
+08,45,082,Lagartera
+08,45,083,Layos
+08,45,084,Lillo
+08,45,085,Lominchar
+08,45,086,Lucillos
+08,45,087,Madridejos
+08,45,088,Magán
+08,45,089,Malpica de Tajo
+08,45,090,Manzaneque
+08,45,091,Maqueda
+08,45,092,Marjaliza
+08,45,093,Marrupe
+08,45,094,Mascaraque
+08,45,095,"Mata, La"
+08,45,096,Mazarambroz
+08,45,097,Mejorada
+08,45,098,Menasalbas
+08,45,099,Méntrida
+08,45,100,Mesegar de Tajo
+08,45,101,Miguel Esteban
+08,45,102,Mocejón
+08,45,103,Mohedas de la Jara
+08,45,104,Montearagón
+08,45,105,Montesclaros
+08,45,106,Mora
+08,45,107,Nambroca
+08,45,108,"Nava de Ricomalillo, La"
+08,45,109,Navahermosa
+08,45,110,Navalcán
+08,45,111,Navalmoralejo
+08,45,112,"Navalmorales, Los"
+08,45,113,"Navalucillos, Los"
+08,45,114,Navamorcuende
+08,45,115,Noblejas
+08,45,116,Noez
+08,45,117,Nombela
+08,45,118,Novés
+08,45,119,Numancia de la Sagra
+08,45,120,Nuño Gómez
+08,45,121,Ocaña
+08,45,122,Olías del Rey
+08,45,123,Ontígola
+08,45,124,Orgaz
+08,45,125,Oropesa
+08,45,126,Otero
+08,45,127,Palomeque
+08,45,128,Pantoja
+08,45,129,Paredes de Escalona
+08,45,130,Parrillas
+08,45,131,Pelahustán
+08,45,132,Pepino
+08,45,133,Polán
+08,45,134,Portillo de Toledo
+08,45,135,"Puebla de Almoradiel, La"
+08,45,136,"Puebla de Montalbán, La"
+08,45,137,"Pueblanueva, La"
+08,45,138,"Puente del Arzobispo, El"
+08,45,139,Puerto de San Vicente
+08,45,140,Pulgar
+08,45,141,Quero
+08,45,142,Quintanar de la Orden
+08,45,143,Quismondo
+08,45,144,"Real de San Vicente, El"
+08,45,145,Recas
+08,45,146,Retamoso de la Jara
+08,45,147,Rielves
+08,45,148,Robledo del Mazo
+08,45,149,"Romeral, El"
+08,45,150,San Bartolomé de las Abiertas
+08,45,151,San Martín de Montalbán
+08,45,152,San Martín de Pusa
+08,45,153,San Pablo de los Montes
+08,45,154,San Román de los Montes
+08,45,155,Santa Ana de Pusa
+08,45,156,Santa Cruz de la Zarza
+08,45,157,Santa Cruz del Retamar
+08,45,158,Santa Olalla
+08,45,901,Santo Domingo-Caudilla
+08,45,159,Sartajada
+08,45,160,Segurilla
+08,45,161,Seseña
+08,45,162,Sevilleja de la Jara
+08,45,163,Sonseca
+08,45,164,Sotillo de las Palomas
+08,45,165,Talavera de la Reina
+08,45,166,Tembleque
+08,45,167,"Toboso, El"
+08,45,168,Toledo
+08,45,169,Torralba de Oropesa
+08,45,171,"Torre de Esteban Hambrán, La"
+08,45,170,Torrecilla de la Jara
+08,45,172,Torrico
+08,45,173,Torrijos
+08,45,174,Totanés
+08,45,175,Turleque
+08,45,176,Ugena
+08,45,177,Urda
+08,45,179,Valdeverdeja
+08,45,180,Valmojado
+08,45,181,Velada
+08,45,182,"Ventas con Peña Aguilera, Las"
+08,45,183,"Ventas de Retamosa, Las"
+08,45,184,"Ventas de San Julián, Las"
+08,45,186,"Villa de Don Fadrique, La"
+08,45,185,Villacañas
+08,45,187,Villafranca de los Caballeros
+08,45,188,Villaluenga de la Sagra
+08,45,189,Villamiel de Toledo
+08,45,190,Villaminaya
+08,45,191,Villamuelas
+08,45,192,Villanueva de Alcardete
+08,45,193,Villanueva de Bogas
+08,45,194,Villarejo de Montalbán
+08,45,195,Villarrubia de Santiago
+08,45,196,Villaseca de la Sagra
+08,45,197,Villasequilla
+08,45,198,Villatobas
+08,45,199,"Viso de San Juan, El"
+08,45,200,"Yébenes, Los"
+08,45,201,Yeles
+08,45,202,Yepes
+08,45,203,Yuncler
+08,45,204,Yunclillos
+08,45,205,Yuncos
+10,46,001,Ademuz
+10,46,002,Ador
+10,46,004,Agullent
+10,46,042,Aielo de Malferit
+10,46,043,Aielo de Rugat
+10,46,005,Alaquàs
+10,46,006,Albaida
+10,46,007,Albal
+10,46,008,Albalat de la Ribera
+10,46,009,Albalat dels Sorells
+10,46,010,Albalat dels Tarongers
+10,46,011,Alberic
+10,46,012,Alborache
+10,46,013,Alboraia/Alboraya
+10,46,014,Albuixech
+10,46,016,Alcàntera de Xúquer
+10,46,015,Alcàsser
+10,46,018,Alcublas
+10,46,020,"Alcúdia de Crespins, l'"
+10,46,019,"Alcúdia, l'"
+10,46,021,Aldaia
+10,46,022,Alfafar
+10,46,024,Alfara de la Baronia
+10,46,025,Alfara del Patriarca
+10,46,026,Alfarb
+10,46,027,Alfarrasí
+10,46,023,Alfauir
+10,46,028,Algar de Palància
+10,46,029,Algemesí
+10,46,030,Algímia d'Alfara
+10,46,031,Alginet
+10,46,032,Almàssera
+10,46,033,Almiserà
+10,46,034,Almoines
+10,46,035,Almussafes
+10,46,036,Alpuente
+10,46,037,"Alqueria de la Comtessa, l'"
+10,46,017,Alzira
+10,46,038,Andilla
+10,46,039,Anna
+10,46,040,Antella
+10,46,041,Aras de los Olmos
+10,46,003,Atzeneta d'Albaida
+10,46,044,Ayora
+10,46,046,Barx
+10,46,045,Barxeta
+10,46,047,Bèlgida
+10,46,048,Bellreguard
+10,46,049,Bellús
+10,46,050,Benagéber
+10,46,051,Benaguasil
+10,46,052,Benavites
+10,46,053,Beneixida
+10,46,054,Benetússer
+10,46,055,Beniarjó
+10,46,056,Beniatjar
+10,46,057,Benicolet
+10,46,904,Benicull de Xúquer
+10,46,060,Benifaió
+10,46,059,Benifairó de la Valldigna
+10,46,058,Benifairó de les Valls
+10,46,061,Beniflá
+10,46,062,Benigànim
+10,46,063,Benimodo
+10,46,064,Benimuslem
+10,46,065,Beniparrell
+10,46,066,Benirredrà
+10,46,067,Benissanó
+10,46,068,Benissoda
+10,46,069,Benissuera
+10,46,070,Bétera
+10,46,071,Bicorp
+10,46,072,Bocairent
+10,46,073,Bolbaite
+10,46,074,Bonrepòs i Mirambell
+10,46,075,Bufali
+10,46,076,Bugarra
+10,46,077,Buñol
+10,46,078,Burjassot
+10,46,079,Calles
+10,46,080,Camporrobles
+10,46,081,Canals
+10,46,082,Canet d'En Berenguer
+10,46,083,Carcaixent
+10,46,084,Càrcer
+10,46,085,Carlet
+10,46,086,Carrícola
+10,46,087,Casas Altas
+10,46,088,Casas Bajas
+10,46,089,Casinos
+10,46,257,Castelló
+10,46,090,Castelló de Rugat
+10,46,091,Castellonet de la Conquesta
+10,46,092,Castielfabib
+10,46,093,Catadau
+10,46,094,Catarroja
+10,46,095,Caudete de las Fuentes
+10,46,096,Cerdà
+10,46,107,Chella
+10,46,106,Chelva
+10,46,108,Chera
+10,46,109,Cheste
+10,46,111,Chiva
+10,46,112,Chulilla
+10,46,097,Cofrentes
+10,46,098,Corbera
+10,46,099,Cortes de Pallás
+10,46,100,Cotes
+10,46,105,Cullera
+10,46,113,Daimús
+10,46,114,Domeño
+10,46,115,Dos Aguas
+10,46,116,"Eliana, l'"
+10,46,117,Emperador
+10,46,118,Enguera
+10,46,119,"Énova, l'"
+10,46,120,Estivella
+10,46,121,Estubeny
+10,46,122,Faura
+10,46,123,Favara
+10,46,126,Foios
+10,46,128,"Font de la Figuera, la"
+10,46,127,"Font d'en Carròs, la"
+10,46,124,Fontanars dels Alforins
+10,46,125,Fortaleny
+10,46,129,Fuenterrobles
+10,46,131,Gandia
+10,46,902,Gátova
+10,46,130,Gavarda
+10,46,132,"Genovés, el"
+10,46,133,Gestalgar
+10,46,134,Gilet
+10,46,135,Godella
+10,46,136,Godelleta
+10,46,137,"Granja de la Costera, la"
+10,46,138,Guadasséquies
+10,46,139,Guadassuar
+10,46,140,Guardamar de la Safor
+10,46,141,Higueruelas
+10,46,142,Jalance
+10,46,144,Jarafuel
+10,46,154,Llanera de Ranes
+10,46,155,Llaurí
+10,46,147,Llíria
+10,46,152,Llocnou de la Corona
+10,46,153,Llocnou de Sant Jeroni
+10,46,151,Llocnou d'En Fenollet
+10,46,156,Llombai
+10,46,157,"Llosa de Ranes, la"
+10,46,150,Llutxent
+10,46,148,Loriguilla
+10,46,149,Losa del Obispo
+10,46,158,Macastre
+10,46,159,Manises
+10,46,160,Manuel
+10,46,161,Marines
+10,46,162,Massalavés
+10,46,163,Massalfassar
+10,46,164,Massamagrell
+10,46,165,Massanassa
+10,46,166,Meliana
+10,46,167,Millares
+10,46,168,Miramar
+10,46,169,Mislata
+10,46,170,Moixent/Mogente
+10,46,171,Montcada/Moncada
+10,46,173,Montaverner
+10,46,174,Montesa
+10,46,175,Montitxelvo/Montichelvo
+10,46,176,Montroi/Montroy
+10,46,172,Montserrat
+10,46,177,Museros
+10,46,178,Nàquera/Náquera
+10,46,179,Navarrés
+10,46,180,Novetlè
+10,46,181,Oliva
+10,46,183,"Olleria, l'"
+10,46,182,Olocau
+10,46,184,Ontinyent
+10,46,185,Otos
+10,46,186,Paiporta
+10,46,187,Palma de Gandía
+10,46,188,Palmera
+10,46,189,"Palomar, el"
+10,46,190,Paterna
+10,46,191,Pedralba
+10,46,192,Petrés
+10,46,193,Picanya
+10,46,194,Picassent
+10,46,195,Piles
+10,46,196,Pinet
+10,46,199,"Pobla de Farnals, la"
+10,46,202,"Pobla de Vallbona, la"
+10,46,200,"Pobla del Duc, la"
+10,46,203,"Pobla Llarga, la"
+10,46,197,Polinyà de Xúquer
+10,46,198,Potries
+10,46,205,Puçol
+10,46,201,Puebla de San Miguel
+10,46,204,"Puig de Santa Maria, el"
+10,46,101,Quart de les Valls
+10,46,102,Quart de Poblet
+10,46,103,Quartell
+10,46,104,Quatretonda
+10,46,206,Quesa
+10,46,207,Rafelbunyol
+10,46,208,Rafelcofer
+10,46,209,Rafelguaraf
+10,46,210,Ráfol de Salem
+10,46,212,Real
+10,46,211,"Real de Gandia, el"
+10,46,213,Requena
+10,46,214,Riba-roja de Túria
+10,46,215,Riola
+10,46,216,Rocafort
+10,46,217,Rotglà i Corberà
+10,46,218,Ròtova
+10,46,219,Rugat
+10,46,220,Sagunt/Sagunto
+10,46,221,Salem
+10,46,903,San Antonio de Benagéber
+10,46,222,Sant Joanet
+10,46,223,Sedaví
+10,46,224,Segart
+10,46,225,Sellent
+10,46,226,Sempere
+10,46,227,Senyera
+10,46,228,Serra
+10,46,229,Siete Aguas
+10,46,230,Silla
+10,46,231,Simat de la Valldigna
+10,46,232,Sinarcas
+10,46,233,Sollana
+10,46,234,Sot de Chera
+10,46,235,Sueca
+10,46,236,Sumacàrcer
+10,46,237,Tavernes Blanques
+10,46,238,Tavernes de la Valldigna
+10,46,239,Teresa de Cofrentes
+10,46,240,Terrateig
+10,46,241,Titaguas
+10,46,242,Torrebaja
+10,46,243,Torrella
+10,46,244,Torrent
+10,46,245,Torres Torres
+10,46,246,Tous
+10,46,247,Tuéjar
+10,46,248,Turís
+10,46,249,Utiel
+10,46,250,València
+10,46,251,Vallada
+10,46,252,Vallanca
+10,46,253,Vallés
+10,46,254,Venta del Moro
+10,46,255,Vilallonga/Villalonga
+10,46,256,Vilamarxant
+10,46,258,Villar del Arzobispo
+10,46,259,Villargordo del Cabriel
+10,46,260,Vinalesa
+10,46,145,Xàtiva
+10,46,143,Xeraco
+10,46,146,Xeresa
+10,46,110,Xirivella
+10,46,261,Yátova
+10,46,262,"Yesa, La"
+10,46,263,Zarra
+07,47,001,Adalia
+07,47,002,Aguasal
+07,47,003,Aguilar de Campos
+07,47,004,Alaejos
+07,47,005,Alcazarén
+07,47,006,Aldea de San Miguel
+07,47,007,Aldeamayor de San Martín
+07,47,008,Almenara de Adaja
+07,47,009,Amusquillo
+07,47,010,Arroyo de la Encomienda
+07,47,011,Ataquines
+07,47,012,Bahabón
+07,47,013,Barcial de la Loma
+07,47,014,Barruelo del Valle
+07,47,015,Becilla de Valderaduey
+07,47,016,Benafarces
+07,47,017,Bercero
+07,47,018,Berceruelo
+07,47,019,Berrueces
+07,47,020,Bobadilla del Campo
+07,47,021,Bocigas
+07,47,022,Bocos de Duero
+07,47,023,Boecillo
+07,47,024,Bolaños de Campos
+07,47,025,Brahojos de Medina
+07,47,026,Bustillo de Chaves
+07,47,027,Cabezón de Pisuerga
+07,47,028,Cabezón de Valderaduey
+07,47,029,Cabreros del Monte
+07,47,030,Campaspero
+07,47,031,"Campillo, El"
+07,47,032,Camporredondo
+07,47,033,Canalejas de Peñafiel
+07,47,034,Canillas de Esgueva
+07,47,035,Carpio
+07,47,036,Casasola de Arión
+07,47,037,Castrejón de Trabancos
+07,47,038,Castrillo de Duero
+07,47,039,Castrillo-Tejeriego
+07,47,040,Castrobol
+07,47,041,Castrodeza
+07,47,042,Castromembibre
+07,47,043,Castromonte
+07,47,044,Castronuevo de Esgueva
+07,47,045,Castronuño
+07,47,046,Castroponce
+07,47,047,Castroverde de Cerrato
+07,47,048,Ceinos de Campos
+07,47,049,Cervillego de la Cruz
+07,47,050,Cigales
+07,47,051,Ciguñuela
+07,47,052,Cistérniga
+07,47,053,Cogeces de Íscar
+07,47,054,Cogeces del Monte
+07,47,055,Corcos
+07,47,056,Corrales de Duero
+07,47,057,Cubillas de Santa Marta
+07,47,058,Cuenca de Campos
+07,47,059,Curiel de Duero
+07,47,060,Encinas de Esgueva
+07,47,061,Esguevillas de Esgueva
+07,47,062,Fombellida
+07,47,063,Fompedraza
+07,47,064,Fontihoyuelo
+07,47,065,Fresno el Viejo
+07,47,066,Fuensaldaña
+07,47,067,Fuente el Sol
+07,47,068,Fuente-Olmedo
+07,47,069,Gallegos de Hornija
+07,47,070,Gatón de Campos
+07,47,071,Geria
+07,47,073,Herrín de Campos
+07,47,074,Hornillos de Eresma
+07,47,075,Íscar
+07,47,076,Laguna de Duero
+07,47,077,Langayo
+07,47,079,Llano de Olmedo
+07,47,078,Lomoviejo
+07,47,080,Manzanillo
+07,47,081,Marzales
+07,47,082,Matapozuelos
+07,47,083,Matilla de los Caños
+07,47,084,Mayorga
+07,47,086,Medina de Rioseco
+07,47,085,Medina del Campo
+07,47,087,Megeces
+07,47,088,Melgar de Abajo
+07,47,089,Melgar de Arriba
+07,47,090,Mojados
+07,47,091,Monasterio de Vega
+07,47,092,Montealegre de Campos
+07,47,093,Montemayor de Pililla
+07,47,094,Moral de la Reina
+07,47,095,Moraleja de las Panaderas
+07,47,096,Morales de Campos
+07,47,097,Mota del Marqués
+07,47,098,Mucientes
+07,47,099,"Mudarra, La"
+07,47,100,Muriel
+07,47,101,Nava del Rey
+07,47,102,Nueva Villa de las Torres
+07,47,103,Olivares de Duero
+07,47,104,Olmedo
+07,47,105,Olmos de Esgueva
+07,47,106,Olmos de Peñafiel
+07,47,109,Palazuelo de Vedija
+07,47,110,"Parrilla, La"
+07,47,111,"Pedraja de Portillo, La"
+07,47,112,Pedrajas de San Esteban
+07,47,113,Pedrosa del Rey
+07,47,114,Peñafiel
+07,47,115,Peñaflor de Hornija
+07,47,116,Pesquera de Duero
+07,47,117,Piña de Esgueva
+07,47,118,Piñel de Abajo
+07,47,119,Piñel de Arriba
+07,47,121,Pollos
+07,47,122,Portillo
+07,47,123,Pozal de Gallinas
+07,47,124,Pozaldez
+07,47,125,Pozuelo de la Orden
+07,47,126,Puras
+07,47,127,Quintanilla de Arriba
+07,47,129,Quintanilla de Onésimo
+07,47,130,Quintanilla de Trigueros
+07,47,128,Quintanilla del Molar
+07,47,131,Rábano
+07,47,132,Ramiro
+07,47,133,Renedo de Esgueva
+07,47,134,Roales de Campos
+07,47,135,Robladillo
+07,47,137,Roturas
+07,47,138,Rubí de Bracamonte
+07,47,139,Rueda
+07,47,140,Saelices de Mayorga
+07,47,141,Salvador de Zapardiel
+07,47,142,San Cebrián de Mazote
+07,47,143,San Llorente
+07,47,144,San Martín de Valvení
+07,47,145,San Miguel del Arroyo
+07,47,146,San Miguel del Pino
+07,47,147,San Pablo de la Moraleja
+07,47,148,San Pedro de Latarce
+07,47,149,San Pelayo
+07,47,150,San Román de Hornija
+07,47,151,San Salvador
+07,47,156,San Vicente del Palacio
+07,47,152,Santa Eufemia del Arroyo
+07,47,153,Santervás de Campos
+07,47,154,Santibáñez de Valcorba
+07,47,155,Santovenia de Pisuerga
+07,47,157,Sardón de Duero
+07,47,158,"Seca, La"
+07,47,159,Serrada
+07,47,160,Siete Iglesias de Trabancos
+07,47,161,Simancas
+07,47,162,Tamariz de Campos
+07,47,163,Tiedra
+07,47,164,Tordehumos
+07,47,165,Tordesillas
+07,47,169,Torre de Esgueva
+07,47,170,Torre de Peñafiel
+07,47,166,Torrecilla de la Abadesa
+07,47,167,Torrecilla de la Orden
+07,47,168,Torrecilla de la Torre
+07,47,171,Torrelobatón
+07,47,172,Torrescárcela
+07,47,173,Traspinedo
+07,47,174,Trigueros del Valle
+07,47,175,Tudela de Duero
+07,47,176,"Unión de Campos, La"
+07,47,177,Urones de Castroponce
+07,47,178,Urueña
+07,47,179,Valbuena de Duero
+07,47,180,Valdearcos de la Vega
+07,47,181,Valdenebro de los Valles
+07,47,182,Valdestillas
+07,47,183,Valdunquillo
+07,47,186,Valladolid
+07,47,184,Valoria la Buena
+07,47,185,Valverde de Campos
+07,47,187,Vega de Ruiponce
+07,47,188,Vega de Valdetronco
+07,47,189,Velascálvaro
+07,47,190,Velilla
+07,47,191,Velliza
+07,47,192,Ventosa de la Cuesta
+07,47,193,Viana de Cega
+07,47,195,Villabáñez
+07,47,196,Villabaruz de Campos
+07,47,197,Villabrágima
+07,47,198,Villacarralón
+07,47,199,Villacid de Campos
+07,47,200,Villaco
+07,47,203,Villafrades de Campos
+07,47,204,Villafranca de Duero
+07,47,205,Villafrechós
+07,47,206,Villafuerte
+07,47,207,Villagarcía de Campos
+07,47,208,Villagómez la Nueva
+07,47,209,Villalán de Campos
+07,47,210,Villalar de los Comuneros
+07,47,211,Villalba de la Loma
+07,47,212,Villalba de los Alcores
+07,47,213,Villalbarba
+07,47,214,Villalón de Campos
+07,47,215,Villamuriel de Campos
+07,47,216,Villán de Tordesillas
+07,47,217,Villanubla
+07,47,218,Villanueva de Duero
+07,47,219,Villanueva de la Condesa
+07,47,220,Villanueva de los Caballeros
+07,47,221,Villanueva de los Infantes
+07,47,222,Villanueva de San Mancio
+07,47,223,Villardefrades
+07,47,224,Villarmentero de Esgueva
+07,47,225,Villasexmir
+07,47,226,Villavaquerín
+07,47,227,Villavellid
+07,47,228,Villaverde de Medina
+07,47,229,Villavicencio de los Caballeros
+07,47,194,Viloria
+07,47,230,Wamba
+07,47,231,Zaratán
+07,47,232,"Zarza, La"
+16,48,001,Abadiño
+16,48,002,Abanto y Ciérvana-Abanto Zierbena
+16,48,911,Ajangiz
+16,48,912,Alonsotegi
+16,48,003,Amorebieta-Etxano
+16,48,004,Amoroto
+16,48,005,Arakaldo
+16,48,006,Arantzazu
+16,48,093,Areatza
+16,48,009,Arrankudiaga-Zollo
+16,48,914,Arratzu
+16,48,010,Arrieta
+16,48,011,Arrigorriaga
+16,48,023,Artea
+16,48,008,Artzentales
+16,48,091,Atxondo
+16,48,070,Aulesti
+16,48,012,Bakio
+16,48,090,Balmaseda
+16,48,013,Barakaldo
+16,48,014,Barrika
+16,48,015,Basauri
+16,48,092,Bedia
+16,48,016,Berango
+16,48,017,Bermeo
+16,48,018,Berriatua
+16,48,019,Berriz
+16,48,020,Bilbao
+16,48,021,Busturia
+16,48,901,Derio
+16,48,026,Dima
+16,48,027,Durango
+16,48,028,Ea
+16,48,031,Elantxobe
+16,48,032,Elorrio
+16,48,902,Erandio
+16,48,033,Ereño
+16,48,034,Ermua
+16,48,079,Errigoiti
+16,48,029,Etxebarri
+16,48,030,Etxebarria
+16,48,906,Forua
+16,48,035,Fruiz
+16,48,036,Galdakao
+16,48,037,Galdames
+16,48,038,Gamiz-Fika
+16,48,039,Garai
+16,48,040,Gatika
+16,48,041,Gautegiz Arteaga
+16,48,046,Gernika-Lumo
+16,48,044,Getxo
+16,48,047,Gizaburuaga
+16,48,042,Gordexola
+16,48,043,Gorliz
+16,48,045,Güeñes
+16,48,048,Ibarrangelu
+16,48,094,Igorre
+16,48,049,Ispaster
+16,48,910,Iurreta
+16,48,050,Izurtza
+16,48,022,Karrantza Harana/Valle de Carranza
+16,48,907,Kortezubi
+16,48,051,Lanestosa
+16,48,052,Larrabetzu
+16,48,053,Laukiz
+16,48,054,Leioa
+16,48,057,Lekeitio
+16,48,055,Lemoa
+16,48,056,Lemoiz
+16,48,081,Lezama
+16,48,903,Loiu
+16,48,058,Mallabia
+16,48,059,Mañaria
+16,48,060,Markina-Xemein
+16,48,061,Maruri-Jatabe
+16,48,062,Mendata
+16,48,063,Mendexa
+16,48,064,Meñaka
+16,48,066,Morga
+16,48,068,Mundaka
+16,48,069,Mungia
+16,48,007,Munitibar-Arbatzegi Gerrikaitz
+16,48,908,Murueta
+16,48,071,Muskiz
+16,48,067,Muxika
+16,48,909,Nabarniz
+16,48,073,Ondarroa
+16,48,075,Orozko
+16,48,083,Ortuella
+16,48,072,Otxandio
+16,48,077,Plentzia
+16,48,078,Portugalete
+16,48,082,Santurtzi
+16,48,084,Sestao
+16,48,904,Sondika
+16,48,085,Sopela
+16,48,086,Sopuerta
+16,48,076,Sukarrieta
+16,48,087,Trucios-Turtzioz
+16,48,088,Ubide
+16,48,065,Ugao-Miraballes
+16,48,089,Urduliz
+16,48,074,Urduña/Orduña
+16,48,916,Usansolo
+16,48,080,Valle de Trápaga-Trapagaran
+16,48,095,Zaldibar
+16,48,096,Zalla
+16,48,905,Zamudio
+16,48,097,Zaratamo
+16,48,024,Zeanuri
+16,48,025,Zeberio
+16,48,913,Zierbena
+16,48,915,Ziortza-Bolibar
+07,49,002,Abezames
+07,49,003,Alcañices
+07,49,004,Alcubilla de Nogales
+07,49,005,Alfaraz de Sayago
+07,49,006,Algodre
+07,49,007,Almaraz de Duero
+07,49,008,Almeida de Sayago
+07,49,009,Andavías
+07,49,010,Arcenillas
+07,49,011,Arcos de la Polvorosa
+07,49,012,Argañín
+07,49,013,Argujillo
+07,49,014,Arquillinos
+07,49,015,Arrabalde
+07,49,016,Aspariegos
+07,49,017,Asturianos
+07,49,018,Ayoó de Vidriales
+07,49,019,Barcial del Barco
+07,49,020,Belver de los Montes
+07,49,021,Benavente
+07,49,022,Benegiles
+07,49,023,Bermillo de Sayago
+07,49,024,"Bóveda de Toro, La"
+07,49,025,Bretó
+07,49,026,Bretocino
+07,49,027,Brime de Sog
+07,49,028,Brime de Urz
+07,49,029,Burganes de Valverde
+07,49,030,Bustillo del Oro
+07,49,031,Cabañas de Sayago
+07,49,032,Calzadilla de Tera
+07,49,033,Camarzana de Tera
+07,49,034,Cañizal
+07,49,035,Cañizo
+07,49,036,Carbajales de Alba
+07,49,037,Carbellino
+07,49,038,Casaseca de Campeán
+07,49,039,Casaseca de las Chanas
+07,49,040,Castrillo de la Guareña
+07,49,041,Castrogonzalo
+07,49,042,Castronuevo
+07,49,043,Castroverde de Campos
+07,49,044,Cazurra
+07,49,046,Cerecinos de Campos
+07,49,047,Cerecinos del Carrizal
+07,49,048,Cernadilla
+07,49,050,Cobreros
+07,49,052,Coomonte
+07,49,053,Coreses
+07,49,054,Corrales del Vino
+07,49,055,Cotanes del Monte
+07,49,056,Cubillos
+07,49,057,Cubo de Benavente
+07,49,058,"Cubo de Tierra del Vino, El"
+07,49,059,Cuelgamures
+07,49,061,Entrala
+07,49,062,Espadañedo
+07,49,063,Faramontanos de Tábara
+07,49,064,Fariza
+07,49,065,Fermoselle
+07,49,066,Ferreras de Abajo
+07,49,067,Ferreras de Arriba
+07,49,068,Ferreruela
+07,49,069,Figueruela de Arriba
+07,49,071,Fonfría
+07,49,075,Fresno de la Polvorosa
+07,49,076,Fresno de la Ribera
+07,49,077,Fresno de Sayago
+07,49,078,Friera de Valverde
+07,49,079,Fuente Encalada
+07,49,080,Fuentelapeña
+07,49,082,Fuentes de Ropel
+07,49,081,Fuentesaúco
+07,49,083,Fuentesecas
+07,49,084,Fuentespreadas
+07,49,085,Galende
+07,49,086,Gallegos del Pan
+07,49,087,Gallegos del Río
+07,49,088,Gamones
+07,49,090,Gema
+07,49,091,Granja de Moreruela
+07,49,092,Granucillo
+07,49,093,Guarrate
+07,49,094,Hermisende
+07,49,095,"Hiniesta, La"
+07,49,096,Jambrina
+07,49,097,Justel
+07,49,098,Losacino
+07,49,099,Losacio
+07,49,100,Lubián
+07,49,101,Luelmo
+07,49,102,"Maderal, El"
+07,49,103,Madridanos
+07,49,104,Mahide
+07,49,105,Maire de Castroponce
+07,49,107,Malva
+07,49,108,Manganeses de la Lampreana
+07,49,109,Manganeses de la Polvorosa
+07,49,110,Manzanal de Arriba
+07,49,112,Manzanal de los Infantes
+07,49,111,Manzanal del Barco
+07,49,113,Matilla de Arzón
+07,49,114,Matilla la Seca
+07,49,115,Mayalde
+07,49,116,Melgar de Tera
+07,49,117,Micereces de Tera
+07,49,118,Milles de la Polvorosa
+07,49,119,Molacillos
+07,49,120,Molezuelas de la Carballeda
+07,49,121,Mombuey
+07,49,122,Monfarracinos
+07,49,123,Montamarta
+07,49,124,Moral de Sayago
+07,49,126,Moraleja de Sayago
+07,49,125,Moraleja del Vino
+07,49,128,Morales de Rey
+07,49,129,Morales de Toro
+07,49,130,Morales de Valverde
+07,49,127,Morales del Vino
+07,49,131,Moralina
+07,49,132,Moreruela de los Infanzones
+07,49,133,Moreruela de Tábara
+07,49,134,Muelas de los Caballeros
+07,49,135,Muelas del Pan
+07,49,136,Muga de Sayago
+07,49,137,Navianos de Valverde
+07,49,138,Olmillos de Castro
+07,49,139,Otero de Bodas
+07,49,141,Pajares de la Lampreana
+07,49,143,Palacios de Sanabria
+07,49,142,Palacios del Pan
+07,49,145,Pedralba de la Pradería
+07,49,146,"Pego, El"
+07,49,147,Peleagonzalo
+07,49,148,Peleas de Abajo
+07,49,149,Peñausende
+07,49,150,Peque
+07,49,151,"Perdigón, El"
+07,49,152,Pereruela
+07,49,153,Perilla de Castro
+07,49,154,Pías
+07,49,155,Piedrahita de Castro
+07,49,156,Pinilla de Toro
+07,49,157,Pino del Oro
+07,49,158,"Piñero, El"
+07,49,160,Pobladura de Valderaduey
+07,49,159,Pobladura del Valle
+07,49,162,Porto
+07,49,163,Pozoantiguo
+07,49,164,Pozuelo de Tábara
+07,49,165,Prado
+07,49,166,Puebla de Sanabria
+07,49,167,Pueblica de Valverde
+07,49,170,Quintanilla de Urz
+07,49,168,Quintanilla del Monte
+07,49,169,Quintanilla del Olmo
+07,49,171,Quiruelas de Vidriales
+07,49,172,Rabanales
+07,49,173,Rábano de Aliste
+07,49,174,Requejo
+07,49,175,Revellinos
+07,49,176,Riofrío de Aliste
+07,49,177,Rionegro del Puente
+07,49,178,Roales
+07,49,179,Robleda-Cervantes
+07,49,180,Roelos de Sayago
+07,49,181,Rosinos de la Requejada
+07,49,183,Salce
+07,49,184,Samir de los Caños
+07,49,185,San Agustín del Pozo
+07,49,186,San Cebrián de Castro
+07,49,187,San Cristóbal de Entreviñas
+07,49,188,San Esteban del Molar
+07,49,189,San Justo
+07,49,190,San Martín de Valderaduey
+07,49,191,San Miguel de la Ribera
+07,49,192,San Miguel del Valle
+07,49,193,San Pedro de Ceque
+07,49,194,San Pedro de la Nave-Almendra
+07,49,208,San Vicente de la Cabeza
+07,49,209,San Vitero
+07,49,197,Santa Clara de Avedillo
+07,49,199,Santa Colomba de las Monjas
+07,49,200,Santa Cristina de la Polvorosa
+07,49,201,Santa Croya de Tera
+07,49,202,Santa Eufemia del Barco
+07,49,203,Santa María de la Vega
+07,49,204,Santa María de Valverde
+07,49,205,Santibáñez de Tera
+07,49,206,Santibáñez de Vidriales
+07,49,207,Santovenia
+07,49,210,Sanzoles
+07,49,214,Tábara
+07,49,216,Tapioles
+07,49,219,Toro
+07,49,220,"Torre del Valle, La"
+07,49,221,Torregamones
+07,49,222,Torres del Carrizal
+07,49,223,Trabazos
+07,49,224,Trefacio
+07,49,225,Uña de Quintana
+07,49,226,Vadillo de la Guareña
+07,49,227,Valcabado
+07,49,228,Valdefinjas
+07,49,229,Valdescorriel
+07,49,230,Vallesa de la Guareña
+07,49,231,Vega de Tera
+07,49,232,Vega de Villalobos
+07,49,233,Vegalatrave
+07,49,234,Venialbo
+07,49,235,Vezdemarbán
+07,49,236,Vidayanes
+07,49,237,Videmala
+07,49,238,Villabrázaro
+07,49,239,Villabuena del Puente
+07,49,240,Villadepera
+07,49,241,Villaescusa
+07,49,242,Villafáfila
+07,49,243,Villaferrueña
+07,49,244,Villageriz
+07,49,245,Villalazán
+07,49,246,Villalba de la Lampreana
+07,49,247,Villalcampo
+07,49,248,Villalobos
+07,49,249,Villalonso
+07,49,250,Villalpando
+07,49,251,Villalube
+07,49,252,Villamayor de Campos
+07,49,255,Villamor de los Escuderos
+07,49,256,Villanázar
+07,49,257,Villanueva de Azoague
+07,49,258,Villanueva de Campeán
+07,49,259,Villanueva de las Peras
+07,49,260,Villanueva del Campo
+07,49,263,Villar de Fallaves
+07,49,264,Villar del Buey
+07,49,261,Villaralbo
+07,49,262,Villardeciervos
+07,49,265,Villardiegua de la Ribera
+07,49,266,Villárdiga
+07,49,267,Villardondiego
+07,49,268,Villarrín de Campos
+07,49,269,Villaseco del Pan
+07,49,270,Villavendimio
+07,49,272,Villaveza de Valverde
+07,49,271,Villaveza del Agua
+07,49,273,Viñas
+07,49,275,Zamora
+02,50,001,Abanto
+02,50,002,Acered
+02,50,003,Agón
+02,50,004,Aguarón
+02,50,005,Aguilón
+02,50,006,Ainzón
+02,50,007,Aladrén
+02,50,008,Alagón
+02,50,009,Alarba
+02,50,010,Alberite de San Juan
+02,50,011,Albeta
+02,50,012,Alborge
+02,50,013,Alcalá de Ebro
+02,50,014,Alcalá de Moncayo
+02,50,015,Alconchel de Ariza
+02,50,016,Aldehuela de Liestos
+02,50,017,Alfajarín
+02,50,018,Alfamén
+02,50,019,Alforque
+02,50,020,Alhama de Aragón
+02,50,021,Almochuel
+02,50,022,"Almolda, La"
+02,50,023,Almonacid de la Cuba
+02,50,024,Almonacid de la Sierra
+02,50,025,"Almunia de Doña Godina, La"
+02,50,026,Alpartir
+02,50,027,Ambel
+02,50,028,Anento
+02,50,029,Aniñón
+02,50,030,Añón de Moncayo
+02,50,031,Aranda de Moncayo
+02,50,032,Arándiga
+02,50,033,Ardisa
+02,50,034,Ariza
+02,50,035,Artieda
+02,50,036,Asín
+02,50,037,Atea
+02,50,038,Ateca
+02,50,039,Azuara
+02,50,040,Badules
+02,50,041,Bagüés
+02,50,042,Balconchán
+02,50,043,Bárboles
+02,50,044,Bardallur
+02,50,045,Belchite
+02,50,046,Belmonte de Gracián
+02,50,047,Berdejo
+02,50,048,Berrueco
+02,50,901,Biel
+02,50,050,Bijuesca
+02,50,051,Biota
+02,50,052,Bisimbre
+02,50,053,Boquiñeni
+02,50,054,Bordalba
+02,50,055,Borja
+02,50,056,Botorrita
+02,50,057,Brea de Aragón
+02,50,058,Bubierca
+02,50,059,Bujaraloz
+02,50,060,Bulbuente
+02,50,061,Bureta
+02,50,062,"Burgo de Ebro, El"
+02,50,063,"Buste, El"
+02,50,064,Cabañas de Ebro
+02,50,065,Cabolafuente
+02,50,066,Cadrete
+02,50,067,Calatayud
+02,50,068,Calatorao
+02,50,069,Calcena
+02,50,070,Calmarza
+02,50,071,Campillo de Aragón
+02,50,072,Carenas
+02,50,073,Cariñena
+02,50,074,Caspe
+02,50,075,Castejón de Alarba
+02,50,076,Castejón de las Armas
+02,50,077,Castejón de Valdejasa
+02,50,078,Castiliscar
+02,50,079,Cervera de la Cañada
+02,50,080,Cerveruela
+02,50,081,Cetina
+02,50,092,Chiprana
+02,50,093,Chodes
+02,50,082,Cimballa
+02,50,083,Cinco Olivas
+02,50,084,Clarés de Ribota
+02,50,085,Codo
+02,50,086,Codos
+02,50,087,Contamina
+02,50,088,Cosuenda
+02,50,089,Cuarte de Huerva
+02,50,090,Cubel
+02,50,091,"Cuerlas, Las"
+02,50,094,Daroca
+02,50,095,Ejea de los Caballeros
+02,50,096,Embid de Ariza
+02,50,098,Encinacorba
+02,50,099,Épila
+02,50,100,Erla
+02,50,101,Escatrón
+02,50,102,Fabara
+02,50,104,Farlete
+02,50,105,Fayón
+02,50,106,"Fayos, Los"
+02,50,107,Figueruelas
+02,50,108,Fombuena
+02,50,109,"Frago, El"
+02,50,110,"Frasno, El"
+02,50,111,Fréscano
+02,50,113,Fuendejalón
+02,50,114,Fuendetodos
+02,50,115,Fuentes de Ebro
+02,50,116,Fuentes de Jiloca
+02,50,117,Gallocanta
+02,50,118,Gallur
+02,50,119,Gelsa
+02,50,120,Godojos
+02,50,121,Gotor
+02,50,122,Grisel
+02,50,123,Grisén
+02,50,124,Herrera de los Navarros
+02,50,125,Ibdes
+02,50,126,Illueca
+02,50,128,Isuerre
+02,50,129,Jaraba
+02,50,130,Jarque de Moncayo
+02,50,131,Jaulín
+02,50,132,"Joyosa, La"
+02,50,133,Lagata
+02,50,134,Langa del Castillo
+02,50,135,Layana
+02,50,136,Lécera
+02,50,138,Lechón
+02,50,137,Leciñena
+02,50,139,Letux
+02,50,140,Litago
+02,50,141,Lituénigo
+02,50,142,Lobera de Onsella
+02,50,143,Longares
+02,50,144,Longás
+02,50,146,Lucena de Jalón
+02,50,147,Luceni
+02,50,148,Luesia
+02,50,149,Luesma
+02,50,150,Lumpiaque
+02,50,151,Luna
+02,50,152,Maella
+02,50,153,Magallón
+02,50,154,Mainar
+02,50,155,Malanquilla
+02,50,156,Maleján
+02,50,160,Mallén
+02,50,157,Malón
+02,50,159,Maluenda
+02,50,161,Manchones
+02,50,162,Mara
+02,50,163,María de Huerva
+02,50,902,Marracos
+02,50,164,Mediana de Aragón
+02,50,165,Mequinenza
+02,50,166,Mesones de Isuela
+02,50,167,Mezalocha
+02,50,168,Mianos
+02,50,169,Miedes de Aragón
+02,50,170,Monegrillo
+02,50,171,Moneva
+02,50,172,Monreal de Ariza
+02,50,173,Monterde
+02,50,174,Montón
+02,50,175,Morata de Jalón
+02,50,176,Morata de Jiloca
+02,50,177,Morés
+02,50,178,Moros
+02,50,179,Moyuela
+02,50,180,Mozota
+02,50,181,Muel
+02,50,182,"Muela, La"
+02,50,183,Munébrega
+02,50,184,Murero
+02,50,185,Murillo de Gállego
+02,50,186,Navardún
+02,50,187,Nigüella
+02,50,188,Nombrevilla
+02,50,189,Nonaspe
+02,50,190,Novallas
+02,50,191,Novillas
+02,50,192,Nuévalos
+02,50,193,Nuez de Ebro
+02,50,194,Olvés
+02,50,195,Orcajo
+02,50,196,Orera
+02,50,197,Orés
+02,50,198,Oseja
+02,50,199,Osera de Ebro
+02,50,200,Paniza
+02,50,201,Paracuellos de Jiloca
+02,50,202,Paracuellos de la Ribera
+02,50,203,Pastriz
+02,50,204,Pedrola
+02,50,205,"Pedrosas, Las"
+02,50,206,Perdiguera
+02,50,207,Piedratajada
+02,50,208,Pina de Ebro
+02,50,209,Pinseque
+02,50,210,"Pintanos, Los"
+02,50,211,Plasencia de Jalón
+02,50,212,Pleitas
+02,50,213,Plenas
+02,50,214,Pomer
+02,50,215,Pozuel de Ariza
+02,50,216,Pozuelo de Aragón
+02,50,217,Pradilla de Ebro
+02,50,218,Puebla de Albortón
+02,50,219,"Puebla de Alfindén, La"
+02,50,220,Puendeluna
+02,50,221,Purujosa
+02,50,222,Quinto
+02,50,223,Remolinos
+02,50,224,Retascón
+02,50,225,Ricla
+02,50,227,Romanos
+02,50,228,Rueda de Jalón
+02,50,229,Ruesca
+02,50,241,Sabiñán
+02,50,230,Sádaba
+02,50,231,Salillas de Jalón
+02,50,232,Salvatierra de Esca
+02,50,233,Samper del Salz
+02,50,234,San Martín de la Virgen de Moncayo
+02,50,235,San Mateo de Gállego
+02,50,236,Santa Cruz de Grío
+02,50,237,Santa Cruz de Moncayo
+02,50,238,Santa Eulalia de Gállego
+02,50,239,Santed
+02,50,240,Sástago
+02,50,242,Sediles
+02,50,243,Sestrica
+02,50,244,Sierra de Luna
+02,50,245,Sigüés
+02,50,246,Sisamón
+02,50,247,Sobradiel
+02,50,248,Sos del Rey Católico
+02,50,249,Tabuenca
+02,50,250,Talamantes
+02,50,251,Tarazona
+02,50,252,Tauste
+02,50,253,Terrer
+02,50,254,Tierga
+02,50,255,Tobed
+02,50,256,Torralba de los Frailes
+02,50,257,Torralba de Ribota
+02,50,258,Torralbilla
+02,50,259,Torrehermosa
+02,50,260,Torrelapaja
+02,50,261,Torrellas
+02,50,262,Torres de Berrellén
+02,50,263,Torrijo de la Cañada
+02,50,264,Tosos
+02,50,265,Trasmoz
+02,50,266,Trasobares
+02,50,267,Uncastillo
+02,50,268,Undués de Lerda
+02,50,269,Urrea de Jalón
+02,50,270,Urriés
+02,50,271,Used
+02,50,272,Utebo
+02,50,274,Val de San Martín
+02,50,273,Valdehorna
+02,50,275,Valmadrid
+02,50,276,Valpalmas
+02,50,277,Valtorres
+02,50,278,Velilla de Ebro
+02,50,279,Velilla de Jiloca
+02,50,280,Vera de Moncayo
+02,50,281,Vierlas
+02,50,283,Villadoz
+02,50,284,Villafeliche
+02,50,285,Villafranca de Ebro
+02,50,286,Villalba de Perejil
+02,50,287,Villalengua
+02,50,903,Villamayor de Gállego
+02,50,288,Villanueva de Gállego
+02,50,290,Villanueva de Huerva
+02,50,289,Villanueva de Jiloca
+02,50,291,Villar de los Navarros
+02,50,292,Villarreal de Huerva
+02,50,293,Villarroya de la Sierra
+02,50,294,Villarroya del Campo
+02,50,282,"Vilueña, La"
+02,50,295,Vistabella
+02,50,296,"Zaida, La"
+02,50,297,Zaragoza
+02,50,298,Zuera
+18,51,001,Ceuta
+19,52,001,Melilla
