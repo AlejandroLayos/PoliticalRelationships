@@ -24,6 +24,7 @@ Uso (desde una máquina con salida a internet; el runner de Actions vale):
 from __future__ import annotations
 
 import argparse
+import io
 import re
 import sys
 import time
@@ -144,6 +145,7 @@ def main() -> int:
     pendientes = list(PORTADAS)
     ficheros = Counter()
     guardadas = 0
+    descargas = 0
     with httpx.Client(timeout=30.0, follow_redirects=True) as c:
         while pendientes and len(vistas) < 25:
             url = pendientes.pop(0)
@@ -236,6 +238,53 @@ def main() -> int:
                 informe.append("")
             es_portada = url == PORTADAS[0] or url == PORTADAS[1]
             if "servicios-buscador" in url:
+                encontrados = re.findall(r"(\d[\d.]*)\s+Resultados encontrados", html)
+                informe.append(f"- «Resultados encontrados»: {encontrados[:1]}")
+                # La descarga: el portal exporta la búsqueda entera a una hoja
+                # mientras sean menos de 2000. Es la mejor forma de leerla:
+                # todo de una vez, sin paginar.
+                exporta = re.search(r'href="([^"]*expTab\.htm[^"]*)"', html)
+                if exporta and descargas < 2:
+                    descargas += 1
+                    url_x = urljoin(url, exporta.group(1).replace("&amp;", "&"))
+                    x_codigo, x_contenido, x_tipo = pedir(c, url_x)
+                    magia = x_contenido[:8].hex()
+                    informe.append(
+                        f"- descarga → HTTP {x_codigo} · `{x_tipo}` · {len(x_contenido)} bytes · magia `{magia}`"
+                    )
+                    if x_codigo == 200 and x_contenido:
+                        sufijo = "historico" if "historico=true" in url else "vigentes"
+                        ext = (
+                            "xlsx"
+                            if x_contenido[:2] == b"PK"
+                            else (
+                                "xls"
+                                if x_contenido[:4] == bytes.fromhex("d0cf11e0")
+                                else "bin"
+                            )
+                        )
+                        nombre_x = f"autorizaciones-{sufijo}.{ext}"
+                        if len(x_contenido) < 3_000_000:
+                            (golden / nombre_x).write_bytes(x_contenido)
+                            informe.append(f"  - guardada como `{golden / nombre_x}`")
+                        if ext == "xlsx":
+                            try:
+                                import openpyxl
+
+                                libro = openpyxl.load_workbook(
+                                    io.BytesIO(x_contenido), read_only=True
+                                )
+                                hoja = libro.worksheets[0]
+                                filas_x = [
+                                    list(f) for f in hoja.iter_rows(values_only=True)
+                                ]
+                                informe.append(f"  - filas: {len(filas_x)}")
+                                for f in filas_x[:4]:
+                                    informe.append(f"  - `{f}`")
+                            except Exception as exc:  # noqa: BLE001
+                                informe.append(f"  - no se pudo abrir: {exc}")
+                        elif ext == "bin":
+                            informe.append(f"  - empieza por: `{x_contenido[:300]!r}`")
                 texto_plano = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
                 for patron in (
                     r"[Ss]e han encontrado[^.]{0,80}",
