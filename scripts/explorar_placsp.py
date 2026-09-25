@@ -130,7 +130,8 @@ def main() -> int:
                     if "sindicacion" in h or h.lower().endswith((".atom", ".zip"))
                 }
             )
-            informe += ["Enlaces a feeds o ficheros:", "", *[f"- `{e}`" for e in enlaces[:60]] or ["- ninguno"], ""]
+            lista = [f"- `{e}`" for e in enlaces[:60]] or ["- ninguno"]
+            informe += ["Enlaces a feeds o ficheros:", "", *lista, ""]
             for e in enlaces:
                 if e.lower().endswith(".atom") and e not in feeds:
                     feeds.append(e)
