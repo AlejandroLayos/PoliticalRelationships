@@ -516,6 +516,16 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
         las actividades: las donaciones y aportaciones no.
       </p>
       <p>
+        Los cruces con el mapa del dinero son siempre por nombre exacto: el
+        órgano que alguien dirigía, si su nombre es el de uno solo del Estado
+        —el cargo abreviado de la Oficina, «D. GRAL. DE…», se lee con la misma
+        regla—; la entidad en la que se le autorizó a trabajar o que declaró,
+        si la nombra por su denominación completa. Cuando el órgano pagó a esa
+        entidad, se dice al lado, con el importe y los años. Bajo qué Gobierno
+        se nombró a alguien sale de la fecha del Real Decreto y de las
+        presidencias leídas; la formación del presidente, del Congreso.
+      </p>
+      <p>
         El BOE no publica ningún identificador en un nombramiento: una persona
         es su nombre. Si el BOE la escribe de dos maneras —con y sin su primer
         nombre, por ejemplo— salen dos fichas, y no se juntan a mano.
