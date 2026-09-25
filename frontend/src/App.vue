@@ -26,7 +26,7 @@ import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA, NOMBRE_TIPO, colorTipo, tipoDe } fro
 import { accionDeEstado, direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
 import { areaDeInfluencia } from './influencia.js'
 import { contratosDeMedios } from './medios.js'
-import { colapsarNodosDePaso, dineroCorto } from './nucleos.js'
+import { MINIMO_NUCLEO, colapsarNodosDePaso, dineroCorto } from './nucleos.js'
 
 const consulta = ref('')
 const resultados = ref([])
@@ -73,11 +73,102 @@ const nucleoSenalado = ref(null)
 const miembroSenalado = ref(null)
 /** Dentro de un grupo, verlo como red de nodos en vez de como círculos. */
 const verRed = ref(false)
+/**
+ * La entidad encendida en el mapa: la que se ha buscado desde él, o a la que
+ * se ha llegado con «Ver en el mapa» desde su ficha. La cámara está en su
+ * grupo y sus caminos, dibujados.
+ */
+const destacadoMapa = ref(null)
 // Al salir de un grupo se vuelve a los círculos: la red sólo existe dentro.
+// Y la entidad encendida se apaga si no es de este grupo.
 watch(nucleoEnfocado, (n) => {
   miembroSenalado.value = null
   if (n === null) verRed.value = false
+  if (destacadoMapa.value && grupoDeEntidad(destacadoMapa.value)?.id !== n) destacadoMapa.value = null
 })
+
+/** El grupo DIBUJADO en el que está una entidad, o null si no está en ninguno. */
+function grupoDeEntidad(id) {
+  if (!id) return null
+  return (
+    nucleos.value.find(
+      (n) => (mostrarSueltos.value || n.tamano >= MINIMO_NUCLEO) && n.miembros?.includes(id),
+    ) ?? null
+  )
+}
+
+/** La clave estable de un grupo: la de su entidad principal. */
+function claveDeGrupo(idGrupo) {
+  const n = nucleos.value.find((x) => x.id === idGrupo)
+  const principal = n?.principales?.[0]?.id
+  return principal ? claveDe((grafoEntero.value?.nodes ?? []).find((x) => x.id === principal)) : ''
+}
+
+/**
+ * Lleva la cámara del mapa hasta una entidad y la enciende. Devuelve false si
+ * la entidad no está en ningún grupo dibujado: entonces no hay a dónde ir, y
+ * quien llama abre su ficha.
+ */
+function verEnMapa(id) {
+  const g = grupoDeEntidad(id)
+  if (!g) return false
+  verMapa()
+  nucleoEnfocado.value = g.id
+  destacadoMapa.value = id
+  return true
+}
+
+/**
+ * «Ver en el mapa» desde una ficha. El mapa puede no haberse abierto todavía
+ * —los grupos se calculan al abrirlo—, así que se abre y se deja pedido.
+ */
+function llevarAlMapa(id) {
+  if (verEnMapa(id)) return
+  const clave = claveDe((grafoEntero.value?.nodes ?? []).find((n) => n.id === id))
+  verMapa()
+  pedidoDelMapa = { destacada: clave, grupo: '' }
+  resolverPedidoDelMapa()
+}
+
+/** Un aviso breve sobre el mapa: lo que se ha pedido y no se puede enseñar. */
+const avisoMapa = ref('')
+let temporizadorAviso = 0
+function avisarEnMapa(texto) {
+  avisoMapa.value = texto
+  clearTimeout(temporizadorAviso)
+  temporizadorAviso = setTimeout(() => (avisoMapa.value = ''), 6000)
+}
+
+/*
+  Un enlace al mapa que nombra un grupo o una entidad no se puede resolver
+  hasta que el mapa ha agrupado —los grupos salen del análisis, que tarda un
+  momento—. Se guarda lo pedido y se resuelve en cuanto llegan los grupos.
+*/
+let pedidoDelMapa = null
+function resolverPedidoDelMapa() {
+  if (!pedidoDelMapa || !nucleos.value.length) return
+  const { destacada, grupo } = pedidoDelMapa
+  pedidoDelMapa = null
+  const nodo = nodoDeClave(destacada || grupo)
+  if (!nodo) return
+  if (destacada) {
+    // Una entidad sin grupo dibujado —sus relaciones son sueltas, o su grupo
+    // es de los pequeños— no tiene dónde encenderse. Se dice, en vez de
+    // dejar el mapa como si no hubiera pasado nada.
+    if (!verEnMapa(nodo.id)) {
+      avisarEnMapa(`«${nodo.caption}» no está en ningún grupo del mapa: sus relaciones van sueltas. Su ficha lo enseña todo.`)
+    }
+  } else {
+    const g = grupoDeEntidad(nodo.id)
+    if (g) nucleoEnfocado.value = g.id
+  }
+  // Es una restauración, no un paso nuevo: no se apila en el historial, y la
+  // dirección se deja como la pidieron (la de arranque ya se había escrito sin
+  // esto, porque los grupos aún no estaban).
+  estadoPintado = { ...estadoDeVista.value }
+  history.replaceState({ ...estadoPintado }, '', direccionDeVista(estadoPintado, location.pathname))
+}
+watch(nucleos, resolverPedidoDelMapa)
 /** En estrecho los filtros del mapa nacen plegados; en ancho no se pliegan. */
 const filtrosAbiertos = ref(false)
 const minImporte = ref(0)
@@ -345,6 +436,10 @@ function elegir(id) {
   const fila = resultados.value.find((r) => r.id === id)
   resultados.value = []
   consulta.value = ''
+  // Buscando desde el mapa, lo que se quiere es ver DÓNDE está: la cámara va
+  // a su grupo y la enciende, con su ficha a un botón. Si no está en ningún
+  // grupo dibujado, se abre su ficha como siempre.
+  if (vista.value === 'mapa' && !fila?.soloIndice && verEnMapa(id)) return Promise.resolve()
   // Una entidad que sólo está en el índice no tiene red que dibujar. Se abre
   // su ficha igual, con lo que sí se sabe de ella, y diciéndolo.
   fueraDelMapa.value = fila?.soloIndice ? fila : null
@@ -444,11 +539,19 @@ const claveSeleccionada = computed(() => {
   return claveDe(n) || seleccionId.value
 })
 
-const estadoDeVista = computed(() => ({
-  vista: vista.value,
-  clave: claveSeleccionada.value,
-  territorio: territorio.value,
-}))
+const estadoDeVista = computed(() => {
+  const enMapa = vista.value === 'mapa'
+  const destacada = enMapa && destacadoMapa.value ? claveDe((grafoEntero.value?.nodes ?? []).find((n) => n.id === destacadoMapa.value)) : ''
+  return {
+    vista: vista.value,
+    clave: claveSeleccionada.value,
+    territorio: territorio.value,
+    ...(destacada ? { destacada } : {}),
+    ...(enMapa && !destacada && nucleoEnfocado.value !== null
+      ? { grupo: claveDeGrupo(nucleoEnfocado.value) }
+      : {}),
+  }
+})
 
 /** Evita apilar una entrada de historial por el estado que acabamos de leer. */
 let estadoPintado = { vista: 'portada', clave: '', territorio: '' }
@@ -461,10 +564,20 @@ watch(estadoDeVista, (ahora) => {
   history.pushState({ ...ahora }, '', direccionDeVista(ahora, location.pathname))
 })
 
-async function irAEstado({ vista: v, clave, territorio: t }) {
+async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo }) {
   restaurando = true
   try {
     if (v === 'portada' || v === 'mapa') territorio.value = t ?? ''
+    if (v === 'mapa') {
+      // Atrás y adelante dentro del mapa: el grupo o la entidad de aquel
+      // momento, o todos los grupos si no había ninguno.
+      destacadoMapa.value = null
+      nucleoEnfocado.value = null
+      if (destacada || grupo) {
+        pedidoDelMapa = { destacada, grupo }
+        resolverPedidoDelMapa()
+      }
+    }
     const nodo = clave ? nodoDeClave(clave) : null
     // El reparto está en `enlace.js` y tiene tests: el orden de estas
     // comprobaciones ya se equivocó una vez —`?v=mapa` no lleva entidad y
@@ -898,6 +1011,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :nucleo-enfocado="nucleoEnfocado"
           :senalado="nucleoSenalado"
           :miembro-senalado="miembroSenalado"
+          :destacado="destacadoMapa"
+          @destacar="(id) => (destacadoMapa = id)"
           @abrir="(n) => (nucleoEnfocado = n)"
           @seleccionar="enfocar"
           @analizado="alAnalizar"
@@ -978,6 +1093,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           izquierda se escribía encima del nombre del bloque más grande, que
           es justo el que ocupa esa esquina.
         -->
+        <p v-else-if="vista === 'mapa' && avisoMapa" class="recuento" role="status">{{ avisoMapa }}</p>
         <p v-else-if="vista === 'mapa' && nucleos.length && filtrosPuestos.length" class="recuento">
           <span class="filtrado">
             Filtrado por {{ filtrosPuestos.join(' y ') }}.
@@ -1058,8 +1174,10 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :fuentes="instantanea?.fuentes ?? []"
         :medios="medios"
         :fuera-del-mapa="fueraDelMapa"
+        :en-mapa="idsDelMapa.has(seleccionId)"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
+        @ver-en-mapa="llevarAlMapa(seleccionId)"
       />
       <PanelEntidad
         v-else-if="seleccionado"

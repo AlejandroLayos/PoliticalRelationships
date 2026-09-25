@@ -176,14 +176,24 @@ await paso('volver a todos los grupos', async () => {
   if ((await pagina.locator('svg .grupo').count()) < 5) throw new Error('no volvió')
 })
 
+// Atrás recorre también el mapa: del mapa entero al grupo del que se venía,
+// de ahí al mapa sin grupo, y de ahí fuera. Antes salía del mapa de golpe
+// porque abrir un grupo no dejaba rastro en el historial.
 await paso('el botón de atrás del navegador retrocede', async () => {
   await pagina.goBack()
-  await pagina.waitForTimeout(4000)
-  if (pagina.url().includes('v=mapa')) throw new Error(`no retrocedió: ${pagina.url()}`)
+  await pagina.waitForTimeout(2500)
+  if (!pagina.url().includes('g=')) throw new Error(`no volvió al grupo: ${pagina.url()}`)
+  await pagina.goBack()
+  await pagina.waitForTimeout(2500)
+  await pagina.goBack()
+  await pagina.waitForTimeout(3000)
+  if (pagina.url().includes('v=mapa')) throw new Error(`no salió del mapa: ${pagina.url()}`)
 })
 
+// Desde la portada: desde el mapa, buscar lleva la cámara a la entidad, no a
+// su ficha (eso lo prueba «ver en el mapa…»).
 await paso('buscar y elegir con el teclado', async () => {
-  await pagina.click('text=← Portada').catch(() => {})
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
   await pagina.waitForTimeout(1500)
   await pagina.fill('input', 'metro de madrid')
   await pagina.waitForTimeout(2500)
@@ -205,6 +215,25 @@ await paso('el botón de la portada abre el mapa', async () => {
   await pagina.click('text=Abrir el mapa del dinero')
   await pagina.waitForTimeout(3000)
   if ((await pagina.locator('svg .grupo').count()) < 5) throw new Error('no abrió el mapa')
+})
+
+// De una ficha a su sitio en el mapa, y el enlace que lo reproduce.
+await paso('ver en el mapa lleva a la entidad y deja un enlace que la reproduce', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(1500)
+  await pagina.fill('.buscador input', 'metro de madrid')
+  await pagina.waitForTimeout(1500)
+  await pagina.keyboard.press('Enter')
+  await pagina.waitForTimeout(2500)
+  await pagina.click('text=Ver en el mapa')
+  await pagina.waitForTimeout(ESPERA_MAPA)
+  const enlace = pagina.url()
+  if (!/v=mapa&e=/.test(enlace)) throw new Error(`dirección: ${enlace}`)
+  if (!(await pagina.locator('.camino').count())) throw new Error('sin caminos')
+  await pagina.goto(enlace, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(ESPERA_MAPA)
+  if (!(await pagina.locator('svg .grupo.dentro').count())) throw new Error('el enlace no abrió el grupo')
+  if (!(await pagina.locator('.ficha-flotante.tactil').count())) throw new Error('el enlace no encendió la entidad')
 })
 
 // La edición de una comunidad. Sólo si el volcado trae comunidades: antes

@@ -33,8 +33,10 @@ const props = defineProps({
    * que es falso.
    */
   fueraDelMapa: { type: Object, default: null },
+  /** Si está en algún grupo del mapa: entonces se le puede buscar allí. */
+  enMapa: { type: Boolean, default: false },
 })
-const emit = defineEmits(['seleccionar', 'volver', 'expandir'])
+const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa'])
 
 const resumen = computed(() => resumenEnPalabras(props.area))
 
@@ -293,6 +295,12 @@ const sinDatos = computed(
         <button class="boton tenue" @click="copiarEnlace">
           {{ copiado ? '✓ Copiado' : 'Copiar enlace' }}
         </button>
+        <!--
+          Dónde está en el mapa: su grupo, quién hay alrededor y sus caminos
+          encendidos. Sólo si está en un grupo dibujado; si no, no hay a
+          dónde llevar.
+        -->
+        <button v-if="enMapa" class="boton tenue" @click="emit('verEnMapa')">Ver en el mapa</button>
       </div>
 
       <p class="antetitulo tipo">

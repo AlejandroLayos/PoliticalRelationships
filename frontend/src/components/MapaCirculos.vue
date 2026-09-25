@@ -55,8 +55,13 @@ const props = defineProps({
   senalado: { type: Number, default: null },
   /** La entidad señalada desde la lista de al lado. */
   miembroSenalado: { type: String, default: null },
+  /**
+   * La entidad encendida desde fuera: buscada desde el mapa, o con «Ver en
+   * el mapa» desde su ficha. Se enseña fijada, con su ficha a un botón.
+   */
+  destacado: { type: String, default: null },
 })
-const emit = defineEmits(['abrir', 'seleccionar', 'analizado', 'senalar'])
+const emit = defineEmits(['abrir', 'seleccionar', 'analizado', 'senalar', 'destacar'])
 
 const contenedor = ref(null)
 const ancho = ref(0)
@@ -135,16 +140,28 @@ function irA(destino, inmediato = false) {
   animacion = requestAnimationFrame(paso)
 }
 
+/*
+  Con una entidad fijada, la tarjeta de abajo tapa el último tramo del
+  círculo: la cámara sube un poco para que lo tapado sea el borde vacío y no
+  los caminos.
+*/
+function vistaDelGrupo(g) {
+  const v = vistaDe(g, ancho.value, alto.value)
+  if (!g || !fijado.value) return v
+  const k = Math.min(ancho.value, alto.value) / v[2]
+  return [v[0], v[1] + 70 / k, v[2]]
+}
+
 watch(
   () => props.nucleoEnfocado,
   () => {
-    fijado.value = null
+    fijado.value = props.destacado ?? null
     miembroEncima.value = null
-    irA(vistaDe(grupoAbierto.value, ancho.value, alto.value))
+    irA(vistaDelGrupo(grupoAbierto.value))
   },
 )
 // Si cambia el lienzo o los filtros, la cámara se recoloca sin viaje.
-watch(disposicion, () => irA(vistaDe(grupoAbierto.value, ancho.value, alto.value), true))
+watch(disposicion, () => irA(vistaDelGrupo(grupoAbierto.value), true))
 
 const escala = computed(() => Math.min(ancho.value, alto.value) / vista.value[2])
 const transformacion = computed(() => {
@@ -163,6 +180,16 @@ const grupoEncima = ref(null)
 const miembroEncima = ref(null)
 /** En pantallas táctiles, la entidad tocada: primer toque señala, segundo abre. */
 const fijado = ref(null)
+watch(
+  () => props.destacado,
+  (id) => (fijado.value = id ?? null),
+  { immediate: true },
+)
+/** Soltar lo fijado, y decírselo a quien lo encendió desde fuera. */
+function soltar() {
+  fijado.value = null
+  if (props.destacado) emit('destacar', null)
+}
 const raton = ref(null)
 let ultimoPuntero = 'mouse'
 
@@ -400,7 +427,7 @@ function alPulsar(ev) {
     return
   }
   if (fijado.value) {
-    fijado.value = null
+    soltar()
     return
   }
   // Pulsar fuera de todo, dentro de un grupo, es salir de él.
@@ -578,7 +605,7 @@ function etiquetaAria(g) {
           <p v-if="!fijado" class="f-pista">Clic para abrir su ficha</p>
           <div v-else class="f-acciones">
             <button class="boton solido" @click.stop="emit('seleccionar', ficha.id)">Abrir su ficha</button>
-            <button class="boton tenue" @click.stop="fijado = null">Cerrar</button>
+            <button class="boton tenue" @click.stop="soltar">Cerrar</button>
           </div>
         </template>
         <template v-else>

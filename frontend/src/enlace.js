@@ -29,11 +29,19 @@
  * pagan las administraciones andaluzas. Sólo en esas dos vistas; una ficha es
  * la misma se mire desde donde se mire.
  */
-export function parametrosDeVista({ vista, clave, territorio }) {
+export function parametrosDeVista({ vista, clave, territorio, destacada, grupo }) {
   const p = new URLSearchParams()
   if (vista === 'mapa') p.set('v', 'mapa')
   else if (vista === 'vecindario') p.set('v', 'red')
   if (clave && vista !== 'mapa') p.set('e', clave)
+  /*
+    Dentro del mapa, la entidad encendida (`e`) o, si no hay, el grupo abierto
+    (`g`). El grupo se nombra por la clave de su entidad principal y no por su
+    número: el número lo pone el agrupamiento y cambia entre volcados; la
+    clave de una entidad no cambia.
+  */
+  if (vista === 'mapa' && destacada) p.set('e', destacada)
+  else if (vista === 'mapa' && grupo) p.set('g', grupo)
   if (territorio && (vista === 'portada' || vista === 'mapa')) p.set('t', territorio)
   return p
 }
@@ -58,7 +66,15 @@ export function vistaDeParametros(busqueda) {
   const v = p.get('v') ?? ''
   const t = (p.get('t') ?? '').trim()
   const conTerritorio = t ? { territorio: t } : {}
-  if (v === 'mapa') return { vista: 'mapa', clave: '', ...conTerritorio }
+  if (v === 'mapa') {
+    const g = p.get('g') ?? ''
+    return {
+      vista: 'mapa',
+      clave: '',
+      ...(clave ? { destacada: clave } : g ? { grupo: g } : {}),
+      ...conTerritorio,
+    }
+  }
   if (v === 'red' && clave) return { vista: 'vecindario', clave }
   if (clave) return { vista: 'ficha', clave }
   return { vista: 'portada', clave: '', ...conTerritorio }
@@ -69,7 +85,9 @@ export function mismoEstado(a, b) {
   return (
     a.vista === b.vista &&
     (a.clave ?? '') === (b.clave ?? '') &&
-    (a.territorio ?? '') === (b.territorio ?? '')
+    (a.territorio ?? '') === (b.territorio ?? '') &&
+    (a.destacada ?? '') === (b.destacada ?? '') &&
+    (a.grupo ?? '') === (b.grupo ?? '')
   )
 }
 

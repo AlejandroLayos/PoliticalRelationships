@@ -94,6 +94,31 @@ describe('la edición de una comunidad', () => {
   })
 })
 
+describe('dentro del mapa', () => {
+  it('una entidad encendida en el mapa va en la dirección', () => {
+    const estado = { vista: 'mapa', clave: '', destacada: 'nif:A28017895' }
+    expect(direccionDeVista(estado)).toBe('/?v=mapa&e=nif%3AA28017895')
+    expect(vistaDeParametros('?v=mapa&e=nif%3AA28017895')).toEqual(estado)
+  })
+
+  it('un grupo abierto se nombra por su entidad principal', () => {
+    const estado = { vista: 'mapa', clave: '', grupo: 'placsp:organo:metro-de-madrid' }
+    expect(direccionDeVista(estado)).toBe('/?v=mapa&g=placsp%3Aorgano%3Ametro-de-madrid')
+    expect(vistaDeParametros(`?${parametrosDeVista(estado)}`)).toEqual(estado)
+  })
+
+  it('la entidad manda sobre el grupo: ya dice en cuál está', () => {
+    const p = parametrosDeVista({ vista: 'mapa', destacada: 'a', grupo: 'b' })
+    expect(p.get('e')).toBe('a')
+    expect(p.has('g')).toBe(false)
+  })
+
+  it('abrir otro grupo es otro estado', () => {
+    const a = { vista: 'mapa', clave: '', grupo: 'x' }
+    expect(mismoEstado(a, { ...a, grupo: 'y' })).toBe(false)
+  })
+})
+
 describe('mismoEstado', () => {
   it('no apila dos veces la misma entrada', () => {
     expect(mismoEstado({ vista: 'ficha', clave: 'a' }, { vista: 'ficha', clave: 'a' })).toBe(true)
