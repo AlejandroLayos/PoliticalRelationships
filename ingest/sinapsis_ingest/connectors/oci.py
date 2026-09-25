@@ -103,11 +103,23 @@ class _Tablas(HTMLParser):
 
 
 def _fecha(texto: str) -> date | None:
-    m = re.fullmatch(r"(\d{4})/(\d{1,2})/(\d{1,2})", (texto or "").strip())
-    if not m:
-        return None
+    """Las dos formas que usa la fuente, sin confundirlas.
+
+    Las páginas de seguimiento escriben «2018/06/01» (año delante) y el
+    buscador «24/09/2025» (día delante). Con el año de cuatro cifras en un
+    extremo no hay ambigüedad; cualquier otra cosa no se interpreta.
+    """
+    t = (texto or "").strip()
+    m = re.fullmatch(r"(\d{4})/(\d{1,2})/(\d{1,2})", t)
+    if m:
+        anio, mes, dia = m.groups()
+    else:
+        m = re.fullmatch(r"(\d{1,2})/(\d{1,2})/(\d{4})", t)
+        if not m:
+            return None
+        dia, mes, anio = m.groups()
     try:
-        return date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        return date(int(anio), int(mes), int(dia))
     except ValueError:
         return None
 
@@ -151,22 +163,41 @@ def nombre_para_cruzar(nombre_fuente: str) -> str:
     return _plano(" ".join([*partes, *cola, apellidos]))
 
 
+def _cabecera(celda: str) -> str:
+    """Una cabecera, como para compararla.
+
+    El buscador del portal escribe «Empresa / Atividad autorizada» —espacios
+    alrededor de la barra, y la errata tal cual—, y las páginas de
+    seguimiento «Empresa/Actividad autorizada». Son la misma columna.
+    """
+    c = re.sub(r"\s*/\s*", "/", _plano(celda))
+    return c.replace("atividad", "actividad")
+
+
 def leer_tablas(html: str) -> list[dict[str, Any]]:
     """Las filas de las tablas de autorizaciones de una página.
 
     Se reconoce la tabla por sus cabeceras, no por su posición: la página
     lleva otras tablas («Fuente de los datos»). Una tabla cuyas cabeceras no
-    son éstas no se lee.
+    son éstas no se lee. El buscador pinta la misma tabla dos veces —para
+    pantalla ancha y estrecha—: una fila repetida es la misma autorización.
     """
     lector = _Tablas()
     lector.feed(html)
     filas: list[dict[str, Any]] = []
+    vistas: set[tuple[str, ...]] = set()
     for tabla, enlaces in zip(lector.tablas, lector.enlaces, strict=True):
-        if not tabla or tuple(_plano(c) for c in tabla[0]) != COLUMNAS:
+        if not tabla or tuple(_cabecera(c) for c in tabla[0]) != COLUMNAS:
             continue
         for celdas, enlace in zip(tabla[1:], enlaces[1:], strict=True):
             if len(celdas) != len(COLUMNAS) or not celdas[0] or not celdas[4]:
                 continue
+            # El pie de la tabla repite la cabecera.
+            if tuple(_cabecera(c) for c in celdas) == COLUMNAS:
+                continue
+            if tuple(celdas) in vistas:
+                continue
+            vistas.add(tuple(celdas))
             filas.append(
                 {
                     "nombre": celdas[0],

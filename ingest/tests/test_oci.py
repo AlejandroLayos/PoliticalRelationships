@@ -6,6 +6,7 @@ Transparencia tal cual las sirvió, guardadas por el reconocimiento.
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from pathlib import Path
 
@@ -49,9 +50,45 @@ def test_una_persona_con_dos_autorizaciones_son_dos_filas():
     ]
 
 
-def test_todas_las_paginas_guardadas_tienen_tabla():
-    for ruta in sorted(GOLDEN.glob("*.html")):
+def test_todas_las_paginas_de_seguimiento_tienen_tabla():
+    for ruta in sorted(GOLDEN.glob("*seguimiento*.html")):
         assert _filas(ruta), ruta.name
+
+
+def test_la_portada_no_trae_la_tabla():
+    """Lo que vio el reconocimiento: la lista de ahora no está en el HTML de
+    la portada, sino en el buscador del portal. Si un día la trae, este test
+    lo dice."""
+    assert (
+        _filas(GOLDEN / "publicidad-activa-por-materias-altos-cargos-actividad-privada-cese.html")
+        == []
+    )
+
+
+def test_el_buscador_del_portal_se_lee_sin_repetir():
+    """El buscador pinta la tabla dos veces y escribe la cabecera con otra
+    forma («Empresa / Atividad autorizada»)."""
+    filas = _filas(GOLDEN / "servicios-buscador-buscar-htm.html")
+    # Diez por página; el pie de la tabla repite la cabecera y no cuenta.
+    assert len(filas) == 10
+    assert len({tuple(f.values()) for f in filas}) == 10
+    # Y aquí la fecha va con el día delante.
+    assert all(re.fullmatch(r"\d{2}/\d{2}/\d{4}", f["fecha_autorizacion"]) for f in filas)
+
+
+@pytest.mark.parametrize(
+    ("texto", "fecha"),
+    [
+        ("2018/06/01", date(2018, 6, 1)),
+        ("24/09/2025", date(2025, 9, 24)),
+        ("01/06/18", None),
+        ("", None),
+    ],
+)
+def test_las_dos_formas_de_fecha(texto, fecha):
+    from sinapsis_ingest.connectors.oci import _fecha
+
+    assert _fecha(texto) == fecha
 
 
 def test_la_tabla_de_la_fuente_de_los_datos_no_se_confunde():
