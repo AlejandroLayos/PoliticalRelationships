@@ -18,10 +18,12 @@ import { dineroCorto } from '../nucleos.js'
 import {
   bajoGobierno,
   buscarCargos,
+  deFormacion,
   dePapel,
   delOrganoEnPalabras,
   fechaCorta,
   fechaLarga,
+  formaciones,
   gobiernos as gobiernosDe,
   huecoDelPeriodo,
   lineaDeTiempo,
@@ -52,15 +54,26 @@ const filtro = ref('')
 const papel = ref('todos')
 /** La clave del presidente bajo cuyo Gobierno se nombró, o ''. */
 const gobierno = ref('')
+/** La formación con la que fue elegido diputado, o ''. Sólo con «Diputados». */
+const formacion = ref('')
+watch(papel, (p) => {
+  if (p !== 'congreso') formacion.value = ''
+})
 const VISIBLES = 30
 const cuantas = ref(VISIBLES)
-watch([filtro, papel, gobierno], () => {
+watch([filtro, papel, gobierno, formacion], () => {
   cuantas.value = VISIBLES
 })
 
 const abierta = computed(() => personaDeClave(props.datos, props.persona))
 const filtradas = computed(() =>
-  bajoGobierno(dePapel(buscarCargos(props.datos, filtro.value), papel.value), gobierno.value),
+  deFormacion(
+    bajoGobierno(dePapel(buscarCargos(props.datos, filtro.value), papel.value), gobierno.value),
+    formacion.value,
+  ),
+)
+const porFormacion = computed(() =>
+  papel.value === 'congreso' ? formaciones(dePapel(props.datos?.personas ?? [], 'congreso')) : [],
 )
 const porGobierno = computed(() => gobiernosDe(props.datos))
 const PAPELES = [
@@ -394,6 +407,20 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
             :aria-pressed="papel === x.id"
             @click="papel = x.id"
           >{{ x.texto }}</button>
+        </div>
+        <!--
+          Con «Diputados», por la formación con la que fueron elegidos. Para
+          navegar; la cifra es la de escaños que salen aquí.
+        -->
+        <div v-if="porFormacion.length" class="papeles gobiernos-filtro" role="group" aria-label="Elegidos por la formación">
+          <button class="papel" :aria-pressed="!formacion" @click="formacion = ''">Cualquier formación</button>
+          <button
+            v-for="f in porFormacion.slice(0, 14)"
+            :key="f.formacion"
+            class="papel"
+            :aria-pressed="formacion === f.formacion"
+            @click="formacion = f.formacion"
+          >{{ f.formacion }} <span class="cuenta-papel">{{ f.personas }}</span></button>
         </div>
         <!--
           Por Gobierno: quién estaba en la Presidencia el día del Real
@@ -744,6 +771,7 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 .papel:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
 .gobiernos-filtro { flex-wrap: wrap; }
 .gobiernos-filtro .papel { font-size: var(--t-xs); }
+.cuenta-papel { font-family: var(--mono); opacity: 0.7; }
 .periodo-gobierno { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.2rem !important; }
 .periodo-gobierno a { color: var(--tinta); }
 .periodo-gobierno abbr { text-decoration: none; }

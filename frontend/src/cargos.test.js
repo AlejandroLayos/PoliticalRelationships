@@ -3,10 +3,12 @@ import {
   bajoGobierno,
   buscarCargos,
   delOrganoEnPalabras,
+  deFormacion,
   dePapel,
   fechaCorta,
   fechaLarga,
   formacionEn,
+  formaciones,
   gobiernos,
   huecoDelPeriodo,
   lineaDeTiempo,
@@ -397,5 +399,24 @@ describe('delOrganoEnPalabras', () => {
     })
     expect(delOrganoEnPalabras({ pagos: 2, adjudicaciones: 1 }).verbo).toBe('pagó o adjudicó')
     expect(delOrganoEnPalabras({ pagos: 2, adjudicaciones: 1 }).cuando).toBe('')
+  })
+})
+
+describe('formaciones', () => {
+  const d = (formacion, ...mas) => ({
+    periodos: [{ fuente: 'congreso', formacion }, ...mas.map((f) => ({ fuente: 'congreso', formacion: f }))],
+  })
+  const personas = [d('PP'), d('PSOE'), d('PP'), d('PSC-PSOE', 'PSOE'), { periodos: [{ desde: 'x' }] }]
+  it('una vez por persona y formación, de más a menos', () => {
+    expect(formaciones(personas)).toEqual([
+      { formacion: 'PP', personas: 2 },
+      { formacion: 'PSOE', personas: 2 },
+      { formacion: 'PSC-PSOE', personas: 1 },
+    ])
+  })
+  it('el filtro, por la formación exacta en cualquier legislatura', () => {
+    expect(deFormacion(personas, 'PSOE')).toHaveLength(2)
+    expect(deFormacion(personas, 'PSC-PSOE')).toHaveLength(1)
+    expect(deFormacion(personas, '')).toHaveLength(5)
   })
 })

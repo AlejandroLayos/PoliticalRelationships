@@ -399,3 +399,29 @@ export function delOrganoEnPalabras(d) {
   const cuando = a && b ? (a === b ? `en ${a}` : `entre ${a} y ${b}`) : ''
   return { verbo, cuantos: partes.join(' y '), cuando }
 }
+
+/**
+ * Las formaciones de los diputados de la lista, con cuántas personas fueron
+ * elegidas por cada una en alguna legislatura leída. Para navegar, no para
+ * comparar: el número es el de escaños que salen aquí, no un indicador.
+ */
+export function formaciones(personas) {
+  const cuenta = new Map()
+  for (const persona of personas ?? []) {
+    const suyas = new Set(
+      (persona.periodos ?? []).filter((p) => p.fuente === 'congreso' && p.formacion).map((p) => p.formacion),
+    )
+    for (const f of suyas) cuenta.set(f, (cuenta.get(f) ?? 0) + 1)
+  }
+  return [...cuenta.entries()]
+    .map(([formacion, personas]) => ({ formacion, personas }))
+    .sort((a, b) => b.personas - a.personas || a.formacion.localeCompare(b.formacion, 'es'))
+}
+
+/** Quien fue elegido diputado por `formacion` en alguna legislatura leída. */
+export function deFormacion(personas, formacion) {
+  if (!formacion) return personas
+  return personas.filter((persona) =>
+    (persona.periodos ?? []).some((p) => p.fuente === 'congreso' && p.formacion === formacion),
+  )
+}
