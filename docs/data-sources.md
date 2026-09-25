@@ -62,7 +62,14 @@ fuente señalando que el beneficiario es un particular, y lo tratamos como tal:
 ver la nota de minimización más abajo.
 
 `nivel1..3` es la jerarquía administrativa del órgano concedente; usamos el
-nivel más específico que venga relleno.
+nivel más específico que venga relleno como nombre del organismo, y la
+jerarquía entera se guarda en `jerarquia_bdns` para saber de qué
+administración es (fase 7, `ingest/sinapsis_ingest/territorio.py`).
+
+⚠️ La forma real de esos tres niveles **no está verificada** —la muestra de
+los tests es sintética—. Si no es la que espera `territorio.py`, esos
+organismos salen «sin clasificar» y sus jerarquías aparecen en
+`docs/fuentes/estado-ingesta.md`, que es de donde hay que sacar las reglas.
 
 **Límites reales:**
 

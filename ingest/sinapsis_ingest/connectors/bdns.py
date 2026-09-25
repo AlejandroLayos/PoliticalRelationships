@@ -53,7 +53,7 @@ ENDPOINT_PARTIDOS = f"{BASE_URL}/partidospoliticos/busqueda"
 
 # Súbelo sólo con un motivo: al cambiar, todo lo derivado se recomputa desde el
 # crudo ya guardado. Formato "<fuente>/<n>".
-EXTRACTOR_VERSION = "bdns/1"
+EXTRACTOR_VERSION = "bdns/2"  # 2: guarda la jerarquía del organismo
 
 # La API admite hasta 10.000, pero páginas así de grandes producen documentos
 # crudos enormes y difíciles de reprocesar. 1.000 es un equilibrio razonable.
@@ -62,6 +62,14 @@ PAGE_SIZE = 1000
 # 10 GET/s por IP es el límite de la API. Vamos deliberadamente por debajo: es
 # un servicio público y no hay ninguna prisa.
 PETICIONES_POR_SEGUNDO = 4.0
+
+
+def _props_organo(organo: str, d: dict[str, Any]) -> dict[str, Any]:
+    """Propiedades del organismo concedente: su nombre y su jerarquía."""
+    props: dict[str, Any] = {"name": organo}
+    if d.get("jerarquia"):
+        props["jerarquia_bdns"] = list(d["jerarquia"])
+    return props
 
 
 class BDNSConnector:
@@ -252,6 +260,16 @@ class BDNSConnector:
                     "numero_convocatoria": item.get("numeroConvocatoria"),
                     "convocatoria": item.get("convocatoria"),
                     "organo": self._nombre_organo(item),
+                    # La jerarquía tal como la publica BDNS, de lo general a
+                    # lo concreto. De aquí sale el nivel —Estado, comunidad,
+                    # entidad local— y el territorio del organismo; la
+                    # clasificación se hace al volcar (`territorio.py`), así
+                    # que afinarla no obliga a volver a ingerir.
+                    "jerarquia": [
+                        str(item.get(k)).strip()
+                        for k in ("nivel1", "nivel2", "nivel3")
+                        if item.get(k) and str(item.get(k)).strip()
+                    ],
                     **self._partir_beneficiario(item),
                     "importe": a_decimal(item.get("importe")),
                     "ayuda_equivalente": a_decimal(item.get("ayudaEquivalente")),
@@ -331,7 +349,7 @@ class BDNSConnector:
                     caption=organo,
                     dedupe_key=clave_organo,
                     country="es",
-                    properties={"name": organo},
+                    properties=_props_organo(organo, d),
                 ),
                 EntidadNormalizada(
                     ftm_schema="LegalEntity",
@@ -429,7 +447,7 @@ class BDNSConnector:
                     caption=organo,
                     dedupe_key=clave_organo,
                     country="es",
-                    properties={"name": organo},
+                    properties=_props_organo(organo, d),
                 ),
                 EntidadNormalizada(
                     ftm_schema=esquema,

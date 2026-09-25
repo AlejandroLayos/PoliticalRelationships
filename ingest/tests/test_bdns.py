@@ -166,6 +166,23 @@ def test_normalize_produce_arista_payment(conector, crudo):
     assert n.entidades[1].ftm_schema == "Company"
 
 
+def test_el_organo_guarda_la_jerarquia_de_la_fuente(conector, crudo):
+    # De lo general a lo concreto y sin eslabones vacíos: es lo que dice BDNS
+    # de dónde cuelga el organismo. Clasificarlo —Estado, comunidad, local—
+    # es cosa del volcado (`territorio.py`).
+    n = _normalizados(conector, crudo)
+    organo_1001 = n["1001"].entidades[0]
+    assert organo_1001.properties["jerarquia_bdns"] == [
+        "ADMINISTRACIÓN DEL ESTADO",
+        "MINISTERIO DE EJEMPLO",
+        "DIRECCIÓN GENERAL DE PRUEBAS",
+    ]
+    assert n["1003"].entidades[0].properties["jerarquia_bdns"] == [
+        "COMUNIDAD AUTÓNOMA DE EJEMPLO",
+        "CONSEJERÍA DE PRUEBAS",
+    ]
+
+
 def test_la_persona_fisica_de_bdns_llega_anonimizada(conector, crudo):
     """BDNS enmascara el NIF del particular; nosotros no republicamos su nombre."""
     n = _normalizados(conector, crudo)["1002"]
@@ -344,7 +361,7 @@ def _registro(conector, **campos):
         "numero_convocatoria": "112233",
     }
     return ParsedRecord(
-        raw_content_hash="x" * 64, extractor_version="bdns/1", data={**base, **campos}
+        raw_content_hash="x" * 64, extractor_version="bdns/2", data={**base, **campos}
     )
 
 

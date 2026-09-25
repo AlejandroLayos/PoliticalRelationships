@@ -45,7 +45,7 @@ from sinapsis_ingest.util import (
 log = structlog.get_logger()
 
 SOURCE_ID = "placsp"
-EXTRACTOR_VERSION = "placsp/1"
+EXTRACTOR_VERSION = "placsp/2"  # 2: guarda la jerarquía del órgano y su plataforma
 
 # Los cinco feeds nacionales. El de licitaciones sin menores es el que trae
 # los contratos con importe relevante.
@@ -83,6 +83,41 @@ def _texto(nodo: ET.Element | None, ruta: str) -> str:
     if hijo is None or hijo.text is None:
         return ""
     return hijo.text.strip()
+
+
+def _props_organo(organo: str, d: dict[str, Any]) -> dict[str, Any]:
+    """Propiedades del órgano de contratación: nombre, jerarquía y plataforma.
+
+    La jerarquía y la dirección de su perfil de contratante son lo que dice
+    la fuente de dónde cuelga el órgano. De ahí sale al volcar su nivel y su
+    territorio (`territorio.py`); aquí sólo se guarda lo publicado.
+    """
+    props: dict[str, Any] = {"name": organo}
+    if d.get("jerarquia"):
+        props["jerarquia_placsp"] = list(d["jerarquia"])
+    if d.get("perfil_contratante"):
+        props["perfil_contratante"] = d["perfil_contratante"]
+    return props
+
+
+def _jerarquia(organo: ET.Element | None) -> list[str]:
+    """La cadena de organismos padre, de lo general a lo concreto.
+
+    CODICE anida un `ParentLocatedParty` dentro de otro: el del órgano es su
+    padre inmediato, el de dentro es el abuelo, y así. El parser sólo leía el
+    primero —«Entitats municipals de Catalunya»—, que dice que es municipal
+    pero no siempre dónde. Se lee entera y se da la vuelta, para que empiece
+    por lo más general. Los eslabones vacíos —la fuente cierra la cadena con
+    un `ParentLocatedParty` sin nombre— no cuentan.
+    """
+    cadena: list[str] = []
+    nodo = organo.find("cac-place-ext:ParentLocatedParty", NS) if organo is not None else None
+    while nodo is not None and len(cadena) < 12:
+        nombre = _texto(nodo, "cac:PartyName/cbc:Name")
+        if nombre:
+            cadena.append(nombre)
+        nodo = nodo.find("cac-place-ext:ParentLocatedParty", NS)
+    return list(reversed(cadena))
 
 
 def _atributo(nodo: ET.Element | None, ruta: str, attr: str) -> str:
@@ -372,6 +407,7 @@ class PLACSPConnector:
             "organo_padre": _texto(
                 organo, "cac-place-ext:ParentLocatedParty/cac:PartyName/cbc:Name"
             ),
+            "jerarquia": _jerarquia(organo),
             "perfil_contratante": _texto(organo, "cbc:BuyerProfileURIID"),
             "tipo_contrato": _texto(proyecto, "cbc:TypeCode"),
             "presupuesto": a_decimal(_texto(proyecto, "cac:BudgetAmount/cbc:TaxExclusiveAmount")),
@@ -422,7 +458,7 @@ class PLACSPConnector:
                 caption=organo,
                 dedupe_key=clave_organo,
                 country="es",
-                properties={"name": organo},
+                properties=_props_organo(organo, d),
             ),
             EntidadNormalizada(
                 ftm_schema="Contract",

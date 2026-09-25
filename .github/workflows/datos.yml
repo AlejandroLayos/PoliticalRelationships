@@ -212,6 +212,28 @@ jobs:
               n = f.get("entidades", 0)
               print(f"| {f['name']} | {n if n else '**0 — no aportó**'} |")
           PYEOF
+            echo
+            echo "## Territorio de los organismos"
+            echo
+            python3 - <<'PYEOF'
+          import json
+          try:
+              d = json.load(open("frontend/public/datos/indice.json"))
+          except (OSError, ValueError):
+              print("Sin índice: no se pudo contar.")
+              raise SystemExit(0)
+          print(f"- del Estado: {d.get('organismosEstatales', 0)}")
+          print(f"- con comunidad: {sum(t['organismos'] for t in d.get('territorios', []))}")
+          print(f"- **sin clasificar: {d.get('organismosSinTerritorio', 0)}**")
+          print()
+          print("Jerarquías más repetidas entre los sin clasificar (para afinar")
+          print("`ingest/sinapsis_ingest/territorio.py`):")
+          print()
+          print("```")
+          for j in d.get("jerarquiasSinClasificar", []):
+              print(j)
+          print("```")
+          PYEOF
           } > docs/fuentes/estado-ingesta.md
           cat docs/fuentes/estado-ingesta.md
 

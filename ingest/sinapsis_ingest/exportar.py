@@ -27,6 +27,7 @@ from typing import Any
 import structlog
 
 from sinapsis_ingest.store import Store
+from sinapsis_ingest.territorio import clasificar_entidad
 from sinapsis_ingest.util import es_identificador_personal
 
 log = structlog.get_logger()
@@ -244,6 +245,25 @@ def tapar_nombres(valor: Any, patron: re.Pattern[str], cuenta: list[int]) -> Any
     if isinstance(valor, list):
         return [tapar_nombres(v, patron, cuenta) for v in valor]
     return valor
+
+
+def territorio_de(esquema: str, propiedades: dict[str, Any] | None) -> dict[str, str]:
+    """Nivel y comunidad de un organismo, para el volcado. Vacío si no los hay.
+
+    Sólo de los organismos públicos: el territorio de una empresa no es una
+    administración, y adivinárselo por su domicilio no es lo que se pregunta.
+    Se calcula aquí y no en la ingesta para que afinar las reglas
+    (`territorio.py`) no obligue a volver a ingerir.
+    """
+    if esquema != "PublicBody":
+        return {}
+    c = clasificar_entidad(propiedades or {})
+    salida: dict[str, str] = {}
+    if c.nivel:
+        salida["nivel"] = c.nivel
+    if c.territorio:
+        salida["territorio"] = c.territorio
+    return salida
 
 
 def exportar(
@@ -547,6 +567,7 @@ def exportar(
             **({"country": f["country"]} if f["country"] else {}),
             "properties": f["properties"] or {},
             "degree": int(f["grado"]),
+            **territorio_de(f["ftm_schema"], f["properties"]),
         }
         for f in filas
         if f["id"] not in omitidas
@@ -822,8 +843,44 @@ def _exportar_indice(
                 **({"extranjera": True} if props.get("entidad_extranjera") else {}),
                 **({"extranjeraIndicio": True} if props.get("entidad_extranjera_indicio") else {}),
                 **({"enMapa": True} if str(f["id"]) in en_mapa else {}),
+                **territorio_de(f["ftm_schema"], props),
             }
         )
+
+    # De qué comunidades cobra cada uno. Es lo que permite contestar «quién
+    # más cobra de la Junta de Andalucía» sin descargar las aristas: el
+    # dinero de cada receptor, repartido por el territorio de quien se lo
+    # paga. Lo que viene de organismos sin clasificar no se reparte: se queda
+    # en el total y no se imputa a ninguna comunidad.
+    por_id = {e["id"]: e for e in entradas}
+    for receptor, pagador, importe in _pagos_por_pagador(store):
+        e = por_id.get(str(receptor))
+        t = por_id.get(str(pagador), {}).get("territorio")
+        if e is None or not t or not importe:
+            continue
+        reparto = e.setdefault("recibidoDe", {})
+        reparto[t] = str(Decimal(reparto.get(t, "0")) + Decimal(importe))
+
+    # Y el resumen por comunidad, para el selector de la web: cuántos
+    # organismos y cuánto dinero reparten, y cuántos no se han podido
+    # clasificar —que también se enseña—.
+    territorios: dict[str, dict[str, Any]] = {}
+    organismos_sin_territorio = 0
+    for e in entradas:
+        if e["schema"] != "PublicBody":
+            continue
+        t = e.get("territorio")
+        if not t:
+            if e.get("nivel") != "estatal":
+                organismos_sin_territorio += 1
+            continue
+        fila = territorios.setdefault(t, {"nombre": t, "organismos": 0, "pagado": Decimal(0)})
+        fila["organismos"] += 1
+        fila["pagado"] += Decimal(e.get("pagado", "0"))
+    resumen_territorios = [
+        {**f, "pagado": str(f["pagado"])}
+        for f in sorted(territorios.values(), key=lambda f: f["pagado"], reverse=True)
+    ]
 
     # Los totales se calculan sobre TODO, aunque luego se publique un extracto:
     # el dinero se suma sólo por el lado que paga, porque sumar las dos
@@ -835,14 +892,23 @@ def _exportar_indice(
         "nPartidos": sum(1 for e in entradas if e.get("partido")),
         "nExtranjeras": sum(1 for e in entradas if e.get("extranjera")),
         "enMapa": len(en_mapa),
+        "territorios": resumen_territorios,
+        "organismosSinTerritorio": organismos_sin_territorio,
+        "organismosEstatales": sum(1 for e in entradas if e.get("nivel") == "estatal"),
     }
 
     cabecera = {"generado": datetime.now(UTC).isoformat(), "total": len(entradas), **totales}
 
+    # Las jerarquías más repetidas entre lo que no se clasificó: son las que
+    # hay que mirar para afinar `territorio.py`. Van en el índice completo, no
+    # en el extracto que descarga todo el mundo, y el trabajo nocturno las
+    # copia al estado de la ingesta, que se lee con un `git pull`.
+    sin_clasificar = _jerarquias_sin_clasificar(filas)
+
     ruta = destino.with_name("indice.json")
     ruta.write_text(
         json.dumps(
-            {**cabecera, "entidades": entradas},
+            {**cabecera, "jerarquiasSinClasificar": sin_clasificar, "entidades": entradas},
             ensure_ascii=False,
             separators=(",", ":"),
         ),
@@ -860,10 +926,59 @@ def _exportar_indice(
     )
 
     return {
+        "territorios": len(resumen_territorios),
+        "organismos_sin_territorio": organismos_sin_territorio,
+        "jerarquias_sin_clasificar": sin_clasificar,
         "indice_entidades": len(entradas),
         "indice_bytes": ruta.stat().st_size,
         "indice_top_bytes": ruta_top.stat().st_size,
     }
+
+
+def _pagos_por_pagador(store: Store) -> list[tuple[Any, Any, Any]]:
+    """(receptor, pagador, importe) sumado, con el expediente puenteado.
+
+    El mismo puente que el índice: el dinero de un expediente es del órgano
+    que lo adjudicó.
+    """
+    return [
+        (f["receptor"], f["pagador"], f["importe"])
+        for f in store.conn.execute(
+            """
+            WITH vivas AS (
+                SELECT r.* FROM relationships r WHERE r.status <> 'retracted'
+            ),
+            pagos AS (
+                SELECT r.target_entity_id AS receptor, r.source_entity_id AS pagador, r.amount
+                FROM vivas r WHERE r.ftm_schema = 'Payment'
+                UNION ALL
+                SELECT a.target_entity_id, u.source_entity_id, a.amount
+                FROM vivas u
+                JOIN entities c ON c.id = u.target_entity_id AND c.ftm_schema = 'Contract'
+                JOIN vivas a ON a.source_entity_id = c.id AND a.ftm_schema = 'ContractAward'
+                WHERE u.ftm_schema = 'UnknownLink'
+            )
+            SELECT receptor, pagador, sum(amount) AS importe
+            FROM pagos WHERE amount IS NOT NULL
+            GROUP BY receptor, pagador
+            """
+        ).fetchall()
+    ]
+
+
+def _jerarquias_sin_clasificar(filas: list[Any], cuantas: int = 15) -> list[str]:
+    cuenta: dict[str, int] = {}
+    for f in filas:
+        if f["ftm_schema"] != "PublicBody":
+            continue
+        props = f["properties"] or {}
+        clasificado = territorio_de("PublicBody", props)
+        if clasificado.get("territorio") or clasificado.get("nivel") == "estatal":
+            continue
+        cadena = props.get("jerarquia_placsp") or props.get("jerarquia_bdns") or ["(ninguna)"]
+        clave = " > ".join(cadena)
+        cuenta[clave] = cuenta.get(clave, 0) + 1
+    return [f"{n} x {c}" for c, n in sorted(cuenta.items(), key=lambda x: -x[1])[:cuantas]]
 
 
 # Cuántas entidades se guardan por cada criterio en el extracto. Los rankings

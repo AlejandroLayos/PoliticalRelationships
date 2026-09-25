@@ -82,7 +82,7 @@ def test_parse_lee_los_campos_clave(conector, crudo):
 def test_parse_enlaza_con_el_crudo(conector, crudo):
     for r in conector.parse(crudo):
         assert r.raw_content_hash == crudo.content_hash
-        assert r.extractor_version == "placsp/1"
+        assert r.extractor_version == "placsp/2"
 
 
 def test_parse_es_puro(conector, crudo):
@@ -242,6 +242,53 @@ def test_el_contrato_referencia_a_su_organo(conector, crudo):
     # Sin importe: el dinero lo lleva el ContractAward y duplicarlo aquí lo
     # contaría dos veces.
     assert enlace.amount is None
+
+
+def test_el_organo_guarda_su_jerarquia_y_su_plataforma(conector, crudo):
+    # De la muestra real: un ayuntamiento colgado de «Entitats municipals de
+    # Catalunya» y con su perfil en la plataforma de la Generalitat. Es lo
+    # que la fuente dice de dónde es el órgano; clasificarlo es cosa del
+    # volcado (`territorio.py`).
+    n = _normalizado(conector, crudo)
+    organo = next(e for e in n.entidades if e.ftm_schema == "PublicBody")
+    assert organo.properties["jerarquia_placsp"] == ["Entitats municipals de Catalunya"]
+    assert organo.properties["perfil_contratante"].startswith(
+        "https://contractaciopublica.gencat.cat/"
+    )
+
+
+def test_la_jerarquia_se_lee_entera_y_de_lo_general_a_lo_concreto():
+    from xml.etree import ElementTree as ET
+
+    from sinapsis_ingest.connectors.placsp import _jerarquia
+
+    ns = NS["cac-place-ext"]
+    cac = NS["cac"]
+    cbc = NS["cbc"]
+
+    def padre(nombre, dentro=""):
+        return (
+            f'<ext:ParentLocatedParty xmlns:ext="{ns}" xmlns:cac="{cac}" xmlns:cbc="{cbc}">'
+            f"<cac:PartyName><cbc:Name>{nombre}</cbc:Name></cac:PartyName>{dentro}"
+            f"</ext:ParentLocatedParty>"
+        )
+
+    # El padre inmediato por fuera; el abuelo dentro; y un eslabón vacío al
+    # final, como cierra la fuente la cadena.
+    vacio = f'<ext:ParentLocatedParty xmlns:ext="{ns}"/>'
+    cadena = padre(
+        "Consejería de Salud", padre("Andalucía", padre("COMUNIDADES Y CIUDADES AUTÓNOMAS", vacio))
+    )
+    organo = ET.fromstring(
+        f'<ext:LocatedContractingParty xmlns:ext="{ns}">{cadena}</ext:LocatedContractingParty>'
+    )
+
+    assert _jerarquia(organo) == [
+        "COMUNIDADES Y CIUDADES AUTÓNOMAS",
+        "Andalucía",
+        "Consejería de Salud",
+    ]
+    assert _jerarquia(None) == []
 
 
 def test_el_contrato_conserva_cpv_y_expediente(conector, crudo):

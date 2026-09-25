@@ -1143,3 +1143,83 @@ def test_ninguna_clave_de_persona_fisica_se_publica(store, tmp_path):
     g = _exportado(store, tmp_path)
     crudo = json.dumps(g, ensure_ascii=False)
     assert "12345678Z" not in crudo
+
+
+# --- Territorio (fase 7, línea 1) ------------------------------------------
+
+
+def _organismo(store: Store, caption: str, jerarquia: list[str]) -> str:
+    """Un organismo con la jerarquía que guardan los conectores."""
+    fila = store.conn.execute(
+        """
+        INSERT INTO entities (ftm_schema, caption, dedupe_key, properties)
+        VALUES ('PublicBody', %s, %s, %s::jsonb) RETURNING id
+        """,
+        (
+            caption,
+            f"test:{uuid.uuid4()}",
+            json.dumps({"name": caption, "jerarquia_placsp": jerarquia}),
+        ),
+    ).fetchone()
+    assert fila is not None
+    return str(fila["id"])
+
+
+def test_cada_organismo_sale_con_su_nivel_y_su_comunidad(store, tmp_path):
+    junta = _organismo(
+        store, "Consejería de Salud", ["COMUNIDADES Y CIUDADES AUTÓNOMAS", "Andalucía"]
+    )
+    ministerio = _organismo(store, "Subsecretaría", ["ADMINISTRACIÓN GENERAL DEL ESTADO"])
+    empresa = _entidad(store, "SUMINISTROS SL")
+    _contrato(store, junta, empresa, "1000")
+    _contrato(store, ministerio, empresa, "500")
+    store.conn.commit()
+
+    grafo = _exportado(store, tmp_path)
+    por_caption = {n["caption"]: n for n in grafo["nodes"]}
+    assert por_caption["Consejería de Salud"]["territorio"] == "Andalucía"
+    assert por_caption["Consejería de Salud"]["nivel"] == "autonomico"
+    assert por_caption["Subsecretaría"]["nivel"] == "estatal"
+    assert "territorio" not in por_caption["Subsecretaría"]
+    # Una empresa no tiene territorio de administración.
+    assert "territorio" not in por_caption["SUMINISTROS SL"]
+
+
+def test_el_indice_reparte_lo_cobrado_por_la_comunidad_de_quien_paga(store, tmp_path):
+    # «Quién más cobra de la Junta de Andalucía», sin descargar aristas.
+    junta = _organismo(
+        store, "Consejería de Salud", ["COMUNIDADES Y CIUDADES AUTÓNOMAS", "Andalucía"]
+    )
+    ayto = _organismo(store, "Ajuntament de Sant Ramon", ["Entitats municipals de Catalunya"])
+    ministerio = _organismo(store, "Subsecretaría", ["ADMINISTRACIÓN GENERAL DEL ESTADO"])
+    empresa = _entidad(store, "SUMINISTROS SL")
+    _contrato(store, junta, empresa, "1000")
+    _contrato(store, junta, empresa, "200")
+    _contrato(store, ayto, empresa, "300")
+    _contrato(store, ministerio, empresa, "500")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    por_caption = {e["caption"]: e for e in idx["entidades"]}
+    reparto = por_caption["SUMINISTROS SL"]["recibidoDe"]
+    assert reparto == {"Andalucía": "1200.00", "Cataluña": "300.00"}
+    # Lo del Estado no se imputa a ninguna comunidad, pero sigue en el total.
+    assert por_caption["SUMINISTROS SL"]["recibido"] == "2000.00"
+
+    territorios = {t["nombre"]: t for t in idx["territorios"]}
+    assert territorios["Andalucía"] == {"nombre": "Andalucía", "organismos": 1, "pagado": "1200.00"}
+    assert idx["organismosEstatales"] == 1
+
+
+def test_lo_que_no_se_clasifica_se_cuenta_y_no_se_adivina(store, tmp_path):
+    raro = _organismo(store, "Servicio Andaluz de Salud", ["OTROS"])
+    empresa = _entidad(store, "SUMINISTROS SL")
+    _contrato(store, raro, empresa, "1000")
+    store.conn.commit()
+
+    idx = _indice(store, tmp_path)
+    por_caption = {e["caption"]: e for e in idx["entidades"]}
+    # Su nombre dice Andalucía; la fuente no. No se le pone.
+    assert "territorio" not in por_caption["Servicio Andaluz de Salud"]
+    assert "recibidoDe" not in por_caption["SUMINISTROS SL"]
+    assert idx["organismosSinTerritorio"] == 1

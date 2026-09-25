@@ -121,7 +121,7 @@ def test_se_puede_volver_de_la_arista_al_documento_original(store, conector):
     assert fila is not None, "no encuentro la concesión 1001"
     assert fila["amount"] == Decimal("50000.50")
     assert fila["currency"] == "EUR"
-    assert fila["extractor_version"] == "bdns/1"
+    assert fila["extractor_version"] == "bdns/2"
     assert len(fila["content_hash"]) == 64
 
 
