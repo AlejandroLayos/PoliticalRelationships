@@ -1173,9 +1173,11 @@ def test_el_organo_que_dirigio_pago_a_la_sociedad_donde_se_le_autorizo(store_oci
     assert float(del_organo["importe"]) == 250000
     assert del_organo["pagos"] == 1 and del_organo["adjudicaciones"] == 0
     assert del_organo["desde"] == "2016-03-01"
-    # Viaja con el cruce de la portada.
+    # Viaja con el cruce de la portada, y al panel de la sociedad.
     [cruce] = grafo["cargos"]["cruces"]
     assert float(cruce["delOrgano"][0]["importe"]) == 250000
+    [en_la_sociedad] = cargos["empresas"]["nif:A11111111"]
+    assert en_la_sociedad["delOrgano"][0]["organo"]["clave"] == "test:dgc-estado"
 
 
 @con_base

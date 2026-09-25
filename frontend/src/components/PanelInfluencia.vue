@@ -9,7 +9,7 @@
  */
 import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
-import { fechaCorta as fechaCortaCargo, tramo } from '../cargos.js'
+import { delOrganoEnPalabras, fechaCorta as fechaCortaCargo, tramo } from '../cargos.js'
 import { resumenEnPalabras } from '../influencia.js'
 import { administracionDe, colorTipo, etiquetaEsquema } from '../esquemas.js'
 import { fechaCorta, nombreDocumento, siglaFuente } from '../procedencia.js'
@@ -295,12 +295,19 @@ const sinDatos = computed(
               {{ a.cargoAnterior ? `antes, ${a.cargoAnterior.toLowerCase()}` : a.actividad }}
             </span>
             <span class="tramo-frente">{{ a.fecha ? fechaCortaCargo(a.fecha) : '' }}</span>
+            <!-- Si el órgano que dirigía pagó a esta sociedad: el hecho, al lado. -->
+            <span v-for="(d, k) in a.delOrgano ?? []" :key="k" class="del-organo-frente">
+              {{ d.organo.nombre }}, que dirigía, le {{ delOrganoEnPalabras(d).verbo }}
+              {{ [dineroCorto(d.importe), delOrganoEnPalabras(d).cuando].filter(Boolean).join(' ') }}
+            </span>
           </li>
         </ul>
         <p class="matiz">
           Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
           en el sector privado en los dos años siguientes al cese. Una
-          autorización no dice que la persona llegara a ocupar el puesto.
+          autorización no dice que la persona llegara a ocupar el puesto. Si el
+          órgano que dirigía pagó a esta sociedad, va al lado: dos hechos
+          documentados, y ninguno dice nada del otro.
         </p>
       </section>
 
@@ -482,12 +489,19 @@ const sinDatos = computed(
               {{ a.cargoAnterior ? `antes, ${a.cargoAnterior.toLowerCase()}` : a.actividad }}
             </span>
             <span class="tramo-frente">{{ a.fecha ? fechaCortaCargo(a.fecha) : '' }}</span>
+            <!-- Si el órgano que dirigía pagó a esta sociedad: el hecho, al lado. -->
+            <span v-for="(d, k) in a.delOrgano ?? []" :key="k" class="del-organo-frente">
+              {{ d.organo.nombre }}, que dirigía, le {{ delOrganoEnPalabras(d).verbo }}
+              {{ [dineroCorto(d.importe), delOrganoEnPalabras(d).cuando].filter(Boolean).join(' ') }}
+            </span>
           </li>
         </ul>
         <p class="matiz">
           Autorizaciones de la Oficina de Conflictos de Intereses para trabajar
           en el sector privado en los dos años siguientes al cese. Una
-          autorización no dice que la persona llegara a ocupar el puesto.
+          autorización no dice que la persona llegara a ocupar el puesto. Si el
+          órgano que dirigía pagó a esta sociedad, va al lado: dos hechos
+          documentados, y ninguno dice nada del otro.
         </p>
       </section>
 
@@ -959,6 +973,10 @@ h3 {
 .al-frente a { color: var(--tinta); font-weight: 600; }
 .cargo-frente { font-size: var(--t-xs); color: var(--tinta-2); }
 .tramo-frente { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); margin-left: auto; }
+.del-organo-frente {
+  flex-basis: 100%; font-size: var(--t-xs); color: var(--tinta-2);
+  padding-left: 0.5rem; border-left: 2px solid var(--adm); margin-top: 0.15rem;
+}
 .panel .nota { font-size: var(--t-s); margin-top: var(--e3); }
 .hueco { margin-top: var(--e5); }
 

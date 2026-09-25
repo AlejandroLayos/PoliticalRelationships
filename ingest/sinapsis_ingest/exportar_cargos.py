@@ -730,11 +730,25 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         cruces = [c for c, b in unida_a.items() if b == clave]
         for c in cruces:
             propias += [{**a, "cruce": "nombre y fecha de cese"} for a in autorizaciones.get(c, [])]
+        # Y la pregunta de las puertas giratorias, con dos hechos documentados
+        # uno al lado del otro: el órgano que la persona dirigió, ¿pagó a la
+        # sociedad en la que se le autorizó a trabajar? Sólo con los dos
+        # enlaces estrictos —el órgano por su nombre exacto, la sociedad por su
+        # denominación completa—; ninguno de los dos dice nada del otro.
+        con_organo = [p for p in ps if p.get("organo")]
         for a in propias:
             empresa = empresa_en(a["actividad"], empresas_mapa)
             if empresa is None:
                 continue
             a["empresa"] = empresa
+            for p in con_organo:
+                par = (p["organo"]["clave"], empresa["clave"])
+                if par not in dinero_cache:
+                    dinero_cache[par] = dinero_del_organo(store, *par)
+                if dinero_cache[par]:
+                    a.setdefault("delOrgano", []).append(
+                        {"organo": p["organo"], "cargo": p["cargo"], **dinero_cache[par]}
+                    )
             en_empresas.setdefault(empresa["clave"], []).append(
                 _serializable(
                     {
@@ -743,26 +757,12 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                         "actividad": a["actividad"],
                         "cargoAnterior": a.get("cargoAnterior", ""),
                         **({"fecha": a["fecha"]} if a.get("fecha") else {}),
+                        # Para el panel de la sociedad: si el órgano que
+                        # dirigía le pagó, se dice allí también.
+                        **({"delOrgano": a["delOrgano"]} if a.get("delOrgano") else {}),
                     }
                 )
             )
-        # Y la pregunta de las puertas giratorias, con dos hechos documentados
-        # uno al lado del otro: el órgano que la persona dirigió, ¿pagó a la
-        # sociedad en la que se le autorizó a trabajar? Sólo con los dos
-        # enlaces estrictos —el órgano por su nombre exacto, la sociedad por su
-        # denominación completa—; ninguno de los dos dice nada del otro.
-        con_organo = [p for p in ps if p.get("organo")]
-        for a in propias:
-            if not a.get("empresa"):
-                continue
-            for p in con_organo:
-                par = (p["organo"]["clave"], a["empresa"]["clave"])
-                if par not in dinero_cache:
-                    dinero_cache[par] = dinero_del_organo(store, *par)
-                if dinero_cache[par]:
-                    a.setdefault("delOrgano", []).append(
-                        {"organo": p["organo"], "cargo": p["cargo"], **dinero_cache[par]}
-                    )
         propias.sort(key=lambda a: a.get("fecha") or date.min, reverse=True)
         declaradas = list(declaraciones.get(clave, []))
         for c in cruces:
