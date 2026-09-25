@@ -340,3 +340,18 @@ def test_los_colectivos_son_candidatos_y_los_de_magistrados_no():
             "promoción por el turno de antigüedad."
         }
     )
+
+
+def test_pasado_el_tope_de_tiempo_no_se_piden_mas_dias(muestra, tmp_path):
+    """Con tope cero no se pide ningún día nuevo; lo que hay en caché, sí se lee."""
+    servidor = _Servidor(muestra)
+    rango = {"fecha_desde": date(2026, 9, 1), "fecha_hasta": date(2026, 9, 2)}
+    primera = list(_conector(servidor, cache=tmp_path).fetch(**rango))
+    n = len(servidor.peticiones)
+    segunda = list(
+        _conector(servidor, cache=tmp_path, tope_segundos=0).fetch(
+            **{**rango, "fecha_desde": date(2026, 8, 20)}
+        )
+    )
+    assert len(servidor.peticiones) == n, "con el tope agotado no se pide nada nuevo"
+    assert [d.content_hash for d in segunda] == [d.content_hash for d in primera]

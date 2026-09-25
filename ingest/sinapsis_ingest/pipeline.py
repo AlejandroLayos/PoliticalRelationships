@@ -148,6 +148,13 @@ def ejecutar(store: Store, conector: Any, **params: Any) -> Resultado:
 
     for raw in conector.fetch(**params):
         ingerir_documento(store, conector, raw, resultado)
+        # Cada documento se confirma al terminarlo. Antes todo iba en una
+        # transacción que se confirmaba al final del conector, y un paso que
+        # agotaba su tiempo en la ingesta nocturna perdía TODO lo leído en
+        # esa ejecución, no sólo lo que le faltaba. Cada documento ya es
+        # atómico por su cuenta —hechos y procedencia en la misma
+        # transacción—, así que confirmar aquí no rompe ninguna invariante.
+        store.conn.commit()
 
     log.info("ingesta terminada", fuente=conector.source_id, **resultado.resumen())
     return resultado

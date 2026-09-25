@@ -163,11 +163,18 @@ class BOEConnector:
         cache: Path | None = None,
         max_dias_nuevos: int | None = None,
         pausa: float = 0.3,
+        tope_segundos: float | None = None,
     ) -> None:
         self._cliente = cliente
         self._cache = cache
         self._max_dias_nuevos = max_dias_nuevos
         self._pausa = pausa
+        # Tiempo de red de una ejecución. Pasado, no se piden más días: lo que
+        # queda se lee de la caché y el resto, la noche siguiente. Es para
+        # terminar ANTES de que el trabajo nocturno corte el paso, que es
+        # peor: un corte a mitad no da tiempo a nada.
+        self._tope = tope_segundos
+        self._inicio = time.monotonic()
 
     # --- caché ------------------------------------------------------------
 
@@ -197,6 +204,8 @@ class BOEConnector:
             return json.loads(ruta.read_text(encoding="utf-8"))
 
         if self._max_dias_nuevos is not None and nuevos[0] >= self._max_dias_nuevos:
+            return None
+        if self._tope is not None and time.monotonic() - self._inicio > self._tope:
             return None
         nuevos[0] += 1
 
@@ -266,6 +275,7 @@ class BOEConnector:
             timeout=60.0, follow_redirects=True, headers=CABECERAS
         )
         propio = self._cliente is None
+        self._inicio = time.monotonic()
         nuevos = [0]
         sin_leer = 0
         try:
@@ -461,7 +471,9 @@ def crear() -> BOEConnector:
 
     cache = os.environ.get("SINAPSIS_CACHE_BOE")
     tope = os.environ.get("SINAPSIS_BOE_MAX_DIAS_NUEVOS")
+    minutos = os.environ.get("SINAPSIS_BOE_TOPE_MINUTOS")
     return BOEConnector(
         cache=Path(cache) if cache else None,
         max_dias_nuevos=int(tope) if tope else None,
+        tope_segundos=float(minutos) * 60 if minutos else None,
     )

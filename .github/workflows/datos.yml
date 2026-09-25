@@ -183,6 +183,10 @@ jobs:
         env:
           SINAPSIS_CACHE_BOE: /tmp/cache-boe
           SINAPSIS_BOE_MAX_DIAS_NUEVOS: "500"
+          # Por debajo del timeout del paso (30): el conector deja de pedir días
+          # nuevos a los 24 minutos y termina bien, en vez de que el paso lo
+          # corte a mitad.
+          SINAPSIS_BOE_TOPE_MINUTOS: "24"
         run: |
           # Desde el gobierno de diciembre de 2011: los dos partidos que han
           # gobernado desde entonces, con sus altos cargos entrando y saliendo.
