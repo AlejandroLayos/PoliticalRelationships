@@ -8,8 +8,10 @@ import PanelEntidad from './components/PanelEntidad.vue'
 import PanelInfluencia from './components/PanelInfluencia.vue'
 import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
+import Cargos from './components/Cargos.vue'
 import {
   buscarTodo,
+  cargarCargos,
   cargarIndice,
   cargarIndiceTop,
   cargarInstantanea,
@@ -21,6 +23,7 @@ import {
   vecinos,
 } from './api.js'
 import { ENTIDAD_INICIAL } from './demo.js'
+import { resultadosDeCargos } from './cargos.js'
 import { siglaFuente } from './procedencia.js'
 import { COLOR_POR_ESQUEMA, NOMBRE_ESQUEMA, NOMBRE_TIPO, colorTipo, tipoDe } from './esquemas.js'
 import { accionDeEstado, direccionDeVista, mismoEstado, vistaDeParametros } from './enlace.js'
@@ -60,6 +63,33 @@ const indice = ref(null)
 // para lo que sí hace bien: enseñar la forma y los grupos.
 const vista = ref('portada')
 const grafoEntero = ref(null)
+
+// --- cargos públicos --------------------------------------------------------
+// La sección de altos cargos (BOE). El fichero se pide al entrar en ella o al
+// buscar, nunca con la portada: quien no la abre no la paga.
+const cargos = ref(null)
+const cargandoCargos = ref(false)
+/** La persona abierta en la sección, por su clave estable, o ''. */
+const personaCargo = ref('')
+const hayCargos = computed(() => (instantanea.value?.cargos?.personas ?? 0) > 0)
+
+async function traerCargos() {
+  if (cargos.value || !hayCargos.value) return cargos.value
+  cargandoCargos.value = true
+  try {
+    cargos.value = await cargarCargos()
+  } finally {
+    cargandoCargos.value = false
+  }
+  return cargos.value
+}
+
+function verCargos(persona = '') {
+  vista.value = 'cargos'
+  personaCargo.value = persona
+  traerCargos()
+  window.scrollTo({ top: 0 })
+}
 // El mapa no se monta hasta que alguien lo pide: calcular núcleos y layout de
 // dos mil nodos son varios segundos de CPU, y hacerlos al cargar la portada
 // sería cobrárselos a todo el mundo para una vista que no todos abren. Una vez
@@ -395,8 +425,15 @@ watch(consulta, (q) => {
   temporizador = setTimeout(async () => {
     buscando.value = true
     try {
-      const r = await buscarTodo(q.trim())
-      resultados.value = r.results ?? []
+      const [r, deCargos] = await Promise.all([
+        buscarTodo(q.trim()),
+        // Las personas con cargo, al final y sólo por su nombre: quien
+        // escribe «hacienda» busca el ministerio, no a todos los que pasaron
+        // por él. Van aparte del resto porque no son entidades del mapa.
+        hayCargos.value ? traerCargos().then((c) => resultadosDeCargos(c, q.trim())) : [],
+      ])
+      if (consulta.value.trim() !== q.trim()) return
+      resultados.value = [...(r.results ?? []), ...deCargos]
       soloIndice.value = r.soloIndice ?? 0
       rotuloRelajado.value = r.rotuloRelajado ?? ''
     } finally {
@@ -436,6 +473,10 @@ function elegir(id) {
   const fila = resultados.value.find((r) => r.id === id)
   resultados.value = []
   consulta.value = ''
+  if (fila?.cargo) {
+    verCargos(fila.clave)
+    return Promise.resolve()
+  }
   // Buscando desde el mapa, lo que se quiere es ver DÓNDE está: la cámara va
   // a su grupo y la enciende, con su ficha a un botón. Si no está en ningún
   // grupo dibujado, se abre su ficha como siempre.
@@ -542,6 +583,9 @@ const claveSeleccionada = computed(() => {
 const estadoDeVista = computed(() => {
   const enMapa = vista.value === 'mapa'
   const destacada = enMapa && destacadoMapa.value ? claveDe((grafoEntero.value?.nodes ?? []).find((n) => n.id === destacadoMapa.value)) : ''
+  if (vista.value === 'cargos') {
+    return { vista: 'cargos', clave: '', ...(personaCargo.value ? { persona: personaCargo.value } : {}) }
+  }
   return {
     vista: vista.value,
     clave: claveSeleccionada.value,
@@ -564,7 +608,7 @@ watch(estadoDeVista, (ahora) => {
   history.pushState({ ...ahora }, '', direccionDeVista(ahora, location.pathname))
 })
 
-async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo }) {
+async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona }) {
   restaurando = true
   try {
     if (v === 'portada' || v === 'mapa') territorio.value = t ?? ''
@@ -585,6 +629,9 @@ async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo }) {
     switch (accionDeEstado({ vista: v, clave }, Boolean(nodo))) {
       case 'mapa':
         verMapa()
+        return
+      case 'cargos':
+        verCargos(persona ?? '')
         return
       case 'portada':
         volverAlMapa()
@@ -652,7 +699,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 </script>
 
 <template>
-  <div class="app" :class="{ desplaza: vista === 'portada' }">
+  <div class="app" :class="{ desplaza: vista === 'portada' || vista === 'cargos' }">
     <!--
       El aviso es permanente y no se puede cerrar mientras se estén enseñando
       datos que no vienen de una fuente real. Publicar un mapa de dinero
@@ -724,7 +771,15 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
               que hay de verdad en la edición, así que desaparece solo el día
               que entre el Registro Mercantil.
             -->
-            <p v-if="!hayVinculosDeControl" class="nota">
+            <p v-if="!hayVinculosDeControl && hayCargos" class="nota">
+              Esta edición lleva dinero público —adjudicaciones, subvenciones
+              y expedientes del Tribunal de Cuentas— y, aparte, los altos
+              cargos del Estado según el BOE. No lleva propiedad de empresas
+              ni consejos de administración, ni cruza a nadie de un lado con
+              el otro: no ver un vínculo aquí no significa que no exista,
+              sino que estas fuentes no lo publican.
+            </p>
+            <p v-else-if="!hayVinculosDeControl" class="nota">
               Esta edición sólo lleva dinero público —adjudicaciones,
               subvenciones y expedientes del Tribunal de Cuentas—. No lleva
               propiedad de empresas, cargos ni consejos de administración: no
@@ -811,7 +866,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
             </li>
             <li :id="`sug-${i}`">
             <button :class="{ resaltada: i === resaltado }" @click="elegir(r.id)">
-              <span class="punto" :style="{ background: colorTipo(r.schema) }" />
+              <span class="punto" :style="{ background: r.cargo ? 'var(--adm)' : colorTipo(r.schema) }" />
               <span class="nombre">{{ r.caption }}</span>
               <!--
                 La cifra, aquí. Sin ella, buscar «ayuntamiento de» devuelve
@@ -819,7 +874,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
                 para saber cuál es el que mueve dinero.
               -->
               <span v-if="mueve(r)" class="mueve">{{ dineroCorto(mueve(r)) }}</span>
-              <span class="tipo">
+              <span v-if="r.cargo" class="tipo">Alto cargo · {{ r.descripcion }}</span>
+              <span v-else class="tipo">
                 {{ NOMBRE_ESQUEMA[r.schema] ?? r.schema }}
                 <template v-if="r.territorio">· {{ r.territorio }}</template>
                 <!--
@@ -868,6 +924,12 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :aria-current="vista === 'mapa' ? 'page' : undefined"
           @click.prevent="verMapa"
         ><span class="ancho">Mapa del dinero</span><span class="estrecho">Mapa</span></a>
+        <a
+          v-if="hayCargos"
+          href="?v=cargos"
+          :aria-current="vista === 'cargos' ? 'page' : undefined"
+          @click.prevent="verCargos()"
+        ><span class="ancho">Altos cargos</span><span class="estrecho">Cargos</span></a>
       </nav>
     </header>
 
@@ -878,7 +940,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
       línea sin que se supiera cuáles llevaban a otra página y cuáles
       cambiaban el dibujo.
     -->
-    <div v-if="hayMapa && vista !== 'portada'" class="barra-vista">
+    <div v-if="hayMapa && vista !== 'portada' && vista !== 'cargos'" class="barra-vista">
       <template v-if="vista === 'mapa'">
         <!--
           En un teléfono los filtros van plegados: son ajustes, no la puerta,
@@ -1223,6 +1285,14 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         @ver-mapa="verMapa"
         @territorio="(t) => (territorio = t)"
       />
+      <Cargos
+        v-if="vista === 'cargos'"
+        class="portada-encima"
+        :datos="cargos"
+        :persona="personaCargo"
+        :cargando="cargandoCargos"
+        @persona="(c) => (personaCargo = c)"
+      />
     </main>
   </div>
 </template>
@@ -1244,7 +1314,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 .app.desplaza main { position: static; flex: none; }
 .app.desplaza .vista-grafo { display: none; }
 .app.desplaza .portada-encima { position: static; }
-.app.desplaza :deep(.portada) { height: auto; overflow: visible; }
+.app.desplaza :deep(.portada),
+.app.desplaza :deep(.cargos) { height: auto; overflow: visible; }
 /* Buscador y secciones siempre a mano, aunque la página sea larga. */
 .app.desplaza .cabecera { position: sticky; top: 0; z-index: 30; }
 

@@ -57,6 +57,9 @@ export async function cargarInstantanea() {
       fuentesConDatos: (datos.fuentes ?? []).filter((f) => (f.entidades ?? 1) > 0),
       fuentesSinDatos: (datos.fuentes ?? []).filter((f) => f.entidades === 0),
       importesSaneados: datos.importesSaneados ?? 0,
+      // Cuántos altos cargos trae la edición, para saber si hay sección sin
+      // descargar el fichero entero.
+      cargos: datos.cargos ?? { personas: 0, actos: 0 },
     }
     return _grafoEstatico
   } catch {
@@ -145,6 +148,32 @@ export async function cargarIndice() {
     })
   }
   return _cargandoIndice
+}
+
+/**
+ * Los altos cargos del Estado según el BOE (`cargos.json`).
+ *
+ * Se pide al entrar en la sección o al buscar, nunca al cargar la portada.
+ * `null` si esta edición no lo trae: la sección no se ofrece en vez de
+ * ofrecerse vacía.
+ */
+let _cargos = null
+let _cargandoCargos = null
+
+export async function cargarCargos() {
+  if (_cargos !== null) return _cargos
+  if (!_cargandoCargos) {
+    _cargandoCargos = fetch('/datos/cargos.json', { headers: { Accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((d) => {
+        _cargos = d?.personas ? d : null
+        // Un fallo no se queda cacheado: el siguiente intento vuelve a pedir.
+        if (_cargos === null) _cargandoCargos = null
+        return _cargos
+      })
+  }
+  return _cargandoCargos
 }
 
 export function indiceCargado() {

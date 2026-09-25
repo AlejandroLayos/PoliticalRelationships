@@ -62,7 +62,7 @@ export function nombreFuente(fuentes, id) {
  * entero está en el detalle. Una fuente sin sigla conocida sale con su
  * nombre, o con su identificador si tampoco hay nombre.
  */
-const SIGLAS = { bdns: 'BDNS', placsp: 'PLACSP', tcu: 'Tribunal de Cuentas' }
+const SIGLAS = { bdns: 'BDNS', placsp: 'PLACSP', tcu: 'Tribunal de Cuentas', boe: 'BOE' }
 
 export function siglaFuente(fuentes, id) {
   return SIGLAS[id] ?? nombreFuente(fuentes, id)

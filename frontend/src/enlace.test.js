@@ -152,3 +152,30 @@ describe('accionDeEstado', () => {
     expect(accionDeEstado({ vista: 'portada', clave: '' }, false)).toBe('portada')
   })
 })
+
+describe('los cargos públicos', () => {
+  it('van a su sección, con la persona en `p` y no en `e`', () => {
+    const estado = { vista: 'cargos', clave: '', persona: 'boe:persona:sara-hernandez-del-olmo' }
+    expect(direccionDeVista(estado)).toBe('/?v=cargos&p=boe%3Apersona%3Asara-hernandez-del-olmo')
+    expect(vistaDeParametros('?v=cargos&p=boe:persona:sara-hernandez-del-olmo')).toEqual(estado)
+  })
+
+  it('la sección sin persona también es un enlace', () => {
+    expect(direccionDeVista({ vista: 'cargos' })).toBe('/?v=cargos')
+    expect(vistaDeParametros('?v=cargos')).toEqual({ vista: 'cargos', clave: '' })
+  })
+
+  it('una edición o una entidad no se cuelan en la dirección de los cargos', () => {
+    const p = parametrosDeVista({ vista: 'cargos', clave: 'nif:A1', territorio: 'Andalucía' })
+    expect(p.toString()).toBe('v=cargos')
+  })
+
+  it('dos personas distintas son dos estados', () => {
+    expect(mismoEstado({ vista: 'cargos', persona: 'a' }, { vista: 'cargos', persona: 'b' })).toBe(false)
+    expect(mismoEstado({ vista: 'cargos', persona: 'a' }, { vista: 'cargos', persona: 'a' })).toBe(true)
+  })
+
+  it('se abre la sección aunque no lleve entidad', () => {
+    expect(accionDeEstado({ vista: 'cargos', clave: '' }, false)).toBe('cargos')
+  })
+})

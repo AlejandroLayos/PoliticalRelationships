@@ -257,6 +257,28 @@ await paso('elegir una comunidad cambia la portada y la dirección', async () =>
   await pagina.waitForTimeout(1000)
 })
 
+// Los altos cargos. Sólo si la edición los trae: hasta la primera ingesta
+// con el conector del BOE no los trae, y la sección no se ofrece.
+await paso('la sección de cargos abre una persona y deja un enlace que la reproduce', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(1500)
+  const enlace = pagina.locator('nav.secciones a[href="?v=cargos"]')
+  if (!(await enlace.count())) {
+    console.log('    (la edición no trae cargos todavía: no hay sección que probar)')
+    return
+  }
+  await enlace.click()
+  await pagina.waitForSelector('.cargos .personas li', { timeout: 15000 })
+  await pagina.click('.cargos .personas li:first-child .fila')
+  await pagina.waitForSelector('.cargos .ficha')
+  const direccion = pagina.url()
+  if (!direccion.includes('v=cargos') || !direccion.includes('p=')) throw new Error(`dirección: ${direccion}`)
+  const nombre = await pagina.locator('.ficha-nombre').innerText()
+  await pagina.goto(direccion, { waitUntil: 'networkidle' })
+  await pagina.waitForSelector('.cargos .ficha', { timeout: 15000 })
+  if ((await pagina.locator('.ficha-nombre').innerText()) !== nombre) throw new Error('el enlace abre otra persona')
+})
+
 // Aena no está en la base. Por subcadena salía una asociación de Baena como
 // primer resultado, e Intro llevaba a su ficha como si fuera lo buscado.
 await paso('buscar lo que no está dice que no está', async () => {

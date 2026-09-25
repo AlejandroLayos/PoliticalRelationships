@@ -29,8 +29,19 @@
  * pagan las administraciones andaluzas. Sólo en esas dos vistas; una ficha es
  * la misma se mire desde donde se mire.
  */
-export function parametrosDeVista({ vista, clave, territorio, destacada, grupo }) {
+export function parametrosDeVista({ vista, clave, territorio, destacada, grupo, persona }) {
   const p = new URLSearchParams()
+  /*
+    Los cargos públicos son otra sección con su propia clave (`p`, de
+    persona): una persona con cargo no es una entidad del mapa del dinero, y
+    mezclarlas en `e` haría que un enlace a un secretario de Estado intentara
+    abrir una ficha que no existe.
+  */
+  if (vista === 'cargos') {
+    p.set('v', 'cargos')
+    if (persona) p.set('p', persona)
+    return p
+  }
   if (vista === 'mapa') p.set('v', 'mapa')
   else if (vista === 'vecindario') p.set('v', 'red')
   if (clave && vista !== 'mapa') p.set('e', clave)
@@ -66,6 +77,10 @@ export function vistaDeParametros(busqueda) {
   const v = p.get('v') ?? ''
   const t = (p.get('t') ?? '').trim()
   const conTerritorio = t ? { territorio: t } : {}
+  if (v === 'cargos') {
+    const persona = (p.get('p') ?? '').trim()
+    return { vista: 'cargos', clave: '', ...(persona ? { persona } : {}) }
+  }
   if (v === 'mapa') {
     const g = p.get('g') ?? ''
     return {
@@ -87,7 +102,8 @@ export function mismoEstado(a, b) {
     (a.clave ?? '') === (b.clave ?? '') &&
     (a.territorio ?? '') === (b.territorio ?? '') &&
     (a.destacada ?? '') === (b.destacada ?? '') &&
-    (a.grupo ?? '') === (b.grupo ?? '')
+    (a.grupo ?? '') === (b.grupo ?? '') &&
+    (a.persona ?? '') === (b.persona ?? '')
   )
 }
 
@@ -103,10 +119,11 @@ export function mismoEstado(a, b) {
  *
  * @param {{vista: string, clave?: string}} estado lo que pide la dirección.
  * @param {boolean} existe si la clave corresponde a algo de esta instantánea.
- * @returns {'portada'|'mapa'|'vecindario'|'ficha'}
+ * @returns {'portada'|'mapa'|'cargos'|'vecindario'|'ficha'}
  */
 export function accionDeEstado({ vista, clave }, existe) {
   if (vista === 'mapa') return 'mapa'
+  if (vista === 'cargos') return 'cargos'
   if (vista === 'portada') return 'portada'
   // Un enlace a algo que ya no está en esta instantánea: la portada dice más
   // que una ficha vacía, y el buscador queda a mano.

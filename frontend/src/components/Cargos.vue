@@ -1,0 +1,484 @@
+<script setup>
+/**
+ * La sección de cargos públicos: quién ocupó qué alto cargo del Estado, y
+ * cuándo, con el Real Decreto de cada cosa a un clic.
+ *
+ * Es la única página de la web con nombres de personas, y lo dice arriba y
+ * con la regla: salen por haber ocupado un cargo público y sólo por eso
+ * (spec §12). Nada aquí habla de lo que alguien hizo antes o después.
+ *
+ * Lo que no se sabe se enseña como no sabido: un periodo sin cese es «no
+ * consta cese», no «sigue en el cargo»; uno sin nombramiento arranca en el
+ * borde del eje, deshilachado, no en una fecha inventada.
+ */
+import { computed, nextTick, ref, watch } from 'vue'
+import {
+  buscarCargos,
+  fechaCorta,
+  fechaLarga,
+  huecoDelPeriodo,
+  lineaDeTiempo,
+  marcasDeAnios,
+  movimientos,
+  organismos,
+  personaDeClave,
+  tramo,
+} from '../cargos.js'
+
+const props = defineProps({
+  /** `cargos.json`, o null mientras llega o si la edición no lo trae. */
+  datos: { type: Object, default: null },
+  /** La clave de la persona abierta, o ''. */
+  persona: { type: String, default: '' },
+  cargando: { type: Boolean, default: false },
+})
+const emit = defineEmits(['persona'])
+
+const filtro = ref('')
+const VISIBLES = 30
+const cuantas = ref(VISIBLES)
+watch(filtro, () => {
+  cuantas.value = VISIBLES
+})
+
+const abierta = computed(() => personaDeClave(props.datos, props.persona))
+const filtradas = computed(() => buscarCargos(props.datos, filtro.value))
+const ultimos = computed(() => movimientos(props.datos, 12))
+const porOrganismo = computed(() => organismos(props.datos, 6))
+
+const eje = computed(() => {
+  const p = abierta.value
+  if (!p || !props.datos) return { barras: [], marcas: [] }
+  return {
+    barras: lineaDeTiempo(p.periodos, props.datos.actosDesde, props.datos.actosHasta),
+    marcas: marcasDeAnios(props.datos.actosDesde, props.datos.actosHasta),
+  }
+})
+
+function abrir(clave) {
+  emit('persona', clave)
+}
+
+/*
+  La ficha se abre encima de las listas, debajo del titular. Sin llevarla a
+  la vista, pinchar un nombre al final de la lista —o llegar por un enlace en
+  un móvil— la abría fuera de la pantalla y parecía que no había pasado nada.
+  Se mira `abierta` y no la clave: en un enlace directo la clave llega antes
+  que los datos, y la ficha no existe hasta que llegan.
+*/
+const ficha = ref(null)
+watch(
+  () => abierta.value?.clave,
+  async (clave) => {
+    if (!clave) return
+    await nextTick()
+    ficha.value?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  },
+)
+
+const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
+</script>
+
+<template>
+  <div class="cargos">
+    <section class="primera">
+      <div class="apertura">
+        <p class="antetitulo">Cargos públicos · Boletín Oficial del Estado</p>
+        <h1 class="titular">Quién ha ocupado los altos cargos del Estado</h1>
+        <p v-if="datos" class="entradilla">
+          {{ datos.personas.length.toLocaleString('es-ES') }} personas nombradas o
+          cesadas por Real Decreto entre el {{ fechaLarga(datos.actosDesde) }} y el
+          {{ fechaLarga(datos.actosHasta) }}: ministros, secretarios de Estado,
+          subsecretarios, directores generales, embajadores y quien preside o
+          dirige un organismo público.
+        </p>
+        <p v-else-if="cargando" class="entradilla">Cargando los cargos…</p>
+        <p v-else class="entradilla">Esta edición no trae cargos públicos.</p>
+      </div>
+      <!--
+        La regla, arriba y no en la letra pequeña. En el resto de la web no
+        sale ninguna persona física, y quien llega aquí desde allí tiene que
+        saber por qué aquí sí.
+      -->
+      <aside class="por-que" aria-label="Por qué aquí hay nombres">
+        <p class="antetitulo">Por qué aquí hay nombres</p>
+        <p>
+          En el resto de esta web no sale ninguna persona física. Aquí sí, y
+          sólo con lo que publica el BOE: quién fue nombrado para qué cargo y
+          cuándo cesó. Ocupar un cargo público es un hecho público.
+        </p>
+        <p class="nota">
+          Nada de esta página dice nada de lo que alguien hizo antes o después
+          del cargo.
+        </p>
+      </aside>
+    </section>
+
+    <!-- La ficha de una persona, encima de todo lo demás. -->
+    <article v-if="abierta" ref="ficha" class="ficha" aria-live="polite">
+      <header class="ficha-cabeza">
+        <p class="antetitulo">Alto cargo</p>
+        <h2 class="ficha-nombre">{{ abierta.nombre }}</h2>
+        <button class="boton tenue" @click="emit('persona', '')">← Todos los cargos</button>
+      </header>
+
+      <!--
+        El eje va de lo primero a lo último leído del BOE, no de la vida de
+        la persona. Lo que queda fuera de lo leído no se dibuja como sabido.
+      -->
+      <!--
+        Sólo con años que marcar: un eje de tres semanas es una raya con una
+        mota al final, que no enseña nada que no digan las fechas.
+      -->
+      <figure
+        v-if="eje.barras.length && eje.marcas.length"
+        class="eje"
+        aria-hidden="true"
+        :style="{ height: `${1.9 + eje.barras.length * 0.9}rem` }"
+      >
+        <span
+          v-for="m in eje.marcas"
+          :key="m.anio"
+          class="eje-marca"
+          :class="{ borde: m.x < 0.04 }"
+          :style="{ left: `${m.x * 100}%` }"
+        >{{ m.anio }}</span>
+        <span
+          v-for="(b, i) in eje.barras"
+          :key="i"
+          class="eje-barra"
+          :class="{ izq: b.abiertoIzquierda, der: b.abiertoDerecha }"
+          :style="{
+            left: `${b.inicio * 100}%`,
+            width: `max(3px, ${(b.fin - b.inicio) * 100}%)`,
+            top: `${1.6 + i * 0.9}rem`,
+          }"
+          :title="b.periodo.cargo"
+        />
+        <!--
+          El número de cada barra, el mismo que el de su periodo en la lista
+          de debajo: detrás de la barra, o delante si la barra llega al final.
+        -->
+        <span
+          v-for="(b, i) in eje.barras"
+          :key="`n${i}`"
+          class="eje-num"
+          :class="{ delante: b.fin > 0.9 }"
+          :style="{
+            left: b.fin > 0.9 ? `${b.inicio * 100}%` : `${b.fin * 100}%`,
+            top: `${1.6 + i * 0.9}rem`,
+          }"
+        >{{ String(i + 1).padStart(2, '0') }}</span>
+      </figure>
+
+      <ol class="periodos">
+        <li v-for="(p, i) in abierta.periodos" :key="i" class="periodo">
+          <span class="puesto-num">{{ String(i + 1).padStart(2, '0') }}</span>
+          <div class="periodo-cuerpo">
+            <p class="periodo-cargo">{{ p.cargo }}</p>
+            <p v-if="p.organismo" class="periodo-organismo">{{ p.organismo }}</p>
+            <p class="periodo-tramo">
+              <span class="tramo">{{ tramo(p) }}</span>
+              <span v-if="huecoDelPeriodo(p)" class="hueco">· {{ huecoDelPeriodo(p) }}</span>
+            </p>
+            <p class="periodo-fuentes">
+              <a v-if="p.urlDesde" :href="p.urlDesde" target="_blank" rel="noopener" class="sello">
+                Nombramiento · {{ p.boeDesde }}
+              </a>
+              <a v-if="p.urlHasta" :href="p.urlHasta" target="_blank" rel="noopener" class="sello">
+                Cese · {{ p.boeHasta }}
+              </a>
+              <span v-if="p.motivoCese" class="motivo">{{ p.motivoCese }}</span>
+            </p>
+          </div>
+        </li>
+      </ol>
+      <p class="nota ficha-pie">
+        Dos personas con el mismo nombre y los mismos apellidos se juntarían en
+        esta ficha: el BOE no publica ningún identificador en un nombramiento.
+        Cada periodo lleva su Real Decreto para comprobarlo.
+      </p>
+    </article>
+
+    <div v-if="datos" class="rejilla">
+      <section class="seccion">
+        <header class="seccion-cabeza">
+          <p class="antetitulo">Personas</p>
+          <h2>{{ filtradas.length.toLocaleString('es-ES') }} con cargo</h2>
+        </header>
+        <label class="filtro">
+          <span class="visualmente-oculto">Buscar entre los cargos</span>
+          <input
+            v-model="filtro"
+            type="search"
+            placeholder="Una persona, un cargo o un ministerio"
+          />
+        </label>
+        <ol class="personas">
+          <li v-for="p in filtradas.slice(0, cuantas)" :key="p.clave">
+            <button
+              class="fila"
+              :class="{ actual: p.clave === persona }"
+              @click="abrir(p.clave)"
+            >
+              <span class="nombre">{{ p.nombre }}</span>
+              <span class="ultimo">
+                {{ p.periodos[0]?.cargo }}
+                <span class="cuando">· {{ tramo(p.periodos[0] ?? {}) }}</span>
+              </span>
+              <span v-if="p.periodos.length > 1" class="mas-cargos">
+                y {{ p.periodos.length - 1 }}
+                {{ p.periodos.length - 1 === 1 ? 'cargo más' : 'cargos más' }}
+              </span>
+            </button>
+          </li>
+        </ol>
+        <p v-if="!filtradas.length" class="nota">
+          Nadie con «{{ filtro.trim() }}» en lo leído del BOE.
+        </p>
+        <button v-if="filtradas.length > cuantas" class="mas" @click="cuantas += VISIBLES * 2">
+          Ver más ({{ (filtradas.length - cuantas).toLocaleString('es-ES') }} restantes)
+        </button>
+      </section>
+
+      <aside class="lateral">
+        <section class="seccion">
+          <header class="seccion-cabeza">
+            <p class="antetitulo">Lo último publicado</p>
+            <h2>Nombramientos y ceses</h2>
+          </header>
+          <ol class="movimientos">
+            <li v-for="(a, i) in ultimos" :key="i" class="movimiento">
+              <p class="mov-linea">
+                <span class="mov-fecha">{{ fechaCorta(a.fecha) }}</span>
+                <span class="mov-verbo" :class="a.tipo">{{ verbo(a) }}</span>
+              </p>
+              <p class="mov-texto">
+                <a href="#" @click.prevent="abrir(a.persona.clave)">{{ a.persona.nombre }}</a>,
+                {{ a.periodo.cargo }}
+              </p>
+              <a v-if="a.url" :href="a.url" target="_blank" rel="noopener" class="sello">{{ a.boe }}</a>
+            </li>
+          </ol>
+        </section>
+
+        <section v-if="porOrganismo.length" class="seccion">
+          <header class="seccion-cabeza">
+            <p class="antetitulo">Dónde</p>
+            <h2>Organismos con más movimientos</h2>
+          </header>
+          <ul class="lista">
+            <li v-for="o in porOrganismo" :key="o.nombre">
+              <a href="#" @click.prevent="filtro = o.nombre">{{ o.nombre }}</a>
+              <span class="cifra">{{ o.actos }}</span>
+            </li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+
+    <footer class="metodo">
+      <h2>Cómo se hace esta sección</h2>
+      <p>
+        Cada noche se leen los sumarios del BOE y, de su sección II.A, los
+        Reales Decretos que nombran o cesan a una persona en un alto cargo de
+        la Ley 3/2015. De cada uno se guarda la disposición entera, que es la
+        prueba. Fiscales, jueces y militares también se nombran por Real
+        Decreto; son carreras profesionales y no salen.
+      </p>
+      <p>
+        Lo que no se lee: los ceses colectivos de un gobierno, que no dicen a
+        quién ni de qué; los nombramientos por orden ministerial; y los
+        gobiernos autonómicos, que publican en sus propios boletines. Por eso
+        un periodo puede no tener cese: quiere decir que no consta en lo
+        leído, no que la persona siga en el cargo.
+      </p>
+    </footer>
+  </div>
+</template>
+
+<style scoped>
+.cargos {
+  overflow-y: auto; height: 100%;
+  padding: var(--e6) var(--e5) var(--e8);
+}
+.cargos > * { max-width: 78rem; margin-left: auto; margin-right: auto; }
+
+.primera {
+  display: grid; gap: var(--e6) var(--e7);
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+  align-items: end;
+}
+.titular {
+  font-size: var(--t-titular); line-height: 1.04; letter-spacing: -0.022em;
+  font-weight: 600; margin: 0; max-width: 20ch;
+}
+.entradilla {
+  font-family: var(--serif); font-size: var(--t-l); line-height: 1.5;
+  color: var(--tinta-2); margin: var(--e4) 0 0; max-width: 52ch;
+}
+.por-que { border-top: 2px solid var(--filete); padding-top: var(--e3); }
+.por-que p:not(.antetitulo) {
+  font-size: var(--t-s); line-height: 1.5; color: var(--tinta-2); margin: var(--e2) 0 0;
+}
+.por-que .nota { color: var(--tinta); }
+
+/* --- La ficha ------------------------------------------------------------ */
+
+.ficha {
+  margin-top: var(--e7); padding: var(--e5) 0 var(--e4);
+  /* La cabecera es fija: sin margen, el nombre quedaría debajo de ella. */
+  scroll-margin-top: 8rem;
+  border-top: 3px solid var(--filete); border-bottom: 1px solid var(--filete-suave);
+}
+.ficha-cabeza {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end;
+  gap: var(--e2) var(--e4);
+}
+.ficha-cabeza .antetitulo { grid-column: 1 / -1; color: var(--adm); }
+.ficha-nombre {
+  font-family: var(--serif); font-size: var(--t-h1); line-height: 1.1;
+  font-weight: 600; margin: 0;
+}
+
+/*
+  El eje: una pista con los años y una barra por periodo. Lo que no se sabe
+  se deshilacha: un periodo sin nombramiento entra desde el borde con un
+  degradado, uno sin cese se sale por el otro lado con el trazo punteado.
+*/
+.eje {
+  position: relative; margin: var(--e5) 0 var(--e3);
+  border-top: 1px solid var(--filete-suave);
+}
+.eje-marca {
+  position: absolute; top: 0.2rem; transform: translateX(-50%);
+  font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3);
+}
+.eje-marca.borde { transform: none; }
+.eje-marca.borde::before { left: 0; }
+.eje-marca::before {
+  content: ''; position: absolute; left: 50%; top: -0.45rem; height: 0.35rem;
+  border-left: 1px solid var(--filete-medio);
+}
+.eje-barra {
+  position: absolute; height: 0.5rem; background: var(--adm); border-radius: 1px;
+}
+.eje-num {
+  position: absolute; margin-top: -0.28rem; padding: 0 0.35rem;
+  font-family: var(--mono); font-size: 0.6875rem; line-height: 1; color: var(--tinta-3);
+}
+.eje-num.delante { transform: translateX(-100%); }
+.eje-barra.izq {
+  background: linear-gradient(to right, transparent, var(--adm) 2.5rem);
+}
+.eje-barra.der {
+  background:
+    repeating-linear-gradient(to right, var(--adm) 0 6px, transparent 6px 9px) right / 2.5rem 100% no-repeat,
+    linear-gradient(to right, var(--adm), var(--adm)) left / calc(100% - 2.5rem) 100% no-repeat;
+}
+.eje-barra.izq.der {
+  background: repeating-linear-gradient(to right, var(--adm) 0 6px, transparent 6px 9px);
+}
+
+.periodos { list-style: none; margin: var(--e4) 0 0; padding: 0; }
+.periodo {
+  display: grid; grid-template-columns: 1.8rem minmax(0, 1fr); gap: var(--e2);
+  padding: var(--e3) 0; border-top: 1px solid var(--filete-suave);
+}
+.periodo .puesto-num { padding-top: 0.25rem; }
+.periodo-cuerpo p { margin: 0; }
+.periodo-cargo { font-family: var(--serif); font-size: var(--t-l); line-height: 1.3; color: var(--tinta); }
+.periodo-organismo { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.15rem !important; }
+.periodo-tramo { font-size: var(--t-s); margin-top: 0.3rem !important; }
+.tramo { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta); }
+.hueco { font-style: italic; color: var(--tinta-3); margin-left: 0.3em; }
+.periodo-fuentes {
+  display: flex; flex-wrap: wrap; gap: var(--e2); align-items: center; margin-top: var(--e2) !important;
+}
+.periodo-fuentes a.sello, .movimiento a.sello { text-decoration: none; }
+.periodo-fuentes a.sello:hover, .movimiento a.sello:hover { text-decoration: underline; }
+.motivo { font-size: var(--t-xs); color: var(--tinta-3); font-style: italic; }
+.ficha-pie { font-size: var(--t-s); margin: var(--e4) 0 0; max-width: var(--medida); }
+
+/* --- Listas -------------------------------------------------------------- */
+
+.rejilla {
+  display: grid; gap: var(--e7); margin-top: var(--e7);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+}
+.lateral { display: grid; gap: var(--e7); }
+.seccion { border-top: 3px solid var(--filete); padding-top: var(--e3); min-width: 0; }
+.seccion-cabeza h2 { font-size: var(--t-h2); margin: 0 0 var(--e3); }
+
+.filtro input {
+  width: 100%; font: inherit; font-size: var(--t-m); color: var(--tinta);
+  background: var(--hoja); border: 1px solid var(--filete-medio); border-radius: var(--radio);
+  padding: 0.55rem 0.7rem; margin-bottom: var(--e3);
+}
+.filtro input:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
+.visualmente-oculto {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.personas { list-style: none; margin: 0; padding: 0; }
+.fila {
+  width: 100%; display: flex; flex-direction: column; gap: 0.15rem;
+  background: none; border: none; border-bottom: 1px solid var(--filete-suave);
+  color: inherit; font: inherit; text-align: left;
+  padding: 0.6rem var(--e2); margin: 0 calc(-1 * var(--e2)); cursor: pointer;
+  border-radius: var(--radio-s);
+}
+.fila:hover, .fila:focus-visible { background: var(--papel-2); outline: none; }
+.fila:focus-visible { box-shadow: inset 0 0 0 2px var(--tinta); }
+.fila.actual { background: var(--papel-2); box-shadow: inset 3px 0 0 var(--adm); }
+.nombre { font-size: var(--t-m); font-weight: 600; color: var(--tinta); }
+.fila:hover .nombre { text-decoration: underline; text-underline-offset: 0.18em; text-decoration-color: var(--filete-medio); }
+.ultimo { font-size: var(--t-s); color: var(--tinta-2); line-height: 1.4; }
+.cuando { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); }
+.mas-cargos { font-size: var(--t-xs); color: var(--tinta-3); }
+
+.mas {
+  display: block; width: 100%; margin: var(--e3) 0 0; padding: 0.55rem;
+  background: none; border: none; color: var(--tinta); font: inherit; font-size: var(--t-s);
+  font-weight: 600; cursor: pointer; text-decoration: underline;
+  text-decoration-color: var(--filete-medio); text-underline-offset: 0.18em;
+}
+
+.movimientos { list-style: none; margin: 0; padding: 0; }
+.movimiento { padding: 0.6rem 0; border-bottom: 1px solid var(--filete-suave); }
+.movimiento p { margin: 0; }
+.mov-linea { display: flex; gap: var(--e2); align-items: baseline; }
+.mov-fecha { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); }
+.mov-verbo {
+  font-size: var(--t-xs); font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.mov-verbo.nombramiento { color: var(--adm); }
+.mov-verbo.cese { color: var(--tinta-3); }
+.mov-texto { font-size: var(--t-s); line-height: 1.45; color: var(--tinta-2); margin: 0.2rem 0 0.35rem !important; }
+.mov-texto a { color: var(--tinta); font-weight: 600; }
+
+.lista { list-style: none; margin: 0; padding: 0; }
+.lista li {
+  display: flex; justify-content: space-between; gap: var(--e3); align-items: baseline;
+  padding: 0.4rem 0; border-bottom: 1px solid var(--filete-suave); font-size: var(--t-s);
+}
+.lista a { color: var(--tinta); }
+.cifra { font-variant-numeric: tabular-nums; font-weight: 650; }
+
+.metodo { margin-top: var(--e8); padding-top: var(--e4); border-top: 3px double var(--filete); }
+.metodo h2 { font-size: var(--t-h3); margin: 0 0 var(--e3); }
+.metodo p {
+  font-size: var(--t-s); color: var(--tinta-2); line-height: 1.6;
+  max-width: var(--medida); margin: 0 0 var(--e3);
+}
+
+@media (max-width: 900px) {
+  .primera, .rejilla { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .cargos { padding: var(--e5) var(--e4) var(--e7); }
+  .ficha-cabeza { grid-template-columns: 1fr; }
+  .ficha-cabeza .boton { justify-self: start; }
+}
+</style>
