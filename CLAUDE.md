@@ -131,7 +131,18 @@ cd ingest && pytest
   test roto el 25/9/2026. Con `set -o pipefail` delante, o sin tubería. Y la
   batería ENTERA antes de empujar, no sólo los ficheros tocados: el mismo día,
   unos XML nuevos que trajo el reconocimiento rompieron un test de otro
-  fichero que nadie había vuelto a pasar.
+  fichero que nadie había vuelto a pasar. Lo mismo con `;`: `comprobar;
+  git commit` commitea aunque la comprobación falle. Pasó con un script
+  que no compilaba.
+- **Dos nombres que se comparan pasan por la MISMA normalización.** El
+  conector de la OCI dejaba el guion y el volcado lo juntaba, así que
+  «Pérez-Castejón» no casaba con «Pérez-Castejón»: ningún apellido
+  compuesto se unía, y Pedro Sánchez no llegaba a su escaño. Lo cazó un test
+  de punta a punta con las muestras reales, no los unitarios, que usaban
+  nombres sin guion. En `exportar_cargos.py` todo pasa por `_plano`.
+- **La caché del BOE sólo guarda candidatos de la sección II.A**, no el
+  sumario entero (minimizar es no guardar). Lo que haga falta de otras
+  secciones se pide aparte.
 - **Los datos de fuentes nuevas se miran en la CI, no se suponen.** El entorno
   de desarrollo no alcanza boe.es, transparencia.gob.es ni ine.es; el flujo
   «Reconocer fuente» sí, y commitea lo que ve (`docs/fuentes/*-reconocimiento.md`)
