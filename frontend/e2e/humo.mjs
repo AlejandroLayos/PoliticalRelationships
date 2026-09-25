@@ -124,31 +124,56 @@ await paso('conexiones dibuja el vecindario', async () => {
   if (!(await pagina.locator('.panel h3', { hasText: 'Conexiones' }).count())) throw new Error('sin panel')
 })
 
-await paso('el mapa del dinero dibuja sus bloques', async () => {
+await paso('el mapa del dinero dibuja sus grupos', async () => {
   await pagina.click('text=Mapa del dinero')
   await pagina.waitForTimeout(ESPERA_MAPA)
-  const n = await pagina.locator('.bloque').count()
-  if (n < 5) throw new Error(`${n} bloques`)
+  const n = await pagina.locator('svg .grupo').count()
+  if (n < 5) throw new Error(`${n} grupos`)
 })
 
-await paso('todo bloque dibujado lleva nombre', async () => {
-  const sinNombre = await pagina.evaluate(() =>
-    [...document.querySelectorAll('.bloque')].filter((b) => !b.querySelector('.nombre')).length,
-  )
-  if (sinNombre) throw new Error(`${sinNombre} bloques mudos`)
+// Un círculo que se ve y no dice cuál es no lleva a su fila de la lista.
+await paso('todo grupo que se ve lleva su número', async () => {
+  const { visibles, rotulos } = await pagina.evaluate(() => ({
+    visibles: [...document.querySelectorAll('svg .grupo .contorno')].filter(
+      (c) => c.getBoundingClientRect().width >= 22,
+    ).length,
+    rotulos: document.querySelectorAll('.rotulo .numero').length,
+  }))
+  if (rotulos < visibles) throw new Error(`${visibles - rotulos} grupos sin número`)
 })
 
-await paso('entrar en un grupo dibuja su red', async () => {
-  await pagina.locator('.bloque').first().click()
-  await pagina.waitForTimeout(ESPERA_MAPA)
+await paso('entrar en un grupo enseña a los de dentro', async () => {
+  await pagina.locator('svg .grupo').first().click()
+  await pagina.waitForTimeout(2000)
   if (!(await pagina.innerText('body')).includes('Todos los grupos')) throw new Error('no entró')
+  const n = await pagina.locator('svg .grupo.dentro .miembro').count()
+  if (n < 5) throw new Error(`${n} entidades dentro`)
+})
+
+await paso('pasar por una entidad dibuja sus caminos', async () => {
+  const cajas = await pagina.locator('svg .grupo.dentro .miembro').evaluateAll((els) =>
+    els.map((e) => e.getBoundingClientRect()).map((r) => ({ x: r.x, y: r.y, w: r.width, h: r.height })),
+  )
+  const mayor = cajas.sort((a, b) => b.w * b.h - a.w * a.h)[0]
+  await pagina.mouse.move(mayor.x + mayor.w / 2, mayor.y + mayor.h / 2)
+  await pagina.waitForTimeout(800)
+  if (!(await pagina.locator('.camino').count())) throw new Error('sin caminos')
+  await pagina.mouse.move(5, 5)
+})
+
+await paso('el grupo también se ve como red', async () => {
+  await pagina.click('.modo button:has-text("Red")')
+  await pagina.waitForTimeout(ESPERA_MAPA)
   if (!(await pagina.locator('canvas').count())) throw new Error('sin lienzo')
+  await pagina.click('.modo button:has-text("Círculos")')
+  await pagina.waitForTimeout(800)
 })
 
 await paso('volver a todos los grupos', async () => {
   await pagina.click('text=Todos los grupos')
-  await pagina.waitForTimeout(3000)
-  if ((await pagina.locator('.bloque').count()) < 5) throw new Error('no volvió')
+  await pagina.waitForTimeout(2000)
+  if (await pagina.locator('svg .grupo.dentro').count()) throw new Error('sigue dentro')
+  if ((await pagina.locator('svg .grupo').count()) < 5) throw new Error('no volvió')
 })
 
 await paso('el botón de atrás del navegador retrocede', async () => {
@@ -171,7 +196,7 @@ await paso('buscar y elegir con el teclado', async () => {
 await paso('un enlace directo a un mapa lleva al mapa', async () => {
   await pagina.goto(`${URL}?v=mapa`, { waitUntil: 'networkidle' })
   await pagina.waitForTimeout(ESPERA_MAPA)
-  if ((await pagina.locator('.bloque').count()) < 5) throw new Error('cayó en la portada')
+  if ((await pagina.locator('svg .grupo').count()) < 5) throw new Error('cayó en la portada')
 })
 
 await paso('el botón de la portada abre el mapa', async () => {
@@ -179,7 +204,7 @@ await paso('el botón de la portada abre el mapa', async () => {
   await pagina.waitForTimeout(ESPERA_MAPA)
   await pagina.click('text=Abrir el mapa del dinero')
   await pagina.waitForTimeout(3000)
-  if ((await pagina.locator('.bloque').count()) < 5) throw new Error('no abrió el mapa')
+  if ((await pagina.locator('svg .grupo').count()) < 5) throw new Error('no abrió el mapa')
 })
 
 // Aena no está en la base. Por subcadena salía una asociación de Baena como

@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import FlujoDinero from './components/FlujoDinero.vue'
 import GrafoRed from './components/GrafoRed.vue'
-import MapaDinero from './components/MapaDinero.vue'
+import MapaCirculos from './components/MapaCirculos.vue'
 import MapaNucleos from './components/MapaNucleos.vue'
 import PanelEntidad from './components/PanelEntidad.vue'
 import PanelInfluencia from './components/PanelInfluencia.vue'
@@ -66,8 +66,17 @@ const grafoEntero = ref(null)
 const mapaPedido = ref(false)
 const nucleos = ref([])
 const nucleoEnfocado = ref(null)
-/** El grupo por el que pasa el ratón, en el mapa de bloques o en su lista. */
+/** El grupo por el que pasa el ratón, en el mapa o en su lista. */
 const nucleoSenalado = ref(null)
+/** La entidad por la que pasa el ratón en la lista del grupo abierto. */
+const miembroSenalado = ref(null)
+/** Dentro de un grupo, verlo como red de nodos en vez de como círculos. */
+const verRed = ref(false)
+// Al salir de un grupo se vuelve a los círculos: la red sólo existe dentro.
+watch(nucleoEnfocado, (n) => {
+  miembroSenalado.value = null
+  if (n === null) verRed.value = false
+})
 /** En estrecho los filtros del mapa nacen plegados; en ancho no se pliegan. */
 const filtrosAbiertos = ref(false)
 const minImporte = ref(0)
@@ -96,13 +105,13 @@ function alAnalizar({ nucleos: n }) {
 const hayMapa = computed(() => Boolean(grafoEntero.value?.nodes?.length))
 
 /**
- * Las vistas de red van en el visor oscuro (docs/diseno.md §5): los nodos se
- * iluminan al pasar, y una luz sólo se ve sobre negro. El mapa de bloques y
- * la ficha son papel: se leen, no se exploran.
+ * Las vistas que se exploran van en el visor oscuro (docs/diseno.md §5): el
+ * mapa y las conexiones, donde las cosas se iluminan al pasar, y una luz sólo
+ * se ve sobre negro. La portada y la ficha son papel: se leen.
  */
 const enVisor = computed(
   () =>
-    (vista.value === 'mapa' && nucleoEnfocado.value !== null) ||
+    vista.value === 'mapa' ||
     vista.value === 'vecindario' ||
     (!hayMapa.value && vista.value !== 'ficha'),
 )
@@ -822,32 +831,34 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           vistas se dibujan ENCIMA.
         -->
         <!--
-          Dos mapas, y el orden importa.
+          El mapa es UNO: círculos que contienen a su gente, y una cámara que
+          entra en ellos (MapaCirculos). Antes eran dos vistas pegadas —unos
+          bloques estáticos y, al pulsar, otra pantalla con un diagrama de
+          nodos— y entre las dos se perdía de dónde se venía.
 
-          La puerta es el de bloques: un bloque por grupo, el área es el
-          dinero, el nombre va escrito dentro. El de nodos dibujaba las 2.428
-          entidades a la vez, y un diagrama de nodos se lee hasta unos cien —
-          se afinaron tamaños, opacidades y rótulos tres veces y seguía siendo
-          una mancha, porque el problema no era el ajuste sino la cantidad.
-
-          El de nodos no se va: se entra en él al pulsar un bloque, y entonces
-          dibuja UN grupo —cincuenta entidades— que es donde sí se lee y donde
-          la pregunta «quién está conectado con quién» tiene respuesta.
+          El diagrama de nodos del grupo se queda como otra forma de mirar lo
+          mismo —«Red», en la banda del grupo—: para seguir cadenas largas de
+          conexiones sigue siendo mejor.
         -->
-        <MapaDinero
-          v-if="hayMapa && mapaPedido && nucleoEnfocado === null"
+        <MapaCirculos
+          v-if="hayMapa && mapaPedido"
+          v-show="!(verRed && nucleoEnfocado !== null)"
           :datos="grafoEntero"
           :min-importe="minImporte"
           :mostrar-expedientes="mostrarExpedientes"
+          :mostrar-sueltos="mostrarSueltos"
           :solo-extranjero="soloExtranjero"
           :solo-partidos="soloPartidos"
+          :nucleo-enfocado="nucleoEnfocado"
           :senalado="nucleoSenalado"
+          :miembro-senalado="miembroSenalado"
           @abrir="(n) => (nucleoEnfocado = n)"
+          @seleccionar="enfocar"
           @analizado="alAnalizar"
           @senalar="(n) => (nucleoSenalado = n)"
         />
         <MapaNucleos
-          v-else-if="hayMapa && mapaPedido"
+          v-if="hayMapa && mapaPedido && verRed && nucleoEnfocado !== null"
           class="bajo-banda"
           :datos="grafoEntero"
           :seleccion="seleccionId"
@@ -859,7 +870,6 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :solo-partidos="soloPartidos"
           :activo="vista === 'mapa'"
           @seleccionar="enfocar"
-          @analizado="alAnalizar"
         />
         <FlujoDinero
           v-if="vista === 'ficha'"
@@ -908,6 +918,14 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
             {{ nucleoAbierto.etiqueta }}
             <span class="cifra">{{ dineroCorto(nucleoAbierto.dinero) }} · {{ nucleoAbierto.tamano }} entidades</span>
           </span>
+          <!--
+            Dos formas de mirar el mismo grupo. Círculos: quién pesa cuánto y
+            con quién se paga cada uno. Red: las cadenas de conexiones.
+          -->
+          <div class="modo" role="group" aria-label="Cómo ver el grupo">
+            <button :aria-pressed="!verRed" @click="verRed = false">Círculos</button>
+            <button :aria-pressed="verRed" @click="verRed = true">Red</button>
+          </div>
         </div>
         <!--
           El recuento se va al pie en la vista de bloques: arriba a la
@@ -963,7 +981,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           `esquemasEnPantalla`, que mira los datos del vecindario y en esta
           vista viene vacío — la leyenda no salía.
         -->
-        <div v-else-if="nucleoEnfocado !== null" class="leyenda">
+        <div v-else-if="nucleoEnfocado !== null && verRed" class="leyenda">
           <span v-for="t in tiposDelGrupo" :key="t.color">
             <i :style="{ background: t.color }" />
             {{ t.nombre }}
@@ -971,9 +989,9 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           <span>El tamaño es el dinero</span>
         </div>
         <!--
-          La explicación del mapa de bloques ya no va aquí: era una placa
-          encima de la esquina de abajo y tapaba los bloques que caían en
-          ella. Es el pie de gráfico de MapaDinero, arriba y fuera del dibujo.
+          La explicación del mapa no va aquí: era una placa encima de la
+          esquina de abajo y tapaba lo que caía en ella. Es el pie de gráfico
+          de MapaCirculos, arriba y fuera del dibujo, con su propia leyenda.
         -->
 
         <p v-if="vista !== 'mapa' || nucleoEnfocado !== null" class="ayuda">
@@ -1012,6 +1030,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         @enfocar="(n) => (nucleoEnfocado = n)"
         @seleccionar="enfocar"
         @senalar="(n) => (nucleoSenalado = n)"
+        @senalar-miembro="(id) => (miembroSenalado = id)"
       />
       <PanelEntidad
         v-else
@@ -1315,6 +1334,16 @@ main { flex: 1; position: relative; min-height: 0; }
   border: 1px solid var(--filete-medio); border-radius: var(--radio); padding: 0.35rem 0.7rem;
 }
 .salir:hover { border-color: var(--tinta); }
+.modo {
+  margin-left: auto; display: inline-flex; border: 1px solid var(--filete-medio); border-radius: var(--radio);
+  overflow: hidden; flex: none;
+}
+.modo button {
+  font: inherit; font-size: var(--t-xs); font-weight: 600; padding: 0.3rem 0.7rem; cursor: pointer;
+  background: none; border: none; color: var(--tinta-2);
+}
+.modo button + button { border-left: 1px solid var(--filete-medio); }
+.modo button[aria-pressed='true'] { background: var(--tinta); color: var(--papel); }
 .nombre-grupo {
   font-family: var(--serif); font-size: var(--t-h3); font-weight: 600; color: var(--tinta);
   min-width: 0;

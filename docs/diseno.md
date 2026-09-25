@@ -39,7 +39,7 @@ Consecuencias:
 - **Un enlace es tinta subrayada**, no azul. Si fuera azul se leería como una
   empresa.
 - **El orden se dice con un número, no con un color.** El mapa numera sus
-  bloques (01, 02…) y la lista de al lado lleva los mismos números. Ocho
+  grupos (01, 02…) y la lista de al lado lleva los mismos números. Ocho
   colores para ocho grupos obligaban a casar tonos parecidos de memoria, y
   además chocaban con los tres de tipo.
 - **En el flujo de una ficha, la cinta lleva el color de la contraparte**: lo
@@ -69,9 +69,10 @@ expediente. Es la promesa del proyecto hecha visible.
 
 ## 5. El visor
 
-Las vistas de red se abren en un **visor** oscuro encajado en la página, como
-una lámina: es donde los nodos se iluminan al pasar por encima, y una luz sólo
-se ve sobre negro. `.visor` redefine los mismos tokens, así que un componente
+Lo que se explora —el mapa y las conexiones— se abre en un **visor** oscuro
+encajado en la página, como una lámina: es donde las cosas se iluminan al
+pasar por encima, y una luz sólo se ve sobre negro. Lo que se lee —la portada
+y la ficha— es papel. `.visor` redefine los mismos tokens, así que un componente
 no necesita saber si está en papel o dentro del visor.
 
 El lienzo de Sigma pinta con WebGL y no lee CSS: usa `COLOR_POR_ESQUEMA`
@@ -81,6 +82,24 @@ aristas (ver `color.js`).
 Dentro del visor, **un expediente es un papel, no un actor**: va pequeño, gris
 y sin rótulo fijo, y su título sale al pasar por encima. Los rótulos son para
 los actores —quién paga, quién cobra—, que es lo que se viene a leer.
+
+### El mapa
+
+Es un solo dibujo con cámara (`MapaCirculos.vue`, cuenta en `mapa.js`):
+
+- **Cada grupo es un círculo y dentro está su gente**, cada entidad del color
+  de su tipo. Desde fuera ya se ve de qué está hecho un grupo.
+- **El área es el dato en los dos niveles**: el valor de una entidad es su
+  dinero dentro del grupo, y el círculo del grupo suma el de los suyos. Los
+  grupos diminutos se dibujan con un tamaño mínimo **y con el borde a
+  trazos**, para que se note que están agrandados.
+- **Entrar es un viaje, no un cambio de pantalla**: la cámara vuela hasta el
+  grupo (`interpolateZoom` de d3) y se sabe de dónde se viene.
+- **Pasar por una entidad dibuja sus caminos** desde quien paga hasta quien
+  cobra, del color de quien paga, y por ellos corre el dinero en ese sentido.
+  Si se dibujan menos de los que hay, se dice.
+- En táctil, el primer toque señala y enseña una tarjeta; el segundo, o su
+  botón, abre la ficha. Con teclado, el foco hace de ratón y Escape sale.
 
 ## 6. Decir lo que no es
 

@@ -21,7 +21,7 @@ const props = defineProps({
   /** El grupo señalado en el mapa, para resaltar su fila. */
   senalado: { type: Number, default: null },
 })
-const emit = defineEmits(['enfocar', 'seleccionar', 'senalar'])
+const emit = defineEmits(['enfocar', 'seleccionar', 'senalar', 'senalarMiembro'])
 
 /*
   El mismo número que el bloque del mapa, y por el mismo orden: el de esta
@@ -95,7 +95,14 @@ function resumenTipos(tipos) {
 
         <ul v-if="enfocado === n.id" class="miembros">
           <li v-for="m in n.principales" :key="m.id">
-            <button class="miembro" @click="emit('seleccionar', m.id)">
+            <button
+              class="miembro"
+              @click="emit('seleccionar', m.id)"
+              @mouseenter="emit('senalarMiembro', m.id)"
+              @mouseleave="emit('senalarMiembro', null)"
+              @focus="emit('senalarMiembro', m.id)"
+              @blur="emit('senalarMiembro', null)"
+            >
               <span class="nombre">{{ m.caption }}</span>
               <span class="dinero">{{ dineroCorto(m.dinero) }}</span>
             </button>
