@@ -252,6 +252,12 @@ func (s *Store) nodos(ctx context.Context, ids []uuid.UUID, depth int) ([]GraphN
 
 // SearchEntities busca entidades por nombre. Es la puerta de entrada de la
 // interfaz: se busca una entidad y desde ahí se expande el vecindario.
+//
+// Casa desde el principio de una palabra, no en cualquier punto: por
+// subcadena, «Aena» devolvía una asociación de Baena. El primer LIKE es el
+// que aprovecha el índice trigram; el segundo descarta lo que cae a media
+// palabra. `caption_normalizado` sólo lleva [a-z0-9] y espacios sueltos, así
+// que un espacio delante es un principio de palabra.
 func (s *Store) SearchEntities(ctx context.Context, q string, limite int) ([]GraphNode, error) {
 	if limite <= 0 || limite > 100 {
 		limite = 25
@@ -261,6 +267,7 @@ func (s *Store) SearchEntities(ctx context.Context, q string, limite int) ([]Gra
 		FROM entities
 		WHERE canonical_id IS NULL
 		  AND caption_normalizado LIKE '%' || sinapsis_normalizar_nombre($1) || '%'
+		  AND ' ' || caption_normalizado LIKE '% ' || sinapsis_normalizar_nombre($1) || '%'
 		ORDER BY length(caption)
 		LIMIT $2`
 

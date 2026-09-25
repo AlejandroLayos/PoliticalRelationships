@@ -317,3 +317,37 @@ func TestSearchEntitiesNoDevuelveFusionadas(t *testing.T) {
 		}
 	}
 }
+
+func TestSearchEntitiesCasaDesdeElPrincipioDePalabra(t *testing.T) {
+	// Por subcadena, «Aena» devolvía una asociación de Baena. Aena no estaba
+	// en la base, así que era el primer resultado y parecía el bueno.
+	st := nuevoStoreDePrueba(t)
+	ctx := context.Background()
+	for i, caption := range []string{
+		"ASOC PARA EL DESARROLLO INTEGRAL DE LAS PERSONAS EN BAENA ADIBAE",
+		"Hospital Universitario de Móstoles",
+		"D.G.DE POLÍTICA INTERIOR",
+	} {
+		if _, err := st.UpsertEntity(ctx, Entity{
+			FtmSchema: "Company", Caption: caption, DedupeKey: "k:p" + string(rune('a'+i)),
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	casos := map[string]int{
+		"aena":      0, // a media palabra
+		"mostol":    1, // escrito a medias, desde el principio
+		"politica":  1, // la puntuación parte palabras
+		"de mostol": 1,
+	}
+	for q, quiero := range casos {
+		res, err := st.SearchEntities(ctx, q, 10)
+		if err != nil {
+			t.Fatalf("buscando %q: %v", q, err)
+		}
+		if len(res) != quiero {
+			t.Errorf("buscando %q hay %d resultados, quería %d", q, len(res), quiero)
+		}
+	}
+}

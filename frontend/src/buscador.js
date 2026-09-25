@@ -72,6 +72,30 @@ export function analizarConsulta(q) {
 }
 
 /**
+ * ¿Está `trozo` en `nombre` empezando en principio de palabra?
+ *
+ * Por subcadena, «Aena» encontraba «asociación … en BAENA» y, como Aena no
+ * está en la base, era el primer resultado: pulsar Intro llevaba a la ficha
+ * de una asociación de Córdoba. Un resultado equivocado presentado como el
+ * bueno es peor que ninguno. Desde el principio de palabra sigue valiendo lo
+ * que la gente escribe a medias —«móstol», «ferrov»—, que es para lo que
+ * servía la subcadena.
+ *
+ * Ambos ya normalizados. Principio de palabra es el principio del nombre o
+ * lo que va detrás de algo que no es letra ni cifra: «D.G.DE» parte en «de».
+ */
+export function empiezaPalabra(nombre, trozo) {
+  if (!trozo) return false
+  let desde = 0
+  for (;;) {
+    const i = nombre.indexOf(trozo, desde)
+    if (i < 0) return false
+    if (i === 0 || !/[\p{L}\p{N}]/u.test(nombre[i - 1])) return true
+    desde = i + 1
+  }
+}
+
+/**
  * Cuánto se parece `caption` a la consulta ya analizada. 0 es «no se parece».
  *
  * @param {string} caption
@@ -80,9 +104,10 @@ export function analizarConsulta(q) {
 export function gradoDeCoincidencia(caption, consulta) {
   if (!consulta.frase) return 0
   const nombre = normaliza(caption)
-  if (nombre.includes(consulta.frase)) return 3
-  if (consulta.todas.every((p) => nombre.includes(p))) return 2
-  if (consulta.distintivas.length && consulta.distintivas.every((p) => nombre.includes(p))) return 1
+  const esta = (p) => empiezaPalabra(nombre, p)
+  if (esta(consulta.frase)) return 3
+  if (consulta.todas.every(esta)) return 2
+  if (consulta.distintivas.length && consulta.distintivas.every(esta)) return 1
   return 0
 }
 

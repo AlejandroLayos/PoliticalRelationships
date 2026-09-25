@@ -10,6 +10,8 @@
  * grafo tiene ciclos y hay que visitar cada nodo una vez.
  */
 
+import { empiezaPalabra } from './buscador.js'
+
 export function normaliza(t) {
   return (t || '')
     .toLowerCase()
@@ -27,9 +29,9 @@ export function crearGrafoLocal(datos) {
   const porId = new Map(nodos.map((n) => [n.id, n]))
 
   function buscar(q, limite = 25) {
-    const aguja = normaliza(q)
+    const aguja = normaliza(q).trim().replace(/\s+/g, ' ')
     const results = nodos
-      .filter((n) => normaliza(n.caption).includes(aguja))
+      .filter((n) => empiezaPalabra(normaliza(n.caption), aguja))
       .sort((a, b) => (b.degree ?? 0) - (a.degree ?? 0) || a.caption.length - b.caption.length)
       .slice(0, limite)
       .map((n) => ({ ...n, depth: 0 }))

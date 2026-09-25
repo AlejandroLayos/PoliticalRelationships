@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { analizarConsulta, gradoDeCoincidencia, rotuloRelajado } from './buscador.js'
+import { analizarConsulta, empiezaPalabra, gradoDeCoincidencia, rotuloRelajado } from './buscador.js'
 
 const grado = (caption, q) => gradoDeCoincidencia(caption, analizarConsulta(q))
 
@@ -46,6 +46,29 @@ describe('gradoDeCoincidencia', () => {
 
   it('las siglas societarias no distinguen', () => {
     expect(analizarConsulta('acciona sa').distintivas).toEqual(['acciona'])
+  })
+})
+
+describe('empiezaPalabra', () => {
+  it('no encuentra una palabra dentro de otra', () => {
+    // Aena no está en la base: por subcadena salía una asociación de Baena
+    // como primer resultado, e Intro llevaba a su ficha.
+    expect(empiezaPalabra('asoc para el desarrollo en baena adibae', 'aena')).toBe(false)
+    expect(gradoDeCoincidencia('ASOC … EN BAENA ADIBAE', analizarConsulta('Aena'))).toBe(0)
+  })
+
+  it('vale lo escrito a medias, desde el principio de la palabra', () => {
+    expect(empiezaPalabra('hospital universitario de mostoles', 'mostol')).toBe(true)
+    expect(gradoDeCoincidencia('Ferrovial Construcción, S.A.', analizarConsulta('ferrov'))).toBe(3)
+  })
+
+  it('la puntuación también parte palabras', () => {
+    expect(empiezaPalabra('d.g.de politica interior', 'politica')).toBe(true)
+    expect(empiezaPalabra('d.g.de politica interior', 'de politica')).toBe(true)
+  })
+
+  it('sigue buscando si la primera aparición cae dentro de otra palabra', () => {
+    expect(empiezaPalabra('baena y aena', 'aena')).toBe(true)
   })
 })
 

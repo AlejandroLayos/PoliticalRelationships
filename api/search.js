@@ -1,6 +1,11 @@
 import { db, json, error, aNodo, sinBaseDeDatos } from './_lib.js'
 
-/** GET /api/search?q=…&limit=… */
+/**
+ * GET /api/search?q=…&limit=…
+ *
+ * Desde el principio de palabra, como `SearchEntities` en Go y `buscador.js`
+ * en la web: por subcadena, «Aena» devolvía una asociación de Baena.
+ */
 export default async function handler(req, res) {
   const q = (req.query.q || '').trim()
   if (q.length < 3) return error(res, 400, 'q debe tener al menos 3 caracteres')
@@ -15,6 +20,7 @@ export default async function handler(req, res) {
       FROM entities
       WHERE canonical_id IS NULL
         AND caption_normalizado LIKE '%' || sinapsis_normalizar_nombre(${q}) || '%'
+        AND ' ' || caption_normalizado LIKE '% ' || sinapsis_normalizar_nombre(${q}) || '%'
       ORDER BY length(caption)
       LIMIT ${limite}`
     json(res, 200, { results: filas.map((f) => aNodo(f)) })
