@@ -186,7 +186,11 @@ jobs:
         timeout-minutes: 30
         env:
           SINAPSIS_CACHE_BOE: /tmp/cache-boe
-          SINAPSIS_BOE_MAX_DIAS_NUEVOS: "500"
+          # La primera noche, 500 días tardaron 7,5 minutos (~0,9 s por día).
+          # 1.300 caben de sobra en el tope de abajo, y los quince años desde
+          # 2011 se completan en cuatro noches en vez de en once. Si el BOE va
+          # lento, el tope corta antes y no pasa nada.
+          SINAPSIS_BOE_MAX_DIAS_NUEVOS: "1300"
           # Por debajo del timeout del paso (30): el conector deja de pedir días
           # nuevos a los 24 minutos y termina bien, en vez de que el paso lo
           # corte a mitad.
