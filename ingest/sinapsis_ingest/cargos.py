@@ -87,13 +87,17 @@ class Acto:
 
 _CABEZA = re.compile(
     r"^Real Decreto (?P<numero>\d+/(?P<anio>\d{4})), de (?P<dia>\d{1,2}) de (?P<mes>[a-z]+)"
-    r"(?: de \d{4})?, por (?:el|la) que se (?P<resto>.+?)\.?\s*$",
+    # «por el que dispone», sin «se», también sale en el BOE: una errata de
+    # origen que no cambia lo que dice.
+    r"(?: de \d{4})?, por (?:el|la) que (?:se )?(?P<resto>.+?)\.?\s*$",
     re.IGNORECASE,
 )
 
 _TRATAMIENTO = r"(?:don|doña|D\.|D\.ª|Dña\.)"
 
-_NOMBRA = re.compile(rf"^nombra (?P<cargo>.+?) a {_TRATAMIENTO} (?P<nombre>.+)$")
+# «Designa» se usa para algunos puestos de representación permanente, y es un
+# nombramiento a todos los efectos.
+_NOMBRA = re.compile(rf"^(?:nombra|designa) (?P<cargo>.+?) a {_TRATAMIENTO} (?P<nombre>.+)$")
 
 # Lo que el BOE añade detrás del cargo en un cese. Sólo lo conocido: si viene
 # otra cosa detrás de una coma, puede ser parte del nombre del cargo —«Ministra
@@ -111,7 +115,9 @@ _MOTIVOS = (
 _MOTIVO = "(?:" + "|".join(_MOTIVOS) + ")"
 
 _CESE = re.compile(
-    rf"^dispone el cese(?:, (?P<motivo_antes>{_MOTIVO}),)? de {_TRATAMIENTO} (?P<nombre>.+?)"
+    # El «de» es opcional porque el BOE a veces se lo come («se dispone el
+    # cese doña Anunciación…»).
+    rf"^dispone el cese(?:, (?P<motivo_antes>{_MOTIVO}),)?(?: de)? {_TRATAMIENTO} (?P<nombre>.+?)"
     rf" como (?P<cargo>.+?)(?:,? (?P<motivo_despues>{_MOTIVO}(?:, {_MOTIVO})*))?$"
 )
 
@@ -119,8 +125,10 @@ _CESE = re.compile(
 _PARTICULAS = frozenset({"de", "del", "la", "las", "los", "y", "i", "e", "da", "do", "dos", "van"})
 
 # Una palabra de un nombre: empieza por mayúscula y sigue con letras, y admite
-# apellidos compuestos con guion o apóstrofo («Martínez-Pardo», «D'Ors»).
-_PALABRA_NOMBRE = re.compile(r"^[A-ZÁÉÍÓÚÑÜÇ][a-záéíóúñüçàèòïl·'\u2019A-ZÁÉÍÓÚÑÜÇ.-]*$")
+# apellidos compuestos con guion o apóstrofo («Martínez-Pardo», «D'Ors»). El
+# BOE escribe el apóstrofo de tres maneras —recta, curva y con el acento agudo
+# suelto (U+00B4) en «D'Olhaberriague»— y abrevia María como «Mª».
+_PALABRA_NOMBRE = re.compile(r"^[A-ZÁÉÍÓÚÑÜÇ][a-záéíóúñüçàèòïl·ªº'\u2019\u00b4A-ZÁÉÍÓÚÑÜÇ.-]*$")
 
 
 def _es_nombre(texto: str) -> bool:
@@ -209,6 +217,9 @@ _MASCULINO = {
     "interventora": "Interventor",
     "abogada": "Abogado",
     "consejera": "Consejero",
+    "consejera delegada": "Consejero Delegado",
+    "directora adjunta": "Director Adjunto",
+    "vicesecretaria": "Vicesecretario",
     "jefa": "Jefe",
     "vicepresidenta primera": "Vicepresidente primero",
     "vicepresidenta segunda": "Vicepresidente segundo",
@@ -244,6 +255,8 @@ _ALTOS_CARGOS = tuple(
         r"^secretario general\b",
         r"^director general\b",
         r"^director (de|del)\b",
+        r"^director adjunto (de|del)\b",
+        r"^vicesecretario general\b",
         r"^delegado del gobierno\b",
         r"^comisionado\b",
         r"^alto comisionado\b",
@@ -252,6 +265,8 @@ _ALTOS_CARGOS = tuple(
         r"^enviado especial\b",
         r"^presidente (de|del)\b",
         r"^vicepresidente (de|del)\b",
+        r"^vicepresidente ejecutivo\b",
+        r"^consejero delegado\b",
         r"^gobernador del banco de espana\b",
         r"^subgobernador del banco de espana\b",
         r"^interventor general\b",
@@ -268,7 +283,10 @@ _CARRERAS = re.compile(
     r"\b(fiscal|fiscalia|magistrad[oa]|juez|jueza|juzgado|audiencia|tribunal supremo"
     r"|tribunal superior de justicia|sala de lo|escuela judicial|poder judicial"
     r"|general de brigada|general de division|teniente general|almirante"
-    r"|registrador|notari)"
+    # «Notario» y «registrador» son la persona; «Dirección General de los
+    # Registros y del Notariado» es un alto cargo, y la regla vieja —«notari»
+    # a secas— la tachaba.
+    r"|\bregistrador|\bnotari[oa]s?\b)"
 )
 
 

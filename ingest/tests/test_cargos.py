@@ -186,3 +186,98 @@ def test_la_muestra_real_separa_fiscales_de_altos_cargos():
     assert "Directora General de Financiación Internacional" in altos
     assert fuera, "la muestra trae fiscales y ninguno debería pasar"
     assert all("Fiscal" in c for c in fuera), fuera
+
+
+# --- El histórico: días de cambio de gobierno (2011, 2018) -------------------
+
+# Lo que se deja sin leer A PROPÓSITO, por su forma. Si aparece un título sin
+# leer que no encaja en ninguna, es una forma nueva y hay que mirarla: por eso
+# esto es una lista cerrada y no un porcentaje.
+_SIN_LEER_A_PROPOSITO = (
+    "se nombran Ministros",  # colectivo: los nombres van en el cuerpo
+    "asuma las funciones",  # encarga una función a quien ya tiene cargo
+    "se promueve al empleo",  # ascensos militares
+    "se confiere",  # representación de la Corona
+    "se declara la jubilación",
+    "del General",  # militares: el empleo va delante del nombre
+    "del Teniente General",
+    "al Almirante",
+    "al General",
+)
+
+
+def test_el_historico_se_lee_entero_salvo_lo_que_no_se_lee_a_proposito():
+    titulos = _titulos("boe_altos_cargos_historico.json")
+    sin_leer = [
+        t
+        for t in titulos
+        if leer_titulo(t) is None and not any(f in t for f in _SIN_LEER_A_PROPOSITO)
+    ]
+    assert not sin_leer, sin_leer
+
+
+@pytest.mark.parametrize(
+    ("titulo", "nombre", "cargo"),
+    [
+        (
+            # Apóstrofo escrito con el acento agudo suelto.
+            "Real Decreto 1863/2011, de 23 de diciembre, por el que se dispone el cese de doña "
+            "Isabel Aymerich D\u00b4Olhaberriague como Directora del Gabinete del Ministro "
+            "de Educación.",
+            "Isabel Aymerich D\u00b4Olhaberriague",
+            "Directora del Gabinete del Ministro de Educación",
+        ),
+        (
+            # El BOE se comió el «de».
+            "Real Decreto 1969/2011, de 30 de diciembre, por el que se dispone el cese doña "
+            "Anunciación Romero González como Secretaria General de Vivienda.",
+            "Anunciación Romero González",
+            "Secretaria General de Vivienda",
+        ),
+        (
+            "Real Decreto 1991/2011, de 30 de diciembre, por el que se dispone el cese de doña "
+            "Mª del Pilar Pin Vega como Directora General de la Ciudadanía Española en el "
+            "Exterior.",
+            "Mª del Pilar Pin Vega",
+            "Directora General de la Ciudadanía Española en el Exterior",
+        ),
+        (
+            # Y aquí, el «se».
+            "Real Decreto 567/2018, de 18 de junio, por el que dispone el cese de doña Elena "
+            "Collado Martínez como Secretaria de Estado de Función Pública.",
+            "Elena Collado Martínez",
+            "Secretaria de Estado de Función Pública",
+        ),
+        (
+            "Real Decreto 1925/2011, de 30 de diciembre, por el que se designa Embajador "
+            "Representante Permanente de España ante la Unión Europea a don Alfonso María "
+            "Dastis Quecedo.",
+            "Alfonso María Dastis Quecedo",
+            "Embajador Representante Permanente de España ante la Unión Europea",
+        ),
+    ],
+)
+def test_formas_reales_del_historico(titulo, nombre, cargo):
+    a = leer_titulo(titulo)
+    assert a is not None
+    assert (a.nombre, a.cargo) == (nombre, cargo)
+    assert es_alto_cargo(a.cargo)
+
+
+@pytest.mark.parametrize(
+    "cargo",
+    [
+        # La regla vieja de carreras la tachaba por «notari».
+        "Directora General de los Registros y del Notariado",
+        "Director Adjunto del Gabinete de la Presidencia del Gobierno",
+        "Vicepresidente Ejecutivo del Instituto Español de Comercio Exterior (ICEX)",
+        "Consejera Delegada del Instituto Español de Comercio Exterior (ICEX)",
+        "Vicesecretario General de la Presidencia del Gobierno",
+    ],
+)
+def test_altos_cargos_del_historico(cargo):
+    assert es_alto_cargo(cargo)
+
+
+def test_puesto_de_dos_palabras():
+    assert puesto("Consejera Delegada del ICEX") == "Consejero Delegado del ICEX"

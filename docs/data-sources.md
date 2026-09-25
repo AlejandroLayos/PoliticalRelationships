@@ -270,6 +270,57 @@ para lo reciente pero no para cargar el histórico.
 
 ---
 
+## 2.bis BOE — nombramientos y ceses de altos cargos
+
+**Aporta:** quién ocupó qué alto cargo de la Administración General del Estado
+y cuándo: ministros, secretarios de Estado, subsecretarios, secretarios
+generales, directores generales, delegados del Gobierno, embajadores y quien
+preside o dirige un organismo o empresa pública. Es la primera pieza de las
+puertas giratorias (spec §15, fase 7).
+
+**Acceso:** API de datos abiertos del BOE, sin registro.
+
+- Sumario diario: `https://www.boe.es/datosabiertos/api/boe/sumario/AAAAMMDD`
+  (JSON). Llega al menos a 2011; los días sin BOE devuelven 404.
+- Cada disposición: `https://www.boe.es/diario_boe/xml.php?id=BOE-A-…` (XML con
+  `metadatos`, `analisis` y `texto`).
+- Forma verificada con muestras reales: `docs/fuentes/boe-reconocimiento.md` y
+  `ingest/tests/golden/boe_*`.
+
+**Qué se lee.** De la sección II.A, los Reales Decretos cuyo título sigue la
+fórmula «por el que se nombra X a don/doña Y» o «por el que se dispone el cese
+de don/doña Y como X». Lo que no sigue la fórmula no se interpreta (ver
+`ingest/sinapsis_ingest/cargos.py`). Sólo se descarga y se guarda lo que es
+alto cargo según la Ley 3/2015: fiscales, jueces y militares también se
+nombran por Real Decreto, pero son carreras y no llegan a la base.
+
+**Base legal (spec §12).** Los nombramientos se publican en el BOE por
+mandato legal para general conocimiento. Tratar el nombre de un alto cargo en
+relación con su cargo es tratamiento de datos de quien ejerce funciones
+públicas, con base en el interés público (art. 6.1.e RGPD) y en la Ley
+19/2013 de transparencia, que obliga a publicar la información sobre altos
+cargos. Se publica sólo el nombre, el cargo, las fechas y el Real Decreto: ni
+el tratamiento (don/doña), ni la firma, ni nada del cuerpo de la disposición.
+
+**Límites conocidos:**
+
+- Los ceses colectivos de un gobierno y los nombramientos de ministros van en
+  un solo Real Decreto con varios nombres en el cuerpo. Todavía no se leen.
+- Una persona se identifica por su nombre: el BOE no publica ningún
+  identificador en un nombramiento. Dos homónimos exactos se juntarían.
+- Sólo el Estado. Los gobiernos autonómicos publican en sus boletines.
+
+**Mapeo a FollowTheMoney:**
+
+```
+persona (Person) --Occupancy--> puesto (Position) --UnknownLink--> departamento (PublicBody)
+```
+
+Una `Occupancy` por disposición: el nombramiento lleva `start_date`, el cese
+`end_date`, y el volcado los junta en periodos (`exportar_cargos.py`).
+
+---
+
 ## 3. BORME — Boletín Oficial del Registro Mercantil
 
 **Aporta:** actos societarios inscritos — constituciones, ceses y nombramientos

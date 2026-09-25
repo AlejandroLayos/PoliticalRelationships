@@ -149,6 +149,60 @@ jobs:
             ejecutar "$c" --desde "$D" --hasta "$H" --max-paginas "$P"
           done
 
+      # Los altos cargos del BOE (fase 7, puertas giratorias).
+      #
+      # Paso propio, con su tiempo y su caché, porque su coste no se parece al
+      # de los demás. El BOE no cambia —lo publicado un día sigue igual para
+      # siempre—, así que cada día leído se guarda y la noche siguiente no se
+      # vuelve a pedir. Sin caché serían quince años de sumarios cada noche.
+      #
+      # La caché se llena de lo reciente hacia atrás, como mucho
+      # BOE_DIAS_NUEVOS días por noche: las primeras noches la sección de
+      # cargos cubre sólo lo último, y lo dice (cargos.json lleva desde qué
+      # fecha hay actos). Cuando está llena, este paso sólo lee disco.
+      #
+      # `restore` y `save` por separado, y el `save` con `always()`: si el paso
+      # agota su tiempo, lo que sí se leyó se guarda igual. Con el `cache`
+      # combinado sólo se guardaría si el job entero sale bien.
+      - name: recuperar la caché del BOE
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/cache-boe
+          key: boe-${{ github.run_id }}
+          restore-keys: boe-
+
+      - name: ingerir altos cargos (BOE)
+        working-directory: ingest
+        continue-on-error: true
+        timeout-minutes: 30
+        env:
+          SINAPSIS_CACHE_BOE: /tmp/cache-boe
+          SINAPSIS_BOE_MAX_DIAS_NUEVOS: "500"
+        run: |
+          # Desde el gobierno de diciembre de 2011: los dos partidos que han
+          # gobernado desde entonces, con sus altos cargos entrando y saliendo.
+          set +e
+          sinapsis-worker --run boe --desde 2011-12-01 --hasta "$(date -u +%F)" > /tmp/log-boe.txt 2>&1
+          rc=$?
+          set -e
+          cat /tmp/log-boe.txt
+          if [ "$rc" -ne 0 ]; then
+            {
+              echo "### boe (código $rc)"
+              tail -n 6 /tmp/log-boe.txt
+              echo
+            } >> /tmp/fuentes-caidas.txt
+            echo "::warning title=Fuente sin datos::boe no aportó nada a esta instantánea"
+          fi
+          echo "días en caché: $(find /tmp/cache-boe/sumarios -name '*.json' 2>/dev/null | wc -l)"
+
+      - name: guardar la caché del BOE
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/cache-boe
+          key: boe-${{ github.run_id }}
+
       # Acotado a propósito. Este paso propone fusiones para que las revise una
       # persona: no fusiona nada y la web no depende de él. El emparejamiento
       # difuso por trigramas crece mucho más rápido que el número de entidades,
@@ -234,6 +288,20 @@ jobs:
               print(j)
           print("```")
           PYEOF
+            echo
+            echo "## Altos cargos (BOE)"
+            echo
+            echo "- días del BOE en caché: $(find /tmp/cache-boe/sumarios -name '*.json' 2>/dev/null | wc -l)"
+            python3 - <<'PYEOF'
+          import json
+          try:
+              d = json.load(open("frontend/public/datos/cargos.json"))
+          except (OSError, ValueError):
+              print("- sin cargos.json en esta edición")
+              raise SystemExit(0)
+          print(f"- personas: {len(d.get('personas', []))} · actos: {d.get('nActos', 0)}")
+          print(f"- actos leídos del {d.get('actosDesde')} al {d.get('actosHasta')}")
+          PYEOF
           } > docs/fuentes/estado-ingesta.md
           cat docs/fuentes/estado-ingesta.md
 
@@ -279,15 +347,21 @@ jobs:
           # completo, sólo quien busca. Publicar uno sin el otro deja la
           # portada con las listas de una instantánea y la búsqueda de otra.
           INDICE_TOP=frontend/public/datos/indice-top.json
+          # Los altos cargos del BOE. El grafo dice cuántos trae (`cargos`), y
+          # la web ofrece la sección por eso: un grafo que los anuncia sin el
+          # fichero al lado dejaría una sección que no carga.
+          CARGOS=frontend/public/datos/cargos.json
           ESTADO=docs/fuentes/estado-ingesta.md
           GUARDADO=$(mktemp)
           GUARDADO_INDICE=$(mktemp)
           GUARDADO_INDICE_TOP=$(mktemp)
           GUARDADO_ESTADO=$(mktemp)
+          GUARDADO_CARGOS=$(mktemp)
           cp "$ARCHIVO" "$GUARDADO"
           cp "$INDICE" "$GUARDADO_INDICE" 2>/dev/null || : > "$GUARDADO_INDICE"
           cp "$INDICE_TOP" "$GUARDADO_INDICE_TOP" 2>/dev/null || : > "$GUARDADO_INDICE_TOP"
           cp "$ESTADO" "$GUARDADO_ESTADO" 2>/dev/null || : > "$GUARDADO_ESTADO"
+          cp "$CARGOS" "$GUARDADO_CARGOS" 2>/dev/null || : > "$GUARDADO_CARGOS"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -304,11 +378,13 @@ jobs:
             [ -s "$GUARDADO_INDICE" ] && cp "$GUARDADO_INDICE" "$INDICE" || true
             [ -s "$GUARDADO_INDICE_TOP" ] && cp "$GUARDADO_INDICE_TOP" "$INDICE_TOP" || true
             [ -s "$GUARDADO_ESTADO" ] && cp "$GUARDADO_ESTADO" "$ESTADO" || true
+            [ -s "$GUARDADO_CARGOS" ] && cp "$GUARDADO_CARGOS" "$CARGOS" || true
             # Los dos ficheros de datos están en .gitignore para que nadie suba
             # un volcado de pruebas a mano; la CI sí debe poder subirlos.
             git add -f "$ARCHIVO"
             [ -s "$GUARDADO_INDICE" ] && git add -f "$INDICE" || true
             [ -s "$GUARDADO_INDICE_TOP" ] && git add -f "$INDICE_TOP" || true
+            [ -s "$GUARDADO_CARGOS" ] && git add -f "$CARGOS" || true
             git add "$ESTADO" 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios en los datos"

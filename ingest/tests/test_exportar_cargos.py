@@ -17,6 +17,7 @@ import pytest
 
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.connectors.boe import BOEConnector
+from sinapsis_ingest.connectors.boe import clave as clave_boe
 from sinapsis_ingest.exportar import exportar
 from sinapsis_ingest.exportar_cargos import periodos
 from sinapsis_ingest.normalizado import AristaNormalizada, EntidadNormalizada, Normalizado
@@ -274,7 +275,9 @@ def test_solo_sale_el_papel_de_cargo_publico(store, tmp_path):
         _nombramiento_boe("Sara Hernández del Olmo", "BOE-A-1", "Directora General de X"),
         b"<documento>1</documento>",
     )
-    clave = "boe:persona:sara-hernandez-del-olmo"
+    # La MISMA ficha que creó el conector: si la clave no coincidiera, la
+    # prueba estaría mirando a otra persona y pasaría sin probar nada.
+    clave = f"boe:persona:{clave_boe('Sara Hernández del Olmo')}"
     _ingerir(
         store,
         "bdns",

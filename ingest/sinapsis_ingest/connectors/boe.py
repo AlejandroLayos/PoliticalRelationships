@@ -44,8 +44,11 @@ de en una sola carrera que agotaría el tiempo del trabajo.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import time
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
@@ -58,7 +61,6 @@ import structlog
 from sinapsis_ingest.cargos import es_alto_cargo, leer_titulo, puesto
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.normalizado import AristaNormalizada, EntidadNormalizada, Normalizado
-from sinapsis_ingest.util import slug
 
 log = structlog.get_logger()
 
@@ -72,6 +74,26 @@ CABECERAS = {
         "+https://github.com/AlejandroLayos/PoliticalRelationships)"
     ),
 }
+
+
+def clave(texto: str) -> str:
+    """La parte variable de una clave: sin tildes, sin mayúsculas, con hash.
+
+    No es `util.slug`, y por dos motivos que se ven en el BOE. Uno: `slug`
+    se come las letras con tilde («hern-ndez»), y la clave sale en la
+    dirección de la web. Dos: el hash de `slug` va sobre el texto exacto, y
+    el BOE escribe el mismo puesto como «Directora General» y «Directora
+    general» según el día. Aquí el hash va sobre la forma normalizada, así
+    que las dos grafías son un solo puesto —y un nombre escrito con y sin
+    tilde, una sola persona—, pero dos textos con letras distintas nunca
+    colapsan.
+    """
+    plano = "".join(
+        c for c in unicodedata.normalize("NFKD", texto) if unicodedata.category(c) != "Mn"
+    ).lower()
+    plano = re.sub(r"\s+", " ", plano).strip()
+    base = re.sub(r"[^a-z0-9]+", "-", plano).strip("-")[:60]
+    return f"{base}-{hashlib.sha256(plano.encode('utf-8')).hexdigest()[:8]}"
 
 
 def como_lista(x: Any) -> list[Any]:
@@ -319,8 +341,8 @@ class BOEConnector:
         nombre_puesto = puesto(d["cargo"])
         departamento = d.get("departamento", "").strip()
 
-        clave_persona = f"boe:persona:{slug(d['nombre'])}"
-        clave_puesto = f"boe:puesto:{slug(nombre_puesto)}"
+        clave_persona = f"boe:persona:{clave(d['nombre'])}"
+        clave_puesto = f"boe:puesto:{clave(nombre_puesto)}"
         entidades = [
             EntidadNormalizada(
                 ftm_schema="Person",
@@ -368,7 +390,7 @@ class BOEConnector:
         ]
 
         if departamento:
-            clave_dep = f"boe:departamento:{slug(departamento)}"
+            clave_dep = f"boe:departamento:{clave(departamento)}"
             entidades.append(
                 EntidadNormalizada(
                     ftm_schema="PublicBody",
@@ -383,7 +405,7 @@ class BOEConnector:
                     ftm_schema="UnknownLink",
                     source_key=clave_puesto,
                     target_key=clave_dep,
-                    dedupe_key=f"boe:puesto-en:{slug(nombre_puesto)}:{slug(departamento)}",
+                    dedupe_key=f"boe:puesto-en:{clave(nombre_puesto)}:{clave(departamento)}",
                     confidence=1.0,
                     status="asserted",
                     properties={"relacion": "puesto en"},

@@ -36,6 +36,7 @@ dist/
 /frontend/public/datos/grafo.json
 /frontend/public/datos/indice.json
 /frontend/public/datos/indice-top.json
+/frontend/public/datos/cargos.json
 
 # Texto extraído de los PDF del Tribunal de Cuentas. Nombra a personas: se
 # sube como artefacto del workflow para poder escribir el parser, y no entra

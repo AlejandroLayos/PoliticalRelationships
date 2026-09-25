@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, placsp, tcu
+from sinapsis_ingest.connectors import bdns, boe, placsp, tcu
 
 
 @dataclass(frozen=True)
@@ -48,6 +48,12 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://www.tcu.es",
         license="Reutilización libre (Ley 37/2007)",
     ),
+    "boe": FichaFuente(
+        id="boe",
+        name="Boletín Oficial del Estado",
+        url="https://www.boe.es",
+        license="Reutilización libre (Ley 37/2007; aviso legal del BOE)",
+    ),
 }
 
 _CONECTORES: dict[str, Any] = {
@@ -61,6 +67,9 @@ _CONECTORES: dict[str, Any] = {
     "placsp-licitaciones": placsp.crear_licitaciones,
     "placsp-menores": placsp.crear_menores,
     "tcu": tcu.crear,
+    # Altos cargos por Real Decreto. Sólo guarda lo que es alto cargo: ver
+    # la regla de personas de la spec (§12) y `cargos.py`.
+    "boe": boe.crear,
 }
 
 
