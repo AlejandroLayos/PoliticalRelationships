@@ -101,7 +101,15 @@ def main() -> int:
         # Los JSON: la forma y cuántos registros, y una muestra de los que
         # sirvan para cruzar (legislatura, formación, grupo).
         guardados = 0
-        for url, texto in [e for e in enlaces if e[0].lower().endswith(".json")][:8]:
+        # Los de cada legislatura son los que lleva la formación y las fechas:
+        # se miran y se guardan ésos, empezando por los de gobiernos recientes.
+        jsons = [e for e in enlaces if e[0].lower().endswith(".json")]
+        por_legislatura = sorted(
+            [e for e in jsons if "odsDiputados" in e[0]],
+            key=lambda e: e[0],
+            reverse=True,
+        )
+        for url, texto in por_legislatura[:4] + [e for e in jsons if "odsDiputados" not in e[0]][:2]:
             codigo, contenido, tipo = pedir(c, url)
             informe += [f"### `{url}`", "", f"{texto!r} · HTTP {codigo} · `{tipo}` · {len(contenido)} bytes", ""]
             if codigo != 200:
