@@ -1,6 +1,6 @@
 # Reconocimiento del BOE y del BORME
 
-Generado automáticamente el 2026-09-25T21:13:58.446251+00:00 por `scripts/explorar_boe.py`.
+Generado automáticamente el 2026-09-25T21:30:11.066244+00:00 por `scripts/explorar_boe.py`.
 
 **No es documentación de una fuente integrada**: es lo que se ve desde fuera,
 anotado sin interpretar, para escribir los conectores de las puertas giratorias
@@ -138,6 +138,28 @@ Cómo empiezan los títulos, sin número ni fecha (las 25 formas más comunes):
 - 1 × `por el que dispone el`
 
 Muestra guardada en `ingest/tests/golden/boe_altos_cargos_historico.json` (408 ítems).
+
+## BOE — Reales Decretos colectivos (formación de gobierno)
+
+- `20111221` BOE-A-2011-19861 · Real Decreto 1822/2011, de 20 de diciembre, por el que se nombra Presidente del Gobierno a don Mariano Rajoy Brey.
+- `20111222` BOE-A-2011-19941 · Real Decreto 1825/2011, de 21 de diciembre, por el que se nombra Vicepresidenta del Gobierno a doña María Soraya Sáenz de Santamaría Antón.
+- `20111222` BOE-A-2011-19942 · Real Decreto 1826/2011, de 21 de diciembre, por el que se nombran Ministros del Gobierno.
+- `20160104` BOE-A-2016-47 · Real Decreto 1134/2015, de 11 de diciembre, por el que se nombran Magistrados a los Jueces a quienes corresponde la promoción por el turno de antigüedad.
+- `20180602` BOE-A-2018-7400 · Real Decreto 354/2018, de 1 de junio, por el que se nombra Presidente del Gobierno a don Pedro Sánchez Pérez-Castejón.
+- `20180602` BOE-A-2018-7401 · Real Decreto 352/2018, de 1 de junio, por el que se declara el cese de los miembros del Gobierno.
+- `20180602` BOE-A-2018-7402 · Real Decreto 353/2018, de 1 de junio, por el que se declara el cese de don Mariano Rajoy Brey como Presidente del Gobierno.
+- `20180607` BOE-A-2018-7576 · Real Decreto 356/2018, de 6 de junio, por el que se nombra Vicepresidenta del Gobierno a doña María del Carmen Calvo Poyato.
+- `20180607` BOE-A-2018-7577 · Real Decreto 357/2018, de 6 de junio, por el que se nombran Ministros del Gobierno.
+- `20200113` BOE-A-2020-412 · Real Decreto 4/2020, de 12 de enero, por el que se nombra Vicepresidenta Primera del Gobierno a doña María del Carmen Calvo Poyato.
+- `20200113` BOE-A-2020-413 · Real Decreto 5/2020, de 12 de enero, por el que se nombra Vicepresidente Segundo del Gobierno a don Pablo Iglesias Turrión.
+- `20200113` BOE-A-2020-414 · Real Decreto 6/2020, de 12 de enero, por el que se nombra Vicepresidenta Tercera del Gobierno a doña Nadia María Calviño Santamaría.
+- `20200113` BOE-A-2020-415 · Real Decreto 7/2020, de 12 de enero, por el que se nombra Vicepresidenta Cuarta del Gobierno a doña Teresa Ribera Rodríguez.
+- `20200113` BOE-A-2020-416 · Real Decreto 8/2020, de 12 de enero, por el que se nombran Ministros del Gobierno.
+- `20231121` BOE-A-2023-23539 · Real Decreto 831/2023, de 20 de noviembre, por el que se nombra Vicepresidenta Primera del Gobierno a doña Nadia María Calviño Santamaría.
+- `20231121` BOE-A-2023-23540 · Real Decreto 832/2023, de 20 de noviembre, por el que se nombra Vicepresidenta Segunda del Gobierno a doña Yolanda Díaz Pérez.
+- `20231121` BOE-A-2023-23541 · Real Decreto 833/2023, de 20 de noviembre, por el que se nombra Vicepresidenta Tercera del Gobierno a doña Teresa Ribera Rodríguez.
+- `20231121` BOE-A-2023-23542 · Real Decreto 834/2023, de 20 de noviembre, por el que se nombra Vicepresidenta Cuarta del Gobierno a doña María Jesús Montero Cuadrado.
+- `20231121` BOE-A-2023-23543 · Real Decreto 835/2023, de 20 de noviembre, por el que se nombran Ministros del Gobierno.
 
 ## BOE — XML de una disposición
 

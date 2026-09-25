@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<documento fecha_actualizacion="20181023201615">
+  <metadatos>
+    <identificador>BOE-A-2018-7402</identificador>
+    <origen_legislativo codigo="1">Estatal</origen_legislativo>
+    <departamento codigo="7786">Presidencia del Gobierno</departamento>
+    <rango codigo="1340">Real Decreto</rango>
+    <fecha_disposicion>20180601</fecha_disposicion>
+    <numero_oficial>353/2018</numero_oficial>
+    <titulo>Real Decreto 353/2018, de 1 de junio, por el que se declara el cese de don Mariano Rajoy Brey como Presidente del Gobierno.</titulo>
+    <diario codigo="BOE">Boletín Oficial del Estado</diario>
+    <fecha_publicacion>20180602</fecha_publicacion>
+    <diario_numero>134</diario_numero>
+    <seccion>2</seccion>
+    <subseccion>A</subseccion>
+    <pagina_inicial>57659</pagina_inicial>
+    <pagina_final>57659</pagina_final>
+    <suplemento_pagina_inicial/>
+    <suplemento_pagina_final/>
+    <url_pdf>https://www.boe.es/boe/dias/2018/06/02/pdfs/BOE-A-2018-7402.pdf</url_pdf>
+    <url_epub/>
+    <url_pdf_catalan/>
+    <url_pdf_euskera/>
+    <url_pdf_gallego/>
+    <url_pdf_valenciano/>
+    <estatus_legislativo/>
+    <fecha_vigencia/>
+    <estatus_derogacion>N</estatus_derogacion>
+    <fecha_derogacion/>
+    <judicialmente_anulada>N</judicialmente_anulada>
+    <fecha_anulacion/>
+    <vigencia_agotada>N</vigencia_agotada>
+    <estado_consolidacion codigo="0"/>
+    <letra_imagen>A</letra_imagen>
+    <suplemento_letra_imagen/>
+  </metadatos>
+  <analisis>
+    <materias/>
+    <notas/>
+    <referencias>
+      <anteriores/>
+      <posteriores/>
+    </referencias>
+    <alertas>
+      <alerta codigo="139" orden="">Nombramientos y ceses de altos cargos</alerta>
+    </alertas>
+  </analisis>
+  <texto>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">De conformidad con lo dispuesto en los artículos 62 y 101 de la Constitución, y según establece su artículo 114.2, si el Congreso adopta una moción de censura, el Gobierno presentará su dimisión al Rey.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Como consecuencia de la adopción por el Congreso de la moción de censura votada en la sesión celebrada los días 31 de mayo y 1 de junio de 2018,</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Vengo en declarar el cese de don Mariano Rajoy Brey como Presidente del Gobierno.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo_2">Dado en Madrid, el 1 de junio de 2018.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="firma_rey">FELIPE R.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="firma_ministro">El Presidente del Gobierno,</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="firma_ministro">MARIANO RAJOY BREY</p>
+  </texto>
+</documento>

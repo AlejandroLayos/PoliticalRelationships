@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<documento fecha_actualizacion="20181023185444">
+  <metadatos>
+    <identificador>BOE-A-2011-19942</identificador>
+    <origen_legislativo codigo="1">Estatal</origen_legislativo>
+    <departamento codigo="7786">Presidencia del Gobierno</departamento>
+    <rango codigo="1340">Real Decreto</rango>
+    <fecha_disposicion>20111221</fecha_disposicion>
+    <numero_oficial>1826/2011</numero_oficial>
+    <titulo>Real Decreto 1826/2011, de 21 de diciembre, por el que se nombran Ministros del Gobierno.</titulo>
+    <diario codigo="BOE">Boletín Oficial del Estado</diario>
+    <fecha_publicacion>20111222</fecha_publicacion>
+    <diario_numero>307</diario_numero>
+    <seccion>2</seccion>
+    <subseccion>A</subseccion>
+    <pagina_inicial>139968</pagina_inicial>
+    <pagina_final>139968</pagina_final>
+    <suplemento_pagina_inicial/>
+    <suplemento_pagina_final/>
+    <url_pdf>https://www.boe.es/boe/dias/2011/12/22/pdfs/BOE-A-2011-19942.pdf</url_pdf>
+    <url_epub/>
+    <url_pdf_catalan/>
+    <url_pdf_euskera/>
+    <url_pdf_gallego/>
+    <url_pdf_valenciano/>
+    <estatus_legislativo/>
+    <fecha_vigencia/>
+    <estatus_derogacion>N</estatus_derogacion>
+    <fecha_derogacion/>
+    <judicialmente_anulada>N</judicialmente_anulada>
+    <fecha_anulacion/>
+    <vigencia_agotada>N</vigencia_agotada>
+    <estado_consolidacion codigo="0"/>
+    <letra_imagen>A</letra_imagen>
+    <suplemento_letra_imagen/>
+  </metadatos>
+  <analisis>
+    <materias/>
+    <notas/>
+    <referencias>
+      <anteriores/>
+      <posteriores/>
+    </referencias>
+    <alertas/>
+  </analisis>
+  <texto>
+    <p class="parrafo">De conformidad con lo dispuesto en los artículos 62 y 100 de la Constitución, y a propuesta del Presidente del Gobierno, vengo en nombrar:</p>
+    <p class="parrafo_2">Ministro de Asuntos Exteriores y de Cooperación a don José Manuel García-Margallo Marfil.</p>
+    <p class="parrafo">Ministro de Justicia a don Alberto Ruiz-Gallardón Jiménez.</p>
+    <p class="parrafo">Ministro de Defensa a don Pedro Morenés Eulate.</p>
+    <p class="parrafo">Ministro de Hacienda y Administraciones Públicas a don Cristóbal Montoro Romero.</p>
+    <p class="parrafo">Ministro del Interior a don Jorge Fernández Díaz.</p>
+    <p class="parrafo">Ministra de Fomento a doña Ana María Pastor Julián.</p>
+    <p class="parrafo">Ministro de Educación, Cultura y Deporte a don José Ignacio Wert Ortega.</p>
+    <p class="parrafo">Ministra de Empleo y Seguridad Social a doña María Fátima Báñez García.</p>
+    <p class="parrafo">Ministro de Industria, Energía y Turismo a don José Manuel Soria López.</p>
+    <p class="parrafo">Ministro de Agricultura, Alimentación y Medio Ambiente a don Miguel Arias Cañete.</p>
+    <p class="parrafo">Ministra de la Presidencia a doña María Soraya Sáenz de Santamaría Antón.</p>
+    <p class="parrafo">Ministro de Economía y Competitividad a don Luis de Guindos Jurado.</p>
+    <p class="parrafo">Ministra de Sanidad, Servicios Sociales e Igualdad a doña Ana Mato Adrover.</p>
+    <p class="parrafo_2">Dado en Madrid, el 21 de diciembre de 2011.</p>
+    <p class="firma_rey">JUAN CARLOS R.</p>
+    <p class="firma_ministro">El Presidente del Gobierno,</p>
+    <p class="firma_ministro">MARIANO RAJOY BREY</p>
+  </texto>
+</documento>

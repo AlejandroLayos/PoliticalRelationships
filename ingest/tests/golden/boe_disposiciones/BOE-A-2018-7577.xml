@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<documento fecha_actualizacion="20241019174002">
+  <metadatos>
+    <identificador>BOE-A-2018-7577</identificador>
+    <origen_legislativo codigo="1">Estatal</origen_legislativo>
+    <departamento codigo="7786">Presidencia del Gobierno</departamento>
+    <rango codigo="1340">Real Decreto</rango>
+    <fecha_disposicion>20180606</fecha_disposicion>
+    <numero_oficial>357/2018</numero_oficial>
+    <titulo>Real Decreto 357/2018, de 6 de junio, por el que se nombran Ministros del Gobierno.</titulo>
+    <diario codigo="BOE">Boletín Oficial del Estado</diario>
+    <fecha_publicacion>20180607</fecha_publicacion>
+    <diario_numero>138</diario_numero>
+    <seccion>2</seccion>
+    <subseccion>A</subseccion>
+    <pagina_inicial>58729</pagina_inicial>
+    <pagina_final>58729</pagina_final>
+    <suplemento_pagina_inicial/>
+    <suplemento_pagina_final/>
+    <url_pdf>https://www.boe.es/boe/dias/2018/06/07/pdfs/BOE-A-2018-7577.pdf</url_pdf>
+    <url_epub/>
+    <url_pdf_catalan/>
+    <url_pdf_euskera/>
+    <url_pdf_gallego/>
+    <url_pdf_valenciano/>
+    <estatus_legislativo/>
+    <fecha_vigencia/>
+    <estatus_derogacion>N</estatus_derogacion>
+    <fecha_derogacion/>
+    <judicialmente_anulada>N</judicialmente_anulada>
+    <fecha_anulacion/>
+    <vigencia_agotada>N</vigencia_agotada>
+    <estado_consolidacion codigo="0"/>
+    <letra_imagen>A</letra_imagen>
+    <suplemento_letra_imagen/>
+  </metadatos>
+  <analisis>
+    <materias/>
+    <notas/>
+    <referencias>
+      <anteriores/>
+      <posteriores>
+        <posterior referencia="BOE-A-2018-7647" orden="">
+          <palabra codigo="201">CORRECCIÓN de errores</palabra>
+          <texto>en BOE núm. 139 de 8 de junio de 2018</texto>
+        </posterior>
+      </posteriores>
+    </referencias>
+    <alertas>
+      <alerta codigo="139" orden="">Nombramientos y ceses de altos cargos</alerta>
+    </alertas>
+  </analisis>
+  <texto>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">De conformidad con lo dispuesto en los artículos 62 y 100 de la Constitución, y a propuesta del Presidente del Gobierno, vengo en nombrar:</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo_2">Ministro de Asuntos Exteriores, Unión Europea y Cooperación a don Josep Borrell Fontelles.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Justicia a doña María Dolores Delgado García.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Defensa a doña Margarita Robles Fernández.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Hacienda a doña María Jesús Montero Cuadrado.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministro del Interior a don Fernando Grande-Marlaska Gómez.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministro de Fomento a don José Luis Ábalos Meco.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Educación y Formación Profesional a doña María Isabel Celaá Diéguez.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Trabajo, Migraciones y Seguridad Social a doña Magdalena Valerio Cordero.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Industria, Comercio y Turismo a doña María Reyes Maroto Illera.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministro de Agricultura, Pesca y Alimentación a don Luis Planas Puchades.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de la Presidencia, Relaciones con las Cortes e Igualdad a doña María del Carmen Calvo Poyato.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Política Territorial y Función Pública a doña Meritxell Batet Lamaña.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra para la Transición Ecológica a doña Teresa Ribera Rodríguez.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministro de Cultura y Deporte a don Màxim Huerta Hernández.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Economía y Empresa a doña Nadia María Calviño Santamaría.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministra de Sanidad, Consumo y Bienestar Social a doña Carmen Montón Giménez.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo">Ministro de Ciencia, Innovación y Universidades a don Pedro Francisco Duque Duque.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="parrafo_2">Dado en Madrid, el 6 de junio de 2018.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="firma_rey">FELIPE R.</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="firma_ministro">El Presidente del Gobierno,</p>
+    <p xmlns:xhtml="http://www.w3.org/1999/xhtml" class="firma_ministro">PEDRO SÁNCHEZ PÉREZ-CASTEJÓN</p>
+  </texto>
+</documento>
