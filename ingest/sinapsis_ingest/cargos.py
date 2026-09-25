@@ -117,7 +117,9 @@ _MOTIVO = "(?:" + "|".join(_MOTIVOS) + ")"
 _CESE = re.compile(
     # El «de» es opcional porque el BOE a veces se lo come («se dispone el
     # cese doña Anunciación…»).
-    rf"^dispone el cese(?:, (?P<motivo_antes>{_MOTIVO}),)?(?: de)? {_TRATAMIENTO} (?P<nombre>.+?)"
+    # «Declara» en vez de «dispone» cuando cesa un Presidente del Gobierno.
+    rf"^(?:dispone|declara) el cese(?:, (?P<motivo_antes>{_MOTIVO}),)?(?: de)? {_TRATAMIENTO}"
+    rf" (?P<nombre>.+?)"
     rf" como (?P<cargo>.+?)(?:,? (?P<motivo_despues>{_MOTIVO}(?:, {_MOTIVO})*))?$"
 )
 
@@ -304,3 +306,108 @@ def es_alto_cargo(cargo: str) -> bool:
     if _CARRERAS.search(p):
         return False
     return any(r.search(p) for r in _ALTOS_CARGOS)
+
+
+# --- Cargos compuestos --------------------------------------------------------
+
+# «Vicepresidenta del Gobierno y Ministra de la Presidencia y para las
+# Administraciones Territoriales» son DOS cargos. Se parte en la «y» que va
+# seguida de otro título de cargo; las demás «y» son del nombre del
+# ministerio («Agricultura y Pesca, Alimentación y Medio Ambiente»).
+_OTRO_CARGO = re.compile(
+    r" y (?=(?:Ministr[oa]|Vicepresident[ea]|Secretari[oa] de Estado|Presidente|Presidenta)\b)"
+)
+
+
+def separar_cargos(cargo: str) -> list[str]:
+    """Los cargos que nombra un texto, uno por uno."""
+    return [c.strip() for c in _OTRO_CARGO.split(cargo) if c.strip()]
+
+
+# --- Reales Decretos colectivos -------------------------------------------------
+
+# Los que forman o disuelven un gobierno llevan los nombres en el cuerpo, no
+# en el título: «por el que se nombran Ministros del Gobierno», «por el que
+# se declara el cese de los miembros del Gobierno». Sólo ésos: un título
+# plural que no es de gobierno —magistrados por antigüedad, por ejemplo— no
+# se abre.
+_COLECTIVO_NOMBRA = re.compile(r"por el que se nombran Ministros del Gobierno", re.IGNORECASE)
+_COLECTIVO_CESE = re.compile(
+    r"por el que se (?:declara|dispone) el cese de (?:los )?(?:siguientes )?"
+    r"(?:miembros del Gobierno|Vicepresidentes y Ministros)",
+    re.IGNORECASE,
+)
+
+# En el cuerpo: «Ministra de Justicia a doña María Dolores Delgado García.»
+_PARRAFO_NOMBRA = re.compile(rf"^(?P<cargo>[A-ZÁÉÍÓÚ].+?) a {_TRATAMIENTO} (?P<nombre>.+?)\.?$")
+# y «Don Rafael Catalá Polo, como Ministro de Justicia.»
+_PARRAFO_CESE = re.compile(r"^(?:Don|Doña|D\.|Dña\.) (?P<nombre>.+?), como (?P<cargo>.+?)\.?$")
+
+
+def tipo_colectivo(titulo: str) -> str | None:
+    """«nombramiento» o «cese» si es un Real Decreto colectivo de gobierno."""
+    t = re.sub(r"\s+", " ", titulo or "")
+    if not t.startswith("Real Decreto"):
+        return None
+    if _COLECTIVO_NOMBRA.search(t):
+        return "nombramiento"
+    if _COLECTIVO_CESE.search(t):
+        return "cese"
+    return None
+
+
+def leer_cuerpo(titulo: str, parrafos: list[str]) -> list[Acto]:
+    """Los actos de un Real Decreto colectivo, uno por persona y cargo.
+
+    Se leen sólo los párrafos que siguen la fórmula entera; el preámbulo
+    («De conformidad con…»), la fecha y las firmas no la siguen y se saltan
+    solos. Un párrafo que no encaja no se interpreta.
+    """
+    tipo = tipo_colectivo(titulo)
+    m = _CABEZA.match(re.sub(r"\s+", " ", titulo or "").strip())
+    if tipo is None or m is None:
+        return []
+    comun = {
+        "numero": m.group("numero"),
+        "fecha_decreto": _fecha(m.group("anio"), m.group("mes"), m.group("dia")),
+    }
+    patron = _PARRAFO_NOMBRA if tipo == "nombramiento" else _PARRAFO_CESE
+    actos = []
+    for parrafo in parrafos:
+        p = re.sub(r"\s+", " ", parrafo or "").strip()
+        if p.lower().startswith(("de conformidad", "dado en", "vengo en", "como consecuencia")):
+            continue
+        encaja = patron.match(p)
+        if not encaja:
+            continue
+        nombre = encaja.group("nombre").strip()
+        if not _es_nombre(nombre):
+            continue
+        for cargo in separar_cargos(encaja.group("cargo").strip()):
+            actos.append(Acto(tipo=tipo, cargo=cargo, nombre=nombre, **comun))
+    return actos
+
+
+# --- El organismo de un acto ----------------------------------------------------
+
+_MIEMBRO_DEL_GOBIERNO = re.compile(
+    r"^(presidente del gobierno|vicepresidente( primero| segundo| tercero| cuarto)? del gobierno"
+    r"|ministro)\b"
+)
+
+
+def organismo_del_acto(departamento: str, cargo: str) -> str:
+    """El organismo que se enseña junto a un cargo, o '' si no aporta.
+
+    El departamento de una disposición es quien la PUBLICA, que casi siempre
+    es el ministerio del puesto. Con los miembros del Gobierno no: a todos
+    los ministros los nombra un Real Decreto de Presidencia del Gobierno, y
+    al Presidente, uno de la Jefatura del Estado. «Ministra de Justicia ·
+    Presidencia del Gobierno» diría que la ministra es de Presidencia. Ahí
+    el cargo ya nombra su ministerio, y no se pone nada.
+    """
+    if _MIEMBRO_DEL_GOBIERNO.search(_plano(puesto(cargo))):
+        return ""
+    if _plano(departamento).strip() == "jefatura del estado":
+        return ""
+    return departamento

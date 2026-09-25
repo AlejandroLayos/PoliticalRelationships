@@ -302,12 +302,20 @@ públicas, con base en el interés público (art. 6.1.e RGPD) y en la Ley
 cargos. Se publica sólo el nombre, el cargo, las fechas y el Real Decreto: ni
 el tratamiento (don/doña), ni la firma, ni nada del cuerpo de la disposición.
 
+Los Reales Decretos que forman o disuelven un gobierno («por el que se
+nombran Ministros del Gobierno», «por el que se declara el cese de los miembros
+del Gobierno») llevan los nombres en el cuerpo, un párrafo por persona, y se
+leen de ahí. Un párrafo con dos cargos («Vicepresidenta del Gobierno y Ministra
+de la Presidencia…») son dos actos.
+
 **Límites conocidos:**
 
-- Los ceses colectivos de un gobierno y los nombramientos de ministros van en
-  un solo Real Decreto con varios nombres en el cuerpo. Todavía no se leen.
 - Una persona se identifica por su nombre: el BOE no publica ningún
   identificador en un nombramiento. Dos homónimos exactos se juntarían.
+- Y al revés: el BOE no siempre escribe igual a la misma persona —«Margarita
+  Robles Fernández» en 2018, «María Margarita Robles Fernández» en 2023—, y
+  entonces salen dos fichas. Es un hueco, no una atribución falsa, y no se
+  junta a mano sin una fuente que lo diga.
 - Sólo el Estado. Los gobiernos autonómicos publican en sus boletines.
 
 **Mapeo a FollowTheMoney:**

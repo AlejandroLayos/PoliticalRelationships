@@ -17,6 +17,7 @@ import pytest
 
 from sinapsis_ingest.connectors.base import RawDocument
 from sinapsis_ingest.connectors.boe import BOEConnector, clave, es_candidato, items_2a
+from sinapsis_ingest.normalizado import Normalizado
 
 GOLDEN = Path(__file__).parent / "golden"
 XML = GOLDEN / "boe_disposiciones"
@@ -101,7 +102,7 @@ def test_normaliza_a_persona_puesto_y_organismo():
     assert por_esquema["PublicBody"].caption == "Ministerio de Transportes y Movilidad Sostenible"
 
     [ocupacion] = [a for a in n.aristas if a.ftm_schema == "Occupancy"]
-    assert ocupacion.dedupe_key == "boe:BOE-A-2026-18440"
+    assert ocupacion.dedupe_key.startswith("boe:BOE-A-2026-18440:")
     assert ocupacion.start_date == date(2026, 9, 2)
     assert ocupacion.end_date is None
     assert ocupacion.properties["url"].endswith("BOE-A-2026-18440")
@@ -246,3 +247,96 @@ def test_la_clave_no_depende_de_tildes_ni_mayusculas():
     assert clave("Sara Hernández del Olmo").startswith("sara-hernandez-del-olmo-")
     # Letras distintas son personas distintas.
     assert clave("Mª del Pilar Pin Vega") != clave("María del Pilar Pin Vega")
+
+
+# --- Reales Decretos colectivos: un gobierno entero en una disposición --------
+
+
+def test_el_gobierno_de_2018_se_lee_del_cuerpo():
+    """«por el que se nombran Ministros del Gobierno»: los nombres no están en
+    el título, están en los párrafos."""
+    registros = _registros("BOE-A-2018-7577")
+    pares = [(r.data["cargo"], r.data["nombre"]) for r in registros]
+    assert len(pares) == 17
+    assert pares[0] == (
+        "Ministro de Asuntos Exteriores, Unión Europea y Cooperación",
+        "Josep Borrell Fontelles",
+    )
+    assert ("Ministra de Justicia", "María Dolores Delgado García") in pares
+    assert (
+        "Ministro de Ciencia, Innovación y Universidades",
+        "Pedro Francisco Duque Duque",
+    ) in pares
+    assert all(r.data["tipo"] == "nombramiento" for r in registros)
+
+
+def test_el_cese_de_un_gobierno_entero_y_los_cargos_dobles():
+    registros = _registros("BOE-A-2018-7401")
+    pares = [(r.data["cargo"], r.data["nombre"]) for r in registros]
+    # Trece personas, y una con dos cargos a la vez.
+    assert len({n for _, n in pares}) == 13
+    assert ("Vicepresidenta del Gobierno", "María Soraya Sáenz de Santamaría Antón") in pares
+    assert (
+        "Ministra de la Presidencia y para las Administraciones Territoriales",
+        "María Soraya Sáenz de Santamaría Antón",
+    ) in pares
+    # Una «y» dentro del nombre del ministerio no parte nada.
+    assert (
+        "Ministra de Agricultura y Pesca, Alimentación y Medio Ambiente",
+        "Isabel García Tejerina",
+    ) in pares
+    assert all(r.data["tipo"] == "cese" for r in registros)
+
+
+@pytest.mark.parametrize(
+    ("identificador", "minimo"),
+    [("BOE-A-2011-19942", 13), ("BOE-A-2020-416", 18), ("BOE-A-2023-23543", 18)],
+)
+def test_todos_los_gobiernos_guardados_se_leen(identificador, minimo):
+    registros = _registros(identificador)
+    assert len(registros) >= minimo
+    assert all(r.data["cargo"].startswith(("Ministro", "Ministra")) for r in registros)
+
+
+def test_el_cese_de_un_presidente_se_declara():
+    [r] = _registros("BOE-A-2018-7402")
+    assert (r.data["tipo"], r.data["cargo"], r.data["nombre"]) == (
+        "cese",
+        "Presidente del Gobierno",
+        "Mariano Rajoy Brey",
+    )
+
+
+def test_un_ministro_no_es_de_presidencia_del_gobierno():
+    """El Real Decreto de los ministros lo publica Presidencia del Gobierno, y
+    «Ministra de Justicia · Presidencia del Gobierno» diría otra cosa."""
+    conector = BOEConnector()
+    for r in _registros("BOE-A-2018-7577") + _registros("BOE-A-2011-19861"):
+        n = conector.normalize(r)
+        assert n is not None
+        assert not [e for e in n.entidades if e.ftm_schema == "PublicBody"]
+        [ocupacion] = [a for a in n.aristas if a.ftm_schema == "Occupancy"]
+        assert "departamento" not in ocupacion.properties
+
+
+def test_cada_acto_de_una_disposicion_tiene_su_propia_clave():
+    conector = BOEConnector()
+    claves = [
+        a.dedupe_key
+        for r in _registros("BOE-A-2018-7401")
+        for a in (conector.normalize(r) or Normalizado()).aristas
+        if a.ftm_schema == "Occupancy"
+    ]
+    assert len(claves) == len(set(claves)) == 14
+
+
+def test_los_colectivos_son_candidatos_y_los_de_magistrados_no():
+    rd = "Real Decreto 357/2018, de 6 de junio, por el que se"
+    assert es_candidato({"titulo": f"{rd} nombran Ministros del Gobierno."})
+    assert es_candidato({"titulo": f"{rd} declara el cese de los miembros del Gobierno."})
+    assert not es_candidato(
+        {
+            "titulo": f"{rd} nombran Magistrados a los Jueces a quienes corresponde la "
+            "promoción por el turno de antigüedad."
+        }
+    )

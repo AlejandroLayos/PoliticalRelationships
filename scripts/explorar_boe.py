@@ -342,7 +342,7 @@ DIAS_DE_GOBIERNO = (
     "20231122",
 )
 COLECTIVO = re.compile(
-    r"se nombran|cese de los|miembros del Gobierno|Presidente del Gobierno|Vicepresident",
+    r"se nombran Ministros|cese de los|miembros del Gobierno|Presidente del Gobierno|Vicepresident",
     re.IGNORECASE,
 )
 

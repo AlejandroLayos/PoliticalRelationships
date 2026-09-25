@@ -287,11 +287,17 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
         Decreto; son carreras profesionales y no salen.
       </p>
       <p>
-        Lo que no se lee: los ceses colectivos de un gobierno, que no dicen a
-        quién ni de qué; los nombramientos por orden ministerial; y los
-        gobiernos autonómicos, que publican en sus propios boletines. Por eso
-        un periodo puede no tener cese: quiere decir que no consta en lo
-        leído, no que la persona siga en el cargo.
+        Los ministros se nombran todos a la vez, en un Real Decreto con los
+        nombres en el cuerpo; se leen de ahí, párrafo a párrafo. Lo que no se
+        lee: los nombramientos por orden ministerial y los gobiernos
+        autonómicos, que publican en sus propios boletines. Por eso un periodo
+        puede no tener cese: quiere decir que no consta en lo leído, no que la
+        persona siga en el cargo.
+      </p>
+      <p>
+        El BOE no publica ningún identificador en un nombramiento: una persona
+        es su nombre. Si el BOE la escribe de dos maneras —con y sin su primer
+        nombre, por ejemplo— salen dos fichas, y no se juntan a mano.
       </p>
     </footer>
   </div>

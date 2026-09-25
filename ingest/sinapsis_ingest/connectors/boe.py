@@ -51,6 +51,7 @@ import time
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -58,7 +59,15 @@ from typing import Any
 import httpx
 import structlog
 
-from sinapsis_ingest.cargos import es_alto_cargo, leer_titulo, puesto
+from sinapsis_ingest.cargos import (
+    es_alto_cargo,
+    leer_cuerpo,
+    leer_titulo,
+    organismo_del_acto,
+    puesto,
+    separar_cargos,
+    tipo_colectivo,
+)
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.normalizado import AristaNormalizada, EntidadNormalizada, Normalizado
 
@@ -133,15 +142,20 @@ def es_candidato(item: dict[str, Any]) -> bool:
     alto cargo. Lo demás no llega a la base: minimizar es no guardar, no
     guardar y luego esconder.
     """
-    acto = leer_titulo(item.get("titulo") or "")
-    return acto is not None and es_alto_cargo(acto.cargo)
+    titulo = item.get("titulo") or ""
+    acto = leer_titulo(titulo)
+    if acto is not None:
+        return any(es_alto_cargo(c) for c in separar_cargos(acto.cargo))
+    # Los que forman o disuelven un gobierno: los nombres van en el cuerpo, y
+    # son ministros.
+    return tipo_colectivo(titulo) is not None
 
 
 class BOEConnector:
     """Altos cargos nombrados y cesados por Real Decreto."""
 
     source_id = "boe"
-    extractor_version = "boe-cargos/1"
+    extractor_version = "boe-cargos/2"
 
     def __init__(
         self,
@@ -306,29 +320,47 @@ class BOEConnector:
 
         identificador = texto("identificador")
         titulo = texto("titulo")
-        acto = leer_titulo(titulo)
-        if not identificador or acto is None or not es_alto_cargo(acto.cargo):
+        if not identificador:
             return
 
-        yield ParsedRecord(
-            raw_content_hash=raw.content_hash,
-            extractor_version=self.extractor_version,
-            data={
-                "id_registro": identificador,
-                "identificador": identificador,
-                "titulo": titulo,
-                "departamento": texto("departamento")
-                or raw.metadata.get("departamento_sumario", ""),
-                "fecha_publicacion": texto("fecha_publicacion"),
-                "fecha_disposicion": texto("fecha_disposicion"),
-                "rango": texto("rango"),
-                "tipo": acto.tipo,
-                "cargo": acto.cargo,
-                "nombre": acto.nombre,
-                "numero": acto.numero,
-                "motivo": acto.motivo,
-            },
-        )
+        acto = leer_titulo(titulo)
+        if acto is not None:
+            # «Vicepresidenta del Gobierno y Ministra de…» son dos cargos.
+            actos = [replace(acto, cargo=c) for c in separar_cargos(acto.cargo)]
+        else:
+            # Colectivo: los nombres están en el cuerpo, párrafo a párrafo.
+            nodo_texto = raiz.find("texto")
+            parrafos = (
+                ["".join(p.itertext()) for p in nodo_texto.findall("p")]
+                if nodo_texto is not None
+                else []
+            )
+            actos = leer_cuerpo(titulo, parrafos)
+            if tipo_colectivo(titulo) and not actos:
+                log.warning("boe: Real Decreto colectivo sin ningún acto leído", id=identificador)
+
+        comun = {
+            "identificador": identificador,
+            "titulo": titulo,
+            "departamento": texto("departamento") or raw.metadata.get("departamento_sumario", ""),
+            "fecha_publicacion": texto("fecha_publicacion"),
+            "fecha_disposicion": texto("fecha_disposicion"),
+            "rango": texto("rango"),
+        }
+        for n, a in enumerate(a for a in actos if es_alto_cargo(a.cargo)):
+            yield ParsedRecord(
+                raw_content_hash=raw.content_hash,
+                extractor_version=self.extractor_version,
+                data={
+                    **comun,
+                    "id_registro": f"{identificador}#{n}",
+                    "tipo": a.tipo,
+                    "cargo": a.cargo,
+                    "nombre": a.nombre,
+                    "numero": a.numero,
+                    "motivo": a.motivo,
+                },
+            )
 
     # --- normalize --------------------------------------------------------
 
@@ -339,7 +371,7 @@ class BOEConnector:
             return None
 
         nombre_puesto = puesto(d["cargo"])
-        departamento = d.get("departamento", "").strip()
+        departamento = organismo_del_acto(d.get("departamento", "").strip(), d["cargo"])
 
         clave_persona = f"boe:persona:{clave(d['nombre'])}"
         clave_puesto = f"boe:puesto:{clave(nombre_puesto)}"
@@ -380,7 +412,9 @@ class BOEConnector:
                 ftm_schema="Occupancy",
                 source_key=clave_persona,
                 target_key=clave_puesto,
-                dedupe_key=f"boe:{d['identificador']}",
+                # Una disposición puede traer varios actos —un gobierno entero,
+                # o dos cargos de una misma persona—: la clave los distingue.
+                dedupe_key=f"boe:{d['identificador']}:{clave(d['nombre'])}:{clave(nombre_puesto)}",
                 confidence=1.0,
                 status="asserted",
                 start_date=fecha if d["tipo"] == "nombramiento" else None,
