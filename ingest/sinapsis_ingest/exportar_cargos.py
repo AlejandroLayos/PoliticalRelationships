@@ -29,13 +29,17 @@ regla y su propio test.
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
 import structlog
 
+from sinapsis_ingest.cargos import organo_del_puesto
 from sinapsis_ingest.store import Store
+from sinapsis_ingest.territorio import clasificar_entidad
 from sinapsis_ingest.util import es_identificador_personal
 
 log = structlog.get_logger()
@@ -117,6 +121,50 @@ def periodos(actos: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return salida
 
 
+def _plano(texto: str) -> str:
+    sin = "".join(
+        c for c in unicodedata.normalize("NFKD", texto or "") if unicodedata.category(c) != "Mn"
+    )
+    return re.sub(r"[^a-z0-9]+", " ", sin.lower()).strip()
+
+
+def organos_del_estado(store: Store) -> dict[str, list[tuple[str, str]]]:
+    """{nombre normalizado: [(clave, nombre)]} de los órganos del Estado.
+
+    Sólo los que la jerarquía de su propia fuente sitúa en la Administración
+    del Estado: «Dirección General de Carreteras» existe también en alguna
+    comunidad autónoma, y quien fue director general del Estado no dirigió
+    la de la comunidad.
+    """
+    filas = store.conn.execute(
+        """
+        SELECT caption, dedupe_key, properties FROM entities
+        WHERE canonical_id IS NULL AND ftm_schema = 'PublicBody'
+          AND dedupe_key NOT LIKE 'boe:%'
+        """
+    ).fetchall()
+    por_nombre: dict[str, list[tuple[str, str]]] = {}
+    for f in filas:
+        props = {**(f["properties"] or {}), "name": f["caption"]}
+        if clasificar_entidad(props).nivel != "estatal":
+            continue
+        por_nombre.setdefault(_plano(f["caption"]), []).append((f["dedupe_key"], f["caption"]))
+    return por_nombre
+
+
+def organo_de(puesto: str, organos: dict[str, list[tuple[str, str]]]) -> dict[str, str] | None:
+    """El órgano que dirigía el puesto, si su nombre es el de UNO del Estado."""
+    nombre = organo_del_puesto(puesto)
+    if not nombre:
+        return None
+    hallados = organos.get(_plano(nombre), [])
+    if len(hallados) != 1:
+        # Ninguno, o varios con el mismo nombre: no se elige.
+        return None
+    clave, caption = hallados[0]
+    return {"clave": clave, "nombre": caption}
+
+
 def _serializable(p: dict[str, Any]) -> dict[str, Any]:
     return {k: (v.isoformat() if isinstance(v, date) else v) for k, v in p.items()}
 
@@ -180,10 +228,32 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
             descartadas=descartadas,
         )
 
+    organos = organos_del_estado(store)
+    # Y al revés: de cada órgano, quién lo dirigió. Es lo que la ficha de un
+    # órgano del mapa del dinero enseña: quién estaba al frente cuando pagó.
+    al_frente: dict[str, list[dict[str, Any]]] = {}
+
     salida = []
     for clave, persona in personas.items():
         ps = periodos(actos[clave])
+        for p in ps:
+            organo = organo_de(p["puesto"], organos)
+            if organo is None:
+                continue
+            p["organo"] = organo
+            al_frente.setdefault(organo["clave"], []).append(
+                _serializable(
+                    {
+                        "persona": clave,
+                        "nombre": persona["nombre"],
+                        "cargo": p["cargo"],
+                        **{k: p[k] for k in ("desde", "hasta") if k in p},
+                    }
+                )
+            )
         salida.append({**persona, "periodos": [_serializable(p) for p in ps]})
+    for lista in al_frente.values():
+        lista.sort(key=lambda x: x.get("hasta") or x.get("desde") or "", reverse=True)
 
     def ultima(p: dict[str, Any]) -> str:
         return max((x.get("hasta") or x.get("desde") or "") for x in p["periodos"])
@@ -200,11 +270,16 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "actosHasta": max(fechas).isoformat() if fechas else None,
         "nActos": len(fechas),
         "personas": salida,
+        "organos": al_frente,
     }
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(
         json.dumps(documento, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
     )
-    resumen = {"cargos_personas": len(salida), "cargos_actos": len(fechas)}
+    resumen = {
+        "cargos_personas": len(salida),
+        "cargos_actos": len(fechas),
+        "cargos_organos": len(al_frente),
+    }
     log.info("cargos exportados", destino=str(destino), **resumen)
     return resumen

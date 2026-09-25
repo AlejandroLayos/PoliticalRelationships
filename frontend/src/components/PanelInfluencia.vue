@@ -9,6 +9,7 @@
  */
 import { computed, ref } from 'vue'
 import { dineroCorto } from '../nucleos.js'
+import { tramo } from '../cargos.js'
 import { resumenEnPalabras } from '../influencia.js'
 import { administracionDe, colorTipo, etiquetaEsquema } from '../esquemas.js'
 import { fechaCorta, nombreDocumento, siglaFuente } from '../procedencia.js'
@@ -35,8 +36,10 @@ const props = defineProps({
   fueraDelMapa: { type: Object, default: null },
   /** Si está en algún grupo del mapa: entonces se le puede buscar allí. */
   enMapa: { type: Boolean, default: false },
+  /** Quién dirigió este órgano según el BOE (`cargos.json`, `organos`). */
+  alFrente: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa'])
+const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo'])
 
 const resumen = computed(() => resumenEnPalabras(props.area))
 
@@ -270,6 +273,16 @@ const sinDatos = computed(
         </div>
       </div>
 
+      <section v-if="alFrente.length" class="bloque al-frente">
+        <h3>Al frente, según el BOE</h3>
+        <ul class="lista">
+          <li v-for="(a, k) in alFrente.slice(0, 8)" :key="k">
+            <a href="#" @click.prevent="emit('verCargo', a.persona)">{{ a.nombre }}</a>
+            <span class="cargo-frente">{{ a.cargo }}</span>
+            <span class="tramo-frente">{{ tramo(a) }}</span>
+          </li>
+        </ul>
+      </section>
       <section class="bloque">
         <h3>Por qué no se ve su red</h3>
         <p class="matiz">
@@ -389,6 +402,28 @@ const sinDatos = computed(
             </li>
           </ul>
         </details>
+      </section>
+
+      <!--
+        Quién estaba al frente, según el BOE. Es la otra mitad de la pregunta
+        de un organismo: además de a quién paga, quién mandaba cuando pagó.
+        Sólo sale si el puesto se corresponde por construcción con este
+        órgano —el director general de Carreteras dirige la Dirección General
+        de Carreteras— y el órgano es del Estado; ver exportar_cargos.py.
+      -->
+      <section v-if="alFrente.length" class="bloque al-frente">
+        <h3>Al frente, según el BOE</h3>
+        <ul class="lista">
+          <li v-for="(a, i) in alFrente.slice(0, 8)" :key="i">
+            <a href="#" @click.prevent="emit('verCargo', a.persona)">{{ a.nombre }}</a>
+            <span class="cargo-frente">{{ a.cargo }}</span>
+            <span class="tramo-frente">{{ tramo(a) }}</span>
+          </li>
+        </ul>
+        <p class="matiz">
+          Nombramientos y ceses por Real Decreto. Sin fecha de cese quiere
+          decir que no consta en lo leído, no que siga en el cargo.
+        </p>
       </section>
 
       <!--
@@ -818,6 +853,10 @@ h3 {
 .cuenta { font-family: var(--mono); font-size: var(--t-xs); font-weight: 400; color: var(--tinta-3); }
 
 .matiz { font-size: var(--t-xs); color: var(--tinta-3); line-height: 1.5; margin: var(--e2) 0 0; }
+.al-frente li { display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; padding: 0.35rem 0; border-bottom: 1px solid var(--filete-suave); }
+.al-frente a { color: var(--tinta); font-weight: 600; }
+.cargo-frente { font-size: var(--t-xs); color: var(--tinta-2); }
+.tramo-frente { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); margin-left: auto; }
 .panel .nota { font-size: var(--t-s); margin-top: var(--e3); }
 .hueco { margin-top: var(--e5); }
 

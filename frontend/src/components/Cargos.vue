@@ -32,7 +32,7 @@ const props = defineProps({
   persona: { type: String, default: '' },
   cargando: { type: Boolean, default: false },
 })
-const emit = defineEmits(['persona'])
+const emit = defineEmits(['persona', 'entidad'])
 
 const filtro = ref('')
 const VISIBLES = 30
@@ -177,6 +177,16 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
           <div class="periodo-cuerpo">
             <p class="periodo-cargo">{{ p.cargo }}</p>
             <p v-if="p.organismo" class="periodo-organismo">{{ p.organismo }}</p>
+            <!--
+              El órgano que dirigía, cuando es uno del mapa del dinero: por ahí
+              se llega a lo que contrató. Sólo si el nombre del órgano sale del
+              puesto por construcción y es uno del Estado (exportar_cargos.py).
+            -->
+            <p v-if="p.organo" class="periodo-organo">
+              Dirigía
+              <a href="#" @click.prevent="emit('entidad', p.organo.clave)">{{ p.organo.nombre }}</a>:
+              ver a quién contrató →
+            </p>
             <p class="periodo-tramo">
               <span class="tramo">{{ tramo(p) }}</span>
               <span v-if="huecoDelPeriodo(p)" class="hueco">· {{ huecoDelPeriodo(p) }}</span>
@@ -396,6 +406,8 @@ const verbo = (a) => (a.tipo === 'nombramiento' ? 'Nombramiento' : 'Cese')
 .periodo-cargo { font-family: var(--serif); font-size: var(--t-l); line-height: 1.3; color: var(--tinta); }
 .periodo-organismo { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.15rem !important; }
 .periodo-tramo { font-size: var(--t-s); margin-top: 0.3rem !important; }
+.periodo-organo { font-size: var(--t-s); color: var(--tinta-2); margin-top: 0.3rem !important; }
+.periodo-organo a { color: var(--adm); font-weight: 600; }
 .tramo { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta); }
 .hueco { font-style: italic; color: var(--tinta-3); margin-left: 0.3em; }
 .periodo-fuentes {

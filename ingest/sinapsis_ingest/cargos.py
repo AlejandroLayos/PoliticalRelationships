@@ -411,3 +411,37 @@ def organismo_del_acto(departamento: str, cargo: str) -> str:
     if _plano(departamento).strip() == "jefatura del estado":
         return ""
     return departamento
+
+
+# --- Del puesto a su órgano -------------------------------------------------------
+
+# Quien es «Director General de Carreteras» está al frente de la «Dirección
+# General de Carreteras», que es el órgano que contrata. La relación la da la
+# propia estructura de la Administración, no un parecido de nombres: por eso
+# sólo se usan las formas fijas de abajo, y el volcado sólo enlaza cuando el
+# nombre resultante coincide con UN órgano del Estado.
+_ORGANO_DEL_PUESTO = (
+    (re.compile(r"^Director General (de|del) (.+)$"), r"Dirección General \1 \2"),
+    (re.compile(r"^Secretario de Estado (de|del|para) (.+)$"), r"Secretaría de Estado \1 \2"),
+    (re.compile(r"^Secretario General (de|del|para) (.+)$"), r"Secretaría General \1 \2"),
+    (re.compile(r"^Subsecretario (de|del|para) (.+)$"), r"Subsecretaría \1 \2"),
+    (re.compile(r"^Ministro (de|del|para) (.+)$"), r"Ministerio \1 \2"),
+    (re.compile(r"^Delegado del Gobierno en (.+)$"), r"Delegación del Gobierno en \1"),
+    # Quien preside o dirige un organismo o una empresa pública: el órgano es
+    # el propio organismo. «Presidente de CASA 47 Entidad Pública
+    # Empresarial», «Director de la Agencia Estatal de Meteorología».
+    (re.compile(r"^(?:Presidente|Director) (?:de la |del |de los |de las |de )(.+)$"), r"\1"),
+)
+
+
+def organo_del_puesto(nombre_puesto: str) -> str:
+    """El nombre del órgano que dirige quien ocupa el puesto, o ''."""
+    for patron, forma in _ORGANO_DEL_PUESTO:
+        m = patron.match(nombre_puesto)
+        if m:
+            organo = m.expand(forma).strip()
+            # «Director del Departamento…» dirige un departamento de un
+            # gabinete, no un órgano de contratación: se deja que el volcado
+            # no lo encuentre, en vez de afinar aquí.
+            return organo
+    return ""

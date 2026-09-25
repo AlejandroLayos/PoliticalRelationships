@@ -84,6 +84,26 @@ async function traerCargos() {
   return cargos.value
 }
 
+/**
+ * Quién dirigió el órgano de la ficha abierta, según el BOE. El fichero de
+ * cargos se pide al abrir una ficha sólo si la edición lo trae: es lo que
+ * responde «quién mandaba cuando pagó».
+ */
+const alFrente = computed(() => cargos.value?.organos?.[claveSeleccionada.value] ?? [])
+watch(
+  () => vista.value === 'ficha' && seleccionId.value,
+  (abierta) => {
+    if (abierta && hayCargos.value) traerCargos()
+  },
+)
+
+/** De un periodo de un cargo a la ficha del órgano que dirigía. */
+async function abrirPorClave(clave) {
+  await cargarIndice()
+  const n = nodoDeClave(clave)
+  if (n) await enfocar(n.id)
+}
+
 function verCargos(persona = '') {
   vista.value = 'cargos'
   personaCargo.value = persona
@@ -1237,9 +1257,11 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :medios="medios"
         :fuera-del-mapa="fueraDelMapa"
         :en-mapa="idsDelMapa.has(seleccionId)"
+        :al-frente="alFrente"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
         @ver-en-mapa="llevarAlMapa(seleccionId)"
+        @ver-cargo="verCargos"
       />
       <PanelEntidad
         v-else-if="seleccionado"
@@ -1292,6 +1314,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :persona="personaCargo"
         :cargando="cargandoCargos"
         @persona="(c) => (personaCargo = c)"
+        @entidad="abrirPorClave"
       />
     </main>
   </div>

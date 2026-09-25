@@ -281,3 +281,33 @@ def test_altos_cargos_del_historico(cargo):
 
 def test_puesto_de_dos_palabras():
     assert puesto("Consejera Delegada del ICEX") == "Consejero Delegado del ICEX"
+
+
+# --- Del puesto a su órgano -------------------------------------------------------
+
+from sinapsis_ingest.cargos import organo_del_puesto  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    ("puesto_", "organo"),
+    [
+        ("Director General de Carreteras", "Dirección General de Carreteras"),
+        ("Secretario de Estado de Justicia", "Secretaría de Estado de Justicia"),
+        (
+            "Secretario de Estado para la Unión Europea",
+            "Secretaría de Estado para la Unión Europea",
+        ),
+        ("Subsecretario de Hacienda", "Subsecretaría de Hacienda"),
+        ("Ministro de Vivienda y Agenda Urbana", "Ministerio de Vivienda y Agenda Urbana"),
+        ("Delegado del Gobierno en Andalucía", "Delegación del Gobierno en Andalucía"),
+        (
+            "Presidente de CASA 47 Entidad Pública Empresarial",
+            "CASA 47 Entidad Pública Empresarial",
+        ),
+        ("Director de la Agencia Estatal de Meteorología", "Agencia Estatal de Meteorología"),
+        ("Embajador de España en la República Francesa", ""),
+        ("Presidente del Gobierno", "Gobierno"),
+    ],
+)
+def test_organo_del_puesto(puesto_, organo):
+    assert organo_del_puesto(puesto_) == organo

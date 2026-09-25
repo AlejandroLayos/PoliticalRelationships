@@ -362,3 +362,75 @@ def test_la_fuente_de_los_cargos_no_se_anuncia_como_caida(store, tmp_path):
     boe = next(f for f in grafo["fuentes"] if f["id"] == "boe")
     assert boe["entidades"] == 1
     assert grafo["cargos"] == {"personas": 1, "actos": 1}
+
+
+@con_base
+def test_el_puesto_se_enlaza_con_el_organo_del_estado_que_dirigia(store, tmp_path):
+    """El director general de Carreteras estaba al frente de la Dirección
+    General de Carreteras, que es quien adjudica. Y sólo de la del Estado."""
+    _ingerir(
+        store,
+        "boe",
+        _nombramiento_boe("Juan Pérez García", "BOE-A-9", "Director General de Carreteras"),
+        b"<documento>9</documento>",
+    )
+    _ingerir(
+        store,
+        "bdns",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    "PublicBody",
+                    "Dirección General de Carreteras",
+                    "test:dgc-estado",
+                    properties={
+                        "jerarquia_placsp": [
+                            "Sector Público",
+                            "ADMINISTRACIÓN GENERAL DEL ESTADO",
+                            "Ministerio de Transportes y Movilidad Sostenible",
+                        ]
+                    },
+                ),
+                EntidadNormalizada("Company", "Asfaltos SA", "test:asfaltos"),
+            ],
+            aristas=[AristaNormalizada("Payment", "test:dgc-estado", "test:asfaltos", "p1", 1.0)],
+        ),
+        b"<documento>10</documento>",
+    )
+    _, _, cargos = _volcar(store, tmp_path)
+    periodo = cargos["personas"][0]["periodos"][0]
+    assert periodo["organo"] == {
+        "clave": "test:dgc-estado",
+        "nombre": "Dirección General de Carreteras",
+    }
+    assert cargos["organos"]["test:dgc-estado"][0]["nombre"] == "Juan Pérez García"
+
+
+@con_base
+def test_un_organo_autonomico_con_el_mismo_nombre_no_se_enlaza(store, tmp_path):
+    _ingerir(
+        store,
+        "boe",
+        _nombramiento_boe("Juan Pérez García", "BOE-A-9", "Director General de Carreteras"),
+        b"<documento>9</documento>",
+    )
+    _ingerir(
+        store,
+        "bdns",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    "PublicBody",
+                    "Dirección General de Carreteras",
+                    "test:dgc-madrid",
+                    properties={"jerarquia_placsp": ["Comunidad de Madrid"]},
+                ),
+                EntidadNormalizada("Company", "Asfaltos SA", "test:asfaltos"),
+            ],
+            aristas=[AristaNormalizada("Payment", "test:dgc-madrid", "test:asfaltos", "p1", 1.0)],
+        ),
+        b"<documento>10</documento>",
+    )
+    _, _, cargos = _volcar(store, tmp_path)
+    assert "organo" not in cargos["personas"][0]["periodos"][0]
+    assert cargos["organos"] == {}
