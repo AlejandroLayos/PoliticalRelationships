@@ -133,8 +133,10 @@ def main() -> int:
             informe.append("")
             time.sleep(0.5)
 
+        # De cada ficha, sólo la forma. Las fichas individuales NO se guardan:
+        # traen estado civil, hijos y fecha de nacimiento, que no hacen falta
+        # para nada. Las muestras son los ficheros de FIJOS, más abajo.
         informe += ["## Ficheros", ""]
-        guardados = 0
         for url, texto in ficheros[:10]:
             codigo, contenido, tipo, final = pedir(c, url)
             informe += [f"### {texto[:80]!r}", "", f"`{url}` → HTTP {codigo} · `{tipo}` · {len(contenido):,} bytes", ""]
@@ -143,13 +145,6 @@ def main() -> int:
             texto_fichero = contenido.decode("utf-8", errors="replace")
             if "xml" in tipo or texto_fichero.lstrip().startswith("<"):
                 informe += describir_xml(texto_fichero)
-            if guardados < 3 and len(contenido) < 3_000_000 and re.search(r"(?i)senador", url + texto):
-                golden.mkdir(parents=True, exist_ok=True)
-                nombre = re.sub(r"[^\w.-]+", "_", urlparse(url).path.rsplit("/", 1)[-1] + "_" + urlparse(url).query)[:80]
-                destino = golden / (nombre + (".xml" if "xml" in tipo else ".dat"))
-                destino.write_bytes(contenido)
-                informe.append(f"- guardado como `{destino}`")
-                guardados += 1
             informe.append("")
             time.sleep(0.5)
 
