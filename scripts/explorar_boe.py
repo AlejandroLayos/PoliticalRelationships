@@ -133,7 +133,49 @@ ALTO_CARGO = re.compile(r"^Real Decreto\b.*\b(se nombra|se dispone el cese)\b", 
 
 
 def reconocer_boe(cliente: httpx.Client, informe: list[str], golden: Path | None) -> None:
+    """Estructura de un día, y los altos cargos de las últimas semanas.
+
+    Un día cualquiera puede no traer ningún nombramiento por Real Decreto —el
+    primer reconocimiento cayó en uno así—, de modo que la muestra se junta
+    recorriendo días hasta tener unos cuantos.
+    """
     informe += ["## BOE — sumario diario", ""]
+    altos_acumulados: list[dict] = []
+    for dia in dias_recientes(45):
+        codigo, datos, _ = pedir(cliente, f"{API}/boe/sumario/{dia}")
+        if codigo != 200 or not isinstance(datos, dict):
+            continue
+        for s in secciones_boe(datos):
+            if str(s.get("codigo", "")).upper() != "2A":
+                continue
+            for i in items_de(s):
+                if ALTO_CARGO.search(i.get("titulo") or ""):
+                    altos_acumulados.append({**i, "_fecha": dia})
+        if len(altos_acumulados) >= 40:
+            break
+        time.sleep(0.3)
+    informe += [
+        f"Altos cargos por Real Decreto en los últimos días recorridos: **{len(altos_acumulados)}**",
+        "",
+        *[f"- {i['_fecha']} · {i.get('titulo')}" for i in altos_acumulados[:25]],
+        "",
+    ]
+    if golden is not None and altos_acumulados:
+        golden.parent.mkdir(parents=True, exist_ok=True)
+        golden.write_text(
+            json.dumps(
+                {
+                    "fuente": f"{API}/boe/sumario/<fecha>",
+                    "capturado": datetime.now(UTC).isoformat(),
+                    "nota": "Sólo ítems de la sección 2A por Real Decreto de nombramiento o cese.",
+                    "items": altos_acumulados,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        informe.append(f"Muestra guardada en `{golden}` ({len(altos_acumulados)} ítems).\n")
     for dia in dias_recientes():
         url = f"{API}/boe/sumario/{dia}"
         codigo, datos, tipo = pedir(cliente, url)
@@ -169,7 +211,7 @@ def reconocer_boe(cliente: httpx.Client, informe: list[str], golden: Path | None
                 "",
             ]
             informe += [f"- {i.get('titulo')}" for i in altos[:15]]
-            if golden is not None and altos:
+            if golden is not None and altos and not golden.exists():
                 golden.parent.mkdir(parents=True, exist_ok=True)
                 muestra = {
                     "fuente": url,
@@ -247,7 +289,9 @@ def reconocer_borme(cliente: httpx.Client, informe: list[str], golden: Path | No
         informe += ["", f"Ítems de la sección primera: **{len(items)}**", "", "Claves de un `item`:", ""]
         informe += ["```json", json.dumps(forma(items[0]) if items else {}, ensure_ascii=False, indent=2), "```", ""]
         informe += [f"- {i.get('titulo')}" for i in items[:12]]
-        # El PDF más pequeño, para no bajar cien páginas en un reconocimiento.
+        # Un PDF mediano: el más pequeño trae un asiento y no enseña la
+        # variedad —ceses, consejeros, varias personas por cargo—; el más
+        # grande son cien páginas.
         def tam(i: dict) -> int:
             pdf = i.get("url_pdf")
             if isinstance(pdf, dict):
@@ -257,7 +301,7 @@ def reconocer_borme(cliente: httpx.Client, informe: list[str], golden: Path | No
                     return 10**9
             return 10**9
 
-        elegido = min(items, key=tam) if items else None
+        elegido = min(items, key=lambda i: abs(tam(i) - 450_000)) if items else None
         if not elegido:
             continue
         pdf = elegido.get("url_pdf")
