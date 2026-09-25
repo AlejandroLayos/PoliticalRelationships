@@ -34,7 +34,6 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote_plus
 
 try:
     import httpx
@@ -44,14 +43,10 @@ except ImportError:  # pragma: no cover
 CABECERAS = {"User-Agent": "Sinapsis/0.1 (reconocimiento; proyecto abierto de transparencia)"}
 XML = "https://www.boe.es/diario_boe/xml.php?id={}"
 
-# El buscador del BOE, con el título como campo. Varias formas, porque los
-# nombres de los parámetros no están documentados y se prueba cuál responde.
-BUSQUEDAS = [
-    "https://www.boe.es/buscar/boe.php?campo%5B1%5D=TIT&dato%5B1%5D={q}&operador%5B1%5D=and"
-    "&sort_field%5B0%5D=FPU&sort_order%5B0%5D=desc&accion=Buscar",
-    "https://www.boe.es/buscar/boe.php?campo%5B0%5D=TIT&dato%5B0%5D={q}&accion=Buscar",
-    "https://www.boe.es/buscar/boe.php?campo%5B0%5D=TODOS&dato%5B0%5D={q}&accion=Buscar",
-]
+# El buscador del BOE. Los nombres de sus campos no están documentados: la
+# primera vuelta los supuso y el buscador devolvió el formulario vacío. Ahora
+# se leen del propio formulario y la consulta se arma con ellos.
+FORMULARIO = "https://www.boe.es/buscar/boe.php"
 CONSULTAS = [
     "estados contables de los partidos políticos",
     "fiscalización partidos políticos",
@@ -89,16 +84,56 @@ def main() -> int:
     ]
     identificadores: list[str] = []
     with httpx.Client(timeout=60.0, follow_redirects=True, headers=CABECERAS) as c:
-        for consulta in CONSULTAS:
-            for plantilla in BUSQUEDAS:
-                url = plantilla.format(q=quote_plus(consulta))
+        # 1. El formulario: qué campos tiene y con qué código.
+        r = c.get(FORMULARIO)
+        html = r.text
+        informe += [f"## El formulario (`{FORMULARIO}`)", "", f"HTTP {r.status_code} · {len(html):,} caracteres", ""]
+        formularios = re.findall(r"<form[^>]*>", html, flags=re.I)
+        informe += [f"- `{f[:200]}`" for f in formularios[:5]]
+        nombres = sorted(set(re.findall(r'name="([^"]+)"', html)))
+        informe += ["", f"Nombres de campo: {nombres[:80]}", ""]
+        opciones = re.findall(r'<option[^>]*value="([^"]*)"[^>]*>(.*?)</option>', html, flags=re.S | re.I)
+        opciones = [(v, " ".join(re.sub(r"<[^>]+>", " ", t).split())) for v, t in opciones]
+        informe += ["Opciones (valor → texto), las primeras:", ""]
+        informe += [f"- `{v}` → {t[:60]}" for v, t in opciones[:120]]
+        informe.append("")
+        # Los campos de texto del formulario, por su índice: «campo[1]» con
+        # un valor fijo en un input oculto y «dato[1]» al lado.
+        ocultos = re.findall(
+            r'<input[^>]*type="hidden"[^>]*name="(campo\[\d+\])"[^>]*value="([^"]*)"', html, flags=re.I
+        ) + re.findall(
+            r'<input[^>]*name="(campo\[\d+\])"[^>]*type="hidden"[^>]*value="([^"]*)"', html, flags=re.I
+        )
+        informe += [f"Campos ocultos: {ocultos}", ""]
+        codigo_titulo = next(
+            (v for n, v in ocultos if re.search(r"TIT", v)),
+            None,
+        )
+        indice_titulo = next(
+            (re.search(r"\d+", n).group(0) for n, v in ocultos if v == codigo_titulo),
+            None,
+        )
+        informe += [f"Campo del título: `{codigo_titulo}` en el índice `{indice_titulo}`", ""]
+
+        # 2. La consulta, con el campo leído del formulario.
+        if codigo_titulo and indice_titulo:
+            for consulta in CONSULTAS:
+                parametros = {
+                    f"campo[{indice_titulo}]": codigo_titulo,
+                    f"dato[{indice_titulo}]": consulta,
+                    f"operador[{indice_titulo}]": "and",
+                    "page_hits": "50",
+                    "sort_field[0]": "FPU",
+                    "sort_order[0]": "desc",
+                    "accion": "Buscar",
+                }
                 try:
-                    r = c.get(url)
+                    r = c.get(FORMULARIO, params=parametros)
                 except httpx.HTTPError as exc:
-                    informe += [f"- `{url}` → error: {exc}"]
+                    informe += [f"- «{consulta}» → error: {exc}"]
                     continue
                 ids = list(dict.fromkeys(re.findall(r"BOE-A-\d{4}-\d+", r.text)))
-                informe.append(f"- «{consulta}» · `{url}` → HTTP {r.status_code}, {len(ids)} disposiciones")
+                informe.append(f"- «{consulta}» · `{r.url}` → HTTP {r.status_code}, {len(ids)} disposiciones")
                 for i in ids:
                     if i not in identificadores:
                         identificadores.append(i)
