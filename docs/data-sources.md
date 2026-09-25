@@ -329,6 +329,49 @@ Una `Occupancy` por disposición: el nombramiento lleva `start_date`, el cese
 
 ---
 
+## 2.ter Oficina de Conflictos de Intereses — actividad privada tras el cese
+
+**Aporta:** las autorizaciones a ex altos cargos para trabajar en el sector
+privado en los dos años siguientes a su cese (Ley 3/2015, art. 15). Es la
+fuente que **afirma** una puerta giratoria: «X, ex ministra de Empleo, autorizada
+a ser consejera de Y» lo dice un documento oficial, no una coincidencia de
+nombres.
+
+**Acceso:** Portal de Transparencia, sin registro. La portada de «Actividad
+privada tras el cese» no trae la lista en el HTML; la sirve el buscador del
+portal (`servicios-buscador/buscar.htm?categoria=autorizaciones_ind`), que
+exporta la búsqueda entera a una hoja de cálculo —un ZIP con un XLSX dentro—
+mientras sean menos de 2000 resultados. El 25/9/2026 eran 644, de 2017 a 2026.
+Forma verificada en `docs/fuentes/oci-reconocimiento.md` y
+`ingest/tests/golden/oci/`.
+
+Columnas: Nombre («APELLIDOS, NOMBRE»), Alto cargo, Ministerio, Fecha de cese,
+Empresa / Actividad autorizada, Fecha de autorización (`dd/mm/aaaa`; las
+páginas antiguas de seguimiento usan `aaaa/mm/dd`, y se leen las dos).
+
+**Base legal (spec §12).** Publicidad activa obligatoria (Ley 19/2013) sobre
+quien ha ejercido un alto cargo, en relación con ese cargo. Se publica lo que
+publica la fuente —nombre, cargo, fechas y el texto de la autorización— y nada
+más. **Una autorización no dice que la persona llegara a ocupar el puesto**, y
+la web lo advierte en cada una.
+
+**Cruces:**
+
+- Con el BOE, la misma persona sólo si coinciden el nombre entero y la fecha de
+  cese (diez días de margen). Con el nombre solo, dos fichas.
+- Con el mapa del dinero, la sociedad sólo si el texto de la autorización la
+  nombra por su denominación completa, con forma societaria: la denominación
+  social es única en España. «LOGISTA» a secas no se cruza.
+
+**Mapeo a FollowTheMoney:**
+
+```
+ex alto cargo (Person) --Occupancy--> puesto (Position)          hasta el cese
+ex alto cargo (Person) --UnknownLink--> texto de la autorización (Organization)
+```
+
+---
+
 ## 3. BORME — Boletín Oficial del Registro Mercantil
 
 **Aporta:** actos societarios inscritos — constituciones, ceses y nombramientos

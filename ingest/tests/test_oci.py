@@ -159,3 +159,70 @@ def test_normaliza_la_autorizacion_y_el_cese():
         if a.ftm_schema == "Occupancy"
     }
     assert len(ceses) == 13
+
+
+# --- La exportación del buscador: la forma con la que se ingiere ------------
+
+import httpx  # noqa: E402
+
+from sinapsis_ingest.connectors.oci import leer_hoja  # noqa: E402
+
+HOJA = GOLDEN / "autorizaciones-vigentes.xlsx"
+BUSCADOR_HTML = GOLDEN / "servicios-buscador-buscar-htm.html"
+
+
+def test_la_hoja_exportada_trae_todas_las_autorizaciones():
+    """El buscador decía 644 resultados; la hoja trae las 644."""
+    filas = leer_hoja(HOJA.read_bytes())
+    assert len(filas) == 644
+    primera = filas[0]
+    assert primera["nombre"] == "GOMEZ GONZALEZ, CELIA"
+    assert primera["cargo"] == "D. GRAL. DE ORDENACION PROFESIONAL"
+    assert primera["fecha_autorizacion"] == "28/04/2026"
+    # Las de 2019 que se leían en las páginas de seguimiento también están.
+    assert any(f["nombre"] == "BAÑEZ GARCIA, FATIMA" and "ROVI" in f["actividad"] for f in filas)
+
+
+def test_una_hoja_que_no_es_la_esperada_no_se_lee():
+    assert leer_hoja(b"PK\x03\x04no es un zip") == []
+
+
+def test_toda_fila_de_la_hoja_se_normaliza_con_sus_fechas():
+    conector = OCIConnector()
+    raw = RawDocument(
+        source_id="oci", url="https://x", content=HOJA.read_bytes(), media_type="application/zip"
+    )
+    registros = list(conector.parse(raw))
+    assert len(registros) == 644
+    sin_fecha = []
+    for r in registros:
+        n = conector.normalize(r)
+        assert n is not None
+        n.validar()
+        autorizacion = next(a for a in n.aristas if a.ftm_schema == "UnknownLink")
+        if autorizacion.start_date is None:
+            sin_fecha.append(r.data["fecha_autorizacion"])
+    assert not sin_fecha, sin_fecha[:5]
+
+
+def test_fetch_baja_la_exportacion_que_enlaza_el_buscador():
+    pedidas: list[str] = []
+
+    def servidor(peticion: httpx.Request) -> httpx.Response:
+        pedidas.append(str(peticion.url))
+        if "expTab.htm" in str(peticion.url):
+            return httpx.Response(
+                200,
+                content=HOJA.read_bytes(),
+                headers={"content-type": "application/zip;charset=UTF-8"},
+            )
+        return httpx.Response(
+            200, content=BUSCADOR_HTML.read_bytes(), headers={"content-type": "text/html"}
+        )
+
+    cliente = httpx.Client(transport=httpx.MockTransport(servidor))
+    [doc] = list(OCIConnector(cliente=cliente).fetch())
+    assert "expTab.htm" in doc.url and "&amp;" not in doc.url
+    assert doc.media_type == "application/zip"
+    assert len(pedidas) == 2
+    assert len(list(OCIConnector().parse(doc))) == 644

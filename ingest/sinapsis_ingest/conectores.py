@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, boe, placsp, tcu
+from sinapsis_ingest.connectors import bdns, boe, oci, placsp, tcu
 
 
 @dataclass(frozen=True)
@@ -54,6 +54,12 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://www.boe.es",
         license="Reutilización libre (Ley 37/2007; aviso legal del BOE)",
     ),
+    "oci": FichaFuente(
+        id="oci",
+        name="Oficina de Conflictos de Intereses",
+        url="https://transparencia.gob.es/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese",
+        license="Publicidad activa (Ley 19/2013); reutilización libre (Ley 37/2007)",
+    ),
 }
 
 _CONECTORES: dict[str, Any] = {
@@ -70,6 +76,9 @@ _CONECTORES: dict[str, Any] = {
     # Altos cargos por Real Decreto. Sólo guarda lo que es alto cargo: ver
     # la regla de personas de la spec (§12) y `cargos.py`.
     "boe": boe.crear,
+    # Autorizaciones de actividad privada tras el cese: la fuente que afirma
+    # las puertas giratorias (§12).
+    "oci": oci.crear,
 }
 
 

@@ -28,9 +28,12 @@ en que viene y no se reordena: darle la vuelta inventaría un nombre.
 
 from __future__ import annotations
 
+import io
 import re
 import time
 import unicodedata
+import warnings
+import zipfile
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from html.parser import HTMLParser
@@ -46,7 +49,13 @@ from sinapsis_ingest.normalizado import AristaNormalizada, EntidadNormalizada, N
 log = structlog.get_logger()
 
 BASE = "https://transparencia.gob.es"
-PAGINAS = (f"{BASE}/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese",)
+#: El buscador del portal con TODAS las autorizaciones —vigentes e
+#: históricas: 644 el 25/9/2026—. Enlaza a la exportación en hoja de cálculo.
+BUSCADOR = (
+    f"{BASE}/servicios-buscador/buscar.htm?categoria=autorizaciones_ind"
+    "&lang=es&orderBy=fechaAutorizacion&or=DESC"
+)
+_EXPORTACION = re.compile(r'href="([^"]*expTab\.htm[^"]*)"')
 
 COLUMNAS = (
     "nombre",
@@ -174,6 +183,55 @@ def _cabecera(celda: str) -> str:
     return c.replace("atividad", "actividad")
 
 
+def leer_hoja(contenido: bytes) -> list[dict[str, Any]]:
+    """Las filas de la exportación del buscador.
+
+    El reconocimiento vio que la «hoja» es un ZIP con un XLSX dentro, y que
+    `openpyxl` en modo de sólo lectura ve una fila porque la hoja no declara
+    sus dimensiones: se abre en modo normal. Cabeceras como en `leer_tablas`,
+    por nombre.
+    """
+    import openpyxl
+
+    try:
+        datos = contenido
+        with zipfile.ZipFile(io.BytesIO(contenido)) as z:
+            interiores = [n for n in z.namelist() if n.lower().endswith(".xlsx")]
+            if interiores:
+                datos = z.read(interiores[0])
+        with warnings.catch_warnings():
+            # «Workbook contains no default style»: la hoja del portal no trae
+            # estilos, y a quien la lee le da igual.
+            warnings.simplefilter("ignore", UserWarning)
+            libro = openpyxl.load_workbook(io.BytesIO(datos))
+    except Exception as exc:  # un formato nuevo no tumba la ingesta
+        log.warning("oci: la hoja no se puede abrir", detalle=str(exc))
+        return []
+    filas = [
+        ["" if v is None else " ".join(str(v).split()) for v in fila]
+        for fila in libro.worksheets[0].iter_rows(values_only=True)
+    ]
+    if not filas or tuple(_cabecera(c) for c in filas[0][: len(COLUMNAS)]) != COLUMNAS:
+        log.warning("oci: la hoja no trae las columnas esperadas", cabecera=filas[:1])
+        return []
+    salida = []
+    for celdas in filas[1:]:
+        if len(celdas) < len(COLUMNAS) or not celdas[0] or not celdas[4]:
+            continue
+        salida.append(
+            {
+                "nombre": celdas[0],
+                "cargo": celdas[1],
+                "ministerio": celdas[2],
+                "fecha_cese": celdas[3],
+                "actividad": celdas[4],
+                "fecha_autorizacion": celdas[5],
+                "curriculum": "",
+            }
+        )
+    return salida
+
+
 def leer_tablas(html: str) -> list[dict[str, Any]]:
     """Las filas de las tablas de autorizaciones de una página.
 
@@ -218,13 +276,17 @@ class OCIConnector:
     source_id = "oci"
     extractor_version = "oci-autorizaciones/1"
 
-    def __init__(self, cliente: httpx.Client | None = None, paginas: tuple[str, ...] = PAGINAS):
+    def __init__(self, cliente: httpx.Client | None = None, buscador: str = BUSCADOR):
         self._cliente = cliente
-        self._paginas = paginas
+        self._buscador = buscador
 
     def fetch(self, **_: Any) -> Iterator[RawDocument]:
-        """Las páginas con tablas de autorizaciones. Sin rango de fechas: la
-        fuente publica listas acumuladas, y la idempotencia la da el hash."""
+        """La exportación entera del buscador, de una vez.
+
+        Sin rango de fechas: la fuente publica la lista acumulada, y la
+        idempotencia la da el hash. El exportador corta en 2000 resultados;
+        si un día se pasa, se dice en el log, porque faltarían filas.
+        """
         cliente = self._cliente or httpx.Client(
             timeout=60.0,
             follow_redirects=True,
@@ -232,30 +294,49 @@ class OCIConnector:
         )
         propio = self._cliente is None
         try:
-            for url in self._paginas:
-                try:
-                    r = cliente.get(url)
-                    r.raise_for_status()
-                except httpx.HTTPError as exc:
-                    log.warning("oci: página no disponible", url=url, detalle=str(exc))
-                    continue
-                if not leer_tablas(r.text):
-                    log.warning("oci: la página no trae la tabla esperada", url=url)
-                yield RawDocument(
-                    source_id=self.source_id,
-                    url=url,
-                    content=r.content,
-                    media_type="text/html",
-                    retrieved_at=datetime.now(UTC),
+            try:
+                r = cliente.get(self._buscador)
+                r.raise_for_status()
+            except httpx.HTTPError as exc:
+                log.warning("oci: el buscador no responde", detalle=str(exc))
+                return
+            enlace = _EXPORTACION.search(r.text)
+            encontrados = re.search(r"(\d[\d.]*)\s+Resultados encontrados", r.text)
+            if encontrados and int(encontrados.group(1).replace(".", "")) >= 2000:
+                log.warning(
+                    "oci: el exportador corta en 2000 y hay más", total=encontrados.group(1)
                 )
-                time.sleep(0.5)
+            if not enlace:
+                log.warning("oci: el buscador ya no enlaza la exportación")
+                return
+            url = httpx.URL(self._buscador).join(enlace.group(1).replace("&amp;", "&"))
+            time.sleep(0.5)
+            try:
+                x = cliente.get(url)
+                x.raise_for_status()
+            except httpx.HTTPError as exc:
+                log.warning("oci: la exportación no se descarga", detalle=str(exc))
+                return
+            yield RawDocument(
+                source_id=self.source_id,
+                url=str(url),
+                content=x.content,
+                media_type=x.headers.get("content-type", "application/zip").split(";")[0],
+                retrieved_at=datetime.now(UTC),
+            )
         finally:
             if propio:
                 cliente.close()
 
     def parse(self, raw: RawDocument) -> Iterator[ParsedRecord]:
-        html = raw.content.decode("utf-8", errors="replace")
-        for n, fila in enumerate(leer_tablas(html)):
+        # La exportación (un ZIP con la hoja) o una página HTML con la tabla:
+        # las dos formas que publica la fuente, y los golden tests prueban
+        # las dos.
+        if raw.content[:2] == b"PK":
+            filas = leer_hoja(raw.content)
+        else:
+            filas = leer_tablas(raw.content.decode("utf-8", errors="replace"))
+        for n, fila in enumerate(filas):
             yield ParsedRecord(
                 raw_content_hash=raw.content_hash,
                 extractor_version=self.extractor_version,

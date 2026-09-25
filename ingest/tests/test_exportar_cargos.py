@@ -608,17 +608,20 @@ def test_la_autorizacion_nombra_una_sociedad_del_mapa(store_oci, tmp_path):
 
 
 def test_una_sociedad_se_reconoce_entera_y_sin_dudas():
-    from sinapsis_ingest.exportar_cargos import empresa_en
+    from sinapsis_ingest.exportar_cargos import _palabras, empresa_en
 
-    mapa = {
-        "ey abogados s l p": [("nif:B1", "EY ABOGADOS, S.L.P.")],
-        "laboratorios farmaceuticos rovi s a": [
-            ("nif:A2", "LABORATORIOS FARMACEUTICOS ROVI, S.A.")
-        ],
-        "grupo x s a": [("nif:A3", "GRUPO X, S.A.")],
-        "x s a": [("nif:A4", "X, S.A.")],
-        "duplicada s l": [("nif:B5", "DUPLICADA, S.L."), ("nif:B6", "Duplicada SL")],
-    }
+    fichas = [
+        ("nif:B1", "EY ABOGADOS, S.L.P."),
+        ("nif:A2", "LABORATORIOS FARMACEUTICOS ROVI, S.A."),
+        ("nif:A3", "GRUPO X, S.A."),
+        ("nif:A4", "X, S.A."),
+        ("nif:B5", "DUPLICADA, S.L."),
+        ("nif:B6", "Duplicada SL"),
+    ]
+    # Las claves se construyen igual que en el volcado.
+    mapa: dict[str, list[tuple[str, str]]] = {}
+    for clave, nombre in fichas:
+        mapa.setdefault(" ".join(_palabras(nombre)), []).append((clave, nombre))
     assert empresa_en("SOCIO DE EY ABOGADOS, S.L.P.", mapa)["clave"] == "nif:B1"
     assert (
         empresa_en(
@@ -632,3 +635,12 @@ def test_una_sociedad_se_reconoce_entera_y_sin_dudas():
     assert empresa_en("ASESOR DE DUPLICADA, S.L.", mapa) is None
     # Sin denominación del mapa: nada.
     assert empresa_en("ECONOMISTA POR CUENTA PROPIA", mapa) is None
+
+
+def test_la_forma_societaria_se_escribe_de_tres_maneras():
+    from sinapsis_ingest.exportar_cargos import _palabras, empresa_en
+
+    assert _palabras("REDEIA, S.L.") == _palabras("REDEIA,SL") == ["redeia", "sl"]
+    assert _palabras("EY ABOGADOS, S. L. P.") == ["ey", "abogados", "slp"]
+    mapa = {"redeia sl": [("nif:B9", "REDEIA, S.L.")]}
+    assert empresa_en("REDEIA,SL", mapa)["clave"] == "nif:B9"

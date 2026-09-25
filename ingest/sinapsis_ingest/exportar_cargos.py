@@ -218,7 +218,24 @@ def _filas_de_la_puerta(store: Store, esquema: str, extra: str = "") -> list[Any
 
 
 def _palabras(texto: str) -> list[str]:
-    return _plano(texto).split()
+    """Las palabras de un nombre, con las siglas juntas.
+
+    «S.L.U.», «S. L. U.» y «SLU» son la misma forma societaria, y la fuente
+    escribe las tres («REDEIA,SL»): letras sueltas seguidas se juntan en una.
+    """
+    salida: list[str] = []
+    sigla = False
+    for palabra in _plano(texto).split():
+        if len(palabra) == 1:
+            if sigla:
+                salida[-1] += palabra
+            else:
+                salida.append(palabra)
+            sigla = True
+        else:
+            salida.append(palabra)
+            sigla = False
+    return salida
 
 
 def empresas_por_nombre(store: Store) -> dict[str, list[tuple[str, str]]]:

@@ -13,6 +13,10 @@ dependencies = [
     # El Tribunal de Cuentas sólo publica PDF: no hay API, ni CSV, ni tablas
     # HTML. Comprobado, no supuesto — ver docs/fuentes/tcu-reconocimiento.md.
     "pdfplumber>=0.11",
+    # La Oficina de Conflictos de Intereses publica las autorizaciones como
+    # hoja de cálculo (el exportador del Portal de Transparencia). Ver
+    # docs/fuentes/oci-reconocimiento.md.
+    "openpyxl>=3.1",
 ]
 
 [project.optional-dependencies]

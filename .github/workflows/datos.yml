@@ -140,6 +140,11 @@ jobs:
           # y la idempotencia la da el content_hash.
           ejecutar tcu --desde "$D" --hasta "$H"
 
+          # Las autorizaciones de la Oficina de Conflictos de Intereses: dos
+          # peticiones —el buscador y su exportación— y la lista entera. Como el
+          # TdC, ignora el rango de fechas.
+          ejecutar oci --desde "$D" --hasta "$H"
+
           # La Plataforma publica tres feeds y hasta el 18/9/2026 sólo se
           # leía uno. `agregadas` trae lo que vuelcan las plataformas
           # autonómicas; `licitaciones` es el feed principal del Estado y
