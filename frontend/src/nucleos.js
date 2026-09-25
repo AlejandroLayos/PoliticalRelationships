@@ -355,6 +355,23 @@ export function paletaDeNucleos(nucleos, cuantos = PALETA_NUCLEOS.length) {
 }
 
 /** Formato de dinero legible: 12.400.000 € se lee peor que 12,4 M €. */
+/**
+ * La cifra como la escribe un periódico en un titular: «5736 millones de
+ * euros», no «5,7 MM €». La abreviatura sirve en una columna de cifras, donde
+ * se compara; en un titular se lee en voz alta, y «MM» no se lee.
+ *
+ * Sin punto de millar en cifras de cuatro dígitos: es la norma de la RAE y la
+ * del formato es-ES.
+ */
+export function cifraDeTitular(v) {
+  const n = aNumero(v)
+  if (n >= 1e6) {
+    const millones = Math.round(n / 1e6)
+    return `${millones.toLocaleString('es-ES')} ${millones === 1 ? 'millón' : 'millones'} de euros`
+  }
+  return `${Math.round(n).toLocaleString('es-ES')} euros`
+}
+
 export function dineroCorto(v) {
   const n = aNumero(v)
   if (n >= 1e9) return `${(n / 1e9).toFixed(1).replace('.', ',')} MM €`

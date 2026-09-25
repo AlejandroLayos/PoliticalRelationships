@@ -171,6 +171,22 @@ await paso('un enlace directo a un mapa lleva al mapa', async () => {
   if ((await pagina.locator('.bloque').count()) < 5) throw new Error('cayó en la portada')
 })
 
+await paso('el botón de la portada abre el mapa', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(ESPERA_MAPA)
+  await pagina.click('text=Abrir el mapa del dinero')
+  await pagina.waitForTimeout(3000)
+  if ((await pagina.locator('.bloque').count()) < 5) throw new Error('no abrió el mapa')
+})
+
+// Aena no está en la base. Por subcadena salía una asociación de Baena como
+// primer resultado, e Intro llevaba a su ficha como si fuera lo buscado.
+await paso('buscar lo que no está dice que no está', async () => {
+  await pagina.fill('.buscador input', 'Aena')
+  await pagina.waitForTimeout(2500)
+  if (!(await pagina.innerText('body')).includes('Nada con «Aena»')) throw new Error('no lo dijo')
+})
+
 await navegador.close()
 
 if (consola.length) {

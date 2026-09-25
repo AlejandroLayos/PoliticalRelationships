@@ -340,6 +340,15 @@ a.sello:hover {
   background: var(--tinta);
   color: var(--papel);
 }
+/* La acción principal de una página, y sólo una: rellena de tinta. */
+.boton.solido {
+  background: var(--tinta);
+  color: var(--papel);
+}
+.boton.solido:hover {
+  background: var(--tinta-2);
+  border-color: var(--tinta-2);
+}
 .boton.tenue {
   border-color: var(--filete-medio);
   color: var(--tinta-2);

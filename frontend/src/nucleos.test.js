@@ -9,6 +9,7 @@ import {
   MINIMO_NUCLEO,
   FONDO,
   PALETA_NUCLEOS,
+  cifraDeTitular,
   dineroCorto,
   etiquetaDe,
   peso,
@@ -268,6 +269,18 @@ describe('colorNucleo', () => {
     expect(colorNucleo(-1)).toBe(FONDO)
     expect(colorNucleo(undefined)).toBe(FONDO)
     expect(PALETA_NUCLEOS).not.toContain(FONDO)
+  })
+})
+
+describe('cifraDeTitular', () => {
+  it('escribe los millones con todas sus letras', () => {
+    expect(cifraDeTitular('5736247296.20')).toBe('5736 millones de euros')
+    expect(cifraDeTitular(12_400_000_000)).toBe('12.400 millones de euros')
+    expect(cifraDeTitular(1_200_000)).toBe('1 millón de euros')
+  })
+
+  it('por debajo del millón, los euros', () => {
+    expect(cifraDeTitular(250_000)).toBe('250.000 euros')
   })
 })
 
