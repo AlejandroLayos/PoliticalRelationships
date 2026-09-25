@@ -13,7 +13,7 @@ on:
       fuente:
         description: "Fuente a reconocer"
         type: choice
-        options: [tcu, boe]
+        options: [tcu, boe, ine]
         default: tcu
 
 permissions:
@@ -34,10 +34,18 @@ jobs:
           python-version: "3.11"
 
       - name: instalar dependencias
-        run: pip install httpx certifi cryptography pdfplumber
+        run: pip install httpx certifi cryptography pdfplumber openpyxl
 
       - name: explorar
+        if: (inputs.fuente || 'tcu') != 'ine'
         run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py
+
+      # El INE no es una fuente de hechos sino una tabla de referencia: la de
+      # municipios con su provincia, para situar lo local de BDNS, que cuelga
+      # del nombre del municipio y de nada más.
+      - name: capturar la relación de municipios del INE
+        if: inputs.fuente == 'ine'
+        run: python scripts/capturar_municipios_ine.py
 
       # Segunda fase: el reconocimiento dice QUÉ publica el organismo; esto
       # dice si se puede leer. Sólo hay script de anatomía para las fuentes
@@ -101,6 +109,8 @@ jobs:
           cp ingest/tests/golden/borme_seccion1_muestra.txt "$GUARDADO/golden/" 2>/dev/null || true
           cp ingest/tests/golden/boe_altos_cargos_historico.json "$GUARDADO/golden/" 2>/dev/null || true
           cp -r ingest/tests/golden/boe_disposiciones "$GUARDADO/golden/" 2>/dev/null || true
+          mkdir -p "$GUARDADO/datos"
+          cp ingest/sinapsis_ingest/datos/municipios_ine.csv "$GUARDADO/datos/" 2>/dev/null || true
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -113,6 +123,8 @@ jobs:
             cp "$GUARDADO"/golden/tcu_*.pdf ingest/tests/golden/ 2>/dev/null || true
             cp "$GUARDADO"/golden/boe_*.json "$GUARDADO"/golden/borme_*.txt ingest/tests/golden/ 2>/dev/null || true
             cp -r "$GUARDADO"/golden/boe_disposiciones ingest/tests/golden/ 2>/dev/null || true
+            mkdir -p ingest/sinapsis_ingest/datos
+            cp "$GUARDADO"/datos/municipios_ine.csv ingest/sinapsis_ingest/datos/ 2>/dev/null || true
             # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
             # nombres de personas y está en .gitignore, pero la barrera que de
             # verdad importa es no pedir nunca que se añada todo.
@@ -122,6 +134,7 @@ jobs:
             git add ingest/tests/golden/borme_seccion1_muestra.txt 2>/dev/null || true
             git add ingest/tests/golden/boe_altos_cargos_historico.json 2>/dev/null || true
             git add ingest/tests/golden/boe_disposiciones/ 2>/dev/null || true
+            git add ingest/sinapsis_ingest/datos/municipios_ine.csv 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios"
               exit 0

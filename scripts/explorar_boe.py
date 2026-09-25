@@ -325,6 +325,53 @@ def reconocer_disposiciones(cliente: httpx.Client, informe: list[str], muestra: 
     informe.append("")
 
 
+# Los días en que se forma o se disuelve un gobierno: ahí van los Reales
+# Decretos COLECTIVOS —«por el que se nombran Ministros del Gobierno»— que
+# llevan los nombres en el cuerpo y no en el título. Sin ellos no hay
+# ministros en la sección de cargos, y los ministros son lo primero que se
+# busca.
+DIAS_DE_GOBIERNO = (
+    "20111221",
+    "20111222",
+    "20160104",
+    "20161104",
+    "20180602",
+    "20180607",
+    "20200113",
+    "20231121",
+    "20231122",
+)
+COLECTIVO = re.compile(
+    r"se nombran|cese de los|miembros del Gobierno|Presidente del Gobierno|Vicepresident",
+    re.IGNORECASE,
+)
+
+
+def reconocer_colectivos(cliente: httpx.Client, informe: list[str], destino: Path) -> None:
+    informe += ["## BOE — Reales Decretos colectivos (formación de gobierno)", ""]
+    destino.mkdir(parents=True, exist_ok=True)
+    for dia in DIAS_DE_GOBIERNO:
+        r_codigo, datos, _ = pedir(cliente, f"{API}/boe/sumario/{dia}")
+        if r_codigo != 200 or not isinstance(datos, dict):
+            informe.append(f"- `{dia}` → HTTP {r_codigo}")
+            continue
+        s2a = [i for s in secciones_boe(datos) if str(s.get("codigo", "")).upper() == "2A" for i in items_de(s)]
+        for i in s2a:
+            titulo = i.get("titulo") or ""
+            if not titulo.startswith("Real Decreto") or not COLECTIVO.search(titulo):
+                continue
+            informe.append(f"- `{dia}` {i.get('identificador')} · {titulo}")
+            url = i.get("url_xml")
+            if not url:
+                continue
+            x_codigo, contenido, _ = pedir(cliente, url, json_=False)
+            if x_codigo == 200 and contenido:
+                (destino / f"{i['identificador']}.xml").write_bytes(contenido)
+            time.sleep(0.5)
+        time.sleep(0.5)
+    informe.append("")
+
+
 # --- BORME ----------------------------------------------------------------
 
 
@@ -467,6 +514,7 @@ def main() -> int:
     with httpx.Client(timeout=TIMEOUT, follow_redirects=True) as cliente:
         reconocer_boe(cliente, informe, Path(args.golden_boe))
         reconocer_historico(cliente, informe, Path(args.golden_historico))
+        reconocer_colectivos(cliente, informe, Path(args.golden_disposiciones))
         reconocer_disposiciones(cliente, informe, Path(args.golden_boe), Path(args.golden_disposiciones))
         reconocer_borme(cliente, informe, Path(args.golden_borme))
 
