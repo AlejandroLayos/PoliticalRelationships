@@ -13,7 +13,7 @@ on:
       fuente:
         description: "Fuente a reconocer"
         type: choice
-        options: [tcu, boe, ine, oci, congreso, placsp, partidos_boe]
+        options: [tcu, boe, ine, oci, congreso, placsp, partidos_boe, senado]
         default: tcu
 
 permissions:
@@ -114,6 +114,7 @@ jobs:
           cp -r ingest/tests/golden/oci "$GUARDADO/golden/" 2>/dev/null || true
           cp -r ingest/tests/golden/congreso "$GUARDADO/golden/" 2>/dev/null || true
           cp -r ingest/tests/golden/partidos_boe "$GUARDADO/golden/" 2>/dev/null || true
+          cp -r ingest/tests/golden/senado "$GUARDADO/golden/" 2>/dev/null || true
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -131,6 +132,7 @@ jobs:
             cp -r "$GUARDADO"/golden/oci ingest/tests/golden/ 2>/dev/null || true
             cp -r "$GUARDADO"/golden/congreso ingest/tests/golden/ 2>/dev/null || true
             cp -r "$GUARDADO"/golden/partidos_boe ingest/tests/golden/ 2>/dev/null || true
+            cp -r "$GUARDADO"/golden/senado ingest/tests/golden/ 2>/dev/null || true
             # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
             # nombres de personas y está en .gitignore, pero la barrera que de
             # verdad importa es no pedir nunca que se añada todo.
@@ -147,6 +149,8 @@ jobs:
             git add ingest/tests/golden/congreso/ 2>/dev/null || true
             # Las cuentas de los partidos: formaciones políticas, personas jurídicas.
             git add ingest/tests/golden/partidos_boe/ 2>/dev/null || true
+            # Senadores: cargos públicos del Senado, publicables por §12.
+            git add ingest/tests/golden/senado/ 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios"
               exit 0
