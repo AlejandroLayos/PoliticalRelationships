@@ -76,6 +76,27 @@ def periodos(actos: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     salida: list[dict[str, Any]] = []
     for lista in por_puesto.values():
+        # Un mandato del Congreso ya es un periodo entero, con su alta y su
+        # baja: no hay que emparejar nada.
+        for a in lista:
+            if a["tipo"] == "mandato":
+                salida.append(
+                    {
+                        "puesto": a["puesto"],
+                        "cargo": a["cargo"],
+                        "organismo": a.get("organismo") or "",
+                        "desde": a["fecha"],
+                        **({"hasta": a["hasta"]} if a.get("hasta") else {}),
+                        "urlDesde": a["url"],
+                        **_fuente_no_boe(a),
+                        **{
+                            k: a[k]
+                            for k in ("formacion", "grupo", "circunscripcion", "cruce")
+                            if a.get(k)
+                        },
+                    }
+                )
+        lista = [a for a in lista if a["tipo"] != "mandato"]
         lista.sort(key=lambda a: (a["fecha"], orden.get(a["tipo"], 2)))
         abierto: dict[str, Any] | None = None
         for a in lista:
@@ -181,7 +202,7 @@ def _serializable(p: dict[str, Any]) -> dict[str, Any]:
 #: Las puertas: el prefijo de clave que pone cada conector, y la ÚNICA fuente
 #: cuya procedencia vale para él. Una ficha con clave del BOE pero sin
 #: documento del BOE no sale, y al revés.
-PUERTAS = {"boe:persona:": "boe", "oci:persona:": "oci"}
+PUERTAS = {"boe:persona:": "boe", "oci:persona:": "oci", "congreso:persona:": "congreso"}
 
 #: Días de margen entre la fecha de cese que da la Oficina de Conflictos de
 #: Intereses y la que publica el BOE: la una es la del cese y la otra la de su
@@ -346,6 +367,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     personas: dict[str, dict[str, Any]] = {}
     actos: dict[str, list[dict[str, Any]]] = {}
     para_cruzar: dict[str, str] = {}
+    biografias: dict[str, list[str]] = {}
     descartadas = 0
     for f in filas:
         # La condición del DNI en Python, con la misma función que usa el
@@ -355,14 +377,18 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
             continue
         props = f["properties"] or {}
         tipo = props.get("acto")
-        fecha = f["start_date"] if tipo == "nombramiento" else f["end_date"]
-        if tipo not in {"nombramiento", "cese"} or fecha is None:
+        fecha = f["end_date"] if tipo == "cese" else f["start_date"]
+        if tipo not in {"nombramiento", "cese", "mandato"} or fecha is None:
             continue
         clave = f["dedupe_key"]
-        fuente = "oci" if clave.startswith("oci:") else "boe"
+        fuente = next(v for k, v in PUERTAS.items() if clave.startswith(k))
         personas.setdefault(clave, {"clave": clave, "nombre": f["caption"]})
-        if fuente == "oci":
+        if fuente in {"oci", "congreso"}:
             para_cruzar[clave] = (f["props_persona"] or {}).get("nombreParaCruzar", "")
+        if fuente == "congreso":
+            biografias[clave] = [
+                _plano(m) for m in (f["props_persona"] or {}).get("cargosEnBiografia", [])
+            ]
         actos.setdefault(clave, []).append(
             {
                 "tipo": tipo,
@@ -374,6 +400,8 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                 "url": props.get("url") or "",
                 "motivo": props.get("motivo") or "",
                 "fuente": fuente,
+                **({"hasta": f["end_date"]} if tipo == "mandato" and f["end_date"] else {}),
+                **{k: props[k] for k in ("formacion", "grupo", "circunscripcion") if props.get(k)},
             }
         )
     if descartadas:
@@ -408,14 +436,26 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         if clave.startswith("boe:"):
             boe_por_nombre.setdefault(_plano(persona["nombre"]), []).append(clave)
     unida_a: dict[str, str] = {}
-    for clave_oci, nombre in para_cruzar.items():
+    for clave_otra, nombre in para_cruzar.items():
         candidatas = boe_por_nombre.get(nombre, [])
         if len(candidatas) != 1:
             continue
-        ceses_oci = [a["fecha"] for a in actos[clave_oci] if a["tipo"] == "cese"]
-        ceses_boe = [a["fecha"] for a in actos[candidatas[0]] if a["tipo"] == "cese"]
-        if any(abs((a - b).days) <= MARGEN_CESE for a in ceses_oci for b in ceses_boe):
-            unida_a[clave_oci] = candidatas[0]
+        del_boe = actos[candidatas[0]]
+        if clave_otra.startswith("oci:"):
+            ceses_oci = [a["fecha"] for a in actos[clave_otra] if a["tipo"] == "cese"]
+            ceses_boe = [a["fecha"] for a in del_boe if a["tipo"] == "cese"]
+            if any(abs((a - b).days) <= MARGEN_CESE for a in ceses_oci for b in ceses_boe):
+                unida_a[clave_otra] = candidatas[0]
+        else:
+            # Congreso: el nombre entero y, además, que su biografía en el
+            # Congreso mencione uno de sus cargos del BOE. La segunda señal la
+            # da la propia fuente.
+            cargos_boe = {_plano(a["cargo"]) for a in del_boe} | {
+                _plano(a["puesto"]) for a in del_boe
+            }
+            cargos_boe = {c for c in cargos_boe if len(c.split()) >= 3}
+            if any(c in m for c in cargos_boe for m in biografias.get(clave_otra, [])):
+                unida_a[clave_otra] = candidatas[0]
 
     organos = organos_del_estado(store)
     empresas_mapa = empresas_por_nombre(store) if autorizaciones else {}
@@ -428,7 +468,17 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     for clave, persona in personas.items():
         if clave in unida_a:
             continue
-        ps = periodos(actos[clave])
+        # Un diputado que no se une a ningún alto cargo no sale: la sección es
+        # de altos cargos, y de él sólo se sabría que fue diputado.
+        if clave.startswith("congreso:"):
+            continue
+        propios_actos = list(actos[clave])
+        for c, b in unida_a.items():
+            if b == clave and c.startswith("congreso:"):
+                propios_actos += [
+                    {**a, "cruce": "nombre y cargo en su biografía del Congreso"} for a in actos[c]
+                ]
+        ps = periodos(propios_actos)
         for p in ps:
             organo = organo_de(p["puesto"], organos)
             if organo is None:

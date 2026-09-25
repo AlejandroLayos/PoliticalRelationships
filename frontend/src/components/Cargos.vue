@@ -131,13 +131,17 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 
     <!--
       Las presidencias del Gobierno que hay en lo leído: el contexto de todo
-      lo demás. Sólo de los Reales Decretos del Presidente; sin partido, que
-      el BOE no lo dice.
+      lo demás. De los Reales Decretos del Presidente; la formación, sólo si
+      su ficha está unida al Congreso por nombre y cargo en su biografía, que
+      el BOE no la dice.
     -->
     <ol v-if="gobiernos.length && !abierta" class="gobiernos" aria-label="Presidencias del Gobierno">
       <li v-for="g in gobiernos" :key="g.persona + (g.desde ?? g.hasta)">
         <a href="#" @click.prevent="abrir(g.persona)">{{ g.nombre }}</a>
-        <span class="tramo">{{ tramo(g) }}</span>
+        <span class="tramo">
+          {{ tramo(g) }}
+          <abbr v-if="g.formacion" title="Formación con la que fue elegido diputado, según el Congreso">· {{ g.formacion }}</abbr>
+        </span>
       </li>
     </ol>
 
@@ -204,6 +208,9 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
           <div class="periodo-cuerpo">
             <p class="periodo-cargo">{{ p.cargo }}</p>
             <p v-if="p.organismo" class="periodo-organismo">{{ p.organismo }}</p>
+            <p v-if="p.formacion" class="periodo-organismo">
+              {{ p.formacion }}<template v-if="p.circunscripcion"> · {{ p.circunscripcion }}</template><template v-if="p.grupo"> · {{ p.grupo }}</template>
+            </p>
             <!--
               El órgano que dirigía, cuando es uno del mapa del dinero: por ahí
               se llega a lo que contrató. Sólo si el nombre del órgano sale del
@@ -219,13 +226,17 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
               <span v-if="huecoDelPeriodo(p)" class="hueco">· {{ huecoDelPeriodo(p) }}</span>
             </p>
             <p class="periodo-fuentes">
-              <a v-if="p.urlDesde" :href="p.urlDesde" target="_blank" rel="noopener" class="sello">
+              <a v-if="p.urlDesde && p.fuente === 'congreso'" :href="p.urlDesde" target="_blank" rel="noopener" class="sello">
+                Congreso de los Diputados
+              </a>
+              <a v-else-if="p.urlDesde" :href="p.urlDesde" target="_blank" rel="noopener" class="sello">
                 Nombramiento · {{ p.boeDesde }}
               </a>
               <a v-if="p.urlHasta" :href="p.urlHasta" target="_blank" rel="noopener" class="sello">
                 Cese · {{ p.boeHasta || nombreFuente(p) }}
               </a>
               <span v-if="p.motivoCese" class="motivo">{{ p.motivoCese }}</span>
+              <span v-if="p.cruce" class="motivo">unido a esta ficha por {{ p.cruce }}</span>
             </p>
           </div>
         </li>

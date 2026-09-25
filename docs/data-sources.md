@@ -372,6 +372,40 @@ ex alto cargo (Person) --UnknownLink--> texto de la autorización (Organization)
 
 ---
 
+## 2.quater Congreso de los Diputados — diputados por legislatura
+
+**Aporta:** quién fue diputado en cada legislatura, por qué circunscripción,
+con qué formación electoral y en qué grupo parlamentario, con fechas de alta y
+baja. Es lo que da el partido —de qué formación era un ministro que fue
+diputado— y, con eso, el contexto de gobierno (spec §15, fase 7, línea 4).
+
+**Acceso:** datos abiertos del Congreso, sin registro. Un JSON por legislatura
+(`odsDiputadosNN__<marca>.json`; la marca cambia a diario, así que los enlaces
+se leen de <https://www.congreso.es/es/opendata/diputados>), y la legislatura
+en curso en los ficheros de diputados activos y de baja. Forma verificada en
+`docs/fuentes/congreso-reconocimiento.md` y `ingest/tests/golden/congreso/`.
+Se leen desde la IX legislatura (2008).
+
+**Base legal (spec §12).** Publicidad de la composición de la Cámara. Se usa
+sólo en su papel de diputado.
+
+**Minimización.** Los ficheros traen la biografía de cada diputado. No se
+guarda ni se publica: de ella sólo se extraen los cargos públicos que menciona
+(«Ministro de Fomento (2018-2020)»), que sirven de segunda señal para unir al
+diputado con un alto cargo del BOE.
+
+**Cruce con el BOE.** Sólo si coinciden el nombre entero y, además, la
+biografía del Congreso menciona uno de sus cargos del BOE. Un diputado que no
+se une a ningún alto cargo no se publica: la sección es de altos cargos.
+
+**Mapeo a FollowTheMoney:**
+
+```
+diputado (Person) --Occupancy--> escaño de la legislatura (Position)   alta → baja
+```
+
+---
+
 ## 3. BORME — Boletín Oficial del Registro Mercantil
 
 **Aporta:** actos societarios inscritos — constituciones, ceses y nombramientos

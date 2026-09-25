@@ -3,6 +3,7 @@ import {
   buscarCargos,
   fechaCorta,
   fechaLarga,
+  formacionEn,
   huecoDelPeriodo,
   lineaDeTiempo,
   marcasDeAnios,
@@ -249,5 +250,26 @@ describe('recuento', () => {
       ],
     }
     expect(recuento(d)).toEqual({ boe: 2, soloOci: 1 })
+  })
+})
+
+describe('formacionEn', () => {
+  const persona = {
+    periodos: [
+      { puesto: 'Presidente del Gobierno', desde: '2018-06-02' },
+      { fuente: 'congreso', formacion: 'PSOE', desde: '2016-07-18', hasta: '2016-10-29' },
+      { fuente: 'congreso', formacion: 'PSOE', desde: '2019-11-27', hasta: '2023-05-30' },
+    ],
+  }
+  it('la del mandato que cubre la fecha, o la del anterior más cercano', () => {
+    expect(formacionEn(persona, '2020-01-01')).toBe('PSOE')
+    expect(formacionEn(persona, '2018-06-02')).toBe('PSOE')
+  })
+  it('sin mandatos del Congreso unidos, nada', () => {
+    expect(formacionEn({ periodos: [{ desde: '2018-01-01' }] }, '2018-06-02')).toBe('')
+    expect(formacionEn(persona, '2010-01-01')).toBe('')
+  })
+  it('el Congreso no dice cese, dice baja', () => {
+    expect(huecoDelPeriodo({ fuente: 'congreso', desde: '2023-08-17' })).toBe('sin baja en el Congreso')
   })
 })

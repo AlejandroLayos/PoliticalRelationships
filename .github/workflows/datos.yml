@@ -145,6 +145,10 @@ jobs:
           # TdC, ignora el rango de fechas.
           ejecutar oci --desde "$D" --hasta "$H"
 
+          # Los diputados del Congreso por legislatura, desde la IX: una página y
+          # un fichero por legislatura. Ignora el rango de fechas.
+          ejecutar congreso --desde "$D" --hasta "$H"
+
           # La Plataforma publica tres feeds y hasta el 18/9/2026 sólo se
           # leía uno. `agregadas` trae lo que vuelcan las plataformas
           # autonómicas; `licitaciones` es el feed principal del Estado y

@@ -50,6 +50,7 @@ export function tramo(p) {
  * Lo que falta en un periodo, dicho. `''` si no falta nada.
  */
 export function huecoDelPeriodo(p) {
+  if (p.fuente === 'congreso') return p.hasta ? '' : 'sin baja en el Congreso'
   if (p.desde && !p.hasta) return 'no consta cese'
   // La Oficina de Conflictos de Intereses da la fecha de cese y no la del
   // nombramiento: no es que sea anterior a lo leído, es que no la publica.
@@ -59,7 +60,26 @@ export function huecoDelPeriodo(p) {
 
 /** Cómo se nombra la fuente de un periodo. */
 export function nombreFuente(p) {
-  return p.fuente === 'oci' ? 'Oficina de Conflictos de Intereses' : 'BOE'
+  if (p.fuente === 'oci') return 'Oficina de Conflictos de Intereses'
+  if (p.fuente === 'congreso') return 'Congreso de los Diputados'
+  return 'BOE'
+}
+
+/**
+ * La formación con la que fue elegido diputado quien tenía un cargo en una
+ * fecha: la del mandato del Congreso que la cubre, o la del más cercano
+ * anterior. Sólo si su ficha está unida al Congreso por las dos señales
+ * (nombre y cargo en su biografía); si no, ''.
+ */
+export function formacionEn(persona, fecha) {
+  const mandatos = (persona?.periodos ?? [])
+    .filter((p) => p.fuente === 'congreso' && p.formacion && p.desde)
+    .sort((a, b) => (a.desde < b.desde ? -1 : 1))
+  if (!mandatos.length || !fecha) return ''
+  const cubre = mandatos.find((m) => m.desde <= fecha && (!m.hasta || fecha <= m.hasta))
+  if (cubre) return cubre.formacion
+  const anteriores = mandatos.filter((m) => m.desde <= fecha)
+  return anteriores.length ? anteriores[anteriores.length - 1].formacion : ''
 }
 
 /**
@@ -235,7 +255,12 @@ export function presidencias(datos) {
   for (const persona of datos?.personas ?? []) {
     for (const p of persona.periodos ?? []) {
       if (p.puesto === 'Presidente del Gobierno' && (p.fuente ?? 'boe') === 'boe') {
-        salida.push({ persona: persona.clave, nombre: persona.nombre, ...p })
+        salida.push({
+          persona: persona.clave,
+          nombre: persona.nombre,
+          formacion: formacionEn(persona, p.desde || p.hasta),
+          ...p,
+        })
       }
     }
   }

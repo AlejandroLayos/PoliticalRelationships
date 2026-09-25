@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, boe, oci, placsp, tcu
+from sinapsis_ingest.connectors import bdns, boe, congreso, oci, placsp, tcu
 
 
 @dataclass(frozen=True)
@@ -54,6 +54,12 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://www.boe.es",
         license="Reutilización libre (Ley 37/2007; aviso legal del BOE)",
     ),
+    "congreso": FichaFuente(
+        id="congreso",
+        name="Congreso de los Diputados",
+        url="https://www.congreso.es/es/opendata/diputados",
+        license="Datos abiertos del Congreso; reutilización libre (Ley 37/2007)",
+    ),
     "oci": FichaFuente(
         id="oci",
         name="Oficina de Conflictos de Intereses",
@@ -79,6 +85,9 @@ _CONECTORES: dict[str, Any] = {
     # Autorizaciones de actividad privada tras el cese: la fuente que afirma
     # las puertas giratorias (§12).
     "oci": oci.crear,
+    # Diputados por legislatura, con su formación: el partido, para el
+    # contexto de gobierno (fase 7, línea 4).
+    "congreso": congreso.crear,
 }
 
 

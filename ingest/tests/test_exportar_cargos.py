@@ -653,3 +653,90 @@ def test_la_forma_societaria_se_escribe_de_tres_maneras():
     assert _palabras("EY ABOGADOS, S. L. P.") == ["ey", "abogados", "slp"]
     mapa = {"redeia sl": [("nif:B9", "REDEIA, S.L.")]}
     assert empresa_en("REDEIA,SL", mapa)["clave"] == "nif:B9"
+
+
+# --- Congreso de los Diputados -------------------------------------------------
+
+
+def _diputado(nombre: str, formacion: str, alta: str, baja: str, cargos: list[str]) -> Normalizado:
+    from sinapsis_ingest.connectors.congreso import CongresoConnector
+
+    registro = ParsedRecord(
+        raw_content_hash="x",
+        extractor_version=CongresoConnector.extractor_version,
+        data={
+            "url": "https://www.congreso.es/x.json",
+            "legislatura": 12,
+            "nombre": nombre,
+            "circunscripcion": "Huelva",
+            "formacion": formacion,
+            "grupo": "Grupo Parlamentario Popular en el Congreso",
+            "alta": alta,
+            "baja": baja,
+            "cargos_en_biografia": cargos,
+        },
+    )
+    n = CongresoConnector().normalize(registro)
+    assert n is not None
+    return n
+
+
+@pytest.fixture
+def store_congreso(store):
+    store.upsert_source(Source(id="congreso", name="Congreso", url="https://ejemplo.test"))
+    store.conn.commit()
+    return store
+
+
+@con_base
+def test_un_diputado_se_une_al_alto_cargo_si_su_biografia_nombra_el_cargo(store_congreso, tmp_path):
+    _ingerir(
+        store_congreso,
+        "boe",
+        _nombramiento_boe(
+            "María Fátima Báñez García", "BOE-A-7", "Ministra de Empleo y Seguridad Social"
+        ),
+        b"<documento>7</documento>",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado(
+            "Báñez García, María Fátima",
+            "PP",
+            "15/07/2016",
+            "21/05/2019",
+            ["Ministra de Empleo y Seguridad Social"],
+        ),
+        b"[1]",
+    )
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    [persona] = cargos["personas"]
+    assert persona["clave"].startswith("boe:")
+    diputada = next(p for p in persona["periodos"] if p.get("fuente") == "congreso")
+    assert diputada["formacion"] == "PP"
+    assert diputada["desde"] == "2016-07-15" and diputada["hasta"] == "2019-05-21"
+    assert diputada["cruce"] == "nombre y cargo en su biografía del Congreso"
+
+
+@con_base
+def test_con_el_nombre_solo_un_diputado_no_se_une_ni_se_publica(store_congreso, tmp_path):
+    _ingerir(
+        store_congreso,
+        "boe",
+        _nombramiento_boe(
+            "María Fátima Báñez García", "BOE-A-7", "Ministra de Empleo y Seguridad Social"
+        ),
+        b"<documento>7</documento>",
+    )
+    _ingerir(
+        store_congreso,
+        "congreso",
+        _diputado("Báñez García, María Fátima", "PP", "15/07/2016", "", ["Directora General de X"]),
+        b"[1]",
+    )
+    grafo, _, cargos = _volcar(store_congreso, tmp_path)
+    [persona] = cargos["personas"]
+    assert all(p.get("fuente") != "congreso" for p in persona["periodos"])
+    # El diputado sí aportó: se leyó, aunque no se publique.
+    assert next(f for f in grafo["fuentes"] if f["id"] == "congreso")["entidades"] == 1
