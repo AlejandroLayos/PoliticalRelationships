@@ -36,16 +36,6 @@ jobs:
       - name: instalar dependencias
         run: pip install httpx certifi cryptography pdfplumber openpyxl
 
-      # Las cuentas de los partidos se buscan en los sumarios del BOE que ya
-      # guarda la ingesta nocturna: la misma caché, sólo para leer.
-      - name: recuperar la caché del BOE
-        if: inputs.fuente == 'partidos_boe'
-        uses: actions/cache/restore@v4
-        with:
-          path: /tmp/cache-boe
-          key: boe-${{ github.run_id }}
-          restore-keys: boe-
-
       - name: explorar
         if: (inputs.fuente || 'tcu') != 'ine'
         run: python scripts/explorar_${{ inputs.fuente || 'tcu' }}.py
