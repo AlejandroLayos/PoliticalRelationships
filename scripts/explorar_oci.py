@@ -40,7 +40,15 @@ except ImportError:  # pragma: no cover
 
 BASE = "https://transparencia.gob.es"
 NOVEDADES = f"{BASE}/masinformacion/novedades-de-transparencia/2026novedades"
+BUSCADOR = f"{BASE}/servicios-buscador/buscar.htm?categoria=autorizaciones_ind&lang=es&orderBy=fechaAutorizacion&or=DESC"
 PORTADAS = (
+    # La lista de ahora no está en el HTML de la portada: la sirve el buscador
+    # del portal, paginado, y la portada enlaza a él por ministerio. El
+    # segundo reconocimiento lo encontró así.
+    BUSCADOR,
+    f"{BUSCADOR}&historico=true",
+    f"{BUSCADOR}&historico=false",
+    f"{BUSCADOR}&pag=2",
     f"{BASE}/publicidad-activa/por-materias/altos-cargos/actividad-privada-cese",
     # Las novedades de 2026: el primer reconocimiento vio que las páginas de
     # seguimiento llegan a 2021 y que la portada no trae la tabla en el HTML.
@@ -52,7 +60,9 @@ PORTADAS = (
 # Las mismas páginas en otras lenguas: el primer reconocimiento gastó en ellas
 # la mitad de su cupo.
 _OTRA_LENGUA = re.compile(r"^/(ca|eu|gl|va|en)/")
-CABECERAS = {"User-Agent": "Sinapsis/0.1 (reconocimiento; proyecto abierto de transparencia)"}
+CABECERAS = {
+    "User-Agent": "Sinapsis/0.1 (reconocimiento; proyecto abierto de transparencia)"
+}
 TOPE = 60.0
 
 
@@ -153,7 +163,9 @@ def main() -> int:
             for i, tabla in enumerate(lector.tablas):
                 if not tabla:
                     continue
-                informe.append(f"- tabla {i}: {len(tabla)} filas · cabecera: `{tabla[0]}`")
+                informe.append(
+                    f"- tabla {i}: {len(tabla)} filas · cabecera: `{tabla[0]}`"
+                )
             relevantes = []
             for href, texto in lector.enlaces:
                 destino = urljoin(url, href)
@@ -173,7 +185,11 @@ def main() -> int:
                         relevantes.append(
                             f"  - HTTP {f_codigo} · `{f_tipo}` · {len(f_contenido)} bytes"
                         )
-                        if f_codigo == 200 and f_contenido and len(f_contenido) < 3_000_000:
+                        if (
+                            f_codigo == 200
+                            and f_contenido
+                            and len(f_contenido) < 3_000_000
+                        ):
                             nombre_f = Path(urlparse(destino).path).name
                             (golden / nombre_f).write_bytes(f_contenido)
                 elif (
@@ -184,7 +200,13 @@ def main() -> int:
                     relevantes.append(f"- {texto!r} → `{destino}`")
                     if urlparse(destino).netloc.endswith("transparencia.gob.es"):
                         pendientes.append(destino.split("#")[0])
-            informe += ["", "Enlaces relevantes:", "", *sorted(set(relevantes))[:60], ""]
+            informe += [
+                "",
+                "Enlaces relevantes:",
+                "",
+                *sorted(set(relevantes))[:60],
+                "",
+            ]
             # Lo que la página carga aparte: si la tabla de ahora no está en
             # el HTML, vendrá de un script, un iframe o un fichero de datos.
             cargas = sorted(
@@ -195,9 +217,16 @@ def main() -> int:
                     )
                 )
             )
-            cargas = [x for x in cargas if "clientlib" not in x and "/etc." not in x][:30]
+            cargas = [x for x in cargas if "clientlib" not in x and "/etc." not in x][
+                :30
+            ]
             if cargas:
-                informe += ["Lo que la página carga aparte:", "", *[f"- `{x}`" for x in cargas], ""]
+                informe += [
+                    "Lo que la página carga aparte:",
+                    "",
+                    *[f"- `{x}`" for x in cargas],
+                    "",
+                ]
             iframes = re.findall(r"<iframe[^>]+src=[\"']([^\"']+)", html)
             if iframes:
                 informe += ["Iframes:", "", *[f"- `{x}`" for x in iframes], ""]
@@ -205,15 +234,52 @@ def main() -> int:
             if ids_tabla:
                 informe.append(f"Tablas por id: {ids_tabla}")
                 informe.append("")
-            es_portada = url == PORTADAS[0]
-            if (es_portada or (lector.tablas and any(len(t) > 3 for t in lector.tablas))) and guardadas < 4:
-                nombre = re.sub(r"[^a-z0-9]+", "-", urlparse(url).path.lower()).strip("-")
+            es_portada = url == PORTADAS[0] or url == PORTADAS[1]
+            if "servicios-buscador" in url:
+                texto_plano = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html))
+                for patron in (
+                    r"[Ss]e han encontrado[^.]{0,80}",
+                    r"\d[\d.]* resultados?[^.]{0,40}",
+                    r"[Pp]ágina \d+ de \d+",
+                ):
+                    hallado = re.findall(patron, texto_plano)
+                    if hallado:
+                        informe.append(f"- `{patron}`: {hallado[:3]}")
+                paginas = sorted(set(re.findall(r"pag=(\d+)", html)), key=int)
+                informe.append(f"- páginas enlazadas: {paginas[:5]} … {paginas[-3:]}")
+                # La forma de un resultado, para escribir el lector: el primer
+                # bloque que lleve «Fecha de autorización» o una tabla.
+                k = html.find("Fecha de autoriza")
+                if k > 0:
+                    informe += [
+                        "",
+                        "Un resultado, en crudo:",
+                        "",
+                        "```html",
+                        html[max(0, k - 2500) : k + 1500],
+                        "```",
+                        "",
+                    ]
+            if (
+                es_portada or (lector.tablas and any(len(t) > 3 for t in lector.tablas))
+            ) and guardadas < 4:
+                nombre = re.sub(r"[^a-z0-9]+", "-", urlparse(url).path.lower()).strip(
+                    "-"
+                )
                 (golden / f"{nombre}.html").write_bytes(contenido)
                 guardadas += 1
-                informe.append(f"Página guardada como muestra: `{golden / (nombre + '.html')}`\n")
+                informe.append(
+                    f"Página guardada como muestra: `{golden / (nombre + '.html')}`\n"
+                )
             time.sleep(0.5)
 
-    informe += ["## Resumen", "", f"- páginas vistas: {len(vistas)}", f"- ficheros enlazados: {dict(ficheros)}", ""]
+    informe += [
+        "## Resumen",
+        "",
+        f"- páginas vistas: {len(vistas)}",
+        f"- ficheros enlazados: {dict(ficheros)}",
+        "",
+    ]
     Path(args.salida).parent.mkdir(parents=True, exist_ok=True)
     Path(args.salida).write_text("\n".join(informe) + "\n", encoding="utf-8")
     print("\n".join(informe))
