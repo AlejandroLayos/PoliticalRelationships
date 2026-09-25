@@ -110,6 +110,39 @@
 }
 
 /*
+  Edición de noche: la misma página en papel oscuro, para quien tiene el
+  sistema en modo oscuro. No es el tablero negro de antes —ése decía
+  «vigilancia»—: es papel cálido y tinta clara, y los tres colores de tipo
+  pasan a sus tonos del visor, que son los que dan contraste sobre oscuro.
+  El visor sigue siendo más oscuro que la página, y sigue viéndose como una
+  lámina encajada en ella.
+*/
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --papel: #1b1a17;
+    --papel-2: #25231f;
+    --papel-3: #35322b;
+    --hoja: #221f1b;
+    --tinta: #ece7dc;
+    --tinta-2: #c2bbad; /* 9:1 sobre el papel de noche */
+    --tinta-3: #9a9385; /* 5,6:1 */
+    --filete: #ece7dc;
+    --filete-medio: #5a554b;
+    --filete-suave: #3a3731;
+    --adm: #e5703d;
+    --emp: #5d9ded;
+    --par: #35b28c;
+    --neutro: #8f897d;
+    --sancion: #e36d70;
+    --aviso: #e9b44c;
+  }
+  ::selection {
+    background: #5b4a24;
+  }
+}
+
+/*
   El visor redefine los tokens base, no los componentes. Todo lo que se pinte
   dentro —leyendas, botones, placas— sale oscuro solo.
 */

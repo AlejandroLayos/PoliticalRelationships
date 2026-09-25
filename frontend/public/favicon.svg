@@ -1,12 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#12141a"/>
-  <g stroke="#5aa9e6" stroke-width="1.6" opacity="0.85">
-    <line x1="16" y1="16" x2="7" y2="8"/><line x1="16" y1="16" x2="25" y2="9"/>
-    <line x1="16" y1="16" x2="9" y2="24"/><line x1="16" y1="16" x2="24" y2="23"/>
-  </g>
-  <circle cx="16" cy="16" r="4" fill="#e8703a"/>
-  <circle cx="7" cy="8" r="2.4" fill="#3d8bd4"/>
-  <circle cx="25" cy="9" r="2.4" fill="#c94f7c"/>
-  <circle cx="9" cy="24" r="2.4" fill="#4bb47f"/>
-  <circle cx="24" cy="23" r="2.4" fill="#b08cd9"/>
+  <!-- La marca de la cabecera: el dinero sale de una administración (cobrizo) y llega a una empresa (azul). -->
+  <rect width="32" height="32" rx="6" fill="#f4f0e6"/>
+  <path d="M6.5 21 C 12 6, 20 6, 25.5 15" fill="none" stroke="#1c1a16" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="6.5" cy="21" r="4.4" fill="#b8461c"/>
+  <circle cx="25.5" cy="15" r="4.4" fill="#2563a6"/>
 </svg>

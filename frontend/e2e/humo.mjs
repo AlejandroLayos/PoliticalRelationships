@@ -118,7 +118,10 @@ await paso('la dirección lleva la clave estable, no el UUID', async () => {
 await paso('conexiones dibuja el vecindario', async () => {
   await pagina.click('text=Ver sus conexiones')
   await pagina.waitForTimeout(9000)
-  if (!(await pagina.innerText('body')).includes('CONEXIONES')) throw new Error('sin panel')
+  // Por el título de la lista del panel, no por el texto en mayúsculas: el
+  // rótulo dejó de ir en versalitas con el rediseño y esto falló sin que
+  // hubiera fallado nada.
+  if (!(await pagina.locator('.panel h3', { hasText: 'Conexiones' }).count())) throw new Error('sin panel')
 })
 
 await paso('el mapa del dinero dibuja sus bloques', async () => {

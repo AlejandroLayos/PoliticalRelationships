@@ -156,3 +156,20 @@ export function etiquetaEsquemaPlural(s, n) {
 export function etiquetaArista(s) {
   return NOMBRE_ARISTA[s] ?? s
 }
+
+/**
+ * Qué relación es, dicha para una persona: el papel si la fuente lo da.
+ *
+ * El enlace de un órgano con su expediente es un `UnknownLink` —FtM no tiene
+ * arista propia para eso— con `role: 'órgano de contratación'`. La lista de
+ * conexiones decía «Conexión sin clasificar» dieciocho veces seguidas, que
+ * suena a dato dudoso, cuando la fuente dice exactamente qué es.
+ */
+export function etiquetaRelacion(arista) {
+  const papel = arista?.properties?.role
+  if (arista?.schema === 'UnknownLink' && typeof papel === 'string' && papel.trim()) {
+    const t = papel.trim()
+    return t[0].toUpperCase() + t.slice(1)
+  }
+  return etiquetaArista(arista?.schema)
+}

@@ -78,12 +78,24 @@ El lienzo de Sigma pinta con WebGL y no lee CSS: usa `COLOR_POR_ESQUEMA`
 (hexadecimales del visor) y `sobreFondo`, porque además ignora el alfa de las
 aristas (ver `color.js`).
 
+Dentro del visor, **un expediente es un papel, no un actor**: va pequeño, gris
+y sin rótulo fijo, y su título sale al pasar por encima. Los rótulos son para
+los actores —quién paga, quién cobra—, que es lo que se viene a leer.
+
 ## 6. Decir lo que no es
 
 Cada lista, cada bloque, lleva su **nota** (`.nota`): lo que ese dato no
 significa. En cursiva y con filete, como una nota del editor. Antes era texto
 gris a pie de lista y se leía como la letra pequeña de un contrato, que es lo
 contrario de lo que tiene que parecer.
+
+## 7. Edición de noche
+
+Con el sistema en modo oscuro, la página pasa a papel oscuro cálido y tinta
+clara (`prefers-color-scheme: dark` en `estilos.css`). No es el tablero negro
+de antes: sigue siendo papel. Los tres colores de tipo toman sus tonos del
+visor, que son los que dan contraste sobre oscuro (todos por encima de 5:1), y
+el visor sigue siendo más oscuro que la página.
 
 ## Piezas
 

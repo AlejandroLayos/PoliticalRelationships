@@ -77,7 +77,7 @@ function tamano(grado) {
  * El texto entero sigue estando: en el panel de al lado y al pasar por
  * encima.
  */
-function recortar(texto, max = 44) {
+function recortar(texto, max = 34) {
   if (!texto || texto.length <= max) return texto ?? ''
   return `${texto.slice(0, max - 1).trimEnd()}…`
 }
@@ -87,9 +87,16 @@ function construir() {
 
   for (const n of props.datos.nodes ?? []) {
     if (grafo.hasNode(n.id)) continue
+    // Un expediente es un papel, no un actor (docs/diseno.md §2): va pequeño
+    // y sin rótulo fijo, y su título sale al pasar por encima. Rotulados,
+    // los títulos de contrato —larguísimos— se llevaban todo el sitio y se
+    // pisaban unos a otros, y los nombres de las empresas, que es lo que se
+    // viene a leer, se quedaban sin rótulo.
+    const esPapel = n.schema === 'Contract'
     grafo.addNode(n.id, {
-      label: recortar(n.caption),
-      etiquetaReal: n.caption,
+      label: esPapel ? '' : recortar(n.caption),
+      etiquetaReal: esPapel ? recortar(n.caption, 80) : n.caption,
+      esPapel,
       esquema: n.schema,
       profundidad: n.depth ?? 0,
       color: COLOR_POR_ESQUEMA[n.schema] ?? COLOR_POR_DEFECTO,
@@ -127,8 +134,8 @@ function construir() {
     })
   }
 
-  grafo.forEachNode((id) => {
-    grafo.setNodeAttribute(id, 'size', tamano(grafo.degree(id)))
+  grafo.forEachNode((id, a) => {
+    grafo.setNodeAttribute(id, 'size', a.esPapel ? 5 : tamano(grafo.degree(id)))
   })
 
   // ForceAtlas2 es lo que produce el aspecto orgánico de red. Una parte de
@@ -275,9 +282,14 @@ function pintar() {
     // con treinta vecinos dejaba treinta nombres largos apiñados unos encima
     // de otros: una mancha de letras de la que no se leía ninguna. La rejilla
     // más grande deja pasar menos, y la placa hace legibles las que pasan.
-    labelDensity: 0.5,
-    labelGridCellSize: 180,
-    labelRenderedSizeThreshold: 9,
+    //
+    // Con los expedientes ya sin rótulo, el presupuesto se lo quedan los
+    // actores. El umbral baja de 9 a 6 porque una empresa del segundo salto
+    // —la que cobra— tiene un solo vecino y se dibuja a 8,5: con 9 no salía
+    // el nombre de ninguna, que es justo lo que se viene a leer.
+    labelDensity: 0.8,
+    labelGridCellSize: 170,
+    labelRenderedSizeThreshold: 6,
     labelFont: "'Public Sans Variable', system-ui, sans-serif",
     labelColor: { color: '#ecebe6' }, // = --visor-tinta
     labelSize: 12,
@@ -315,20 +327,23 @@ function pintar() {
   animacion = requestAnimationFrame(unFotograma)
 }
 
-/** Atenúa lo que no toca al nodo seleccionado, para poder leer el vecindario. */
+/*
+  El seleccionado se marca, pero NO apaga el resto.
+
+  Apagaba todo lo que no fuera vecino directo, y en esta vista todo lo que se
+  dibuja es vecindario del seleccionado: con dos saltos, lo que se apagaba
+  eran las empresas del segundo —Metro → contrato → empresa—, que son
+  justamente la respuesta a «¿a quién paga?». Se quedaban grises y sin
+  nombre. Y como esa rama iba primero, el realce al pasar el ratón no llegaba
+  a ejecutarse nunca: con algo seleccionado —siempre, al venir de una ficha—
+  la vista no respondía al ratón.
+
+  Ahora manda el ratón; el seleccionado lleva su nombre entero y va encima.
+*/
 function resaltar() {
   if (!sigma || !grafo) return
   const foco = props.seleccion
   sigma.setSetting('nodeReducer', (id, datos) => {
-    if (foco && grafo.hasNode(foco)) {
-      // El del foco, con su nombre entero: es UNO, no se cruza con nada y es
-      // justo el que se está mirando.
-      if (id === foco) {
-        return { ...datos, label: datos.etiquetaReal ?? datos.label, highlighted: true, zIndex: 2 }
-      }
-      if (grafo.areNeighbors(foco, id)) return { ...datos, zIndex: 1 }
-      return { ...datos, color: sobreFondo([160, 165, 180], 0.28), label: '', zIndex: 0 }
-    }
     // Apuntar un nodo enciende su vecindario y apaga el resto, con fundido.
     const i = realzado.intensidad
     if (i > 0.001 && realzado.id && grafo.hasNode(realzado.id)) {
@@ -355,6 +370,11 @@ function resaltar() {
       return { ...datos, color: apagar(datos.color, entre(0, 0.88, i)), label: '', zIndex: 0 }
     }
 
+    // El seleccionado, con su nombre entero: es UNO y es el que se mira.
+    if (foco && id === foco) {
+      return { ...datos, label: datos.etiquetaReal ?? datos.label, forceLabel: true, highlighted: true, zIndex: 2 }
+    }
+
     // Y si no, el foco del cursor: lo de alrededor se aclara, el resto se aleja.
     if (!raton) return datos
     const cerca = cercania(datos.x, datos.y, raton, radioRaton)
@@ -368,10 +388,6 @@ function resaltar() {
   })
   sigma.setSetting('edgeReducer', (id, datos) => {
     const extremos = grafo.extremities(id)
-    if (foco && grafo.hasNode(foco)) {
-      if (extremos.includes(foco)) return { ...datos, zIndex: 1 }
-      return { ...datos, color: sobreFondo([190, 193, 203], 0.16), zIndex: 0 }
-    }
     // Los caminos del nodo apuntado: los suyos se encienden y engordan, los
     // de vecino a vecino quedan a media luz y el resto casi al fondo.
     const i = realzado.intensidad

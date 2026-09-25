@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colorTipo, mezclaDeTipos, tipoDe } from './esquemas.js'
+import { colorTipo, etiquetaRelacion, mezclaDeTipos, tipoDe } from './esquemas.js'
 
 describe('tipoDe', () => {
   it('la persona jurídica es empresa: las dos cobran dinero público', () => {
@@ -36,5 +36,17 @@ describe('mezclaDeTipos', () => {
   it('sin entidades no hay mezcla', () => {
     expect(mezclaDeTipos({})).toEqual([])
     expect(mezclaDeTipos(undefined)).toEqual([])
+  })
+})
+
+describe('etiquetaRelacion', () => {
+  it('un enlace sin esquema propio dice el papel que da la fuente', () => {
+    const a = { schema: 'UnknownLink', properties: { role: 'órgano de contratación' } }
+    expect(etiquetaRelacion(a)).toBe('Órgano de contratación')
+  })
+
+  it('sin papel, el nombre del esquema', () => {
+    expect(etiquetaRelacion({ schema: 'UnknownLink' })).toBe('Conexión sin clasificar')
+    expect(etiquetaRelacion({ schema: 'ContractAward', properties: { role: 'x' } })).toBe('Adjudicación')
   })
 })

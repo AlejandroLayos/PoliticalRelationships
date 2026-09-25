@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
-import { NOMBRE_ESTADO, colorTipo, etiquetaArista, etiquetaEsquema } from '../esquemas.js'
+import { NOMBRE_ESTADO, colorTipo, etiquetaEsquema, etiquetaRelacion } from '../esquemas.js'
+import { siglaFuente } from '../procedencia.js'
 
 const props = defineProps({
   entidad: { type: Object, default: null },
@@ -80,10 +81,10 @@ function importe(a) {
     </p>
 
     <template v-else>
-      <header>
-        <span class="punto" :style="{ background: color }" />
-        <span class="tipo">{{ etiquetaEsquema(entidad.schema) }}</span>
-      </header>
+      <p class="antetitulo tipo">
+        <span class="punto-tipo" :style="{ background: color }" />
+        {{ etiquetaEsquema(entidad.schema) }}
+      </p>
       <h2>{{ entidad.caption }}</h2>
       <p v-if="entidad.nif" class="nif">NIF {{ entidad.nif }}</p>
 
@@ -97,8 +98,8 @@ function importe(a) {
         reproducir la ingesta y no para comprobar nada—.
       -->
       <p v-if="entidad.properties?.sourceUrl" class="expediente-publico">
-        <a :href="entidad.properties.sourceUrl" target="_blank" rel="noopener noreferrer">
-          Ver el expediente en la plataforma oficial
+        <a :href="entidad.properties.sourceUrl" target="_blank" rel="noopener noreferrer" class="boton">
+          Ver el expediente en la plataforma oficial ↗
         </a>
       </p>
 
@@ -107,7 +108,7 @@ function importe(a) {
         <button class="enlace" @click="emit('ir', entidad.merged_into)">Ver la vigente</button>
       </p>
 
-      <button class="expandir" @click="emit('expandir', entidad.id)">
+      <button class="boton tenue expandir" @click="emit('expandir', entidad.id)">
         Expandir su red
       </button>
 
@@ -132,7 +133,7 @@ function importe(a) {
             </button>
             <div class="meta">
               <span class="rel">
-                {{ c.saliente ? '→' : '←' }} {{ etiquetaArista(c.arista.schema) }}
+                {{ c.saliente ? '→' : '←' }} {{ etiquetaRelacion(c.arista) }}
               </span>
               <span v-if="importe(c.arista)" class="importe">{{ importe(c.arista) }}</span>
             </div>
@@ -185,13 +186,13 @@ function importe(a) {
       <!-- Procedencia ----------------------------------------------------- -->
       <section v-if="entidad.provenance?.length">
         <h3>Procedencia</h3>
-        <p class="explica">
+        <p class="nota">
           Cada dato de esta ficha sale de un documento guardado. Sin eso, no se
           publica.
         </p>
         <ul class="procedencia">
           <li v-for="(p, i) in entidad.provenance" :key="i">
-            <a :href="p.url" target="_blank" rel="noopener noreferrer">{{ p.source_id }}</a>
+            <a :href="p.url" target="_blank" rel="noopener noreferrer" class="sello">{{ siglaFuente([], p.source_id) }}</a>
             <code :title="p.content_hash">{{ p.content_hash.slice(0, 12) }}…</code>
             <span class="extractor">{{ p.extractor_version }}</span>
             <blockquote v-if="p.excerpt">{{ p.excerpt }}</blockquote>
@@ -204,69 +205,77 @@ function importe(a) {
 
 <style scoped>
 .panel {
-  overflow-y: auto;
-  padding: 1.1rem 1.15rem 3rem;
-  border-left: 1px solid var(--borde);
-  background: var(--fondo-panel);
+  overflow-y: auto; padding: var(--e4) var(--e5) var(--e7);
+  border-left: 1px solid var(--filete-suave); background: var(--papel);
 }
-.vacio { color: var(--texto-tenue); font-size: 0.9rem; margin-top: 1rem; }
-header { display: flex; align-items: center; gap: 0.5rem; }
-.punto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.punto.pequeno { width: 7px; height: 7px; }
-.tipo { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-tenue); }
-h2 { font-size: 1.1rem; margin: 0.35rem 0 0.2rem; line-height: 1.3; }
-.expediente-publico { margin: 0.35rem 0 0.6rem; font-size: 0.82rem; }
-.expediente-publico a { color: var(--serie-1); }
-.nif { font-size: 0.8rem; color: var(--texto-tenue); font-variant-numeric: tabular-nums; margin: 0 0 0.6rem; }
+.vacio { color: var(--tinta-3); font-size: var(--t-m); margin-top: var(--e4); }
+.tipo { display: flex; align-items: center; gap: 0.45em; margin-bottom: var(--e2); }
+h2 { font-size: var(--t-h2); margin: 0 0 var(--e2); line-height: 1.15; overflow-wrap: anywhere; }
+.nif { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); margin: 0 0 var(--e3); }
+.expediente-publico { margin: var(--e3) 0; }
+.expediente-publico .boton { white-space: normal; text-align: left; }
 
 .aviso-fusion {
-  font-size: 0.8rem; background: var(--aviso-suave); border-radius: 6px;
-  padding: 0.5rem 0.6rem; margin: 0.5rem 0;
+  font-size: var(--t-s); background: var(--hoja); border-left: 3px solid var(--aviso);
+  padding: var(--e2) var(--e3); margin: var(--e3) 0;
 }
-.enlace { background: none; border: none; color: var(--acento); cursor: pointer; padding: 0; text-decoration: underline; font: inherit; }
-
-.expandir {
-  width: 100%; margin: 0.6rem 0 0.9rem; padding: 0.5rem;
-  border: 1px solid var(--borde); border-radius: 6px;
-  background: var(--fondo-boton); color: var(--texto); cursor: pointer; font-size: 0.85rem;
+.enlace {
+  background: none; border: none; color: var(--tinta); cursor: pointer; padding: 0; font: inherit;
+  text-decoration: underline; text-decoration-color: var(--filete-medio); text-underline-offset: 0.18em;
 }
-.expandir:hover { border-color: var(--acento); color: var(--acento); }
 
-h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-tenue); margin: 1.2rem 0 0.5rem; }
-.cuenta { color: var(--texto-tenue); font-weight: 400; }
+.expandir { width: 100%; justify-content: center; margin: var(--e2) 0 var(--e4); }
+
+section { margin-top: var(--e5); padding-top: var(--e3); border-top: 2px solid var(--filete); }
+h3 {
+  font-family: var(--serif); font-size: var(--t-h3); color: var(--tinta); margin: 0 0 var(--e2);
+  display: flex; align-items: baseline; gap: var(--e2);
+}
+.cuenta { font-family: var(--mono); font-size: var(--t-xs); font-weight: 400; color: var(--tinta-3); }
 
 .conexiones, .procedencia { list-style: none; padding: 0; margin: 0; }
-.conexiones li { padding: 0.55rem 0; border-bottom: 1px solid var(--borde-suave); }
+.conexiones li { padding: 0.6rem 0; border-bottom: 1px solid var(--filete-suave); }
+.otro {
+  display: flex; align-items: baseline; gap: 0.5rem; background: none; border: none;
+  color: var(--tinta); cursor: pointer; padding: 0; font: inherit; font-size: var(--t-s);
+  font-weight: 550; text-align: left; line-height: 1.35;
+}
+.otro:hover .nombre-otro { text-decoration: underline; text-decoration-color: var(--filete-medio); text-underline-offset: 0.18em; }
+.punto.pequeno { width: 0.5em; height: 0.5em; border-radius: 50%; flex: none; transform: translateY(-0.05em); }
 .nombre-otro {
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
   overflow: hidden; min-width: 0;
 }
-.fiabilidad.rutina { color: var(--tinta-3); font-size: var(--t-xs); }
-.otro {
-  display: flex; align-items: center; gap: 0.45rem; background: none; border: none;
-  color: var(--texto); cursor: pointer; padding: 0; font: inherit; font-size: 0.88rem;
-  text-align: left; line-height: 1.3;
+.meta {
+  display: flex; justify-content: space-between; gap: var(--e2);
+  font-size: var(--t-xs); color: var(--tinta-2); margin-top: 0.2rem;
 }
-.otro:hover { color: var(--acento); }
-.meta { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.76rem; color: var(--texto-tenue); margin-top: 0.2rem; }
-.importe { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.importe { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 650; color: var(--tinta); }
+.cuando-que {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: baseline;
+  font-size: var(--t-xs); color: var(--tinta-3); margin-top: 0.1rem;
+}
+.cuando-que .fecha { font-family: var(--mono); font-size: 0.6875rem; white-space: nowrap; }
+.cuando-que .concepto { min-width: 0; }
 
-.fiabilidad { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.3rem; font-size: 0.7rem; color: var(--texto-tenue); }
-.fiabilidad.inferido .estado { color: var(--aviso); font-weight: 600; }
-.barra { flex: 1; height: 3px; background: var(--borde); border-radius: 2px; overflow: hidden; }
-.relleno { display: block; height: 100%; background: var(--acento); }
+.fiabilidad { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.3rem; font-size: var(--t-xs); color: var(--tinta-3); }
+.fiabilidad.rutina { color: var(--tinta-3); }
+.fiabilidad.inferido .estado { color: var(--aviso); font-weight: 650; }
+.barra { flex: 1; height: 3px; background: var(--papel-3); border-radius: 1px; overflow: hidden; }
+.relleno { display: block; height: 100%; background: var(--tinta-2); }
 .fiabilidad.inferido .relleno { background: var(--aviso); }
 .pct { font-variant-numeric: tabular-nums; }
 
-.explica { font-size: 0.76rem; color: var(--texto-tenue); margin: 0 0 0.5rem; line-height: 1.4; }
-.procedencia li { font-size: 0.76rem; padding: 0.4rem 0; border-bottom: 1px solid var(--borde-suave); display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
-.procedencia code { font-size: 0.7rem; color: var(--texto-tenue); }
-.extractor { color: var(--texto-tenue); }
-.cuando-que {
-  display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: baseline;
-  font-size: 0.7rem; color: var(--texto-tenue); margin-top: 0.1rem;
+section .nota { font-size: var(--t-s); margin: 0 0 var(--e3); }
+.procedencia li {
+  font-size: var(--t-xs); padding: 0.45rem 0; border-bottom: 1px solid var(--filete-suave);
+  display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
 }
-.cuando-que .fecha { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.cuando-que .concepto { min-width: 0; }
-.procedencia blockquote { flex-basis: 100%; margin: 0.3rem 0 0; padding-left: 0.55rem; border-left: 2px solid var(--borde); color: var(--texto-tenue); font-style: italic; }
+.procedencia code { font-family: var(--mono); font-size: 0.6875rem; color: var(--tinta-3); }
+.extractor { font-family: var(--mono); font-size: 0.6875rem; color: var(--tinta-3); }
+.procedencia blockquote {
+  flex-basis: 100%; margin: 0.3rem 0 0; padding-left: var(--e2);
+  border-left: 2px solid var(--filete-medio); color: var(--tinta-2);
+  font-family: var(--serif); font-style: italic;
+}
 </style>

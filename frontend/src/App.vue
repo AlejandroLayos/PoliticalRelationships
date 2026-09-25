@@ -1103,8 +1103,8 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 .fuente-caida::before { content: '▲ '; }
 
 .franja-demo {
-  background: #fbecc8; color: #5c3d00; border-bottom-color: #e5c47a;
-  font-size: var(--t-s);
+  background: color-mix(in srgb, var(--aviso) 16%, var(--papel)); color: var(--tinta);
+  border-bottom-color: var(--aviso); font-size: var(--t-s);
 }
 .franja-demo a { color: inherit; margin-left: var(--e2); }
 
