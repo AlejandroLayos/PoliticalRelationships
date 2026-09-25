@@ -38,6 +38,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["sinapsis_ingest*"]
 
+# La relación de municipios del INE viaja con el paquete: la ingesta no debe
+# depender de que el INE responda para clasificar lo que ya sabe.
+[tool.setuptools.package-data]
+sinapsis_ingest = ["datos/*.csv"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

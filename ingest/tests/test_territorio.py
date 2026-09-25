@@ -167,3 +167,87 @@ def test_los_servicios_de_salud_por_su_nombre_entero(padre, comunidad):
 def test_un_gentilicio_suelto_no_basta():
     # «Navarro» es también un apellido. Sólo el nombre entero del servicio.
     assert clasificar(["Fundación Navarro Villoslada"]).territorio is None
+
+
+# --- Municipios del INE -------------------------------------------------------
+
+from sinapsis_ingest.territorio import (  # noqa: E402
+    formas_de_municipio,
+    municipio_en,
+    municipios_unicos,
+)
+
+_TABLA_DE_PRUEBA = municipios_unicos(
+    [
+        {"codauto": "09", "nombre": "Berga"},
+        {"codauto": "15", "nombre": "Pamplona/Iruña"},
+        {"codauto": "13", "nombre": "Rozas de Madrid, Las"},
+        {"codauto": "09", "nombre": "Hospitalet de Llobregat, L'"},
+        # Dos comunidades con el mismo nombre: no se resuelve.
+        {"codauto": "07", "nombre": "Villanueva del Campo"},
+        {"codauto": "08", "nombre": "Villanueva del Campo"},
+        # Dos provincias de la misma comunidad: sí.
+        {"codauto": "07", "nombre": "Castrillo de la Reina"},
+        {"codauto": "07", "nombre": "Castrillo de la Reina"},
+    ]
+)
+
+
+def test_formas_del_ine():
+    assert "las rozas de madrid" in formas_de_municipio("Rozas de Madrid, Las")
+    # Tal cual también: BDNS escribe «CORUÑA, A».
+    assert set(formas_de_municipio("Coruña, A")) == {"coruna a", "a coruna"}
+    assert set(formas_de_municipio("Donostia/San Sebastián")) == {
+        "donostia san sebastian",
+        "donostia",
+        "san sebastian",
+    }
+    assert "l hospitalet de llobregat" in formas_de_municipio("Hospitalet de Llobregat, L'")
+
+
+@pytest.mark.parametrize(
+    ("eslabones", "comunidad"),
+    [
+        (["local", "berga"], "Cataluña"),  # como viene en BDNS
+        (["ayuntamiento de pamplona"], "Navarra"),
+        (["ayuntamiento de iruna"], "Navarra"),
+        (["ayuntamiento de las rozas de madrid"], "Madrid"),
+        (["ajuntament de l hospitalet de llobregat"], "Cataluña"),
+        (["local", "castrillo de la reina"], "Castilla y León"),
+        (["local", "villanueva del campo"], None),
+        # Una palabra suelta dentro de otro nombre no cuenta.
+        (["local", "mancomunidad de berga y otros"], None),
+    ],
+)
+def test_el_municipio_dice_la_comunidad_si_no_duda(eslabones, comunidad):
+    assert municipio_en(eslabones, _TABLA_DE_PRUEBA) == comunidad
+
+
+def test_sin_tabla_no_se_adivina():
+    assert municipio_en(["local", "berga"], {}) is None
+
+
+def test_el_estado_dicho_explicitamente_manda_sobre_lo_local():
+    c = clasificar(
+        [
+            "Sector Público",
+            "ADMINISTRACIÓN GENERAL DEL ESTADO",
+            "Ministerio para la Transición Ecológica y el Reto Demográfico",
+            "Dirección General del Agua",
+            "Mancomunidad de los Canales del Taibilla",
+        ]
+    )
+    assert c.nivel == "estatal" and c.territorio is None
+
+
+def test_la_tabla_real_del_ine():
+    """Con la relación que se commitea, los casos de la primera ingesta real."""
+    from sinapsis_ingest.territorio import MUNICIPIOS_INE, _municipios
+
+    if not MUNICIPIOS_INE.exists():
+        pytest.skip("sin la relación del INE")
+    tabla = _municipios()
+    assert municipio_en(["local", "berga"], tabla) == "Cataluña"
+    assert municipio_en(["local", "coruna a"], tabla) == "Galicia"
+    assert municipio_en(["ayuntamiento de donostia san sebastian"], tabla) == "País Vasco"
+    assert municipio_en(["local", "espartinas"], tabla) == "Andalucía"

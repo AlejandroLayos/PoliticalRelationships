@@ -31,9 +31,12 @@ sus jerarquías, para ir afinando las reglas con lo que publican de verdad.
 
 from __future__ import annotations
 
+import csv
 import re
 import unicodedata
 from dataclasses import dataclass
+from functools import cache
+from pathlib import Path
 from urllib.parse import urlparse
 
 
@@ -170,6 +173,112 @@ PLATAFORMAS: dict[str, str] = {
     "contratacion.larioja.org": "La Rioja",
 }
 
+# --- Municipios ------------------------------------------------------------
+
+#: La relación oficial de municipios del INE (ver
+#: `scripts/capturar_municipios_ine.py`). Sin ella, lo de abajo no clasifica
+#: nada, que es lo correcto: no se adivina.
+MUNICIPIOS_INE = Path(__file__).parent / "datos" / "municipios_ine.csv"
+
+#: Los códigos de comunidad del INE (CODAUTO).
+COMUNIDAD_INE = {
+    "01": "Andalucía",
+    "02": "Aragón",
+    "03": "Asturias",
+    "04": "Baleares",
+    "05": "Canarias",
+    "06": "Cantabria",
+    "07": "Castilla y León",
+    "08": "Castilla-La Mancha",
+    "09": "Cataluña",
+    "10": "Comunidad Valenciana",
+    "11": "Extremadura",
+    "12": "Galicia",
+    "13": "Madrid",
+    "14": "Murcia",
+    "15": "Navarra",
+    "16": "País Vasco",
+    "17": "La Rioja",
+    "18": "Ceuta",
+    "19": "Melilla",
+}
+
+
+def formas_de_municipio(nombre_ine: str) -> list[str]:
+    """Las formas en que puede aparecer un nombre del INE, normalizadas.
+
+    El INE escribe los artículos detrás —«Rozas de Madrid, Las», «Coruña, A»,
+    «Hospitalet de Llobregat, L'»— y los nombres oficiales bilingües con
+    barra: «Pamplona/Iruña», «Alicante/Alacant». Las fuentes los escriben
+    como se dicen.
+    """
+    # Tal cual también: BDNS escribe «LOCAL > CORUÑA, A», con la coma del INE,
+    # y el nombre entero con su barra, «Donostia/San Sebastián».
+    formas = [_normaliza(nombre_ine)]
+    for parte in nombre_ine.split("/"):
+        parte = parte.strip()
+        m = re.match(r"^(.*?),\s*(\S+)$", parte)
+        if m:
+            articulo = m.group(2)
+            parte = f"{articulo}{'' if articulo.endswith(chr(39)) else ' '}{m.group(1)}"
+        if parte:
+            formas.append(_normaliza(parte))
+    return list(dict.fromkeys(formas))
+
+
+def municipios_unicos(filas: list[dict[str, str]]) -> dict[str, str]:
+    """{nombre normalizado: comunidad}, sólo para los nombres que no dudan.
+
+    «Villanueva», «Castrillo» o «Santa Cruz» existen en varias comunidades:
+    ésos no se resuelven. Si se repiten DENTRO de una misma comunidad sí
+    valen, porque la comunidad es lo que se pregunta.
+    """
+    por_nombre: dict[str, set[str]] = {}
+    for f in filas:
+        comunidad = COMUNIDAD_INE.get((f.get("codauto") or "").zfill(2))
+        if not comunidad:
+            continue
+        for forma in formas_de_municipio(f.get("nombre") or ""):
+            por_nombre.setdefault(forma, set()).add(comunidad)
+    return {n: next(iter(cs)) for n, cs in por_nombre.items() if len(cs) == 1}
+
+
+@cache
+def _municipios() -> dict[str, str]:
+    if not MUNICIPIOS_INE.exists():
+        return {}
+    with MUNICIPIOS_INE.open(encoding="utf-8") as fh:
+        filas = list(csv.DictReader(ln for ln in fh if not ln.startswith("#")))
+    return municipios_unicos(filas)
+
+
+_AYUNTAMIENTO = re.compile(
+    r"^(?:excmo |excmo\. )?(?:ayuntamiento|ajuntament|concello|ayto)(?: de| del| d| da| do)? (.+)$"
+)
+
+
+def municipio_en(eslabones: list[str], tabla: dict[str, str] | None = None) -> str | None:
+    """La comunidad del municipio que nombra la jerarquía, si es uno solo.
+
+    Mira eslabones enteros: el nombre del municipio a secas —así viene en
+    BDNS, «LOCAL > BERGA»— o detrás de «Ayuntamiento de». Nunca una palabra
+    suelta dentro de otro nombre.
+    """
+    tabla = _municipios() if tabla is None else tabla
+    if not tabla:
+        return None
+    halladas = set()
+    for e in eslabones:
+        candidatos = [e]
+        m = _AYUNTAMIENTO.match(e)
+        if m:
+            candidatos.append(m.group(1))
+        for c in candidatos:
+            if c in tabla:
+                halladas.add(tabla[c])
+    return next(iter(halladas)) if len(halladas) == 1 else None
+
+
 # --- Nivel ------------------------------------------------------------------
 
 # Marcas de nivel en la jerarquía, normalizadas. Van en orden de prioridad:
@@ -242,14 +351,23 @@ class Clasificacion:
     territorio: str | None
     """La comunidad, o None: del Estado, o sin clasificar."""
     por: str | None
-    """De dónde sale el territorio: `jerarquia` o `plataforma`."""
+    """De dónde sale el territorio: `jerarquia`, `plataforma` o `municipio`."""
 
 
 def _contiene(texto: str, marca: str) -> bool:
     return re.search(rf"(?<![\w-]){re.escape(marca)}(?![\w-])", texto) is not None
 
 
+# Lo que dice «Estado» sin lugar a dudas, y manda sobre cualquier marca local:
+# la Mancomunidad de los Canales del Taibilla es un organismo del Estado
+# —cuelga de la Dirección General del Agua— y la palabra «mancomunidad» la
+# mandaba a lo local.
+_ESTATAL_EXPLICITO = ("administracion general del estado", "sector publico estatal")
+
+
 def _nivel(eslabones: list[str]) -> str | None:
+    if any(_contiene(e, m) for e in eslabones for m in _ESTATAL_EXPLICITO):
+        return "estatal"
     for marcas, nivel in ((_LOCAL, "local"), (_ESTATAL, "estatal"), (_AUTONOMICO, "autonomico")):
         if any(_contiene(e, m) for e in eslabones for m in marcas):
             return nivel
@@ -315,6 +433,14 @@ def clasificar(jerarquia: list[str] | None, perfil: str | None = None) -> Clasif
             return Clasificacion(nivel, None, None)
         if not territorio:
             territorio, por = por_plataforma, "plataforma"
+
+    # Lo local que sólo dice su municipio. Es como BDNS cuelga a los
+    # ayuntamientos —«LOCAL > BERGA > AYUNTAMIENTO DE BERGA»—, sin provincia,
+    # y era lo que más quedaba sin clasificar tras la primera ingesta real.
+    if not territorio and nivel == "local":
+        comunidad = municipio_en(eslabones)
+        if comunidad:
+            territorio, por = comunidad, "municipio"
         # Publicar en una plataforma autonómica no dice si el organismo es de
         # la comunidad o de un ayuntamiento suyo: el nivel sigue siendo el que
         # diga la jerarquía, o ninguno.
