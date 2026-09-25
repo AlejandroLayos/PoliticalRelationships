@@ -13,7 +13,7 @@ on:
       fuente:
         description: "Fuente a reconocer"
         type: choice
-        options: [tcu]
+        options: [tcu, boe]
         default: tcu
 
 permissions:
@@ -91,6 +91,10 @@ jobs:
           mkdir -p "$GUARDADO/docs" "$GUARDADO/golden"
           cp -r docs/fuentes "$GUARDADO/docs/" 2>/dev/null || true
           cp ingest/tests/golden/tcu_*.pdf "$GUARDADO/golden/" 2>/dev/null || true
+          # Del BOE, sólo altos cargos; del BORME, texto con los nombres de
+          # persona ya sustituidos (ver scripts/explorar_boe.py).
+          cp ingest/tests/golden/boe_altos_cargos_muestra.json "$GUARDADO/golden/" 2>/dev/null || true
+          cp ingest/tests/golden/borme_seccion1_muestra.txt "$GUARDADO/golden/" 2>/dev/null || true
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -101,11 +105,14 @@ jobs:
             mkdir -p docs ingest/tests/golden
             cp -r "$GUARDADO/docs/fuentes" docs/ 2>/dev/null || true
             cp "$GUARDADO"/golden/tcu_*.pdf ingest/tests/golden/ 2>/dev/null || true
+            cp "$GUARDADO"/golden/boe_*.json "$GUARDADO"/golden/borme_*.txt ingest/tests/golden/ 2>/dev/null || true
             # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
             # nombres de personas y está en .gitignore, pero la barrera que de
             # verdad importa es no pedir nunca que se añada todo.
             git add docs/fuentes/ || true
             git add ingest/tests/golden/tcu_*.pdf 2>/dev/null || true
+            git add ingest/tests/golden/boe_altos_cargos_muestra.json 2>/dev/null || true
+            git add ingest/tests/golden/borme_seccion1_muestra.txt 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios"
               exit 0
