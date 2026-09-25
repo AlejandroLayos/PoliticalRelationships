@@ -279,6 +279,23 @@ await paso('la sección de cargos abre una persona y deja un enlace que la repro
   if ((await pagina.locator('.ficha-nombre').innerText()) !== nombre) throw new Error('el enlace abre otra persona')
 })
 
+// Del cargo a la empresa. Sólo si la edición trae cruces: hasta la primera
+// ingesta con la Oficina de Conflictos de Intereses no los trae.
+await paso('del cargo a la empresa lleva a la sociedad y de vuelta a la persona', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(1500)
+  const bloque = pagina.locator('.puertas')
+  if (!(await bloque.count())) {
+    console.log('    (la edición no trae cruces todavía: no hay bloque que probar)')
+    return
+  }
+  await bloque.locator('.cruce-empresa').first().click()
+  await pagina.waitForSelector('text=Ex altos cargos autorizados a trabajar aquí', { timeout: 15000 })
+  await pagina.locator('.al-frente a').first().click()
+  await pagina.waitForSelector('.cargos .ficha', { timeout: 15000 })
+  if (!(await pagina.locator('.autorizaciones').count())) throw new Error('la ficha no enseña la autorización')
+})
+
 // Aena no está en la base. Por subcadena salía una asociación de Baena como
 // primer resultado, e Intro llevaba a su ficha como si fuera lo buscado.
 await paso('buscar lo que no está dice que no está', async () => {
