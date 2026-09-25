@@ -13,7 +13,7 @@ on:
       fuente:
         description: "Fuente a reconocer"
         type: choice
-        options: [tcu, boe, ine, oci, congreso, placsp]
+        options: [tcu, boe, ine, oci, congreso, placsp, partidos_boe]
         default: tcu
 
 permissions:
@@ -35,6 +35,16 @@ jobs:
 
       - name: instalar dependencias
         run: pip install httpx certifi cryptography pdfplumber openpyxl
+
+      # Las cuentas de los partidos se buscan en los sumarios del BOE que ya
+      # guarda la ingesta nocturna: la misma caché, sólo para leer.
+      - name: recuperar la caché del BOE
+        if: inputs.fuente == 'partidos_boe'
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/cache-boe
+          key: boe-${{ github.run_id }}
+          restore-keys: boe-
 
       - name: explorar
         if: (inputs.fuente || 'tcu') != 'ine'
@@ -113,6 +123,7 @@ jobs:
           cp ingest/sinapsis_ingest/datos/municipios_ine.csv "$GUARDADO/datos/" 2>/dev/null || true
           cp -r ingest/tests/golden/oci "$GUARDADO/golden/" 2>/dev/null || true
           cp -r ingest/tests/golden/congreso "$GUARDADO/golden/" 2>/dev/null || true
+          cp -r ingest/tests/golden/partidos_boe "$GUARDADO/golden/" 2>/dev/null || true
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -129,6 +140,7 @@ jobs:
             cp "$GUARDADO"/datos/municipios_ine.csv ingest/sinapsis_ingest/datos/ 2>/dev/null || true
             cp -r "$GUARDADO"/golden/oci ingest/tests/golden/ 2>/dev/null || true
             cp -r "$GUARDADO"/golden/congreso ingest/tests/golden/ 2>/dev/null || true
+            cp -r "$GUARDADO"/golden/partidos_boe ingest/tests/golden/ 2>/dev/null || true
             # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
             # nombres de personas y está en .gitignore, pero la barrera que de
             # verdad importa es no pedir nunca que se añada todo.
@@ -143,6 +155,8 @@ jobs:
             git add ingest/tests/golden/oci/ 2>/dev/null || true
             # Diputados: cargos públicos del Congreso, publicables por §12.
             git add ingest/tests/golden/congreso/ 2>/dev/null || true
+            # Las cuentas de los partidos: formaciones políticas, personas jurídicas.
+            git add ingest/tests/golden/partidos_boe/ 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios"
               exit 0
