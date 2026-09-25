@@ -13,7 +13,7 @@ on:
       fuente:
         description: "Fuente a reconocer"
         type: choice
-        options: [tcu, boe, ine]
+        options: [tcu, boe, ine, oci]
         default: tcu
 
 permissions:
@@ -111,6 +111,7 @@ jobs:
           cp -r ingest/tests/golden/boe_disposiciones "$GUARDADO/golden/" 2>/dev/null || true
           mkdir -p "$GUARDADO/datos"
           cp ingest/sinapsis_ingest/datos/municipios_ine.csv "$GUARDADO/datos/" 2>/dev/null || true
+          cp -r ingest/tests/golden/oci "$GUARDADO/golden/" 2>/dev/null || true
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -125,6 +126,7 @@ jobs:
             cp -r "$GUARDADO"/golden/boe_disposiciones ingest/tests/golden/ 2>/dev/null || true
             mkdir -p ingest/sinapsis_ingest/datos
             cp "$GUARDADO"/datos/municipios_ine.csv ingest/sinapsis_ingest/datos/ 2>/dev/null || true
+            cp -r "$GUARDADO"/golden/oci ingest/tests/golden/ 2>/dev/null || true
             # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
             # nombres de personas y está en .gitignore, pero la barrera que de
             # verdad importa es no pedir nunca que se añada todo.
@@ -135,6 +137,8 @@ jobs:
             git add ingest/tests/golden/boe_altos_cargos_historico.json 2>/dev/null || true
             git add ingest/tests/golden/boe_disposiciones/ 2>/dev/null || true
             git add ingest/sinapsis_ingest/datos/municipios_ine.csv 2>/dev/null || true
+            # Autorizaciones a ex altos cargos: publicables por §12.
+            git add ingest/tests/golden/oci/ 2>/dev/null || true
             if git diff --cached --quiet; then
               echo "sin cambios"
               exit 0
