@@ -265,6 +265,109 @@ def informes_de_gobierno(html: str) -> list[InformeDeGobierno]:
     return salida
 
 
+# --- El cuadro C.1.2 del IAGC: los miembros del consejo ---------------------------
+
+# La cabecera del cuadro en el modelo de la CNMV, tal cual (sin acentos ni
+# mayúsculas). Se repite en cada página por la que sigue el cuadro. El modelo
+# no trae fecha de nacimiento; los cuadros propios de algunas cotizadas, sí (el
+# del BBVA, «Año de nacimiento»), y por eso no se leen: sólo este.
+CABECERA_DEL_CONSEJO = (
+    "nombre o denominacion social del consejero",
+    "representante",
+    "categoria del consejero",
+    "cargo en el consejo",
+    "fecha primer nombramiento",
+    "fecha ultimo nombramiento",
+    "procedimiento de eleccion",
+)
+TEXTO_DEL_CUADRO = "Nombre o denominación social del consejero"
+
+_CATEGORIAS_DE_CONSEJERO = {
+    "ejecutivo": "Ejecutivo",
+    "dominical": "Dominical",
+    "independiente": "Independiente",
+    "otro externo": "Otro externo",
+}
+# Los cargos, lista cerrada. Lo que no casa no se lee: en el cuadro de bajas,
+# con la misma forma de fila, esa columna trae las comisiones.
+_CARGO = re.compile(
+    r"^(presidente|vicepresidente(?: \d+º)?|consejero delegado|consejero coordinador independiente"
+    r"|consejero|secretario consejero|consejero secretario|vicesecretario consejero)$"
+)
+
+
+@dataclass(frozen=True)
+class MiembroDelConsejo:
+    nombre: str
+    """Sin «DON» ni «DOÑA», como lo escribe el informe."""
+
+    persona: bool
+    """Persona física («DON»/«DOÑA»); si no, una sociedad consejera."""
+
+    representante: str
+    """De una sociedad consejera, quien la representa en el consejo."""
+
+    categoria: str
+    cargo: str
+
+
+def es_cuadro_del_consejo(cabecera: list[str | None]) -> bool:
+    """¿Es esta la primera fila del cuadro C.1.2?"""
+    return tuple(_plano(" ".join((c or "").split())) for c in cabecera) == CABECERA_DEL_CONSEJO
+
+
+def _celda(c: str | None) -> str:
+    # «CLERMONT- TONNERRE»: un guion partido por el salto de línea.
+    return re.sub(r"(\w)- (\w)", r"\1-\2", " ".join((c or "").split()))
+
+
+def miembros_del_consejo(
+    tablas: list[list[list[str | None]]],
+) -> tuple[list[MiembroDelConsejo], int]:
+    """Los miembros del consejo de las tablas del cuadro C.1.2, y cuántas filas se dejaron.
+
+    Sólo se leen las tablas cuya primera fila es la cabecera del cuadro. Una
+    fila entra si su categoría y su cargo están en las listas cerradas; si no
+    —la mitad de una fila partida entre dos páginas, que llega sin categoría—
+    se cuenta y se deja: no se reconstruye un nombre a partir de un trozo. Las
+    columnas de fechas no se leen.
+    """
+    miembros: dict[str, MiembroDelConsejo] = {}
+    descartadas = 0
+    for tabla in tablas:
+        if not tabla or not es_cuadro_del_consejo(tabla[0]):
+            continue
+        for fila in tabla[1:]:
+            celdas = [_celda(c) for c in fila] + [""] * 7
+            nombre, representante, categoria, cargo, primera = celdas[:5]
+            categoria_ok = _CATEGORIAS_DE_CONSEJERO.get(_plano(categoria))
+            cargo_plano = _plano(cargo)
+            # «VICEPRESIDENT» + «E 26/01/1994»: la E final del cargo cae en la
+            # columna de al lado.
+            if re.fullmatch(r"vicepresident( \d+º)?", cargo_plano) and primera.startswith("E"):
+                cargo_plano = cargo_plano.replace("vicepresident", "vicepresidente")
+            if not nombre or not categoria_ok or not _CARGO.match(cargo_plano):
+                descartadas += 1
+                continue
+            m = re.match(r"^(DON|DOÑA|D\.|DÑA\.)\s+(.+)$", nombre, flags=re.IGNORECASE)
+            miembro = MiembroDelConsejo(
+                nombre=m.group(2).strip() if m else nombre,
+                persona=bool(m),
+                representante=representante if not m else "",
+                categoria=categoria_ok,
+                cargo=cargo_plano.capitalize(),
+            )
+            # El mismo cuadro sale dos veces en algunos informes.
+            miembros.setdefault(_plano(miembro.nombre), miembro)
+    return list(miembros.values()), descartadas
+
+
+def consejeros_fijados(texto: str) -> int | None:
+    """«Número de consejeros fijado por la junta 15», del texto del apartado C.1.1."""
+    m = re.search(r"(?i)n[uú]mero de consejeros fijado por la junta\s+(\d+)", texto or "")
+    return int(m.group(1)) if m else None
+
+
 def es_medio_de_comunicacion(sector: str) -> bool:
     """¿El sector de la CNMV es el de los medios? Por su nombre, no por lista."""
     return "medios de comunicacion" in _plano(sector or "")

@@ -13,14 +13,17 @@ from pathlib import Path
 import pytest
 
 from sinapsis_ingest.cnmv import (
+    consejeros_fijados,
     emisor_del_titulo,
     enlaces_de_participaciones,
+    es_cuadro_del_consejo,
     es_medio_de_comunicacion,
     es_persona_fisica,
     informes_de_gobierno,
     leer_accionistas,
     leer_datos_generales,
     leer_participadas,
+    miembros_del_consejo,
     nombre_de_persona,
 )
 
@@ -463,3 +466,90 @@ def test_ninguna_muestra_del_consejo_lleva_fechas_ni_nacimientos():
                     ), f"{f.name}, página {t['pagina']}"
             for fila in t["filas"][1:]:
                 assert not any(re.fullmatch(r"(19|20)\d\d", c) for c in fila), f.name
+
+
+# --- El consejo, del cuadro C.1.2 del IAGC ------------------------------------------
+
+
+def _tablas(empresa: str) -> list:
+    import json
+
+    datos = json.loads((GOLDEN / f"{empresa}-consejo-tablas.json").read_text(encoding="utf-8"))
+    return [t["filas"] for t in datos["tablas"]]
+
+
+def test_el_consejo_de_telefonica_entero_y_sin_los_que_cesaron():
+    miembros, descartadas = miembros_del_consejo(_tablas("telefonica"))
+    assert len(miembros) == 15 and descartadas == 0
+    por_nombre = {m.nombre: m for m in miembros}
+    assert por_nombre["MARC THOMAS MURTRA MILLAR"].cargo == "Presidente"
+    assert por_nombre["MARC THOMAS MURTRA MILLAR"].categoria == "Ejecutivo"
+    # «VICEPRESIDENT» + «E <fecha>»: la E vuelve a su sitio.
+    assert por_nombre["CARLOS OCAÑA ORBIS"].cargo == "Vicepresidente"
+    assert por_nombre["CARLOS OCAÑA ORBIS"].categoria == "Dominical"
+    assert por_nombre["PETER LÖSCHER"].cargo == "Consejero coordinador independiente"
+    assert all(m.persona and not m.representante for m in miembros)
+    # El cuadro de bajas del ejercicio tiene la misma forma de fila, pero no
+    # su cabecera: quien cesó no sale como consejero.
+    assert not any("PALLETE" in m.nombre or "VILÁ" in m.nombre for m in miembros)
+
+
+def test_el_consejo_de_prisa_sin_repetir_y_sin_filas_partidas():
+    miembros, descartadas = miembros_del_consejo(_tablas("prisa"))
+    nombres = [m.nombre for m in miembros]
+    # El cuadro sale dos veces en el informe; cada consejero, una.
+    assert len(nombres) == len(set(nombres)) == 13
+    # La fila partida entre dos páginas llega sin categoría: se deja, no se
+    # recompone un nombre a partir de un trozo (una por cada copia del cuadro).
+    assert descartadas == 2
+    assert not any(n.startswith("FERNÁNDEZ DE ALARCÓN") for n in nombres)
+    assert "BEATRICE DE CLERMONT-TONNERRE" in nombres
+    oughourlian = next(m for m in miembros if m.nombre == "JOSEPH OUGHOURLIAN")
+    assert (oughourlian.cargo, oughourlian.categoria) == ("Presidente", "Dominical")
+    assert {m.cargo for m in miembros} >= {"Vicepresidente 1º", "Vicepresidente 2º"}
+
+
+@pytest.mark.parametrize(("empresa", "cuantos"), [("santander", 15), ("bbva", 14), ("repsol", 15)])
+def test_el_consejo_de_otras_cotizadas(empresa, cuantos):
+    miembros, _ = miembros_del_consejo(_tablas(empresa))
+    assert len(miembros) == cuantos
+    assert sum(1 for m in miembros if m.cargo == "Presidente") == 1
+
+
+def test_el_cuadro_propio_del_bbva_con_nacimientos_no_se_lee():
+    # Su cabecera no es la del modelo: si se leyera, saldrían dos veces.
+    tablas = _tablas("bbva")
+    propio = next(t for t in tablas if "Año de nacimiento" in t[0])
+    assert not es_cuadro_del_consejo(propio[0])
+    assert miembros_del_consejo([propio]) == ([], 0)
+
+
+def test_una_sociedad_consejera_con_su_representante():
+    cabecera = [
+        "Nombre o denominación social del consejero",
+        "Representante",
+        "Categoría del consejero",
+        "Cargo en el consejo",
+        "Fecha primer nombramiento",
+        "Fecha último nombramiento",
+        "Procedimiento de elección",
+    ]
+    tabla = [
+        cabecera,
+        ["CRITERIA CAIXA, S.A.U.", "DON ALGUIEN EJEMPLO", "Dominical", "CONSEJERO", "", "", "X"],
+        # Una fila del cuadro de bajas colada: comisiones donde va el cargo.
+        ["DON OTRO EJEMPLO", "", "Ejecutivo", "Comisión Delegada", "", "", ""],
+    ]
+    [sociedad], descartadas = miembros_del_consejo([tabla])
+    assert sociedad.persona is False
+    assert (sociedad.nombre, sociedad.representante) == (
+        "CRITERIA CAIXA, S.A.U.",
+        "DON ALGUIEN EJEMPLO",
+    )
+    assert descartadas == 1
+
+
+def test_consejeros_fijados_por_la_junta():
+    texto = "Número mínimo de consejeros 5 Número de consejeros fijado por la junta 14 C.1.2"
+    assert consejeros_fijados(texto) == 14
+    assert consejeros_fijados("nada") is None
