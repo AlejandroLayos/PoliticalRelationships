@@ -60,6 +60,7 @@ import httpx
 import structlog
 
 from sinapsis_ingest.cnmv import (
+    a_quien_representan,
     consejeros_fijados,
     emisor_del_titulo,
     informes_de_gobierno,
@@ -183,6 +184,7 @@ class CNMVConsejosConnector:
     def parse(self, raw: RawDocument) -> Iterator[ParsedRecord]:
         tablas, texto = tablas_del_cuadro(raw.content)
         miembros, descartadas = miembros_del_consejo(tablas)
+        representa = a_quien_representan(tablas)
         fijados = consejeros_fijados(texto)
         nif = raw.metadata.get("nif", "")
         if not miembros:
@@ -210,6 +212,11 @@ class CNMVConsejosConnector:
                     "representante": m.representante,
                     "categoria": m.categoria,
                     "cargo": m.cargo,
+                    # Si es dominical: el accionista en cuyo nombre se sienta,
+                    # tal como lo escribe el informe.
+                    "representa": representa.get(m.nombre, "")
+                    if m.categoria == "Dominical"
+                    else "",
                 },
             )
 
@@ -243,7 +250,9 @@ class CNMVConsejosConnector:
                 properties={"name": d["nombre"], "nombreCNMV": d["nombre"]},
             )
         propiedades = {
-            k: d[k] for k in ("cargo", "categoria", "ejercicio", "url", "representante") if d.get(k)
+            k: d[k]
+            for k in ("cargo", "categoria", "ejercicio", "url", "representante", "representa")
+            if d.get(k)
         }
         return Normalizado(
             entidades=[miembro, cotizada],
@@ -280,7 +289,8 @@ def tablas_del_cuadro(pdf: bytes) -> tuple[list[list[list[str | None]]], str]:
             plano = " ".join(documento[i].get_textpage().get_text_range().split())
             if "fijado por la junta" in plano:
                 texto.append(plano)
-            if "denominación social del consejero" in plano:
+            # El cuadro del consejo (C.1.2) y el de los dominicales (C.1.3).
+            if "denominación social del consejero" in plano or "a quien representa" in plano:
                 paginas.update({i, i + 1})
         total = len(documento)
     finally:

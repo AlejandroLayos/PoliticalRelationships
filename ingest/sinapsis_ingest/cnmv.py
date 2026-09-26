@@ -396,6 +396,59 @@ def miembros_del_consejo(
     return list(miembros.values()), descartadas
 
 
+CABECERA_DE_DOMINICALES = (
+    "nombre o denominacion social del consejero",
+    "nombre o denominacion del accionista significativo a quien representa "
+    "o que ha propuesto su nombramiento",
+)
+
+
+def a_quien_representan(tablas: list[list[list[str | None]]]) -> dict[str, str]:
+    """{consejero: accionista} del cuadro de consejeros dominicales (C.1.3).
+
+    Un dominical está en el consejo en nombre de un accionista significativo, y
+    el informe dice de cuál. El cuadro se reconoce por su cabecera exacta —dos
+    primeras columnas—, que se repite en cada página. De cada fila, sólo esas
+    dos columnas: la tercera es el perfil del consejero y no se lee. La fila
+    partida entre dos páginas llega con una de las dos vacía, y se deja. La
+    clave es el nombre sin «DON»/«DOÑA», como en `miembros_del_consejo`.
+    """
+    salida: dict[str, str] = {}
+    for tabla in tablas:
+        dentro = False
+        for fila in tabla:
+            celdas = [_celda(c) for c in (fila or [])[:2]] + ["", ""]
+            nombre, accionista = celdas[0], celdas[1]
+            if tuple(_plano(c) for c in (nombre, accionista)) == CABECERA_DE_DOMINICALES:
+                dentro = True
+                continue
+            if not dentro or not nombre or not accionista:
+                continue
+            m = re.match(r"^(DON|DOÑA|D\.|DÑA\.)\s+(.+)$", nombre, flags=re.IGNORECASE)
+            salida.setdefault(m.group(2).strip() if m else nombre, accionista)
+    return salida
+
+
+def mismo_titular(a: str, b: str) -> bool:
+    """¿Nombran al mismo titular? Sin forma jurídica, sin paréntesis, sin signos.
+
+    «CRITERIA CAIXA S.A.U» y «CRITERIA CAIXA, S.A.U.»; «SOCIEDAD ESTATAL DE
+    PARTICIPACIONES INDUSTRIALES (SEPI)» y la misma sin la sigla. Se usa sólo
+    dentro de una misma cotizada y una misma fuente: el accionista que el
+    informe dice que representa un consejero, frente a los accionistas
+    significativos que la CNMV registra en esa cotizada.
+    """
+
+    def base(x: str) -> str:
+        x = re.sub(r"\([^)]*\)", " ", x or "")
+        x = _plano(x)
+        x = re.sub(r"[^a-z0-9]+", " ", x)
+        palabras = [w for w in x.split() if not _FORMAS.fullmatch(w)]
+        return " ".join(palabras)
+
+    return bool(base(a)) and base(a) == base(b)
+
+
 def consejeros_fijados(texto: str) -> int | None:
     """«Número de consejeros fijado por la junta 15», del texto del apartado C.1.1."""
     m = re.search(r"(?i)n[uú]mero de consejeros fijado por la junta\s+(\d+)", texto or "")

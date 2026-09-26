@@ -46,7 +46,7 @@ from typing import Any
 import structlog
 
 from sinapsis_ingest.cargos import organo_del_puesto
-from sinapsis_ingest.cnmv import es_medio_de_comunicacion
+from sinapsis_ingest.cnmv import es_medio_de_comunicacion, mismo_titular
 from sinapsis_ingest.store import Store
 from sinapsis_ingest.territorio import COMUNIDADES, clasificar_entidad
 from sinapsis_ingest.util import es_identificador_personal, parece_forma_societaria
@@ -818,7 +818,7 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
                     **({"persona": True} if persona else {}),
                     **{
                         k: props[k]
-                        for k in ("cargo", "categoria", "ejercicio", "url")
+                        for k in ("cargo", "categoria", "ejercicio", "url", "representa")
                         if props.get(k)
                     },
                 }
@@ -840,6 +840,16 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
         )
     for c in cotizadas.values():
         c["accionistas"].sort(key=lambda a: -float(a.get("porcentaje") or 0))
+        # El dominical, unido al accionista que representa sólo si ese
+        # accionista está registrado en ESTA cotizada con el mismo nombre
+        # (misma fuente, misma sociedad). Si no, se queda el texto.
+        for m in c["consejo"]:
+            if not m.get("representa"):
+                continue
+            for a in c["accionistas"]:
+                if mismo_titular(m["representa"], a["nombre"]):
+                    m["representaClave"] = a["clave"]
+                    break
         # La presidencia primero, luego las vicepresidencias; el resto, por nombre.
         c["consejo"].sort(key=lambda m: (_orden_en_el_consejo(m.get("cargo", "")), m["nombre"]))
         for vacia in ("url", "consejo"):

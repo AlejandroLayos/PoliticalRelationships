@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from sinapsis_ingest.cnmv import (
+    a_quien_representan,
     consejeros_fijados,
     emisor_del_titulo,
     enlaces_de_participaciones,
@@ -24,6 +25,7 @@ from sinapsis_ingest.cnmv import (
     leer_datos_generales,
     leer_participadas,
     miembros_del_consejo,
+    mismo_titular,
     nombre_de_persona,
 )
 
@@ -644,3 +646,60 @@ def test_cargos_compuestos(cargo, vale):
         [[cabecera, ["DON X Y Z", "", "Ejecutivo", cargo, "", "", ""]]]
     )
     assert bool(miembros) is vale
+
+
+# --- Los dominicales: a quién representa cada uno (C.1.3) ---------------------------
+
+
+def _dominicales(empresa: str) -> dict:
+    import json
+
+    datos = json.loads((GOLDEN / f"{empresa}-dominicales.json").read_text(encoding="utf-8"))
+    return a_quien_representan([t["filas"] for t in datos["tablas"]])
+
+
+def test_los_dominicales_de_telefonica():
+    assert _dominicales("telefonica") == {
+        "JOSÉ MARÍA ABRIL PÉREZ": "BANCO BILBAO VIZCAYA ARGENTARIA, S.A.",
+        "ISIDRO FAINÉ CASAS": "CRITERIA CAIXA S.A.U.",
+        "CARLOS OCAÑA ORBIS": "SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES (SEPI)",
+        "OLAYAN M. ALWETAID": "GREEN BRIDGE INVESTMENT COMPANY SCS",
+    }
+
+
+def test_los_dominicales_de_prisa_y_naturgy():
+    assert _dominicales("prisa")["JOSEPH OUGHOURLIAN"] == "AMBER CAPITAL UK LLP"
+    naturgy = _dominicales("naturgy")
+    assert len(naturgy) == 10
+    assert naturgy["ISABEL ESTAPÉ TOUS"] == "CRITERIA CAIXA, S.A.U."
+    # La tabla de la página 16 no tiene la cabecera: sólo accionistas, sin
+    # consejero al lado. No se lee.
+    assert "CRITERIA CAIXA S.A.U" not in naturgy
+
+
+def test_el_guion_partido_se_une_tambien_aqui():
+    assert "JOSÉ MARÍA MÉNDEZ ÁLVAREZ-CEDRÓN" in _dominicales("caixabank")
+
+
+@pytest.mark.parametrize(
+    ("a", "b", "mismo"),
+    [
+        ("CRITERIA CAIXA S.A.U", "CRITERIA CAIXA, S.A.U.", True),
+        (
+            "SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES (SEPI)",
+            "SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES",
+            True,
+        ),
+        ("AMBER CAPITAL UK LLP", "AMBER CAPITAL UK LLP", True),
+        # Nombres distintos para lo que quizá sea lo mismo: no se da por igual.
+        (
+            "FUNDACIÓN BANCARIA LA CAIXA",
+            "FUNDACION BANCARIA CAIXA D ESTALVIS I PENSIONS DE BARCELONA",
+            False,
+        ),
+        ("RIOJA ACQUISITION S.À.R.L", "RIOJA ACQUISITIONS S.À.R.L.", False),
+        ("", "", False),
+    ],
+)
+def test_mismo_titular(a, b, mismo):
+    assert mismo_titular(a, b) is mismo

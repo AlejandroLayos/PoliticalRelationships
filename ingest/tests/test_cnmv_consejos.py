@@ -89,7 +89,9 @@ def test_si_corta_siempre_no_hay_informe_y_no_se_rompe():
 
 def _tablas(empresa: str) -> list:
     datos = json.loads((GOLDEN / f"{empresa}-consejo-tablas.json").read_text(encoding="utf-8"))
-    return [t["filas"] for t in datos["tablas"]], "Número de consejeros fijado por la junta 14"
+    dominicales = json.loads((GOLDEN / f"{empresa}-dominicales.json").read_text(encoding="utf-8"))
+    tablas = [t["filas"] for t in datos["tablas"]] + [t["filas"] for t in dominicales["tablas"]]
+    return tablas, "Número de consejeros fijado por la junta 14"
 
 
 @pytest.fixture
@@ -124,6 +126,8 @@ def test_cada_consejero_unido_a_su_cotizada_sin_fechas(consejo_de_prisa):
         "categoria": "Dominical",
         "ejercicio": 2025,
         "url": f"https://www.cnmv.es/x/informaciongobcorp.aspx?nif={PRISA}",
+        # Dominical: en nombre de Amber Capital, según el propio informe.
+        "representa": "AMBER CAPITAL UK LLP",
         "relacion": "consejo",
     }
     # Ninguna fecha: ni en las propiedades de la arista ni en sus fechas.
@@ -180,3 +184,12 @@ def test_la_lista_de_todos_los_emisores_no_da_informe():
     servidor = _ServidorConGuion("iberdrola-gobcorp-qs.html")
     assert list(_conector(servidor).fetch()) == []
     assert not any("verdocumento" in u for u in servidor.peticiones)
+
+
+def test_el_dominical_lleva_a_quien_representa(consejo_de_prisa):
+    aristas = {a.source_key: a for n in consejo_de_prisa for a in n.aristas}
+    oughourlian = aristas[f"cnmv:persona:{clave('JOSEPH OUGHOURLIAN')}"]
+    assert oughourlian.properties["representa"] == "AMBER CAPITAL UK LLP"
+    # Un independiente no representa a nadie.
+    independientes = [a for a in aristas.values() if a.properties["categoria"] == "Independiente"]
+    assert independientes and all("representa" not in a.properties for a in independientes)

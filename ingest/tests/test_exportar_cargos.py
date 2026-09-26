@@ -1562,6 +1562,11 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
                             "categoria": "Dominical",
                             "ejercicio": 2025,
                             "url": "https://www.cnmv.es/iagc",
+                            **(
+                                {"representa": "AMBER CAPITAL UK LLP"}
+                                if clave_m.endswith("oughourlian")
+                                else {}
+                            ),
                         },
                     )
                 ],
@@ -1572,6 +1577,11 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
 
     consejo = cargos["cotizadas"][prisa_clave]["consejo"]
     assert [m["nombre"] for m in consejo] == ["JOSEPH OUGHOURLIAN", "BANCO SANTANDER, S.A."]
+    amber = next(
+        a
+        for a in cargos["cotizadas"][prisa_clave]["accionistas"]
+        if a["nombre"] == "AMBER CAPITAL UK LLP"
+    )
     assert consejo[0] == {
         "clave": "cnmv:persona:joseph-oughourlian",
         "nombre": "JOSEPH OUGHOURLIAN",
@@ -1580,6 +1590,9 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
         "categoria": "Dominical",
         "ejercicio": 2025,
         "url": "https://www.cnmv.es/iagc",
+        # A quién representa, y ese accionista de la misma cotizada.
+        "representa": "AMBER CAPITAL UK LLP",
+        "representaClave": amber["clave"],
     }
     assert "persona" not in consejo[1]
     # El enlace de la cotizada sigue siendo el de sus participaciones.
