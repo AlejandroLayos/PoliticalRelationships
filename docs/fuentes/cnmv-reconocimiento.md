@@ -1,5 +1,32 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Quinta vuelta: 2026-09-26T11:05:11.962821+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Quinta vuelta: el buscador por denominación
+
+### El buscador de participaciones significativas
+
+- `https://www.cnmv.es/portal/Consultas/busqueda.aspx?id=7` → HTTP 200 · «CNMV - Participaciones Significativas y Autocartera en Sociedades cotizadas» · final `https://www.cnmv.es/portal/Consultas/busqueda?id=7`
+- ocultos: ['__EVENTVALIDATION', '__VIEWSTATE', '__VIEWSTATEGENERATOR']
+- de texto: []
+- botones: [('ctl00$WucCookiesPolicy$btnCookiesConfirmTech', 'Aceptar solo las imprescindibles'), ('ctl00$WucCookiesPolicy$btnCookiesConfirmAll', 'Aceptar todas'), ('ctl00$WucCookiesPolicy$btnCookiesConfirmSelected', 'Confirmar selección'), ('ctl00$WucCookiesPolicy$btnCookiesConfirmAll2', 'Aceptar todas'), ('ctl00$ContentPrincipal$btnOk', 'Buscar'), ('ctl00$ContentPrincipal$btnLimpiar', 'Limpiar')]
+- desplegables: []
+- contenido: 'ContentPrincipal_wNombreEntidad_txtDenominacion" id="ctl00_ContentPrincipal_wNombreEntidad_lblDenominacion" class="enlinea3">Por denominación de la entidad: Por intervalo de fechas de registro (dd/mm/aaaa): Fecha desde: Fecha hasta: Por los registros de los últimos días <'
+- campo de denominación: ctl00$ContentPrincipal$wNombreEntidad$txtDenominacion
+- «IBERDROLA» → HTTP 200 · 213,167 caracteres · enlaces: ['Autocartera.aspx?qS={f113e1f8-aae6-44fb-ad50-c7e7a3320512}', 'Notificaciones-Participaciones.aspx?qS={f113e1f8-aae6-44fb-ad50-c7e7a3320512}', 'SociedadesParticipa.aspx?qS={f113e1f8-aae6-44fb-ad50-c7e7a3320512}', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={32a67081-f3a5-448a-9375-4137c10b17bf}&lang=ca', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={32a67081-f3a5-448a-9375-4137c10b17bf}&lang=en', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={32a67081-f3a5-448a-9375-4137c10b17bf}&lang=es', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={32a67081-f3a5-448a-9375-4137c10b17bf}&lang=eu', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={32a67081-f3a5-448a-9375-4137c10b17bf}&lang=gl']
+  - contenido: 'ContentPrincipal_titulo_wuc_Noscript1"> Notificaciones de derechos de voto e instrumentos financieros Sociedades cotizadas donde participa Notificaciones sobre acciones propias (Autocartera) <'
+- «INDRA SISTEMAS» → HTTP 200 · 213,202 caracteres · enlaces: ['Autocartera.aspx?qS={d69f4887-b880-452b-ad60-631c30d9b330}', 'Notificaciones-Participaciones.aspx?qS={d69f4887-b880-452b-ad60-631c30d9b330}', 'SociedadesParticipa.aspx?qS={d69f4887-b880-452b-ad60-631c30d9b330}', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={d8cffa67-ed46-4f34-adcd-6d6f97efb70b}&lang=ca', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={d8cffa67-ed46-4f34-adcd-6d6f97efb70b}&lang=en', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={d8cffa67-ed46-4f34-adcd-6d6f97efb70b}&lang=es', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={d8cffa67-ed46-4f34-adcd-6d6f97efb70b}&lang=eu', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={d8cffa67-ed46-4f34-adcd-6d6f97efb70b}&lang=gl']
+  - contenido: 'ContentPrincipal_titulo_wuc_Noscript1"> Notificaciones de derechos de voto e instrumentos financieros Sociedades cotizadas donde participa Notificaciones sobre acciones propias (Autocartera) <'
+- «INDUSTRIA DE DISEÑO TEXTIL» → HTTP 200 · 213,303 caracteres · enlaces: ['Autocartera.aspx?qS={f14109e7-2300-4e20-aff2-51eea38685b4}', 'Notificaciones-Participaciones.aspx?qS={f14109e7-2300-4e20-aff2-51eea38685b4}', 'SociedadesParticipa.aspx?qS={f14109e7-2300-4e20-aff2-51eea38685b4}', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={788b190b-afa7-44bc-abcb-013e5f4942ee}&lang=ca', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={788b190b-afa7-44bc-abcb-013e5f4942ee}&lang=en', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={788b190b-afa7-44bc-abcb-013e5f4942ee}&lang=es', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={788b190b-afa7-44bc-abcb-013e5f4942ee}&lang=eu', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={788b190b-afa7-44bc-abcb-013e5f4942ee}&lang=gl']
+  - contenido: 'ContentPrincipal_titulo_wuc_Noscript1"> Notificaciones de derechos de voto e instrumentos financieros Sociedades cotizadas donde participa Notificaciones sobre acciones propias (Autocartera) <'
+- «ATRESMEDIA» → HTTP 200 · 213,736 caracteres · enlaces: ['../../HR/HSPactosParasociales.aspx?qS={ba0de6e4-195c-4a67-ae91-af8e586a21bd}', 'Autocartera.aspx?qS={ba0de6e4-195c-4a67-ae91-af8e586a21bd}', 'Notificaciones-Participaciones.aspx?qS={ba0de6e4-195c-4a67-ae91-af8e586a21bd}', 'SociedadesParticipa.aspx?qS={ba0de6e4-195c-4a67-ae91-af8e586a21bd}', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={7ea16c6c-8e4e-4f68-96d0-7a2e09b4c7a1}&lang=ca', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={7ea16c6c-8e4e-4f68-96d0-7a2e09b4c7a1}&lang=en', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={7ea16c6c-8e4e-4f68-96d0-7a2e09b4c7a1}&lang=es', 'https://www.cnmv.es/portal/consultas/derechosvoto/ps_ac_ini?qS={7ea16c6c-8e4e-4f68-96d0-7a2e09b4c7a1}&lang=eu']
+  - contenido: 'ContentPrincipal_titulo_wuc_Noscript1"> Notificaciones de derechos de voto e instrumentos financieros Sociedades cotizadas donde participa Notificaciones sobre acciones propias (Autocartera) Comunicación de Pactos parasociales <'
+
+
+---
+
+
 Cuarta vuelta: 2026-09-26T11:03:09.318976+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -579,6 +606,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 
