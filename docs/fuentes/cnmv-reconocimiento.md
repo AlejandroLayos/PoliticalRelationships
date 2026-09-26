@@ -1,5 +1,31 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Séptima vuelta: 2026-09-26T12:02:48.741256+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Séptima vuelta: consejos y directivos, con la sesión hecha
+
+- portada → HTTP 200 (text/html; charset=utf-8); cookies: 1
+- participaciones de Telefónica → HTTP 200 (text/html; charset=utf-8)
+
+### El consejo en el informe de gobierno corporativo, por filas
+
+- telefonica: 167 páginas, 42 filas de consejo; categorías {'ejecutivo': 8, 'dominical': 8, 'independiente': 24, 'otro externo': 2}; forma de la primera: [4]
+- prisa: 191 páginas, 28 filas de consejo; categorías {'dominical': 8, 'independiente': 14, 'ejecutivo': 6}; forma de la primera: [5]
+- santander: 216 páginas, 15 filas de consejo; categorías {'independiente': 10, 'otro externo': 3, 'ejecutivo': 2}; forma de la primera: [5]
+- bbva: 180 páginas, 26 filas de consejo; categorías {'ejecutivo': 4, 'independiente': 20, 'otro externo': 2}; forma de la primera: [5]
+- repsol: 143 páginas, 16 filas de consejo; categorías {'independiente': 11, 'otro externo': 4, 'ejecutivo': 1}; forma de la primera: [5]
+
+### Notificaciones de directivos: sólo la forma
+
+- telefonica: HTTP 200, 0 tablas (text/html; charset=utf-8)
+- prisa: HTTP 200, 0 tablas (text/html; charset=utf-8)
+- santander: HTTP 200, 0 tablas (text/html; charset=utf-8)
+
+
+---
+
+
 Sexta vuelta: 2026-09-26T11:39:45.204368+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -629,6 +655,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 
