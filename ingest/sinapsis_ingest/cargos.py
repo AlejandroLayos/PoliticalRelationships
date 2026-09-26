@@ -103,6 +103,22 @@ _NOMBRA = re.compile(rf"^(?:nombra|designa) (?P<cargo>.+?) a {_TRATAMIENTO} (?P<
 # otra cosa detrás de una coma, puede ser parte del nombre del cargo —«Ministra
 # de Trabajo, Migraciones y Seguridad Social» lleva comas— y cortar ahí
 # publicaría un cargo mutilado.
+# «por el que se promueve a la categoría de Magistrado de la Sala Quinta del
+# Tribunal Supremo a don Celso Rodríguez Padrón»: así se nombra a los
+# magistrados del Supremo que vienen de la carrera.
+_PROMUEVE = re.compile(
+    rf"^promueve a la categor[ií]a de (?P<cargo>.+?) a {_TRATAMIENTO} (?P<nombre>.+)$"
+)
+# «por el que se nombra en propiedad a don Manuel Marchena Gómez, Magistrado de
+# la Sala Segunda del Tribunal Supremo» y «se nombra a don Manuel Marchena
+# Gómez, Presidente de la Sala Segunda»: el nombre delante y el cargo detrás.
+_NOMBRA_A_QUIEN = re.compile(
+    rf"^nombra(?: en propiedad)? a {_TRATAMIENTO} (?P<nombre>[^,]+), (?P<cargo>.+)$"
+)
+# «se nombra Presidente de la Sala Segunda del Tribunal Supremo don Juan
+# Saavedra Ruiz», sin la «a».
+_NOMBRA_SIN_A = re.compile(rf"^nombra (?P<cargo>.+?) {_TRATAMIENTO} (?P<nombre>.+)$")
+
 _MOTIVOS = (
     r"a petición propia",
     r"por pase a otro destino",
@@ -178,9 +194,22 @@ def leer_titulo(titulo: str) -> Acto | None:
     n = _NOMBRA.match(resto)
     if n:
         nombre, cargo = n.group("nombre").strip(), n.group("cargo").strip()
-        if not _es_nombre(nombre) or not cargo:
-            return None
-        return Acto(tipo="nombramiento", cargo=cargo, nombre=nombre, **comun)
+        if _es_nombre(nombre) and cargo:
+            return Acto(tipo="nombramiento", cargo=cargo, nombre=nombre, **comun)
+        # «se nombra en propiedad a don X, Magistrado…» también encaja aquí,
+        # con «en propiedad» de cargo y el resto de nombre, que no lo es. Se
+        # sigue probando con las fórmulas de la carrera judicial.
+
+    # Las fórmulas de la carrera judicial. Sólo se aceptan si el cargo es de
+    # una alta instancia (`es_alta_instancia`): fuera de ahí son ascensos de
+    # carrera, y una fórmula nueva no puede colar lo que antes no pasaba.
+    for formula in (_PROMUEVE, _NOMBRA_A_QUIEN, _NOMBRA_SIN_A):
+        j = formula.match(resto)
+        if not j:
+            continue
+        nombre, cargo = j.group("nombre").strip(), j.group("cargo").strip()
+        if _es_nombre(nombre) and cargo and es_alta_instancia(cargo):
+            return Acto(tipo="nombramiento", cargo=cargo, nombre=nombre, **comun)
 
     c = _CESE.match(resto)
     if c:
@@ -223,6 +252,7 @@ _MASCULINO = {
     "directora adjunta": "Director Adjunto",
     "vicesecretaria": "Vicesecretario",
     "jefa": "Jefe",
+    "magistrada": "Magistrado",
     "vicepresidenta primera": "Vicepresidente primero",
     "vicepresidenta segunda": "Vicepresidente segundo",
     "vicepresidenta tercera": "Vicepresidente tercero",
@@ -296,6 +326,107 @@ _CARRERAS = re.compile(
 # General del Estado la elige el Consejo de Ministros, y el paso de un
 # ministerio a la Fiscalía General es precisamente de lo que va esto.
 _NOMBRADOS_POR_EL_GOBIERNO = re.compile(r"^fiscal general del estado$")
+
+
+# --- Altas instancias judiciales y fiscales -----------------------------------
+
+# La ampliación de §12 del 26/9/2026: el Supremo, el Constitucional, el CGPJ,
+# la Audiencia Nacional, las presidencias de los TSJ, el Fiscal General y los
+# fiscales de sala, por su nombramiento en el BOE. La carrera judicial y fiscal
+# ordinaria sigue fuera: jueces de instancia, audiencias provinciales,
+# fiscales provinciales. Como con los altos cargos, es una lista de lo que SÍ.
+_ALTAS_INSTANCIAS = tuple(
+    re.compile(p)
+    for p in (
+        r"^presidente del tribunal supremo\b",
+        r"^vicepresidente del tribunal supremo\b",
+        r"^presidente de la sala (primera|segunda|tercera|cuarta|quinta) del tribunal supremo$",
+        r"^magistrado (de la sala (primera|segunda|tercera|cuarta|quinta) )?del tribunal supremo$",
+        r"^presidente del tribunal constitucional$",
+        r"^vicepresidente del tribunal constitucional$",
+        r"^magistrado del tribunal constitucional$",
+        r"^presidente del consejo general del poder judicial$",
+        r"^vocal del consejo general del poder judicial$",
+        r"^presidente de la audiencia nacional$",
+        r"^presidente de la sala de (lo penal|lo contencioso-administrativo|lo social|apelacion)"
+        r" de la audiencia nacional$",
+        r"^presidente del tribunal superior de justicia de [a-z ,-]+$",
+        r"^fiscal general del estado$",
+        r"^teniente fiscal del tribunal supremo$",
+        r"^fiscal de sala\b",
+    )
+)
+
+
+def es_alta_instancia(cargo: str) -> bool:
+    """¿El puesto es de una alta instancia judicial o fiscal de la lista?"""
+    p = _plano(puesto(cargo)).strip()
+    return any(r.search(p) for r in _ALTAS_INSTANCIAS)
+
+
+def es_publicable(cargo: str) -> bool:
+    """Lo que se lee del BOE: un alto cargo o una alta instancia."""
+    return es_alto_cargo(cargo) or es_alta_instancia(cargo)
+
+
+_INSTITUCIONES = (
+    # La Fiscalía primero: «Fiscal de Sala del Tribunal Supremo» es de la
+    # Fiscalía, aunque nombre al Supremo.
+    (re.compile(r"^(fiscal|teniente fiscal)\b"), "Fiscalía General del Estado"),
+    (re.compile(r"\btribunal constitucional\b"), "Tribunal Constitucional"),
+    (re.compile(r"\btribunal supremo\b"), "Tribunal Supremo"),
+    (re.compile(r"\bconsejo general del poder judicial\b"), "Consejo General del Poder Judicial"),
+    (re.compile(r"\baudiencia nacional\b"), "Audiencia Nacional"),
+)
+_TSJ = re.compile(r"(Tribunal Superior de Justicia de .+)$", re.IGNORECASE)
+
+
+def institucion_judicial(cargo: str) -> str:
+    """La institución de un cargo de alta instancia, por su propio nombre; ''.
+
+    El departamento de estas disposiciones es quien las publica —el CGPJ, la
+    Jefatura del Estado—, no donde está el puesto: «Magistrado del Supremo ·
+    Consejo General del Poder Judicial» diría que es vocal del Consejo.
+    """
+    if not es_alta_instancia(cargo):
+        return ""
+    p = _plano(puesto(cargo))
+    tsj = _TSJ.search(cargo)
+    if tsj and not p.startswith(("fiscal", "teniente fiscal")):
+        return tsj.group(1)[0].upper() + tsj.group(1)[1:]
+    for patron, institucion in _INSTITUCIONES:
+        if patron.search(p):
+            return institucion
+    return ""
+
+
+# Quién propone a una alta instancia, según el cuerpo del Real Decreto: «y a
+# propuesta del Senado, Vengo en nombrar…». Lista cerrada; si el texto nombra
+# a más de uno, o a ninguno de éstos, no se dice nada.
+_PROPUESTAS = (
+    (re.compile(r"a propuesta del gobierno\b"), "Gobierno"),
+    (re.compile(r"a propuesta del congreso de los diputados\b"), "Congreso de los Diputados"),
+    (re.compile(r"a propuesta del senado\b"), "Senado"),
+    (
+        re.compile(
+            r"a propuesta del (?:pleno del )?consejo general del poder judicial\b"
+            r"|por acuerdo (?:del pleno|de la comision permanente)"
+            r" del consejo general del poder judicial\b"
+        ),
+        "Consejo General del Poder Judicial",
+    ),
+    (
+        re.compile(r"a propuesta del (?:pleno del )?tribunal constitucional\b"),
+        "Tribunal Constitucional",
+    ),
+)
+
+
+def propuesta_de(parrafos: list[str]) -> str:
+    """Quién propuso el nombramiento, si el cuerpo lo dice de uno solo; ''."""
+    texto = re.sub(r"\s+", " ", _plano(" ".join(parrafos)))
+    hallados = {nombre for patron, nombre in _PROPUESTAS if patron.search(texto)}
+    return hallados.pop() if len(hallados) == 1 else ""
 
 
 def es_alto_cargo(cargo: str) -> bool:

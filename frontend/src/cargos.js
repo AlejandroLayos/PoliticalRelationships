@@ -331,10 +331,19 @@ export function sectorDeclarado(d) {
 
 /** Cómo se llama la ficha: por lo más alto que se sabe de la persona. */
 export function papelDeLaFicha(persona) {
-  const fuentes = new Set((persona?.periodos ?? []).map((p) => p.fuente ?? 'boe'))
-  if (fuentes.has('boe')) return 'Alto cargo'
-  if (fuentes.has('congreso')) return 'Congreso de los Diputados'
+  const periodos = persona?.periodos ?? []
+  const delBoe = periodos.filter((p) => (p.fuente ?? 'boe') === 'boe')
+  // Sólo altas instancias judiciales o fiscales: no es un alto cargo del
+  // Gobierno, y la ficha no puede decir que lo es.
+  if (delBoe.length && delBoe.every((p) => p.ambito === 'justicia')) return 'Justicia · alta instancia'
+  if (delBoe.length) return 'Alto cargo'
+  if (periodos.some((p) => p.fuente === 'congreso')) return 'Congreso de los Diputados'
   return 'Ex alto cargo'
+}
+
+/** «del Senado», «del Consejo General del Poder Judicial»: con su artículo. */
+export function propuestaEnPalabras(quien) {
+  return quien ? `del ${quien}` : ''
 }
 
 /**

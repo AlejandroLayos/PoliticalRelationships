@@ -19,6 +19,7 @@ import {
   nombreDeGobierno,
   organismos,
   papelDeLaFicha,
+  propuestaEnPalabras,
   personaDeClave,
   presidencias,
   recuento,
@@ -446,5 +447,20 @@ describe('el puente de las formaciones', () => {
       { formacion: 'PSOE', nombre: 'PARTIDO SOCIALISTA OBRERO ESPAÑOL', personas: 2 },
     ])
     expect(formacionesDeEntidad(datos, 'nif:otro')).toEqual([])
+  })
+})
+
+describe('altas instancias judiciales', () => {
+  it('la ficha de quien sólo tiene cargos judiciales no dice «Alto cargo»', () => {
+    const juez = { periodos: [{ cargo: 'Magistrado del Tribunal Constitucional', ambito: 'justicia' }] }
+    expect(papelDeLaFicha(juez)).toBe('Justicia · alta instancia')
+    // Quien fue ministro y luego magistrado sigue siendo alto cargo.
+    const ambos = { periodos: [...juez.periodos, { cargo: 'Ministro de Justicia' }] }
+    expect(papelDeLaFicha(ambos)).toBe('Alto cargo')
+  })
+
+  it('el proponente, con su artículo', () => {
+    expect(propuestaEnPalabras('Senado')).toBe('del Senado')
+    expect(propuestaEnPalabras('')).toBe('')
   })
 })

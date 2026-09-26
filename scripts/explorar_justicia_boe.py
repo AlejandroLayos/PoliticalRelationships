@@ -87,7 +87,9 @@ def main() -> int:
     with httpx.Client(timeout=60.0, follow_redirects=True, headers=CABECERAS) as c:
         html = c.get(FORMULARIO).text
         ocultos = re.findall(
-            r'<input[^>]*type="hidden"[^>]*name="(campo\[\d+\])"[^>]*value="([^"]*)"', html, flags=re.I
+            r'<input[^>]*type="hidden"[^>]*name="(campo\[\d+\])"[^>]*value="([^"]*)"',
+            html,
+            flags=re.I,
         )
         titulo = next(((n, v) for n, v in ocultos if v == "TITULOS"), None)
         informe += [f"Campos del formulario: {ocultos}", ""]
@@ -109,17 +111,31 @@ def main() -> int:
                     },
                 )
                 ids = list(dict.fromkeys(re.findall(r"BOE-A-\d{4}-\d+", r.text)))
-                total = re.search(r"([\d.]+)\s+(?:resultados?|documentos?|disposiciones)", r.text, flags=re.I)
+                total = re.search(
+                    r"([\d.]+)\s+(?:resultados?|documentos?|disposiciones)", r.text, flags=re.I
+                )
                 informe.append(
                     f"- «{consulta}» → HTTP {r.status_code}, {len(ids)} en la primera página"
                     + (f", total {total.group(1)}" if total else "")
                 )
                 if consulta == CONSULTAS[0]:
                     # Cómo pagina: los enlaces de «siguiente» y el texto del recuento.
-                    paginas = sorted(set(re.findall(r'href="([^"]*(?:pag|page|accion=Mas)[^"]*)"', r.text, flags=re.I)))
-                    informe.append(f"  - enlaces de paginación: {[p.replace('&amp;', '&')[:200] for p in paginas[:6]]}")
-                    recuento = re.search(r"[^<>]{0,80}\b(?:resultado|encontrad)[^<>]{0,80}", r.text, flags=re.I)
-                    informe.append(f"  - texto del recuento: {recuento.group(0).strip() if recuento else '(no aparece)'!r}")
+                    paginas = sorted(
+                        set(
+                            re.findall(
+                                r'href="([^"]*(?:pag|page|accion=Mas)[^"]*)"', r.text, flags=re.I
+                            )
+                        )
+                    )
+                    informe.append(
+                        f"  - enlaces de paginación: {[p.replace('&amp;', '&')[:200] for p in paginas[:6]]}"
+                    )
+                    recuento = re.search(
+                        r"[^<>]{0,80}\b(?:resultado|encontrad)[^<>]{0,80}", r.text, flags=re.I
+                    )
+                    informe.append(
+                        f"  - texto del recuento: {recuento.group(0).strip() if recuento else '(no aparece)'!r}"
+                    )
                 por_consulta[consulta] = ids
                 for i in ids:
                     if i not in identificadores:
@@ -179,7 +195,12 @@ def main() -> int:
     con_xml = [h for h in hallados if h["xml"]]
     if con_xml:
         etiquetas = Counter(re.findall(r"<([a-z_]+)[\s>]", con_xml[0]["xml"]))
-        informe += ["## Forma del XML", "", f"`{con_xml[0]['id']}`: {etiquetas.most_common(40)}", ""]
+        informe += [
+            "## Forma del XML",
+            "",
+            f"`{con_xml[0]['id']}`: {etiquetas.most_common(40)}",
+            "",
+        ]
         meta = re.search(r"<metadatos>.*?</metadatos>", con_xml[0]["xml"], flags=re.S)
         if meta:
             informe += ["```xml", meta.group(0)[:2500], "```", ""]
@@ -189,7 +210,9 @@ def main() -> int:
     guardados = 0
     for consulta in CONSULTAS:
         suyos = [h for h in hallados if h["consulta"] == consulta and h["xml"]]
-        nombramientos = [h for h in suyos if NOMBRAMIENTO.search(h["titulo"])][:MUESTRAS_POR_CONSULTA]
+        nombramientos = [h for h in suyos if NOMBRAMIENTO.search(h["titulo"])][
+            :MUESTRAS_POR_CONSULTA
+        ]
         ceses = [h for h in suyos if CESE.search(h["titulo"])][:1]
         for h in nombramientos + ceses:
             destino = golden / f"{h['id']}.xml"

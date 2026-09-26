@@ -49,6 +49,7 @@ export const TIPOS = {
  */
 export const RELACIONES = {
   preside: { ida: 'Presidió', vuelta: 'Presidencia' },
+  propuesta: { ida: 'A propuesta de', vuelta: 'Propuso para el cargo' },
   nombramiento: { ida: 'Nombramientos durante el', vuelta: 'Nombramientos en el BOE' },
   cargo: { ida: 'Cargos en', vuelta: 'Personas con cargo aquí' },
   escano: { ida: 'Escaño por', vuelta: 'Escaños en el Congreso' },
@@ -65,6 +66,7 @@ export const RELACIONES = {
 /** El orden en que se enseñan los grupos de conexiones en el panel. */
 const ORDEN_RELACION = [
   'preside',
+  'propuesta',
   'autorizacion',
   'dirigio',
   'declaracion',
@@ -278,9 +280,17 @@ export function construirRed(cargos, grafo = null) {
           gobiernoOrganismo.set(k, (gobiernoOrganismo.get(k) ?? 0) + 1)
         }
       }
+      // Quién propuso a una alta instancia judicial, según el Real Decreto.
+      // Si fue el Gobierno, la arista va a ese Gobierno y no es un
+      // «nombramiento durante»: es una propuesta suya.
+      const propuestaDelGobierno = p.propuesta === 'Gobierno' && p.gobierno?.persona
+      if (p.propuesta && !propuestaDelGobierno && p.propuesta !== 'Gobierno') {
+        const quien = nodo(claveOrganismo(p.propuesta), { tipo: 'organismo', nombre: p.propuesta })
+        unir(persona.clave, quien.id, 'propuesta', { ...base, texto: cargo })
+      }
       if (p.gobierno?.persona) {
         const g = nodoGobierno(p.gobierno)
-        unir(persona.clave, g.id, 'nombramiento', { ...base, texto: cargo })
+        unir(persona.clave, g.id, propuestaDelGobierno ? 'propuesta' : 'nombramiento', { ...base, texto: cargo })
       }
       if (p.organo?.clave) {
         const o = nodoEntidad(p.organo)
@@ -417,7 +427,7 @@ export function relevancia(red, id) {
   if (n.tipo !== 'persona') return 100 + (n.grado ?? 0)
   let fuertes = 0
   for (const a of red.porNodo.get(id) ?? []) {
-    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside'].includes(a.relacion)) fuertes += 1
+    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta'].includes(a.relacion)) fuertes += 1
   }
   return fuertes * 10 + (n.rango ?? 1) * 3 + Math.min(5, n.grado ?? 0)
 }

@@ -31,6 +31,7 @@ import {
   marcasDeAnios,
   movimientos,
   nombreDeGobierno,
+  propuestaEnPalabras,
   nombreFuente,
   organismos,
   papelDeLaFicha,
@@ -271,8 +272,16 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
               las presidencias leídas. Dice quién gobernaba, no el partido de
               la persona nombrada.
             -->
+            <!--
+              Quién lo propuso, en una alta instancia judicial: lo dice el
+              cuerpo del Real Decreto («a propuesta del Senado»). Si fue el
+              Gobierno, la línea de abajo dice cuál.
+            -->
+            <p v-if="p.propuesta && p.propuesta !== 'Gobierno'" class="periodo-gobierno">
+              A propuesta {{ propuestaEnPalabras(p.propuesta) }}
+            </p>
             <p v-if="p.gobierno" class="periodo-gobierno">
-              Nombramiento con el
+              {{ p.propuesta === 'Gobierno' ? 'A propuesta del' : 'Nombramiento con el' }}
               <a href="#" @click.prevent="abrir(p.gobierno.persona)">Gobierno de {{ p.gobierno.nombre }}</a><abbr
                 v-if="p.gobierno.formacion"
                 title="Formación con la que el presidente fue elegido diputado, según el Congreso"

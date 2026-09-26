@@ -60,10 +60,14 @@ import httpx
 import structlog
 
 from sinapsis_ingest.cargos import (
+    es_alta_instancia,
     es_alto_cargo,
+    es_publicable,
+    institucion_judicial,
     leer_cuerpo,
     leer_titulo,
     organismo_del_acto,
+    propuesta_de,
     puesto,
     separar_cargos,
     tipo_colectivo,
@@ -145,7 +149,7 @@ def es_candidato(item: dict[str, Any]) -> bool:
     titulo = item.get("titulo") or ""
     acto = leer_titulo(titulo)
     if acto is not None:
-        return any(es_alto_cargo(c) for c in separar_cargos(acto.cargo))
+        return any(es_publicable(c) for c in separar_cargos(acto.cargo))
     # Los que forman o disuelven un gobierno: los nombres van en el cuerpo, y
     # son ministros.
     return tipo_colectivo(titulo) is not None
@@ -155,7 +159,10 @@ class BOEConnector:
     """Altos cargos nombrados y cesados por Real Decreto."""
 
     source_id = "boe"
-    extractor_version = "boe-cargos/2"
+    # 3: también las altas instancias judiciales y fiscales (spec §12,
+    # ampliación del 26/9/2026). La caché de sumarios ya las tenía: guarda
+    # todos los Reales Decretos de la II.A, no sólo los que pasaban el filtro.
+    extractor_version = "boe-cargos/3"
 
     def __init__(
         self,
@@ -333,18 +340,18 @@ class BOEConnector:
         if not identificador:
             return
 
+        nodo_texto = raiz.find("texto")
+        parrafos = (
+            ["".join(p.itertext()) for p in nodo_texto.findall("p")]
+            if nodo_texto is not None
+            else []
+        )
         acto = leer_titulo(titulo)
         if acto is not None:
             # «Vicepresidenta del Gobierno y Ministra de…» son dos cargos.
             actos = [replace(acto, cargo=c) for c in separar_cargos(acto.cargo)]
         else:
             # Colectivo: los nombres están en el cuerpo, párrafo a párrafo.
-            nodo_texto = raiz.find("texto")
-            parrafos = (
-                ["".join(p.itertext()) for p in nodo_texto.findall("p")]
-                if nodo_texto is not None
-                else []
-            )
             actos = leer_cuerpo(titulo, parrafos)
             if tipo_colectivo(titulo) and not actos:
                 log.warning("boe: Real Decreto colectivo sin ningún acto leído", id=identificador)
@@ -357,7 +364,7 @@ class BOEConnector:
             "fecha_disposicion": texto("fecha_disposicion"),
             "rango": texto("rango"),
         }
-        for n, a in enumerate(a for a in actos if es_alto_cargo(a.cargo)):
+        for n, a in enumerate(a for a in actos if es_publicable(a.cargo)):
             yield ParsedRecord(
                 raw_content_hash=raw.content_hash,
                 extractor_version=self.extractor_version,
@@ -369,6 +376,15 @@ class BOEConnector:
                     "nombre": a.nombre,
                     "numero": a.numero,
                     "motivo": a.motivo,
+                    # Quién lo propuso, en los nombramientos de una alta
+                    # instancia: lo dice el cuerpo del propio Real Decreto.
+                    **(
+                        {"propuesta": propuesta_de(parrafos)}
+                        if a.tipo == "nombramiento"
+                        and es_alta_instancia(a.cargo)
+                        and propuesta_de(parrafos)
+                        else {}
+                    ),
                 },
             )
 
@@ -381,7 +397,16 @@ class BOEConnector:
             return None
 
         nombre_puesto = puesto(d["cargo"])
-        departamento = organismo_del_acto(d.get("departamento", "").strip(), d["cargo"])
+        # En una alta instancia, la institución la dice el propio cargo; el
+        # departamento es quien publica (el CGPJ, la Jefatura del Estado).
+        # El Fiscal General lo propone el Gobierno y ya era alto cargo: ése
+        # conserva su Gobierno. Los demás son ámbito de la justicia.
+        judicial = es_alta_instancia(d["cargo"]) and not es_alto_cargo(d["cargo"])
+        departamento = (
+            institucion_judicial(d["cargo"])
+            if es_alta_instancia(d["cargo"])
+            else organismo_del_acto(d.get("departamento", "").strip(), d["cargo"])
+        )
 
         clave_persona = f"boe:persona:{clave(d['nombre'])}"
         clave_puesto = f"boe:puesto:{clave(nombre_puesto)}"
@@ -416,6 +441,10 @@ class BOEConnector:
             **({"departamento": departamento} if departamento else {}),
             **({"fechaDisposicion": d["fecha_disposicion"]} if d.get("fecha_disposicion") else {}),
             **({"motivo": d["motivo"]} if d.get("motivo") else {}),
+            # Para que el volcado no le ponga «nombramiento con el Gobierno de
+            # …»: a un magistrado no lo elige el Gobierno.
+            **({"ambito": "justicia"} if judicial else {}),
+            **({"propuestaDe": d["propuesta"]} if d.get("propuesta") else {}),
         }
         aristas = [
             AristaNormalizada(

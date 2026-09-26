@@ -1030,6 +1030,49 @@ def test_los_presidentes_reales_se_unen_a_su_escano(store_congreso, tmp_path):
 
 
 @con_base
+def test_una_alta_instancia_judicial_sale_con_su_tribunal_y_sin_gobierno(store_congreso, tmp_path):
+    """El Real Decreto real de un magistrado del Constitucional a propuesta del
+    Senado, con el nombramiento de Sánchez (2018) leído: el periodo cuelga del
+    Tribunal y no lleva «nombramiento con el Gobierno de …». Y el mismo
+    Real Decreto con «a propuesta del Gobierno» sí lo lleva."""
+    golden = Path(__file__).parent / "golden"
+
+    def raw(contenido: bytes, identificador: str) -> RawDocument:
+        return RawDocument(
+            source_id="boe",
+            url=f"https://www.boe.es/diario_boe/xml.php?id={identificador}",
+            content=contenido,
+            media_type="application/xml",
+        )
+
+    for identificador in ("BOE-A-2018-7400", "BOE-A-2018-7577"):
+        contenido = (golden / "boe_disposiciones" / f"{identificador}.xml").read_bytes()
+        _ingerir_real(store_congreso, BOEConnector(), raw(contenido, identificador))
+    macias = (golden / "boe_justicia" / "BOE-A-2024-15661.xml").read_bytes()
+    _ingerir_real(store_congreso, BOEConnector(), raw(macias, "BOE-A-2024-15661"))
+    # El mismo acto, con otra persona y propuesto por el Gobierno.
+    otro = (
+        macias.decode("utf-8")
+        .replace("a propuesta del Senado", "a propuesta del Gobierno")
+        .replace("José María Macías Castaño", "Laura Díez Bueso")
+        .replace("BOE-A-2024-15661", "BOE-A-2024-99999")
+        .encode("utf-8")
+    )
+    _ingerir_real(store_congreso, BOEConnector(), raw(otro, "BOE-A-2024-99999"))
+
+    _, _, cargos = _volcar(store_congreso, tmp_path)
+    por_nombre = {p["nombre"]: p for p in cargos["personas"]}
+    [senado] = por_nombre["José María Macías Castaño"]["periodos"]
+    assert senado["organismo"] == "Tribunal Constitucional"
+    assert senado["ambito"] == "justicia"
+    assert senado["propuesta"] == "Senado"
+    assert "gobierno" not in senado
+    [gobierno] = por_nombre["Laura Díez Bueso"]["periodos"]
+    assert gobierno["propuesta"] == "Gobierno"
+    assert gobierno["gobierno"]["nombre"] == "Pedro Sánchez Pérez-Castejón"
+
+
+@con_base
 def test_la_biografia_de_una_legislatura_no_tapa_la_de_otra(store_congreso, tmp_path):
     _ingerir(
         store_congreso,

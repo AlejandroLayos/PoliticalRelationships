@@ -333,6 +333,40 @@ persona (Person) --Occupancy--> puesto (Position) --UnknownLink--> departamento 
 Una `Occupancy` por disposición: el nombramiento lleva `start_date`, el cese
 `end_date`, y el volcado los junta en periodos (`exportar_cargos.py`).
 
+### Altas instancias judiciales y fiscales (desde el 26/9/2026)
+
+La ampliación de §12 añade, por su nombramiento en el BOE, el Tribunal
+Supremo (magistrados y presidencias de Sala), el Tribunal Constitucional, el
+Consejo General del Poder Judicial, la Audiencia Nacional, las presidencias de
+los TSJ, el Fiscal General del Estado y los fiscales de sala. La carrera
+ordinaria —juzgados, audiencias provinciales, fiscalías provinciales— sigue
+fuera. Es otra lista cerrada (`es_alta_instancia` en `cargos.py`), aparte de
+la de altos cargos, que no se abre.
+
+Se leen con el mismo conector: la caché de sumarios guarda todos los Reales
+Decretos de la II.A, no sólo los que pasaban el filtro, así que el histórico
+ya leído se completa sin volver a pedir ni un sumario. El reconocimiento
+(`docs/fuentes/justicia-boe-reconocimiento.md`) encontró tres fórmulas
+propias de la carrera judicial, que sólo se aceptan para un cargo de la lista:
+
+- «se promueve a la categoría de Magistrado de la Sala Quinta del Tribunal
+  Supremo a don …»;
+- «se nombra en propiedad a don …, Magistrado de la Sala Segunda …»;
+- «se nombra Presidente de la Sala Segunda del Tribunal Supremo don …», sin
+  la «a».
+
+Dos diferencias con un alto cargo:
+
+- **La institución sale del cargo**, no del departamento: quien publica es
+  el CGPJ o la Jefatura del Estado, y «Magistrado del Supremo · Consejo
+  General del Poder Judicial» diría que es vocal del Consejo.
+- **No se les pone Gobierno.** Los propone el CGPJ, las Cortes o el propio
+  Tribunal. El cuerpo del Real Decreto lo dice —«y a propuesta del Senado,
+  Vengo en nombrar…»— y se guarda (`propuestaDe`), de una lista cerrada y
+  sólo si nombra a uno. Cuando es «a propuesta del Gobierno», el volcado sí
+  dice de qué Gobierno. El Fiscal General lo propone siempre el Gobierno y ya
+  era alto cargo: conserva su Gobierno.
+
 ---
 
 ## 2.ter Oficina de Conflictos de Intereses — actividad privada tras el cese

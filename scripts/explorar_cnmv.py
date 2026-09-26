@@ -117,7 +117,10 @@ def tablas(html: str, filas_max: int = 4, con_valores: bool = True) -> list[str]
         ident = re.search(r'<table[^>]*id="([^"]+)"', t)
         muestra = []
         for fila in filas[: filas_max if con_valores else 1]:
-            celdas = [texto(c)[:50] for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", fila, flags=re.S | re.I)]
+            celdas = [
+                texto(c)[:50]
+                for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", fila, flags=re.S | re.I)
+            ]
             muestra.append(celdas[:12])
         lineas.append(
             f"  - tabla {i + 1}{' #' + ident.group(1) if ident else ''}: {len(filas)} filas; "
@@ -128,7 +131,9 @@ def tablas(html: str, filas_max: int = 4, con_valores: bool = True) -> list[str]
 
 def enlaces(html: str, base: str) -> list[tuple[str, str]]:
     salida = []
-    for href, cuerpo in re.findall(r'<a[^>]+href="([^"#][^"]*)"[^>]*>(.*?)</a>', html, flags=re.S | re.I):
+    for href, cuerpo in re.findall(
+        r'<a[^>]+href="([^"#][^"]*)"[^>]*>(.*?)</a>', html, flags=re.S | re.I
+    ):
         salida.append((urljoin(base, html_lib.unescape(href)), texto(cuerpo)))
     return salida
 
@@ -136,7 +141,11 @@ def enlaces(html: str, base: str) -> list[tuple[str, str]]:
 def encabezados(html: str) -> list[str]:
     """Los rótulos de sección de la página: h1-h4, legend y caption."""
     vistos = []
-    for e in re.findall(r"<(?:h[1-4]|legend|caption)[^>]*>(.*?)</(?:h[1-4]|legend|caption)>", html, flags=re.S | re.I):
+    for e in re.findall(
+        r"<(?:h[1-4]|legend|caption)[^>]*>(.*?)</(?:h[1-4]|legend|caption)>",
+        html,
+        flags=re.S | re.I,
+    ):
         t = texto(e)
         if t and t not in vistos and "cookie" not in t.lower():
             vistos.append(t[:90])
@@ -171,7 +180,11 @@ def main() -> int:
                 f"- id={n} → HTTP {codigo} · «{titulo(html)[:90]}» · {len(nifs)} NIF enlazados"
                 + (f" (primeros: {nifs[:5]})" if nifs else "")
             )
-            if codigo == 200 and nifs and re.search(r"(?i)emisor|cotiz|acciones|admitid", titulo(html)):
+            if (
+                codigo == 200
+                and nifs
+                and re.search(r"(?i)emisor|cotiz|acciones|admitid", titulo(html))
+            ):
                 (golden / f"listado-{n}.html").write_text(html, encoding="utf-8")
                 informe.append(f"  - guardado como `listado-{n}.html`")
             time.sleep(0.6)
@@ -206,18 +219,31 @@ def main() -> int:
                     docs = [
                         (u, t)
                         for u, t in enlaces(html, final)
-                        if re.search(r"(?i)verdoc|documento|\.pdf|\.xbrl|\.zip|\.xhtml|showfile|descarga", u)
+                        if re.search(
+                            r"(?i)verdoc|documento|\.pdf|\.xbrl|\.zip|\.xhtml|showfile|descarga", u
+                        )
                     ]
                     informe += [f"    - documento {t[:40]!r} → `{u}`" for u, t in docs[:8]]
                     if docs:
                         u, _ = docs[0]
                         codigo2, cuerpo2, tipo2, _ = pedir(c, u)
-                        informe.append(f"- el primero → HTTP {codigo2} · `{tipo2}` · {len(cuerpo2):,} bytes")
-                        if codigo2 == 200 and cuerpo2 and len(cuerpo2) < 3_000_000 and iagc_guardados < 2:
+                        informe.append(
+                            f"- el primero → HTTP {codigo2} · `{tipo2}` · {len(cuerpo2):,} bytes"
+                        )
+                        if (
+                            codigo2 == 200
+                            and cuerpo2
+                            and len(cuerpo2) < 3_000_000
+                            and iagc_guardados < 2
+                        ):
                             ext = (
-                                "pdf" if cuerpo2[:4] == b"%PDF" else
-                                "zip" if cuerpo2[:2] == b"PK" else
-                                "html" if b"<html" in cuerpo2[:2000].lower() else "bin"
+                                "pdf"
+                                if cuerpo2[:4] == b"%PDF"
+                                else "zip"
+                                if cuerpo2[:2] == b"PK"
+                                else "html"
+                                if b"<html" in cuerpo2[:2000].lower()
+                                else "bin"
                             )
                             if ext == "html":
                                 informe += tablas(cuerpo2.decode("utf-8", errors="replace"))

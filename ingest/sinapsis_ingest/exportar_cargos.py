@@ -117,6 +117,8 @@ def periodos(actos: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "boeDesde": a["boe"],
                     "urlDesde": a["url"],
                     **_fuente_no_boe(a),
+                    **({"ambito": a["ambito"]} if a.get("ambito") else {}),
+                    **({"propuesta": a["propuesta"]} if a.get("propuesta") else {}),
                 }
             elif a["tipo"] == "cese":
                 cierre = {
@@ -136,6 +138,7 @@ def periodos(actos: list[dict[str, Any]]) -> list[dict[str, Any]]:
                             "organismo": a.get("organismo") or "",
                             **cierre,
                             **_fuente_no_boe(a),
+                            **({"ambito": a["ambito"]} if a.get("ambito") else {}),
                         }
                     )
         if abierto is not None:
@@ -732,6 +735,8 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
                 "url": props.get("url") or "",
                 "motivo": props.get("motivo") or "",
                 "fuente": fuente,
+                **({"ambito": props["ambito"]} if props.get("ambito") else {}),
+                **({"propuesta": props["propuestaDe"]} if props.get("propuestaDe") else {}),
                 **({"hasta": f["end_date"]} if tipo == "mandato" and f["end_date"] else {}),
                 **{k: props[k] for k in ("formacion", "grupo", "circunscripcion") if props.get(k)},
             }
@@ -971,6 +976,13 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
             # presidente del Gobierno, pero decir «nombramiento con el Gobierno
             # de …» leería al revés.
             if comunidad_de_la_presidencia(p.get("puesto", "")):
+                continue
+            # Ni a un magistrado del Supremo o del Constitucional, ni a un
+            # fiscal de sala: los propone el CGPJ, las Cortes o el propio
+            # Tribunal, y el Real Decreto sólo lo formaliza. Salvo que el
+            # Real Decreto diga que la propuesta es del Gobierno: entonces sí
+            # es un nombramiento con el Gobierno de entonces.
+            if p.get("ambito") == "justicia" and p.get("propuesta") != "Gobierno":
                 continue
             gobierno = gobierno_en(presidencias, p["desde"])
             if gobierno is not None:

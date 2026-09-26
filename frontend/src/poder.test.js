@@ -270,3 +270,50 @@ describe('qué es cada entidad', () => {
     expect(claseDe(red.nodos.get('nif:G1'))).toBe('par')
   })
 })
+
+describe('altas instancias judiciales', () => {
+  function conJueces() {
+    const c = cargos()
+    c.personas.push(
+      {
+        clave: 'boe:persona:macias',
+        nombre: 'José María Macías Castaño',
+        periodos: [
+          { puesto: 'Magistrado del Tribunal Constitucional', cargo: 'Magistrado del Tribunal Constitucional', organismo: 'Tribunal Constitucional', desde: '2024-07-30', ambito: 'justicia', propuesta: 'Senado', urlDesde: 'https://boe/tc1' },
+        ],
+      },
+      {
+        clave: 'boe:persona:campo',
+        nombre: 'Juan Carlos Campo Moreno',
+        periodos: [
+          { puesto: 'Magistrado del Tribunal Constitucional', cargo: 'Magistrado del Tribunal Constitucional', organismo: 'Tribunal Constitucional', desde: '2022-12-31', ambito: 'justicia', propuesta: 'Gobierno', gobierno: SANCHEZ, urlDesde: 'https://boe/tc2' },
+          { puesto: 'Ministro de Justicia', cargo: 'Ministro de Justicia', organismo: '', desde: '2020-01-13', hasta: '2021-07-12', gobierno: SANCHEZ, urlDesde: 'https://boe/mj' },
+        ],
+      },
+    )
+    return c
+  }
+
+  it('el proponente es un nodo, unido por «a propuesta de»', () => {
+    const red = construirRed(conJueces())
+    const a = red.aristas.find((x) => x.relacion === 'propuesta' && x.source === 'boe:persona:macias')
+    expect(red.nodos.get(a.target)).toMatchObject({ tipo: 'organismo', nombre: 'Senado' })
+    // Y el tribunal, como su organismo.
+    const tc = red.aristas.find((x) => x.relacion === 'cargo' && x.source === 'boe:persona:macias')
+    expect(red.nodos.get(tc.target).nombre).toBe('Tribunal Constitucional')
+    // Sin Gobierno: nadie dice que lo nombrara ninguno.
+    expect(red.aristas.some((x) => x.source === 'boe:persona:macias' && x.relacion === 'nombramiento')).toBe(false)
+  })
+
+  it('a propuesta del Gobierno, la arista va a ese Gobierno y no es un nombramiento durante', () => {
+    const red = construirRed(conJueces())
+    const suyas = red.aristas.filter((x) => x.source === 'boe:persona:campo' && x.target === 'gobierno:boe:persona:ps')
+    expect(suyas.map((x) => x.relacion).sort()).toEqual(['nombramiento', 'propuesta'])
+    const propuesta = suyas.find((x) => x.relacion === 'propuesta')
+    expect(propuesta.hechos.map((h) => h.texto)).toEqual(['Magistrado del Tribunal Constitucional'])
+    const nombramiento = suyas.find((x) => x.relacion === 'nombramiento')
+    expect(nombramiento.hechos.map((h) => h.texto)).toEqual(['Ministro de Justicia'])
+    // Ningún nodo «Gobierno» suelto por la propuesta.
+    expect(red.nodos.has('organismo:gobierno')).toBe(false)
+  })
+})
