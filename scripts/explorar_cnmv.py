@@ -350,14 +350,26 @@ def buscador(c: httpx.Client) -> list[str]:
         f"- desplegables: {selects}",
         f"- contenido: {contenido(html)[:500]!r}",
     ]
+    # Los atributos del campo van en cualquier orden: se busca por su nombre.
     campo = next(
-        (v for v in visibles if re.search(r"(?i)nombre|denom|texto|entidad|buscar", v)),
-        None,
+        iter(re.findall(r'name="([^"]*txtDenominacion[^"]*)"', html)),
+        next(
+            (v for v in visibles if re.search(r"(?i)nombre|denom|texto|entidad", v)),
+            None,
+        ),
     )
-    boton = next((b for b in botones), None)
+    salida.append(f"- campo de denominación: {campo}")
+    boton = next(
+        (b for b in botones if "ContentPrincipal" in b[0] and "Buscar" in b[1]), None
+    )
     if not campo:
         return [*salida, "- no hay campo de texto reconocible", ""]
-    for consulta in ("IBERDROLA", "INDRA"):
+    for consulta in (
+        "IBERDROLA",
+        "INDRA SISTEMAS",
+        "INDUSTRIA DE DISEÑO TEXTIL",
+        "ATRESMEDIA",
+    ):
         datos = {**ocultos, campo: consulta}
         if boton:
             datos[boton[0]] = boton[1]
@@ -366,7 +378,13 @@ def buscador(c: httpx.Client) -> list[str]:
         except httpx.HTTPError as exc:
             salida.append(f"- «{consulta}» → error {exc}")
             continue
-        enlaces = sorted(set(re.findall(r'href="([^"]*(?:nif=|qS=)[^"]*)"', r.text)))
+        enlaces = sorted(
+            set(
+                re.findall(
+                    r'href="([^"]*(?:nif=|qS=|ps_ac|Notificaciones)[^"]*)"', r.text
+                )
+            )
+        )
         salida.append(
             f"- «{consulta}» → HTTP {r.status_code} · {len(r.text):,} caracteres ·"
             f" enlaces: {[html_lib.unescape(e) for e in enlaces[:8]]}"
@@ -386,14 +404,13 @@ def main() -> int:
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Cuarta vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        f"Quinta vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
         "Las anteriores siguen debajo.",
         "",
-        "## Cuarta vuelta",
+        "## Quinta vuelta: el buscador por denominación",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
-        informe += cuantas_responden(c)
         informe += buscador(c)
     if anterior:
         cuerpo_anterior = anterior.split("\n", 1)[1] if "\n" in anterior else anterior
