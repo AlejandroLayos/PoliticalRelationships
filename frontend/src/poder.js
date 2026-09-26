@@ -674,6 +674,12 @@ export function puntosDeEntrada(red, cuantos = 6) {
       .sort((a, b) => b.accionistas - a.accionistas || a.nombre.localeCompare(b.nombre, 'es'))
       .slice(0, cuantos + 4),
     gobiernos: porTipo('gobierno').sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0)),
+    // Las instituciones de las altas instancias judiciales y fiscales, por su
+    // nombre, que es el que pone el conector a partir del cargo.
+    justicia: porTipo('organismo')
+      .filter((n) => INSTITUCIONES_DE_JUSTICIA.test(n.nombre))
+      .sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0))
+      .slice(0, cuantos + 4),
     partidos: porTipo('partido')
       .sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0))
       .slice(0, cuantos + 2),
@@ -684,6 +690,9 @@ export function puntosDeEntrada(red, cuantos = 6) {
       .slice(0, cuantos),
   }
 }
+
+const INSTITUCIONES_DE_JUSTICIA =
+  /^(Tribunal Supremo|Tribunal Constitucional|Consejo General del Poder Judicial|Audiencia Nacional|Fiscalía General del Estado|Tribunal Superior de Justicia)/
 
 /** El nodo con el que abrir la vista si no se pide ninguno: el Gobierno en curso. */
 export function centroInicial(red, cargos) {

@@ -448,3 +448,17 @@ describe('nombreLegible', () => {
     expect(nombreLegible('Juan del Alcázar Narváez')).toBe('Juan del Alcázar Narváez')
   })
 })
+
+describe('la entrada de justicia', () => {
+  it('ofrece las instituciones judiciales que haya', () => {
+    const c = cargos()
+    c.personas.push({
+      clave: 'boe:persona:tc',
+      nombre: 'Magistrada Ejemplo',
+      periodos: [{ puesto: 'Magistrado del Tribunal Constitucional', cargo: 'Magistrada del Tribunal Constitucional', organismo: 'Tribunal Constitucional', desde: '2024-01-01', ambito: 'justicia', propuesta: 'Senado' }],
+    })
+    const red = construirRed(c)
+    expect(puntosDeEntrada(red).justicia.map((n) => n.nombre)).toEqual(['Tribunal Constitucional'])
+    expect(puntosDeEntrada(construirRed(cargos())).justicia).toEqual([])
+  })
+})

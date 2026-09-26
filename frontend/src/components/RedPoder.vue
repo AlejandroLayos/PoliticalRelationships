@@ -413,6 +413,12 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
           {{ c.nombre }} <span class="n">{{ c.accionistas }}</span>
         </button>
       </div>
+      <div v-if="entradas.justicia.length" class="fila">
+        <span class="rotulo">Justicia</span>
+        <button v-for="j in entradas.justicia" :key="j.id" type="button" class="chip k-adm" @click="centrar(j.id)">
+          {{ j.nombre }}
+        </button>
+      </div>
       <div class="fila">
         <span class="rotulo">Partidos</span>
         <button v-for="p in entradas.partidos" :key="p.id" type="button" class="chip k-par" @click="centrar(p.id)">
