@@ -313,6 +313,17 @@ export function flujosEntreAreas(cargos, grafo = null) {
     ['autorización de la OCI', 'autorizaciones de la OCI'],
     puertas.filter((h) => h.cotizada),
   )
+  // Y las que van a uno de los grandes accionistas de una cotizada.
+  const duenos = accionistaDe(cargos)
+  add(
+    'gobierno',
+    'accionistas',
+    'Ex altos cargos autorizados a trabajar en un gran accionista de una cotizada',
+    ['autorización de la OCI', 'autorizaciones de la OCI'],
+    puertas
+      .filter((h) => !h.cotizada && duenos.has(h.entidad))
+      .map((h) => ({ ...h, texto: `${h.texto} — accionista de ${enQue(duenos.get(h.entidad))}` })),
+  )
 
   // Parlamento → empresas: lo que declararon los diputados.
   const declarados = []
@@ -365,6 +376,27 @@ export function flujosEntreAreas(cargos, grafo = null) {
 /**
  * Los puentes: quien está en más de un sitio.
  */
+/**
+ * De quién es accionista significativo cada titular, por su clave: para la
+ * autorización de la OCI que nombra, no una cotizada, sino a uno de sus
+ * grandes accionistas (Sapa Placencia, en Indra).
+ */
+export function accionistaDe(cargos) {
+  const m = new Map()
+  for (const [clave, c] of Object.entries(cargos?.cotizadas ?? {})) {
+    for (const a of c.accionistas ?? []) {
+      if (!a.clave || cargos?.cotizadas?.[a.clave]) continue
+      const lista = m.get(a.clave) ?? []
+      lista.push({ cotizada: clave, nombre: nombreCorto(c), porcentaje: Number(a.porcentaje), titular: a.nombre })
+      m.set(a.clave, lista)
+    }
+  }
+  return m
+}
+
+const enQue = (lista) =>
+  lista.map((x) => `${x.nombre} (${x.porcentaje.toLocaleString('es-ES', { maximumFractionDigits: 1 })} %)`).join(', ')
+
 export function puentes(cargos) {
   const salida = []
   const { compartidos, presencia } = nucleosEconomicos(cargos)
@@ -382,6 +414,14 @@ export function puentes(cargos) {
     if (!cotizadas[clave]) continue
     for (const a of lista) {
       salida.push({ clave: a.persona, nombre: a.nombre, tipo: 'puerta', n: 1, detalle: [`${a.cargoAnterior ?? 'Alto cargo'} → ${cotizadas[clave].nombre}`] })
+    }
+  }
+  const duenos = accionistaDe(cargos)
+  for (const [clave, lista] of Object.entries(cargos?.empresas ?? {})) {
+    const de = duenos.get(clave)
+    if (cotizadas[clave] || !de) continue
+    for (const a of lista) {
+      salida.push({ clave: a.persona, nombre: a.nombre, tipo: 'puerta', n: 1, detalle: [`${a.cargoAnterior ?? 'Alto cargo'} → ${de[0].titular}, accionista de ${enQue(de)}`] })
     }
   }
   for (const [, e] of estadoAccionista(cargos)) {

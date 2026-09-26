@@ -286,6 +286,21 @@ describe('rótulos y nombres cortos', () => {
     // Una palabra por titular del núcleo.
     expect(r.rotulos.accionistas).toBe('Criteria…')
   })
+  it('la autorización para un gran accionista va a «grandes accionistas», con lo que tiene', () => {
+    const c = cargos()
+    const [clave, cot] = Object.entries(c.cotizadas).find(([, v]) => (v.accionistas ?? []).some((a) => a.clave && !c.cotizadas[a.clave]))
+    const dueno = cot.accionistas.find((a) => a.clave && !c.cotizadas[a.clave])
+    c.empresas[dueno.clave] = [{ persona: 'oci:persona:r', nombre: 'Ex Renfe', cargoAnterior: 'Presidente de Renfe', actividad: 'SAPA', fecha: '2024-01-01' }]
+    const f = flujosEntreAreas(c, null).find((x) => x.de === 'gobierno' && x.a === 'accionistas')
+    expect(f.n).toBe(1)
+    expect(f.hechos[0].texto).toContain(`accionista de ${nombreCorto(cot)}`)
+    // No cuenta como autorización a una cotizada.
+    expect(flujosEntreAreas(c, null).find((x) => x.de === 'gobierno' && x.a === 'empresas')?.hechos.some((h) => h.entidad === dueno.clave) ?? false).toBe(false)
+    const p = puentes(c).find((x) => x.clave === 'oci:persona:r')
+    expect(p.tipo).toBe('puerta')
+    expect(p.detalle[0]).toContain(`Presidente de Renfe → ${dueno.nombre}, accionista de`)
+    expect(clave).toBeTruthy()
+  })
   it('a «grandes empresas» sólo llega lo que va a una cotizada', () => {
     const c = cargos()
     c.empresas['nif:Q1'] = [{ persona: 'oci:persona:y', nombre: 'Otra', actividad: 'UNIVERSIDAD', fecha: '2020-01-01' }]
