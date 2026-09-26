@@ -849,6 +849,9 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
       corto: nombrePropio(nombreCorto(cot[clave])),
       medio: !!cot[clave]?.medio,
       compartida: nus.size > 1,
+      // Ex altos cargos que la OCI autorizó a trabajar en ella: por donde el
+      // Gobierno toca al núcleo.
+      puertas: (cargos?.empresas?.[clave] ?? []).length,
     }
     if (nus.size === 1) {
       const [id] = nus.keys()
@@ -876,15 +879,16 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
   const pesoEn = (clave, id) => de.get(clave)?.get(id) ?? 0
   for (const [id, lista] of solas) {
     nodoDe.get(id).propias = lista
-      .map((c) => ({ clave: c.clave, corto: c.corto, medio: c.medio, porcentaje: pesoEn(c.clave, id) }))
+      .map((c) => ({ clave: c.clave, corto: c.corto, medio: c.medio, puertas: c.puertas, porcentaje: pesoEn(c.clave, id) }))
       .sort((p, q) => q.porcentaje - p.porcentaje || p.corto.localeCompare(q.corto, 'es'))
   }
   // Las de dentro, separadas por la caja de su rótulo (unos 6,5 px por letra,
   // encima del punto), no sólo por el punto: dos rótulos no se pisan.
   const dentro = cotizadas.filter((c) => c.compartida)
   const caja = (c) => {
-    const w = Math.min(20, c.corto.length) * 6.5 + 8
-    return [c.x - w / 2, c.y - 22, c.x + w / 2, c.y + 6]
+    // Con ex altos cargos, una línea más encima.
+    const w = Math.max(Math.min(20, c.corto.length), c.puertas ? 17 : 0) * 6.5 + 8
+    return [c.x - w / 2, c.y - 22 - (c.puertas ? 15 : 0), c.x + w / 2, c.y + 6]
   }
   for (let vuelta = 0; vuelta < 120; vuelta++) {
     let movido = false
@@ -908,6 +912,20 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
           a.x += d
           b.x -= d
         }
+      }
+    }
+    // Y lejos de los círculos de los núcleos, con su rótulo encima.
+    for (const c of dentro) {
+      for (const n of nodos) {
+        const dx = c.x - n.x
+        const dy = c.y - 12 - n.y
+        const d = Math.hypot(dx, dy)
+        const min = 12 + 7 * Math.sqrt(n.peso) + 24
+        if (d >= min) continue
+        movido = true
+        const k = d ? (min - d) / d : 1
+        c.x += dx * k
+        c.y += d ? dy * k : min
       }
     }
     if (!movido) break

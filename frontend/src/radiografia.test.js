@@ -315,6 +315,11 @@ describe('el mapa de los núcleos', () => {
     // Ninguna es a la vez punto y propia, y ninguna propia lleva arista de participación.
     expect(propias.filter((c) => puntos.some((p) => p.id === c))).toEqual([])
     expect(m.aristas.filter((e) => e.tipo === 'participacion' && propias.includes(e.target))).toEqual([])
+    // Las puertas giratorias de la OCI, contadas en su cotizada.
+    const c = cargos()
+    c.empresas['nif:A1'] = [{ persona: 'oci:persona:x', nombre: 'Ex', actividad: 'TELCO', fecha: '2020-01-01' }]
+    const conPuertas = mapaDeNucleos(radiografia(c), c)
+    expect(conPuertas.nodos.find((n) => n.id === 'nif:A1').puertas).toBe(1)
     // Cada propia, con lo que tiene su núcleo, de mayor a menor.
     for (const n of m.nodos.filter((x) => x.tipo === 'nucleo')) {
       const pc = n.propias.map((c) => c.porcentaje)
