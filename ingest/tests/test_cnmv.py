@@ -17,6 +17,7 @@ from sinapsis_ingest.cnmv import (
     enlaces_de_participaciones,
     es_medio_de_comunicacion,
     es_persona_fisica,
+    informes_de_gobierno,
     leer_accionistas,
     leer_datos_generales,
     leer_participadas,
@@ -413,3 +414,25 @@ def test_una_ficha_de_otro_nif_no_se_usa():
     # La ficha de Prisa servida al pedir la de Telefónica: no le pone sector.
     raw = _ficha("prisa-datosgenerales.html", TELEFONICA, "TELEFONICA, S.A.")
     assert list(CNMVConnector().parse(raw)) == []
+
+
+# --- El informe anual de gobierno corporativo -----------------------------------
+
+
+@pytest.mark.parametrize(
+    ("empresa", "registro"),
+    [("telefonica", "2026028797"), ("prisa", "2026042679"), ("santander", "2026029544")],
+)
+def test_el_iagc_mas_reciente_sale_de_su_propia_tabla(empresa, registro):
+    informes = informes_de_gobierno(_html(f"{empresa}-gobcorp.html"))
+    assert informes[0].ejercicio == 2025 and informes[0].registro == registro
+    assert informes[0].url.startswith("https://www.cnmv.es/webservices/verdocumento/ver?e=")
+    # Y el resto, más viejos, sin repetir.
+    ejercicios = [i.ejercicio for i in informes]
+    assert ejercicios == sorted(ejercicios, reverse=True)
+    assert len({i.url for i in informes}) == len(informes)
+
+
+def test_sin_la_tabla_del_iagc_no_hay_informes():
+    assert informes_de_gobierno(_html("prisa-datosgenerales.html")) == []
+    assert informes_de_gobierno("") == []

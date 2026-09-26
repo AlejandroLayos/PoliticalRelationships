@@ -222,6 +222,49 @@ def leer_datos_generales(html: str) -> DatosGenerales | None:
     )
 
 
+@dataclass(frozen=True)
+class InformeDeGobierno:
+    """Un informe anual de gobierno corporativo (IAGC) de la lista de la CNMV."""
+
+    ejercicio: int
+    registro: str
+    """Número de registro oficial en la CNMV."""
+
+    url: str
+    """El PDF, `webservices/verdocumento/ver?e=…`."""
+
+
+def informes_de_gobierno(html: str) -> list[InformeDeGobierno]:
+    """Los IAGC de `ee/informaciongobcorp.aspx?nif=…`, del más reciente al más viejo.
+
+    La página tiene una tabla por tipo de informe (el de remuneraciones, el
+    IARC, también lista consejeros); se leen sólo las filas de la del IAGC,
+    `wGridIAGC_gridDatos`. Dentro de un ejercicio, el registro más alto va
+    primero: una versión modificada sustituye a la anterior.
+    """
+    i = (html or "").find("wGridIAGC_gridDatos")
+    if i < 0:
+        return []
+    fin = html.find("</table>", i)
+    salida = []
+    for fila in re.findall(r"<tr.*?</tr>", html[i:fin], flags=re.S | re.I):
+        ejercicio = re.search(r'data-th="Ejercicio"[^>]*>\s*(\d{4})\s*<', fila)
+        registro = re.search(r'data-th="N[^"]*registro oficial"[^>]*>\s*(\d+)\s*<', fila)
+        url = re.search(
+            r'href="(https://www\.cnmv\.es/webservices/verdocumento/ver\?e=[^"]+)"', fila
+        )
+        if ejercicio and url:
+            salida.append(
+                InformeDeGobierno(
+                    ejercicio=int(ejercicio.group(1)),
+                    registro=registro.group(1) if registro else "",
+                    url=html_lib.unescape(url.group(1)),
+                )
+            )
+    salida.sort(key=lambda x: (x.ejercicio, x.registro), reverse=True)
+    return salida
+
+
 def es_medio_de_comunicacion(sector: str) -> bool:
     """¿El sector de la CNMV es el de los medios? Por su nombre, no por lista."""
     return "medios de comunicacion" in _plano(sector or "")
