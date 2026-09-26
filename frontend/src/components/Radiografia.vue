@@ -27,24 +27,18 @@ const millones = (x) =>
     : `${(x / 1e6).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M€`
 const nombre = (texto) => nombrePropio(texto)
 const ir = (clave) => clave && emit('centrar', clave)
+/** Lleva a una sección de la página, sin tocar la dirección. */
+function irA(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 /* --- La entradilla, escrita con los datos ------------------------------- */
 
-const entradilla = computed(() => {
-  const x = r.value
-  if (!x?.nucleos.length) return ''
-  const estado = x.nucleos.find((n) => n.estado)
-  const otros = x.nucleos.filter((n) => !n.estado).slice(0, 3)
-  const partes = []
-  if (estado) partes.push(`el Estado es accionista de referencia de ${estado.cotizadas.length} cotizadas`)
-  for (const n of otros) partes.push(`${nombre(n.titulares[0].nombre)}, de ${n.cotizadas.length}`)
-  const disputadas = [...(x.enNucleo?.entries() ?? [])].filter(([, v]) => v.length > 1).length
-  return (
-    `De las ${x.cifras.cotizadas} cotizadas que se siguen, ${partes.join('; ')}. ` +
-    (disputadas ? `En ${disputadas} se cruzan dos núcleos o más. ` : '') +
-    `Debajo, quién nombra a quién, adónde va el dinero público y qué personas unen unos núcleos con otros.`
-  )
-})
+const entradilla = computed(() =>
+  r.value?.cifras.cotizadas
+    ? `Quién es dueño de las grandes empresas y de los medios, quién nombra a los árbitros y a los jueces, y quién pasa de un sitio a otro. Sólo con lo que publican el BOE, la CNMV, la Oficina de Conflictos de Intereses y el Congreso: cada línea lleva a su documento.`
+    : '',
+)
 
 /* --- El mapa de los núcleos ---------------------------------------------- */
 
@@ -240,6 +234,14 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <p class="antetitulo">Radiografía</p>
         <h1 class="titular">Quién tiene el poder en España</h1>
         <p class="entradilla">{{ entradilla }}</p>
+        <section v-if="r.esencial.length" class="esencial" aria-labelledby="t-esencial">
+          <h2 id="t-esencial" class="antetitulo">Lo esencial</h2>
+          <ol>
+            <li v-for="(e, i) in r.esencial" :key="i">
+              <a :href="`#${e.seccion}`" @click.prevent="irA(e.seccion)">{{ e.texto }}</a>
+            </li>
+          </ol>
+        </section>
         <ul class="cifras" aria-label="Lo que cubre esta edición">
           <li><b>{{ numero(r.cifras.cotizadas) }}</b> cotizadas</li>
           <li><b>{{ numero(r.cifras.accionistas) }}</b> accionistas significativos</li>
@@ -555,6 +557,12 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
 .antetitulo { font-family: var(--sans); font-size: var(--t-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); margin: 0 0 var(--e1); }
 .titular { font-family: var(--serif); font-size: var(--t-titular); line-height: 1.05; margin: 0 0 var(--e4); font-weight: 600; }
 .entradilla { font-family: var(--serif); font-size: var(--t-l); line-height: 1.5; max-width: var(--medida); color: var(--tinta-2); margin: 0 0 var(--e5); }
+.esencial { margin: 0 0 var(--e5); max-width: 52rem; }
+.esencial ol { margin: var(--e2) 0 0; padding-left: 1.4rem; font-family: var(--serif); font-size: var(--t-l); line-height: 1.45; }
+.esencial li { margin-bottom: var(--e2); padding-left: var(--e1); }
+.esencial li::marker { font-family: var(--mono); font-size: var(--t-s); color: var(--tinta-3); }
+.esencial a { color: var(--tinta); text-decoration: none; border-bottom: 1px solid var(--filete-medio); }
+.esencial a:hover, .esencial a:focus-visible { border-bottom-color: var(--tinta); background: var(--papel-2); }
 .cifras { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5); padding: var(--e3) 0; margin: 0; border-top: 2px solid var(--filete); border-bottom: 1px solid var(--filete-suave); font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); }
 .cifras b { font-family: var(--mono); font-weight: 500; color: var(--tinta); }
 .bloque { margin-top: var(--e7); }

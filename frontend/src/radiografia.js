@@ -27,7 +27,7 @@ import { nombreLegible } from './poder.js'
  * consejero o accionista, según la CNMV; cargo público, según el BOE o la OCI.
  */
 
-const FORMAS = new Set(['sa', 'sl', 'sau', 'slu', 'sme', 'socimi', 'sfl', 'inc', 'plc', 'llc', 'llp', 'lp', 'ag', 'icav', 'sgiic', 'srl', 'se', 'nv', 'bv', 'fi', 'frob', 'sepi', 'bbva', 'caf', 'acs', 'gic', 'fmr', 'tci', 'disa', 'enaire', 'mfe'])
+const FORMAS = new Set(['sa', 'sl', 'sau', 'slu', 'sme', 'socimi', 'sfl', 'inc', 'plc', 'llc', 'llp', 'lp', 'ag', 'icav', 'sgiic', 'srl', 'se', 'nv', 'bv', 'fi', 'frob', 'sepi', 'bbva', 'caf', 'acs', 'gic', 'fmr', 'tci', 'disa', 'enaire', 'mfe', 'uk', 'usa', 'ee', 'uu'])
 
 /**
  * Un nombre de la CNMV o del BOE, legible: «CRITERIA CAIXA, S.A.U.» →
@@ -496,6 +496,76 @@ export function cupulaJudicial(cargos) {
   return { constitucional, recuento }
 }
 
+/**
+ * Lo esencial: las conclusiones de la radiografía en frases, cada una con la
+ * sección donde se ve. Todas salen de los datos; una frase sin datos detrás
+ * no se escribe.
+ */
+export function loEsencial(r, cargos) {
+  const salida = []
+  const cot = cargos?.cotizadas ?? {}
+  const n = (x) => x.toLocaleString('es-ES')
+  const corta = (k) => nombrePropio(nombreCorto(cot[k]))
+  const estado = r.nucleos.find((x) => x.estado)
+  if (estado) {
+    const mayores = [...estado.participaciones].sort((a, b) => b.porcentaje - a.porcentaje).slice(0, 3)
+    salida.push({
+      seccion: 't-nucleos',
+      texto: `El Estado es accionista de referencia de ${n(estado.cotizadas.length)} cotizadas; las mayores participaciones, en ${mayores
+        .map((p) => `${corta(p.cotizada)} (${String(Math.round(p.porcentaje * 10) / 10).replace('.', ',')} %)`)
+        .join(', ')}.`,
+    })
+  }
+  const grupos = r.nucleos.filter((x) => !x.estado).slice(0, 3)
+  if (grupos.length) {
+    salida.push({
+      seccion: 't-mapa',
+      texto: `Tras él, los núcleos con más cotizadas: ${grupos.map((g) => `${nombrePropio(g.titulares[0].nombre).replace(/,.*$/, '')} (${g.cotizadas.length})`).join(', ')}.`,
+    })
+  }
+  const disputadas = [...(r.enNucleo?.values() ?? [])].filter((v) => v.length > 1).length
+  if (disputadas) salida.push({ seccion: 't-mapa', texto: `En ${n(disputadas)} ${disputadas === 1 ? 'cotizada' : 'cotizadas'} se cruzan dos núcleos o más.` })
+  const medios = Object.values(cot).filter((c) => c.medio)
+  if (medios.length) {
+    const duenos = medios.map((m) => {
+      const orden = [...(m.accionistas ?? [])].sort((a, b) => Number(b.porcentaje) - Number(a.porcentaje))
+      if (!orden.length) return nombrePropio(nombreCorto(m))
+      // Los que tienen exactamente la misma participación —la directa y la
+      // indirecta de un mismo grupo— van juntos.
+      const top = orden.filter((a) => Number(a.porcentaje) === Number(orden[0].porcentaje))
+      const pctTexto = String(Math.round(Number(orden[0].porcentaje) * 10) / 10).replace('.', ',')
+      return `${nombrePropio(nombreCorto(m))}, ${top.map((a) => nombrePropio(a.nombre).replace(/,.*$/, '')).join(' / ')} (${pctTexto} %)`
+    })
+    salida.push({ seccion: 't-medios', texto: `Los grupos de medios cotizados y su mayor accionista: ${duenos.join('; ')}.` })
+  }
+  const personasEnVarios = (r.compartidos ?? []).filter((x) => x.persona)
+  if (personasEnVarios.length) {
+    const mas = [...personasEnVarios].sort((a, b) => b.en.length - a.en.length)[0]
+    salida.push({
+      seccion: 't-puentes',
+      texto: `${n(personasEnVarios.length)} ${personasEnVarios.length === 1 ? 'persona se sienta' : 'personas se sientan'} en dos consejos de cotizadas o más${mas.en.length > 2 ? `; ${nombrePropio(mas.nombre)}, en ${mas.en.length}` : ''}.`,
+    })
+  }
+  const arbitros = (r.gobiernos ?? []).flatMap((g) => Object.values(g.grupos).flat())
+  const deSuGobierno = arbitros.filter((x) => x.antes)
+  if (arbitros.length) {
+    salida.push({
+      seccion: 't-gobiernos',
+      texto: `Los Gobiernos leídos nombraron ${n(arbitros.length)} presidencias de reguladores, empresas públicas y órganos consultivos${deSuGobierno.length ? `; ${n(deSuGobierno.length)} fueron para alguien que antes había estado en el Gobierno` : ''}.`,
+    })
+  }
+  const puertas = r.flujos.find((f) => f.de === 'gobierno' && f.a === 'empresas')
+  if (puertas) {
+    salida.push({
+      seccion: 't-areas',
+      texto: `${n(puertas.n)} ${puertas.n === 1 ? 'ex alto cargo fue autorizado' : 'ex altos cargos fueron autorizados'} por la Oficina de Conflictos de Intereses a trabajar en una cotizada.`,
+    })
+  }
+  const cgpj = r.flujos.find((f) => f.de === 'justicia' && f.a === 'justicia')
+  if (cgpj) salida.push({ seccion: 't-jueces', texto: `El CGPJ propuso ${n(cgpj.n)} nombramientos de la cúpula judicial; el Congreso y el Senado proponen a los suyos en el Constitucional.` })
+  return salida
+}
+
 /** Las cifras de cabecera. */
 export function cifras(cargos) {
   const cot = Object.values(cargos?.cotizadas ?? {})
@@ -793,5 +863,5 @@ export function radiografia(cargos, grafo = null) {
 /** Todo junto, con los rótulos del diagrama. */
 export function radiografiaCompleta(cargos, grafo = null) {
   const r = radiografia(cargos, grafo)
-  return { ...r, rotulos: rotulos(cargos, grafo, r), mapa: mapaDeNucleos(r, cargos) }
+  return { ...r, rotulos: rotulos(cargos, grafo, r), mapa: mapaDeNucleos(r, cargos), esencial: loEsencial(r, cargos) }
 }

@@ -5,6 +5,7 @@ import {
   estadoAccionista,
   flujosEntreAreas,
   nombrePropio,
+  loEsencial,
   cupulaJudicial,
   nombramientosClave,
   mapaDeNucleos,
@@ -341,5 +342,21 @@ describe('quién elige a los jueces', () => {
     expect(j.recuento.Senado['Tribunal Constitucional']).toBe(2)
     // Del Gobierno al Constitucional, según el mismo BOE.
     expect(j.constitucional.Gobierno[0]).toMatchObject({ nombre: 'Ex Ministro', antes: 'Ministro de Justicia' })
+  })
+})
+
+describe('lo esencial', () => {
+  it('frases con datos, cada una con su sección', () => {
+    const c = cargos()
+    const r = radiografia(c)
+    const e = loEsencial(r, c)
+    const texto = e.map((x) => x.texto).join(' ')
+    expect(texto).toMatch(/El Estado es accionista de referencia de 3 cotizadas; las mayores participaciones, en Aeropuertos \(51 %\)/)
+    expect(texto).toMatch(/Tele, Planeta Corporacion \(41,7 %\)/)
+    expect(texto).toMatch(/1 persona se sienta en dos consejos/)
+    expect(e.every((x) => x.seccion.startsWith('t-'))).toBe(true)
+  })
+  it('sin datos, sin frases', () => {
+    expect(loEsencial(radiografia({}), {})).toEqual([])
   })
 })
