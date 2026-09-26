@@ -1,0 +1,222 @@
+import { describe, expect, it } from 'vitest'
+import {
+  cifras,
+  esMercantilEstatal,
+  estadoAccionista,
+  flujosEntreAreas,
+  nucleosEconomicos,
+  puentes,
+  radiografia,
+  umbralOmnipresente,
+} from './radiografia.js'
+
+const acc = (clave, nombre, porcentaje, extra = {}) => ({ clave, nombre, porcentaje: String(porcentaje), ...extra })
+
+function cargos() {
+  return {
+    presidencias: [{ persona: 'boe:persona:pres', nombre: 'Presidente Ejemplo', desde: '2018-06-02' }],
+    personas: [
+      {
+        clave: 'boe:persona:sepi',
+        nombre: 'Ana Sepi',
+        periodos: [
+          {
+            cargo: 'Presidenta de la Sociedad Estatal de Participaciones Industriales',
+            desde: '2021-03-31',
+            urlDesde: 'https://boe/sepi',
+            gobierno: { persona: 'boe:persona:pres', nombre: 'Presidente Ejemplo' },
+          },
+        ],
+      },
+      {
+        clave: 'boe:persona:frob',
+        nombre: 'Luis Frob',
+        periodos: [{ cargo: 'Presidente del Fondo de Reestructuración Ordenada Bancaria (FROB)', desde: '2020-12-02' }],
+      },
+      {
+        clave: 'boe:persona:juez',
+        nombre: 'Juez Ejemplo',
+        periodos: [{ cargo: 'Magistrado del Tribunal Supremo', ambito: 'justicia', propuesta: 'Consejo General del Poder Judicial', desde: '2022-01-01' }],
+      },
+      {
+        clave: 'boe:persona:vocal',
+        nombre: 'Vocal Ejemplo',
+        periodos: [{ cargo: 'Vocal del Consejo General del Poder Judicial', ambito: 'justicia', propuesta: 'Congreso de los Diputados' }],
+      },
+    ],
+    empresas: { 'nif:A1': [{ persona: 'oci:persona:x', nombre: 'Ex Alto Cargo', actividad: 'CONSEJERA DE TELCO', cargoAnterior: 'SECRETARIA DE ESTADO', fecha: '2020-01-01' }] },
+    declarantes: {},
+    formaciones: { PX: { nombre: 'PARTIDO X', entidad: { clave: 'nif:G1', nombre: 'PARTIDO X' } } },
+    cotizadas: {
+      'nif:A1': {
+        clave: 'nif:A1',
+        nombre: 'TELCO, S.A.',
+        accionistas: [
+          acc('cnmv:sociedad:sepi', 'SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES', 10),
+          acc('cnmv:sociedad:caixa', 'CRITERIA CAIXA, S.A.U.', 9.99),
+          acc('cnmv:sociedad:fundacion', 'FUNDACION BANCARIA LA CAIXA', 9.99),
+          acc('cnmv:sociedad:blackrock', 'BLACKROCK INC.', 4.5),
+        ],
+        consejo: [{ clave: 'cnmv:persona:puente', nombre: 'PERSONA PUENTE', persona: true, cargo: 'Consejero' }],
+      },
+      'nif:A2': {
+        clave: 'nif:A2',
+        nombre: 'BANCO, S.A.',
+        accionistas: [
+          acc('cnmv:sociedad:caixa', 'CRITERIA CAIXA, S.A.U.', 30),
+          acc('cnmv:sociedad:fundacion', 'FUNDACION BANCARIA LA CAIXA', 30),
+          acc('cnmv:sociedad:frob', 'FROB', 16),
+          acc('cnmv:sociedad:blackrock', 'BLACKROCK INC.', 4.5),
+          acc('cnmv:persona:familia', 'AMANCIA RICA POSEE', 3, { persona: true }),
+        ],
+        consejo: [{ clave: 'cnmv:persona:puente', nombre: 'PERSONA PUENTE', persona: true, cargo: 'Consejero' }],
+      },
+      'nif:A3': {
+        clave: 'nif:A3',
+        nombre: 'AEROPUERTOS, S.M.E., S.A.',
+        accionistas: [acc('cnmv:sociedad:enaire', 'ENAIRE', 51), acc('cnmv:sociedad:blackrock', 'BLACKROCK INC.', 4)],
+      },
+      'nif:A4': {
+        clave: 'nif:A4',
+        nombre: 'MODA, S.A.',
+        accionistas: [acc('cnmv:persona:familia', 'AMANCIA RICA POSEE', 59, { persona: true })],
+      },
+      'nif:A5': {
+        clave: 'nif:A5',
+        nombre: 'TELE, S.A.',
+        medio: true,
+        sector: 'MEDIOS DE COMUNICACIÓN',
+        accionistas: [acc('cnmv:sociedad:planeta', 'PLANETA CORPORACION, S.R.L.', 41.7)],
+      },
+    },
+  }
+}
+
+describe('el Estado accionista, por lo que dicen sus fuentes', () => {
+  it('la SEPI, porque el BOE nombra a quien la preside', () => {
+    const e = estadoAccionista(cargos())
+    expect(e.get('cnmv:sociedad:sepi').cargos[0]).toMatchObject({ nombre: 'Ana Sepi', desde: '2021-03-31' })
+  })
+  it('el FROB, por su sigla entre paréntesis en el cargo', () => {
+    expect(estadoAccionista(cargos()).get('cnmv:sociedad:frob').cargos).toHaveLength(1)
+  })
+  it('ENAIRE, por tener la mayoría de una sociedad mercantil estatal', () => {
+    expect(estadoAccionista(cargos()).get('cnmv:sociedad:enaire').motivo).toMatch(/mercantil estatal/)
+  })
+  it('Criteria no es el Estado', () => {
+    expect(estadoAccionista(cargos()).has('cnmv:sociedad:caixa')).toBe(false)
+  })
+  it('la marca S.M.E., escrita de varias formas', () => {
+    expect(esMercantilEstatal('AENA, S.M.E., S.A.')).toBe(true)
+    expect(esMercantilEstatal('AENA SME SA')).toBe(true)
+    expect(esMercantilEstatal('SMEAGOL, S.A.')).toBe(false)
+  })
+})
+
+describe('los núcleos', () => {
+  it('el Estado es un núcleo, con todas sus participaciones', () => {
+    const { nucleos } = nucleosEconomicos(cargos())
+    const estado = nucleos.find((n) => n.estado)
+    expect(nucleos[0]).toBe(estado)
+    expect(estado.cotizadas.map((c) => c.clave).sort()).toEqual(['nif:A1', 'nif:A2', 'nif:A3'])
+    expect(estado.participaciones[0]).toMatchObject({ nombre: 'ENAIRE', porcentaje: 51 })
+  })
+
+  it('dos titulares con las mismas participaciones son un grupo', () => {
+    const { nucleos } = nucleosEconomicos(cargos())
+    const caixa = nucleos.find((n) => n.titulares.some((t) => t.clave === 'cnmv:sociedad:caixa'))
+    expect(caixa.titulares.map((t) => t.clave).sort()).toEqual(['cnmv:sociedad:caixa', 'cnmv:sociedad:fundacion'])
+    // Por nombre: BANCO antes que TELCO.
+    expect(caixa.cotizadas.map((c) => c.clave)).toEqual(['nif:A2', 'nif:A1'])
+  })
+
+  it('una cotizada puede estar en dos núcleos: la disputa por su control', () => {
+    const { enNucleo } = nucleosEconomicos(cargos())
+    expect(enNucleo.get('nif:A1')).toHaveLength(2)
+  })
+
+  it('menos de un 5 % no hace núcleo', () => {
+    const { nucleos } = nucleosEconomicos(cargos())
+    // La familia tiene un 59 % en una y un 3 % en otra: no es un núcleo.
+    expect(nucleos.some((n) => n.titulares.some((t) => t.clave === 'cnmv:persona:familia'))).toBe(false)
+  })
+
+  it('la cotizada de un solo dueño sale como referencia, con él', () => {
+    const { referencias } = nucleosEconomicos(cargos())
+    const moda = referencias.find((r) => r.clave === 'nif:A4')
+    expect(moda.principal).toMatchObject({ nombre: 'AMANCIA RICA POSEE', porcentaje: 59, persona: true })
+  })
+
+  it('la gestora que está en casi todas se aparta', () => {
+    // Con un umbral bajo, BlackRock (en tres de cinco) sería omnipresente.
+    expect(umbralOmnipresente(5)).toBe(8)
+    const c = cargos()
+    for (let i = 6; i < 40; i++) {
+      c.cotizadas[`nif:B${i}`] = { clave: `nif:B${i}`, nombre: `OTRA ${i}`, accionistas: [acc('cnmv:sociedad:blackrock', 'BLACKROCK INC.', 5)] }
+    }
+    const { omnipresentes, nucleos } = nucleosEconomicos(c)
+    expect(omnipresentes.map((o) => o.clave)).toEqual(['cnmv:sociedad:blackrock'])
+    expect(nucleos.some((n) => n.titulares.some((t) => t.clave === 'cnmv:sociedad:blackrock'))).toBe(false)
+  })
+
+  it('los consejeros compartidos son puentes, no núcleos', () => {
+    const { nucleos, compartidos } = nucleosEconomicos(cargos())
+    expect(compartidos.map((x) => x.clave)).toEqual(['cnmv:persona:puente'])
+    expect(nucleos.find((n) => !n.estado).consejeros.map((x) => x.clave)).toEqual(['cnmv:persona:puente'])
+  })
+})
+
+describe('los flujos entre áreas', () => {
+  const grafo = {
+    nodes: [
+      { id: '1', clave: 'placsp:organo:ministerio', caption: 'Ministerio' },
+      { id: '2', clave: 'nif:A1', caption: 'TELCO' },
+      { id: '3', clave: 'nif:G1', caption: 'PARTIDO X' },
+    ],
+    edges: [
+      { source: '1', target: '2', schema: 'ContractAward', amount: '1000000' },
+      { source: '1', target: '3', schema: 'Payment', amount: '500000' },
+      { source: '1', target: '2', schema: 'Debt', amount: '99' },
+    ],
+  }
+  const por = (flujos, de, a) => flujos.find((f) => f.de === de && f.a === a)
+
+  it('el Gobierno nombra a quien preside el Estado accionista', () => {
+    const f = por(flujosEntreAreas(cargos(), grafo), 'gobierno', 'estado')
+    expect(f.n).toBe(2)
+  })
+  it('el Estado es accionista de empresas, y los grandes accionistas de los medios', () => {
+    const fl = flujosEntreAreas(cargos(), grafo)
+    expect(por(fl, 'estado', 'empresas').n).toBe(3)
+    expect(por(fl, 'accionistas', 'medios').hechos[0].texto).toMatch(/PLANETA/)
+  })
+  it('las puertas giratorias, el CGPJ, el Parlamento y el dinero', () => {
+    const fl = flujosEntreAreas(cargos(), grafo)
+    expect(por(fl, 'gobierno', 'empresas').hechos[0].cotizada).toBe(true)
+    expect(por(fl, 'justicia', 'justicia').n).toBe(1)
+    expect(por(fl, 'parlamento', 'justicia').n).toBe(1)
+    expect(por(fl, 'administracion', 'empresas').importe).toBe(1000000)
+    expect(por(fl, 'administracion', 'partidos').importe).toBe(500000)
+  })
+  it('sin hechos no hay flujo', () => {
+    expect(por(flujosEntreAreas(cargos(), null), 'administracion', 'empresas')).toBeUndefined()
+  })
+})
+
+describe('puentes y cifras', () => {
+  it('el consejero en dos consejos, la familia en dos cotizadas, la puerta giratoria', () => {
+    const p = puentes(cargos())
+    expect(p.find((x) => x.tipo === 'consejos').nombre).toBe('PERSONA PUENTE')
+    expect(p.find((x) => x.tipo === 'accionista').nombre).toBe('AMANCIA RICA POSEE')
+    expect(p.find((x) => x.tipo === 'puerta').detalle[0]).toMatch(/TELCO/)
+    expect(p.filter((x) => x.tipo === 'estado')).toHaveLength(2)
+  })
+  it('las cifras de cabecera', () => {
+    expect(cifras(cargos())).toMatchObject({ cotizadas: 5, consejeros: 1, justicia: 2, gobiernos: 1 })
+  })
+  it('todo junto, sin grafo', () => {
+    const r = radiografia(cargos())
+    expect(r.nucleos.length).toBeGreaterThan(1)
+    expect(r.referencias.length).toBeGreaterThan(0)
+  })
+})
