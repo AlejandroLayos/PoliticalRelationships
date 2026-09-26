@@ -296,6 +296,36 @@ await paso('del cargo a la empresa lleva a la sociedad y de vuelta a la persona'
   if (!(await pagina.locator('.autorizaciones').count())) throw new Error('la ficha no enseña la autorización')
 })
 
+// La red de poder: dibuja un centro, pulsar una conexión del panel lo cambia
+// y el enlace lo reproduce. Sólo si la edición trae cargos.
+await paso('la red de poder cambia de centro y deja un enlace que lo reproduce', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(1500)
+  const enlace = pagina.locator('nav.secciones a[href="?v=poder"]')
+  if (!(await enlace.count())) {
+    console.log('    (la edición no trae cargos todavía: no hay red que probar)')
+    return
+  }
+  await enlace.click()
+  await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
+  await pagina.waitForSelector('.poder .lienzo canvas', { timeout: 15000 })
+  const antes = await pagina.locator('.poder .panel .nombre').innerText()
+  await pagina.locator('.poder .grupo .otro').first().click()
+  await pagina.waitForFunction(
+    (a) => document.querySelector('.poder .panel .nombre')?.textContent !== a,
+    antes,
+    { timeout: 10000 },
+  )
+  const nombre = await pagina.locator('.poder .panel .nombre').innerText()
+  const direccion = pagina.url()
+  if (!direccion.includes('v=poder') || !direccion.includes('n=')) throw new Error(`dirección: ${direccion}`)
+  await pagina.goto(direccion, { waitUntil: 'networkidle' })
+  await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
+  if ((await pagina.locator('.poder .panel .nombre').innerText()) !== nombre) throw new Error('el enlace abre otro centro')
+  await pagina.goBack()
+  await pagina.waitForTimeout(800)
+})
+
 // Aena no está en la base. Por subcadena salía una asociación de Baena como
 // primer resultado, e Intro llevaba a su ficha como si fuera lo buscado.
 // Con una palabra que no puede estar. Era «Aena», hasta que el feed de

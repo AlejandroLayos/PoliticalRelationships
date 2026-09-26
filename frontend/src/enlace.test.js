@@ -179,3 +179,27 @@ describe('los cargos públicos', () => {
     expect(accionDeEstado({ vista: 'cargos', clave: '' }, false)).toBe('cargos')
   })
 })
+
+describe('la red de poder', () => {
+  it('lleva el nodo del centro y vuelve igual', () => {
+    const estado = { vista: 'poder', clave: '', nodo: 'gobierno:boe:persona:x' }
+    expect(direccionDeVista(estado)).toBe('/?v=poder&n=gobierno%3Aboe%3Apersona%3Ax')
+    expect(vistaDeParametros('?v=poder&n=gobierno:boe:persona:x')).toEqual(estado)
+  })
+
+  it('sin nodo, abre la red por donde empiece', () => {
+    expect(direccionDeVista({ vista: 'poder' })).toBe('/?v=poder')
+    expect(vistaDeParametros('?v=poder')).toEqual({ vista: 'poder', clave: '' })
+    expect(accionDeEstado({ vista: 'poder', clave: '' }, false)).toBe('poder')
+  })
+
+  it('dos centros distintos son dos entradas de historial', () => {
+    expect(mismoEstado({ vista: 'poder', nodo: 'a' }, { vista: 'poder', nodo: 'b' })).toBe(false)
+    expect(mismoEstado({ vista: 'poder', nodo: 'a' }, { vista: 'poder', nodo: 'a' })).toBe(true)
+  })
+
+  it('ni una entidad ni una edición se cuelan en su dirección', () => {
+    const p = parametrosDeVista({ vista: 'poder', clave: 'nif:A1', territorio: 'Andalucía', nodo: 'nif:B2' })
+    expect(p.toString()).toBe('v=poder&n=nif%3AB2')
+  })
+})

@@ -142,6 +142,26 @@ escriben «Apellidos, Nombre» y el BOE no; la misma persona se lee igual venga
 de donde venga. «Escaño en la XV legislatura» y no «Diputado»: la fuente no
 dice el género, y el BOE sí lo escribe en cada cargo.
 
+### La red de poder
+
+Visor a la izquierda y papel a la derecha: el dibujo es para ver la forma y
+el panel es donde se lee. Todo lo que dice el dibujo está en el panel, con su
+fuente y su enlace; lo que no cabe en el dibujo, también (el lienzo avisa de
+cuántas conexiones se quedan fuera).
+
+Los colores de siempre para lo que ya tenía color: la administración en teja,
+lo privado en azul, partidos y asociaciones en verde. Qué es cada entidad lo
+dice la letra de su NIF, que es una regla oficial y no una suposición sobre su
+nombre. Las personas van en la tinta del visor: no son ninguno de los tres, y
+un cuarto color no pasa la prueba de daltonismo con los otros. Las aristas
+fuertes —dinero, autorización, escaño— llevan el color de su lado; las de
+nombramiento, gris, porque son muchas y son contexto.
+
+Nunca hay una arista entre dos personas. Dos nombres juntos en el dibujo
+comparten el nodo que los une y nada más, y la nota del panel lo dice con esas
+palabras. El Gobierno bajo el que se nombró a alguien es un nodo —«Gobierno de
+…»—, no el partido: la militancia sale sólo del escaño.
+
 ## 6. Decir lo que no es
 
 Cada lista, cada bloque, lleva su **nota** (`.nota`): lo que ese dato no

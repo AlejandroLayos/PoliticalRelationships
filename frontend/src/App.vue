@@ -9,6 +9,7 @@ import PanelInfluencia from './components/PanelInfluencia.vue'
 import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
 import Cargos from './components/Cargos.vue'
+import RedPoder from './components/RedPoder.vue'
 import {
   buscarTodo,
   cargarCargos,
@@ -116,6 +117,14 @@ async function abrirPorClave(clave) {
   await cargarIndice()
   const n = nodoDeClave(clave)
   if (n) await enfocar(n.id)
+}
+
+/** El nodo del centro de la red de poder, por su clave, o ''. */
+const nodoPoder = ref('')
+function verPoder(nodo = '') {
+  vista.value = 'poder'
+  nodoPoder.value = nodo
+  traerCargos()
 }
 
 function verCargos(persona = '') {
@@ -621,6 +630,9 @@ const estadoDeVista = computed(() => {
   if (vista.value === 'cargos') {
     return { vista: 'cargos', clave: '', ...(personaCargo.value ? { persona: personaCargo.value } : {}) }
   }
+  if (vista.value === 'poder') {
+    return { vista: 'poder', clave: '', ...(nodoPoder.value ? { nodo: nodoPoder.value } : {}) }
+  }
   return {
     vista: vista.value,
     clave: claveSeleccionada.value,
@@ -643,7 +655,9 @@ watch(estadoDeVista, (ahora) => {
   history.pushState({ ...ahora }, '', direccionDeVista(ahora, location.pathname))
 })
 
-async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona }) {
+// `nodo: centroRed` y no `nodo` a secas: dentro hay otro `nodo` —la entidad
+// de la clave— que lo tapaba, y el enlace a la red perdía su centro.
+async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona, nodo: centroRed }) {
   restaurando = true
   try {
     if (v === 'portada' || v === 'mapa') territorio.value = t ?? ''
@@ -667,6 +681,9 @@ async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, per
         return
       case 'cargos':
         verCargos(persona ?? '')
+        return
+      case 'poder':
+        verPoder(centroRed ?? '')
         return
       case 'portada':
         volverAlMapa()
@@ -965,6 +982,12 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           :aria-current="vista === 'cargos' ? 'page' : undefined"
           @click.prevent="verCargos()"
         ><span class="ancho">Cargos públicos</span><span class="estrecho">Cargos</span></a>
+        <a
+          v-if="hayCargos"
+          href="?v=poder"
+          :aria-current="vista === 'poder' ? 'page' : undefined"
+          @click.prevent="verPoder()"
+        ><span class="ancho">Red de poder</span><span class="estrecho">Red</span></a>
       </nav>
     </header>
 
@@ -975,7 +998,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
       línea sin que se supiera cuáles llevaban a otra página y cuáles
       cambiaban el dibujo.
     -->
-    <div v-if="hayMapa && vista !== 'portada' && vista !== 'cargos'" class="barra-vista">
+    <div v-if="hayMapa && vista !== 'portada' && vista !== 'cargos' && vista !== 'poder'" class="barra-vista">
       <template v-if="vista === 'mapa'">
         <!--
           En un teléfono los filtros van plegados: son ajustes, no la puerta,
@@ -1281,6 +1304,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         @volver="volverAlMapa"
         @ver-en-mapa="llevarAlMapa(seleccionId)"
         @ver-cargo="verCargos"
+        @ver-red="verPoder(claveSeleccionada)"
       />
       <PanelEntidad
         v-else-if="seleccionado"
@@ -1343,6 +1367,18 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :cargando="cargandoCargos"
         @persona="(c) => (personaCargo = c)"
         @entidad="abrirPorClave"
+        @red="verPoder"
+      />
+      <RedPoder
+        v-if="vista === 'poder'"
+        class="portada-encima"
+        :cargos="cargos"
+        :grafo="grafoEntero"
+        :nodo="nodoPoder"
+        :cargando="cargandoCargos"
+        @centrar="(id) => (nodoPoder = id)"
+        @ver-cargo="verCargos"
+        @ver-entidad="abrirPorClave"
       />
     </main>
   </div>

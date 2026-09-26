@@ -50,7 +50,7 @@ const props = defineProps({
   formacionInicial: { type: String, default: '' },
   cargando: { type: Boolean, default: false },
 })
-const emit = defineEmits(['persona', 'entidad'])
+const emit = defineEmits(['persona', 'entidad', 'red'])
 
 const filtro = ref('')
 /** Todos, quien tiene un Real Decreto, o los diputados. */
@@ -205,7 +205,10 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
       <header class="ficha-cabeza">
         <p class="antetitulo">{{ papelDeLaFicha(abierta) }}</p>
         <h2 class="ficha-nombre">{{ abierta.nombre }}</h2>
-        <button class="boton tenue" @click="emit('persona', '')">← Todos los cargos</button>
+        <div class="ficha-botones">
+          <button class="boton" @click="emit('red', abierta.clave)">Ver en la red de poder</button>
+          <button class="boton tenue" @click="emit('persona', '')">← Todos los cargos</button>
+        </div>
       </header>
 
       <!--
@@ -833,6 +836,7 @@ const verbo = (a) => VERBOS[a.tipo] ?? a.tipo
 @media (max-width: 600px) {
   .cargos { padding: var(--e5) var(--e4) var(--e7); }
   .ficha-cabeza { grid-template-columns: 1fr; }
-  .ficha-cabeza .boton { justify-self: start; }
+  .ficha-cabeza .ficha-botones { justify-self: start; }
 }
+.ficha-botones { display: flex; flex-wrap: wrap; gap: var(--e2); justify-content: flex-end; }
 </style>

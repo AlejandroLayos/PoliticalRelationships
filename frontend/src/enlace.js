@@ -29,8 +29,18 @@
  * pagan las administraciones andaluzas. Sólo en esas dos vistas; una ficha es
  * la misma se mire desde donde se mire.
  */
-export function parametrosDeVista({ vista, clave, territorio, destacada, grupo, persona }) {
+export function parametrosDeVista({ vista, clave, territorio, destacada, grupo, persona, nodo }) {
   const p = new URLSearchParams()
+  /*
+    La red de poder lleva el nodo del centro (`n`): una persona, un Gobierno,
+    un ministerio, un partido o una entidad. Otra clave más porque sus nodos
+    son de varias clases y no todos existen en el mapa del dinero.
+  */
+  if (vista === 'poder') {
+    p.set('v', 'poder')
+    if (nodo) p.set('n', nodo)
+    return p
+  }
   /*
     Los cargos públicos son otra sección con su propia clave (`p`, de
     persona): una persona con cargo no es una entidad del mapa del dinero, y
@@ -77,6 +87,10 @@ export function vistaDeParametros(busqueda) {
   const v = p.get('v') ?? ''
   const t = (p.get('t') ?? '').trim()
   const conTerritorio = t ? { territorio: t } : {}
+  if (v === 'poder') {
+    const nodo = (p.get('n') ?? '').trim()
+    return { vista: 'poder', clave: '', ...(nodo ? { nodo } : {}) }
+  }
   if (v === 'cargos') {
     const persona = (p.get('p') ?? '').trim()
     return { vista: 'cargos', clave: '', ...(persona ? { persona } : {}) }
@@ -103,7 +117,8 @@ export function mismoEstado(a, b) {
     (a.territorio ?? '') === (b.territorio ?? '') &&
     (a.destacada ?? '') === (b.destacada ?? '') &&
     (a.grupo ?? '') === (b.grupo ?? '') &&
-    (a.persona ?? '') === (b.persona ?? '')
+    (a.persona ?? '') === (b.persona ?? '') &&
+    (a.nodo ?? '') === (b.nodo ?? '')
   )
 }
 
@@ -119,11 +134,12 @@ export function mismoEstado(a, b) {
  *
  * @param {{vista: string, clave?: string}} estado lo que pide la dirección.
  * @param {boolean} existe si la clave corresponde a algo de esta instantánea.
- * @returns {'portada'|'mapa'|'cargos'|'vecindario'|'ficha'}
+ * @returns {'portada'|'mapa'|'cargos'|'poder'|'vecindario'|'ficha'}
  */
 export function accionDeEstado({ vista, clave }, existe) {
   if (vista === 'mapa') return 'mapa'
   if (vista === 'cargos') return 'cargos'
+  if (vista === 'poder') return 'poder'
   if (vista === 'portada') return 'portada'
   // Un enlace a algo que ya no está en esta instantánea: la portada dice más
   // que una ficha vacía, y el buscador queda a mano.

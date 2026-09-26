@@ -45,7 +45,16 @@ const props = defineProps({
   /** Si es un partido: sus formaciones en el Congreso, con cuántos diputados salen. */
   enElCongreso: { type: Array, default: () => [] },
 })
-const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo', 'verDiputados'])
+const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo', 'verDiputados', 'verRed'])
+
+/** Si alguna persona con cargo está unida a esta entidad: entonces está en la red de poder. */
+const conPersonas = computed(
+  () =>
+    props.alFrente.length > 0 ||
+    props.exAltosCargos.length > 0 ||
+    props.declarantes.length > 0 ||
+    props.enElCongreso.length > 0,
+)
 
 const resumen = computed(() => resumenEnPalabras(props.area))
 
@@ -279,6 +288,10 @@ const sinDatos = computed(
         </div>
       </div>
 
+      <!-- Las personas de abajo, con todo lo demás que las une, en la red de poder. -->
+      <p v-if="conPersonas" class="a-la-red">
+        <a href="#" @click.prevent="emit('verRed')">Ver sus personas en la red de poder →</a>
+      </p>
       <!--
         Ex altos cargos autorizados a trabajar en esta sociedad, según la
         Oficina de Conflictos de Intereses. El texto de la autorización la
@@ -493,6 +506,10 @@ const sinDatos = computed(
         órgano —el director general de Carreteras dirige la Dirección General
         de Carreteras— y el órgano es del Estado; ver exportar_cargos.py.
       -->
+      <!-- Las personas de abajo, con todo lo demás que las une, en la red de poder. -->
+      <p v-if="conPersonas" class="a-la-red">
+        <a href="#" @click.prevent="emit('verRed')">Ver sus personas en la red de poder →</a>
+      </p>
       <!--
         Ex altos cargos autorizados a trabajar en esta sociedad, según la
         Oficina de Conflictos de Intereses. El texto de la autorización la
@@ -1116,4 +1133,6 @@ h3 {
 .meta { font-size: var(--t-xs); color: var(--tinta-3); }
 .meta .inferido, .meta .sin-cifra { color: var(--aviso); }
 .meta .extranjera { color: var(--tinta-2); }
+.a-la-red { margin: var(--e4) 0 0; font-size: var(--t-s); font-weight: 600; }
+.a-la-red a { color: var(--tinta); }
 </style>
