@@ -140,6 +140,11 @@ cd ingest && pytest
   compuesto se unía, y Pedro Sánchez no llegaba a su escaño. Lo cazó un test
   de punta a punta con las muestras reales, no los unitarios, que usaban
   nombres sin guion. En `exportar_cargos.py` todo pasa por `_plano`.
+- **El cron de las 04:40 UTC no arranca a las 04:40.** GitHub retrasa los
+  programados de repos con poco tráfico: en septiembre de 2026 empezaban hacia
+  las 09:30 y acababan hacia las 11:00. Que a las 06:00 no haya instantánea
+  nueva no es un fallo. Si corre prisa, se lanza a mano (`workflow_dispatch`);
+  el grupo de `concurrency` pone el programado a la cola detrás.
 - **La caché del BOE sólo guarda candidatos de la sección II.A**, no el
   sumario entero (minimizar es no guardar). Lo que haga falta de otras
   secciones se pide aparte.
