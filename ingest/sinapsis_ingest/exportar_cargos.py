@@ -1227,7 +1227,11 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
             }
             for p in salida
             for a in p.get("autorizaciones", [])
-            if a.get("empresa")
+            # Sólo las que llevan a una sociedad del mapa del dinero: una
+            # sociedad que sólo registra la CNMV no está en el grafo, y el
+            # cruce de la portada no llevaría a ninguna parte. En los cargos
+            # sigue, para la red de poder.
+            if a.get("empresa") and not a["empresa"]["clave"].startswith("cnmv:")
         ),
         key=lambda c: c.get("fecha", ""),
         reverse=True,

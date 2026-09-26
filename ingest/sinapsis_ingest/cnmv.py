@@ -444,9 +444,16 @@ def mismo_titular(a: str, b: str) -> bool:
         x = _plano(x)
         x = re.sub(r"[^a-z0-9]+", " ", x)
         palabras = [w for w in x.split() if not _FORMAS.fullmatch(w)]
+        # El tratamiento no es parte del nombre: el informe escribe «DON
+        # AMANCIO ORTEGA GAONA» donde la CNMV registra «AMANCIO ORTEGA GAONA».
+        while palabras and palabras[0] in _TRATAMIENTOS:
+            palabras = palabras[1:]
         return " ".join(palabras)
 
     return bool(base(a)) and base(a) == base(b)
+
+
+_TRATAMIENTOS = frozenset({"don", "dona", "d", "dna"})
 
 
 def consejeros_fijados(texto: str) -> int | None:

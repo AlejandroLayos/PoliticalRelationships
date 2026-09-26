@@ -691,6 +691,11 @@ def test_el_guion_partido_se_une_tambien_aqui():
             True,
         ),
         ("AMBER CAPITAL UK LLP", "AMBER CAPITAL UK LLP", True),
+        # El tratamiento no cuenta; el resto del nombre, entero.
+        ("DON AMANCIO ORTEGA GAONA", "AMANCIO ORTEGA GAONA", True),
+        ("DOÑA CARMEN YBARRA CAREAGA", "CARMEN YBARRA CAREAGA", True),
+        ("DOÑA CARMEN YBARRA", "CARMEN YBARRA CAREAGA", False),
+        ("DON", "", False),
         # Nombres distintos para lo que quizá sea lo mismo: no se da por igual.
         (
             "FUNDACIÓN BANCARIA LA CAIXA",

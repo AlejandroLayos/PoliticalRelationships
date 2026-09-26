@@ -612,6 +612,49 @@ def test_la_autorizacion_nombra_una_sociedad_del_mapa(store_oci, tmp_path):
     assert grafo["cargos"]["nCruces"] == 1
 
 
+def test_el_cruce_a_una_sociedad_que_solo_registra_la_cnmv_no_va_en_el_grafo(store_oci, tmp_path):
+    """La autorización se cruza con la sociedad accionista de la CNMV —su
+    denominación es única—, y así la ve la red de poder; pero esa sociedad no
+    está en el grafo, y el cruce de la portada no llevaría a ninguna parte."""
+    _ingerir(
+        store_oci,
+        "oci",
+        _autorizacion_oci(
+            "SANCHEZ GONZALEZ, LUIS MARIA",
+            "PRESIDENTE DE UNA ENTIDAD PUBLICA",
+            "2018/07/02",
+            "SAPA PLACENCIA, S.L.",
+            "2019/11/21",
+        ),
+        b"<html>1</html>",
+    )
+    store_oci.upsert_source(Source(id="cnmv", name="CNMV", url="https://ejemplo.test"))
+    _ingerir(
+        store_oci,
+        "cnmv",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    "Company", "SAPA PLACENCIA S.L.", "cnmv:sociedad:sapa-placencia-s-l"
+                ),
+                EntidadNormalizada("Company", "INDRA SISTEMAS, S.A.", "nif:A28599033"),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    "Ownership", "cnmv:sociedad:sapa-placencia-s-l", "nif:A28599033", "o1", 1.0
+                )
+            ],
+        ),
+        b"<documento>cnmv</documento>",
+    )
+    grafo, _, cargos = _volcar(store_oci, tmp_path)
+    [autorizacion] = cargos["personas"][0]["autorizaciones"]
+    assert autorizacion["empresa"]["clave"] == "cnmv:sociedad:sapa-placencia-s-l"
+    assert grafo["cargos"]["cruces"] == []
+    assert grafo["cargos"]["nCruces"] == 0
+    assert "cnmv:" not in json.dumps(grafo)
+
+
 def test_una_sociedad_se_reconoce_entera_y_sin_dudas():
     from sinapsis_ingest.exportar_cargos import _palabras, empresa_en
 
