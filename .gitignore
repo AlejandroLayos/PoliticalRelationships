@@ -42,3 +42,6 @@ dist/
 # sube como artefacto del workflow para poder escribir el parser, y no entra
 # en git. Ver spec §12 y scripts/anatomia_pdf_tcu.py.
 /detalle-pdf/
+
+# Caché de los informes de gobierno corporativo de la CNMV (datos.yml).
+.cache-cnmv/

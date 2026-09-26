@@ -325,10 +325,12 @@ def exportar(
           AND es.dedupe_key NOT LIKE 'oci:%' AND et.dedupe_key NOT LIKE 'oci:%'
           AND es.dedupe_key NOT LIKE 'congreso:%' AND et.dedupe_key NOT LIKE 'congreso:%'
           AND es.dedupe_key NOT LIKE 'senado:%' AND et.dedupe_key NOT LIKE 'senado:%'
-          -- Los accionistas de la CNMV, tampoco: no llevan dinero, y entre sus
-          -- titulares hay personas. Salen en `cargos.json` (`cotizadas`).
+          -- Los accionistas y los consejos de la CNMV, tampoco: no llevan
+          -- dinero, y entre sus titulares y miembros hay personas. Salen en
+          -- `cargos.json` (`cotizadas`). Por esquema además de por clave: una
+          -- sociedad consejera va por su NIF.
           AND es.dedupe_key NOT LIKE 'cnmv:%' AND et.dedupe_key NOT LIKE 'cnmv:%'
-          AND r.ftm_schema <> 'Ownership'
+          AND r.ftm_schema NOT IN ('Ownership', 'Directorship')
         ORDER BY r.amount DESC NULLS LAST, r.id
         """
     ).fetchall()

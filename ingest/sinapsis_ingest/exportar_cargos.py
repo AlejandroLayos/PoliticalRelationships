@@ -689,15 +689,27 @@ def dinero_del_organo(store: Store, organo: str, empresa: str) -> dict[str, Any]
     }
 
 
+def _orden_en_el_consejo(cargo: str) -> int:
+    c = cargo.lower()
+    if c.startswith("presidente") or c.startswith("presidenta"):
+        return 0
+    if c.startswith("vicepresident"):
+        return 1
+    if "delegad" in c:
+        return 2
+    return 3
+
+
 def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
-    """Las cotizadas y sus accionistas significativos, según la CNMV.
+    """Las cotizadas, sus accionistas significativos y su consejo, según la CNMV.
 
     Por la clave de la cotizada (`nif:…` si está en la lista, o la de la
     CNMV). Una persona física sólo sale si pasa SU puerta: la clave
-    `cnmv:persona:`, la marca `accionista_cnmv` y la arista con procedencia de
-    la CNMV. En su papel de accionista significativo y en ningún otro (spec
-    §12, ampliación del 26/9/2026): no entra en `personas`, ni en el grafo, ni
-    se une a nadie.
+    `cnmv:persona:`, la marca de la CNMV (`accionista_cnmv` o
+    `consejero_cnmv`) y la arista con procedencia de la CNMV. En su papel de
+    accionista significativo o de consejero y en ningún otro (spec §12,
+    ampliación del 26/9/2026): no entra en `personas`, ni en el grafo, ni se
+    une a nadie de otra fuente.
     """
     filas = store.conn.execute(
         """
@@ -705,11 +717,11 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
                es.ftm_schema AS esquema_titular, es.properties AS props_titular,
                et.dedupe_key AS clave_cotizada, et.caption AS cotizada,
                COALESCE(et.nif, '') AS nif_cotizada, et.properties AS props_cotizada,
-               r.properties
+               r.properties, r.ftm_schema AS esquema
         FROM relationships r
         JOIN entities es ON es.id = r.source_entity_id AND es.canonical_id IS NULL
         JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
-        WHERE r.ftm_schema = 'Ownership'
+        WHERE r.ftm_schema IN ('Ownership', 'Directorship')
           AND r.status <> 'retracted'
           AND EXISTS (
               SELECT 1 FROM provenance pv
@@ -723,9 +735,10 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
     for f in filas:
         props = f["properties"] or {}
         persona = f["esquema_titular"] == "Person"
+        marcas = f["props_titular"] or {}
         if persona and not (
             f["clave_titular"].startswith("cnmv:persona:")
-            and (f["props_titular"] or {}).get("accionista_cnmv") is True
+            and (marcas.get("accionista_cnmv") is True or marcas.get("consejero_cnmv") is True)
         ):
             descartadas += 1
             continue
@@ -740,10 +753,27 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
                 # de ese sector, no de una lista nuestra.
                 **({"sector": sector} if sector else {}),
                 **({"medio": True} if es_medio_de_comunicacion(sector) else {}),
-                "url": props.get("url", ""),
+                "url": props.get("url", "") if f["esquema"] == "Ownership" else "",
                 "accionistas": [],
+                "consejo": [],
             },
         )
+        if f["esquema"] == "Directorship":
+            c["consejo"].append(
+                {
+                    "clave": f["clave_titular"],
+                    "nombre": f["titular"],
+                    **({"persona": True} if persona else {}),
+                    **{
+                        k: props[k]
+                        for k in ("cargo", "categoria", "ejercicio", "url")
+                        if props.get(k)
+                    },
+                }
+            )
+            continue
+        if not c["url"] and props.get("url"):
+            c["url"] = props["url"]
         c["accionistas"].append(
             {
                 "clave": f["clave_titular"],
@@ -758,8 +788,11 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
         )
     for c in cotizadas.values():
         c["accionistas"].sort(key=lambda a: -float(a.get("porcentaje") or 0))
-        if not c["url"]:
-            c.pop("url")
+        # La presidencia primero, luego las vicepresidencias; el resto, por nombre.
+        c["consejo"].sort(key=lambda m: (_orden_en_el_consejo(m.get("cargo", "")), m["nombre"]))
+        for vacia in ("url", "consejo"):
+            if not c[vacia]:
+                c.pop(vacia)
     if descartadas:
         log.error("cnmv: accionistas personas sin su marca; no salen", descartadas=descartadas)
     return cotizadas

@@ -1528,7 +1528,63 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
         ),
         b"sin-marca",
     )
+    # El consejo de Prisa: una persona con su marca, otra sin ella, y una
+    # sociedad consejera que va por su NIF.
+    prisa_clave = "nif:A28297059"
+    for clave_m, nombre_m, esquema, marca, cargo in (
+        ("cnmv:persona:joseph-oughourlian", "JOSEPH OUGHOURLIAN", "Person", True, "PRESIDENTE"),
+        ("cnmv:persona:sin-marca-consejo", "Sin Marca Consejo", "Person", False, "CONSEJERO"),
+        ("nif:A39000013", "BANCO SANTANDER, S.A.", "Company", None, "CONSEJERO"),
+    ):
+        _ingerir(
+            store,
+            "cnmv",
+            Normalizado(
+                entidades=[
+                    EntidadNormalizada(
+                        esquema,
+                        nombre_m,
+                        clave_m,
+                        nif="A39000013" if esquema == "Company" else "",
+                        properties={"consejero_cnmv": True} if marca else {},
+                    ),
+                    EntidadNormalizada("Company", "PROMOTORA", prisa_clave, nif="A28297059"),
+                ],
+                aristas=[
+                    AristaNormalizada(
+                        "Directorship",
+                        clave_m,
+                        prisa_clave,
+                        f"cnmv:consejo:{clave_m}",
+                        confidence=1.0,
+                        properties={
+                            "cargo": cargo,
+                            "categoria": "Dominical",
+                            "ejercicio": 2025,
+                            "url": "https://www.cnmv.es/iagc",
+                        },
+                    )
+                ],
+            ),
+            f"consejo-{clave_m}".encode(),
+        )
     grafo, indice, cargos = _volcar(store, tmp_path)
+
+    consejo = cargos["cotizadas"][prisa_clave]["consejo"]
+    assert [m["nombre"] for m in consejo] == ["JOSEPH OUGHOURLIAN", "BANCO SANTANDER, S.A."]
+    assert consejo[0] == {
+        "clave": "cnmv:persona:joseph-oughourlian",
+        "nombre": "JOSEPH OUGHOURLIAN",
+        "persona": True,
+        "cargo": "PRESIDENTE",
+        "categoria": "Dominical",
+        "ejercicio": 2025,
+        "url": "https://www.cnmv.es/iagc",
+    }
+    assert "persona" not in consejo[1]
+    # El enlace de la cotizada sigue siendo el de sus participaciones.
+    assert "ps_ac_ini" in cargos["cotizadas"][prisa_clave]["url"]
+    assert not any(e["schema"] == "Directorship" for e in grafo["edges"])
 
     assert grafo["cargos"]["cotizadas"] == len(cargos["cotizadas"]) > 1
     prisa = cargos["cotizadas"]["nif:A28297059"]
