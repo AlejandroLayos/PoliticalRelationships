@@ -7,7 +7,7 @@ import forceAtlas2 from 'graphology-layout-forceatlas2'
 import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
 import { aclarar, apagar, hexSobreFondo } from '../color.js'
 import { semillaDePosicion } from '../vida.js'
-import { tramo } from '../cargos.js'
+import { fechaCorta, tramo } from '../cargos.js'
 import {
   buscarEnRed,
   centroInicial,
@@ -82,6 +82,7 @@ function subtitulo(n) {
   if (n.tipo === 'gobierno') return n.formacion ? `Formación del presidente: ${n.formacion}` : ''
   if (n.tipo === 'partido') return n.largo && n.largo !== n.nombre ? n.largo : ''
   if (n.tipo === 'entidad' && n.subtipo === 'organo') return 'Paga o contrata con dinero público'
+  if (n.tipo === 'entidad' && n.cotizada) return 'Sus accionistas significativos, según la CNMV'
   return ''
 }
 
@@ -109,6 +110,7 @@ const COLOR_ARISTA = {
   autorizacion: [93, 157, 237],
   declaracion: [93, 157, 237],
   escano: [53, 178, 140],
+  accionista: [93, 157, 237],
   preside: [229, 112, 61],
 }
 
@@ -295,7 +297,8 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
         <h1 class="titulo">Quién está unido a quién, y quién lo dice</h1>
         <p class="entradilla">
           Cada línea es un hecho de una fuente oficial: un nombramiento en el BOE, un escaño, una
-          autorización de la Oficina de Conflictos de Intereses, una actividad declarada al Congreso.
+          autorización de la Oficina de Conflictos de Intereses, una actividad declarada al Congreso,
+          una participación significativa registrada en la CNMV.
           Pulsa un nodo para ponerlo en el centro.
         </p>
       </div>
@@ -330,6 +333,12 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
           {{ g.nombre.replace('Gobierno de ', '') }}
         </button>
       </div>
+      <div v-if="entradas.cotizadas.length" class="fila">
+        <span class="rotulo">Cotizadas</span>
+        <button v-for="c in entradas.cotizadas" :key="c.id" type="button" class="chip" :class="`k-${claseDe(c)}`" @click="centrar(c.id)">
+          {{ c.nombre }} <span class="n">{{ c.accionistas }}</span>
+        </button>
+      </div>
       <div class="fila">
         <span class="rotulo">Partidos</span>
         <button v-for="p in entradas.partidos" :key="p.id" type="button" class="chip k-par" @click="centrar(p.id)">
@@ -357,7 +366,7 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
           </li>
         </ol>
         <ul class="leyenda" aria-label="Leyenda">
-          <li><span class="punto k-persona" />Persona con cargo</li>
+          <li><span class="punto k-persona" />Persona</li>
           <li><span class="punto k-adm" />Administración</li>
           <li><span class="punto k-emp" />Empresa</li>
           <li><span class="punto k-par" />Partido, asociación o fundación</li>
@@ -404,6 +413,7 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
                 <li v-for="(h, i) in it.hechos.slice(0, 3)" :key="i">
                   <span class="texto">{{ h.texto }}</span>
                   <span v-if="tramo(h)" class="cuando">{{ tramo(h) }}</span>
+                  <span v-if="h.registro" class="cuando" title="Fecha en que la CNMV registró la última notificación; no es la de compra">registro {{ fechaCorta(h.registro) }}</span>
                   <a v-if="h.url" :href="h.url" target="_blank" rel="noopener" class="fuente">{{ nombreDeFuente(h.fuente) }}</a>
                   <span v-else class="fuente">{{ nombreDeFuente(h.fuente) }}</span>
                 </li>

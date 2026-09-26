@@ -317,3 +317,56 @@ describe('altas instancias judiciales', () => {
     expect(red.nodos.has('organismo:gobierno')).toBe(false)
   })
 })
+
+describe('las cotizadas de la CNMV', () => {
+  function conCotizadas() {
+    const c = cargos()
+    c.cotizadas = {
+      'nif:A1': {
+        clave: 'nif:A1',
+        nombre: 'INDRA SISTEMAS, S.A.',
+        nif: 'A1',
+        url: 'https://cnmv/indra',
+        accionistas: [
+          { clave: 'cnmv:sociedad:sepi', nombre: 'SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES', porcentaje: '28.000', fechaRegistroCNMV: '2025-01-01' },
+          { clave: 'cnmv:persona:x', nombre: 'JOSEPH OUGHOURLIAN', persona: true, porcentaje: '3.100' },
+          { clave: 'nif:A2', nombre: 'BANCO EJEMPLO, S.A.', porcentaje: '5.500' },
+        ],
+      },
+    }
+    return c
+  }
+
+  it('la cotizada es el mismo nodo que la empresa de las autorizaciones', () => {
+    const red = construirRed(conCotizadas())
+    const indra = red.nodos.get('nif:A1')
+    expect(indra.cotizada).toBe(true)
+    const titulos = conexionesDe(red, 'nif:A1').map((g) => g.titulo)
+    expect(titulos).toContain('Ex altos cargos autorizados a trabajar aquí')
+    expect(titulos).toContain('Accionistas significativos')
+  })
+
+  it('los accionistas, de mayor a menor, con su porcentaje y la CNMV como fuente', () => {
+    const red = construirRed(conCotizadas())
+    const grupo = conexionesDe(red, 'nif:A1').find((g) => g.relacion === 'accionista')
+    expect(grupo.items.map((i) => i.nodo.id)).toEqual(['cnmv:sociedad:sepi', 'nif:A2', 'cnmv:persona:x'])
+    expect(grupo.items[0].hechos[0]).toMatchObject({ texto: '28,000 % de los derechos de voto', fuente: 'cnmv', url: 'https://cnmv/indra' })
+  })
+
+  it('un accionista persona no se presenta como cargo público', () => {
+    const red = construirRed(conCotizadas())
+    const persona = red.nodos.get('cnmv:persona:x')
+    expect(persona.tipo).toBe('persona')
+    expect(nombreDeTipo(persona)).toBe('Accionista significativo, según la CNMV')
+    // Y sigue sin haber aristas entre personas.
+    for (const a of red.aristas) {
+      const tipos = [red.nodos.get(a.source).tipo, red.nodos.get(a.target).tipo]
+      expect(tipos.filter((t) => t === 'persona').length).toBeLessThan(2)
+    }
+  })
+
+  it('las cotizadas con más accionistas son un punto de entrada', () => {
+    const red = construirRed(conCotizadas())
+    expect(puntosDeEntrada(red).cotizadas.map((n) => n.id)).toEqual(['nif:A1'])
+  })
+})

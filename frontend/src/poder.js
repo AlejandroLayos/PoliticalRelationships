@@ -61,6 +61,7 @@ export const RELACIONES = {
   declaracion: { ida: 'Actividad declarada en', vuelta: 'Diputados que declararon actividad aquí' },
   ministerio: { ida: 'Ministerios y organismos con nombramientos', vuelta: 'Gobiernos con nombramientos aquí' },
   dinero: { ida: 'Pagó o adjudicó a', vuelta: 'Cobró de' },
+  accionista: { ida: 'Accionista significativo de', vuelta: 'Accionistas significativos' },
 }
 
 /** El orden en que se enseñan los grupos de conexiones en el panel. */
@@ -74,6 +75,7 @@ const ORDEN_RELACION = [
   'cargo',
   'nombramiento',
   'ministerio',
+  'accionista',
   'dinero',
 ]
 
@@ -81,6 +83,7 @@ const NOMBRE_FUENTE = {
   boe: 'BOE',
   oci: 'Oficina de Conflictos de Intereses',
   congreso: 'Congreso de los Diputados',
+  cnmv: 'CNMV',
   mapa: 'Mapa del dinero',
 }
 
@@ -341,6 +344,42 @@ export function construirRed(cargos, grafo = null) {
     }
   }
 
+  // Las cotizadas y sus accionistas significativos, según la CNMV. Una
+  // cotizada con NIF es el mismo nodo que esa empresa en el resto de la red:
+  // la Indra de las autorizaciones de la OCI es la Indra de la CNMV.
+  for (const c of Object.values(cargos?.cotizadas ?? {})) {
+    if (!c?.clave) continue
+    const f = formaDeNif(c.clave)
+    const cotizada = nodo(c.clave, {
+      tipo: 'entidad',
+      nombre: c.nombre,
+      ...(c.clave.startsWith('nif:') ? { entidad: c.clave } : {}),
+      ...(f ? { forma: f.forma, clase: f.clase } : {}),
+    })
+    cotizada.cotizada = true
+    for (const a of c.accionistas ?? []) {
+      if (!a?.clave) continue
+      const titular = a.persona
+        ? nodo(a.clave, { tipo: 'persona', papel: 'accionista', nombre: a.nombre, rango: 1, cargo: 'Accionista significativo' })
+        : nodo(a.clave, {
+            tipo: 'entidad',
+            nombre: a.nombre,
+            ...(a.clave.startsWith('nif:') ? { entidad: a.clave } : {}),
+            ...(formaDeNif(a.clave) ? { forma: formaDeNif(a.clave).forma, clase: formaDeNif(a.clave).clase } : {}),
+          })
+      const pct = a.porcentaje ? `${String(a.porcentaje).replace('.', ',')} % de los derechos de voto` : 'Participación significativa'
+      unir(titular.id, cotizada.id, 'accionista', {
+        texto: pct,
+        porcentaje: Number(a.porcentaje) || 0,
+        desde: null,
+        hasta: null,
+        registro: a.fechaRegistroCNMV ?? null,
+        fuente: 'cnmv',
+        url: c.url ?? '',
+      })
+    }
+  }
+
   // Presidentes → su Gobierno.
   for (const [clave, x] of presidentes) {
     if (!nodos.has(clave)) continue
@@ -427,7 +466,7 @@ export function relevancia(red, id) {
   if (n.tipo !== 'persona') return 100 + (n.grado ?? 0)
   let fuertes = 0
   for (const a of red.porNodo.get(id) ?? []) {
-    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta'].includes(a.relacion)) fuertes += 1
+    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta', 'accionista'].includes(a.relacion)) fuertes += 1
   }
   return fuertes * 10 + (n.rango ?? 1) * 3 + Math.min(5, n.grado ?? 0)
 }
@@ -511,6 +550,7 @@ export function conexionesDe(red, id) {
     g.items.sort((x, y) => {
       if (g.relacion === 'dinero') return (y.hechos[0]?.importe ?? 0) - (x.hechos[0]?.importe ?? 0)
       if (g.relacion === 'ministerio') return (y.hechos[0]?.n ?? 0) - (x.hechos[0]?.n ?? 0)
+      if (g.relacion === 'accionista') return (y.hechos[0]?.porcentaje ?? 0) - (x.hechos[0]?.porcentaje ?? 0)
       return relevancia(red, y.nodo.id) - relevancia(red, x.nodo.id) || x.nodo.nombre.localeCompare(y.nodo.nombre, 'es')
     })
   }
@@ -550,6 +590,9 @@ export function claseDe(n) {
 /** Cómo se dice qué es un nodo, lo más concreto que se sepa. */
 export function nombreDeTipo(n) {
   if (!n) return ''
+  // Un accionista de la CNMV no tiene cargo público: se dice lo que es.
+  if (n.tipo === 'persona' && n.papel === 'accionista') return 'Accionista significativo, según la CNMV'
+  if (n.tipo === 'entidad' && n.cotizada && n.forma) return `${n.forma} cotizada`
   if (n.tipo === 'entidad' && n.subtipo === 'organo') return 'Órgano de la administración'
   if (n.tipo === 'entidad' && n.forma) return n.forma
   return TIPOS[n.tipo]?.nombre ?? ''
@@ -568,7 +611,15 @@ export function puntosDeEntrada(red, cuantos = 6) {
         .filter((a) => ['autorizacion', 'declaracion', 'dirigio'].includes(a.relacion))
         .map((a) => otro(a, n.id)),
     ).size
+  const accionistas = (n) =>
+    (red.porNodo.get(n.id) ?? []).filter((a) => a.relacion === 'accionista' && a.target === n.id).length
   return {
+    cotizadas: todos
+      .filter((n) => n.cotizada)
+      .map((n) => ({ ...n, accionistas: accionistas(n) }))
+      .filter((n) => n.accionistas > 0)
+      .sort((a, b) => b.accionistas - a.accionistas || a.nombre.localeCompare(b.nombre, 'es'))
+      .slice(0, cuantos + 4),
     gobiernos: porTipo('gobierno').sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0)),
     partidos: porTipo('partido')
       .sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0))

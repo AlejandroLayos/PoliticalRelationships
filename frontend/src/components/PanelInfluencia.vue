@@ -44,6 +44,8 @@ const props = defineProps({
   declarantes: { type: Array, default: () => [] },
   /** Si es un partido: sus formaciones en el Congreso, con cuántos diputados salen. */
   enElCongreso: { type: Array, default: () => [] },
+  /** Si es una cotizada: sus accionistas significativos según la CNMV (`cargos.json`, `cotizadas`). */
+  cotizada: { type: Object, default: null },
 })
 const emit = defineEmits(['seleccionar', 'volver', 'expandir', 'verEnMapa', 'verCargo', 'verDiputados', 'verRed'])
 
@@ -53,8 +55,15 @@ const conPersonas = computed(
     props.alFrente.length > 0 ||
     props.exAltosCargos.length > 0 ||
     props.declarantes.length > 0 ||
-    props.enElCongreso.length > 0,
+    props.enElCongreso.length > 0 ||
+    (props.cotizada?.accionistas?.length ?? 0) > 0,
 )
+
+/** «4,145 %»: el porcentaje como lo escribe la CNMV, con coma. */
+function porcentaje(v) {
+  const n = Number(v)
+  return Number.isFinite(n) ? `${n.toLocaleString('es-ES', { maximumFractionDigits: 3 })} %` : ''
+}
 
 const resumen = computed(() => resumenEnPalabras(props.area))
 
@@ -288,6 +297,24 @@ const sinDatos = computed(
         </div>
       </div>
 
+      <!--
+        Quién tiene más del 3 % de sus derechos de voto, según la CNMV. Las
+        personas, en su papel de accionista y sin enlace a ninguna ficha.
+      -->
+      <section v-if="cotizada?.accionistas?.length" class="bloque al-frente">
+        <h3>Accionistas significativos, según la CNMV</h3>
+        <ul class="lista">
+          <li v-for="a in cotizada.accionistas.slice(0, 10)" :key="a.clave">
+            <span>{{ a.nombre }}</span>
+            <span class="cargo-frente">{{ porcentaje(a.porcentaje) }} de los derechos de voto</span>
+          </li>
+        </ul>
+        <p class="fuente-cnmv">
+          <a v-if="cotizada.url" :href="cotizada.url" target="_blank" rel="noopener">CNMV</a>
+          <template v-else>CNMV</template>
+          · la fecha de cada notificación no es la de compra
+        </p>
+      </section>
       <!-- Las personas de abajo, con todo lo demás que las une, en la red de poder. -->
       <p v-if="conPersonas" class="a-la-red">
         <a href="#" @click.prevent="emit('verRed')">Ver sus personas en la red de poder →</a>
@@ -506,6 +533,24 @@ const sinDatos = computed(
         órgano —el director general de Carreteras dirige la Dirección General
         de Carreteras— y el órgano es del Estado; ver exportar_cargos.py.
       -->
+      <!--
+        Quién tiene más del 3 % de sus derechos de voto, según la CNMV. Las
+        personas, en su papel de accionista y sin enlace a ninguna ficha.
+      -->
+      <section v-if="cotizada?.accionistas?.length" class="bloque al-frente">
+        <h3>Accionistas significativos, según la CNMV</h3>
+        <ul class="lista">
+          <li v-for="a in cotizada.accionistas.slice(0, 10)" :key="a.clave">
+            <span>{{ a.nombre }}</span>
+            <span class="cargo-frente">{{ porcentaje(a.porcentaje) }} de los derechos de voto</span>
+          </li>
+        </ul>
+        <p class="fuente-cnmv">
+          <a v-if="cotizada.url" :href="cotizada.url" target="_blank" rel="noopener">CNMV</a>
+          <template v-else>CNMV</template>
+          · la fecha de cada notificación no es la de compra
+        </p>
+      </section>
       <!-- Las personas de abajo, con todo lo demás que las une, en la red de poder. -->
       <p v-if="conPersonas" class="a-la-red">
         <a href="#" @click.prevent="emit('verRed')">Ver sus personas en la red de poder →</a>
@@ -1135,4 +1180,6 @@ h3 {
 .meta .extranjera { color: var(--tinta-2); }
 .a-la-red { margin: var(--e4) 0 0; font-size: var(--t-s); font-weight: 600; }
 .a-la-red a { color: var(--tinta); }
+.fuente-cnmv { margin: var(--e2) 0 0; font-size: var(--t-xs); color: var(--tinta-3); }
+.fuente-cnmv a { color: var(--tinta-2); }
 </style>

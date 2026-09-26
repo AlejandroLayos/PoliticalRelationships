@@ -95,6 +95,8 @@ const alFrente = computed(() => cargos.value?.organos?.[claveSeleccionada.value]
 const exAltosCargos = computed(() => cargos.value?.empresas?.[claveSeleccionada.value] ?? [])
 /** Diputados que declararon al Congreso trabajar en la sociedad de la ficha abierta. */
 const declarantes = computed(() => cargos.value?.declarantes?.[claveSeleccionada.value] ?? [])
+/** Si la entidad abierta es una cotizada: sus accionistas según la CNMV. */
+const cotizadaAbierta = computed(() => cargos.value?.cotizadas?.[claveSeleccionada.value] ?? null)
 /** Si la entidad abierta es un partido: sus formaciones en el Congreso. */
 const enElCongreso = computed(() => formacionesDeEntidad(cargos.value, claveSeleccionada.value))
 /** La formación con la que abrir la lista de diputados, desde el panel de un partido. */
@@ -1299,6 +1301,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :ex-altos-cargos="exAltosCargos"
         :declarantes="declarantes"
         :en-el-congreso="enElCongreso"
+        :cotizada="cotizadaAbierta"
         @ver-diputados="verDiputadosDe"
         @seleccionar="enfocar"
         @volver="volverAlMapa"
