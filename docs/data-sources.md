@@ -672,6 +672,14 @@ influencia editorial.
 **Acceso:** parcialmente vía BORME (con el límite accionarial de arriba) y
 depósitos de cuentas. Es la fuente con más huecos estructurales.
 
+**Lo que ya hay (26/9/2026):** los grupos de medios **cotizados**, por la
+CNMV (§2.septies). Qué cotizada es un medio no lo decide una lista nuestra:
+lo dice el sector que la CNMV le asigna en su ficha
+(`ee/datosgenerales.aspx?nif=…`, «MEDIOS DE COMUNICACIÓN» para Prisa), y
+sus dueños son sus accionistas significativos. Los medios no cotizados —la
+mayoría— siguen siendo un hueco: el BORME no da accionistas, y el registro
+estatal de prestadores audiovisuales está por reconocer.
+
 **Mapeo a FollowTheMoney:**
 
 ```

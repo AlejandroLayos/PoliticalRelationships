@@ -381,6 +381,10 @@ export function construirRed(cargos, grafo = null) {
       ...(f ? { forma: f.forma, clase: f.clase } : {}),
     })
     cotizada.cotizada = true
+    // El sector es el de la ficha de la CNMV; «medio», si ese sector es el de
+    // los medios de comunicación. Lo dice la fuente, no una lista nuestra.
+    if (c.sector) cotizada.sector = c.sector
+    if (c.medio) cotizada.medio = true
     for (const a of c.accionistas ?? []) {
       if (!a?.clave) continue
       const titular = a.persona
@@ -645,6 +649,7 @@ export function nombreDeTipo(n) {
   if (!n) return ''
   // Un accionista de la CNMV no tiene cargo público: se dice lo que es.
   if (n.tipo === 'persona' && n.papel === 'accionista') return 'Accionista significativo, según la CNMV'
+  if (n.tipo === 'entidad' && n.medio) return 'Grupo de medios de comunicación cotizado'
   if (n.tipo === 'entidad' && n.cotizada && n.forma) return `${n.forma} cotizada`
   if (n.tipo === 'entidad' && n.subtipo === 'organo') return 'Órgano de la administración'
   if (n.tipo === 'entidad' && n.forma) return n.forma
@@ -666,13 +671,17 @@ export function puntosDeEntrada(red, cuantos = 6) {
     ).size
   const accionistas = (n) =>
     (red.porNodo.get(n.id) ?? []).filter((a) => a.relacion === 'accionista' && a.target === n.id).length
+  const conAccionistas = (n) => ({ ...n, accionistas: accionistas(n) })
+  const porAccionistas = (a, b) => b.accionistas - a.accionistas || a.nombre.localeCompare(b.nombre, 'es')
   return {
+    // Los grupos de medios van en su fila, no repetidos en la de cotizadas.
     cotizadas: todos
-      .filter((n) => n.cotizada)
-      .map((n) => ({ ...n, accionistas: accionistas(n) }))
+      .filter((n) => n.cotizada && !n.medio)
+      .map(conAccionistas)
       .filter((n) => n.accionistas > 0)
-      .sort((a, b) => b.accionistas - a.accionistas || a.nombre.localeCompare(b.nombre, 'es'))
+      .sort(porAccionistas)
       .slice(0, cuantos + 4),
+    medios: todos.filter((n) => n.medio).map(conAccionistas).sort(porAccionistas),
     gobiernos: porTipo('gobierno').sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0)),
     // Las instituciones de las altas instancias judiciales y fiscales, por su
     // nombre, que es el que pone el conector a partir del cargo.

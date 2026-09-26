@@ -397,6 +397,32 @@ describe('las cotizadas de la CNMV', () => {
     const red = construirRed(conCotizadas())
     expect(puntosDeEntrada(red).cotizadas.map((n) => n.id)).toEqual(['nif:A1'])
   })
+
+  it('un grupo de medios, por el sector de la CNMV, va en su fila y no en la de cotizadas', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A3'] = {
+      clave: 'nif:A3',
+      nombre: 'PROMOTORA DE INFORMACIONES, S.A.',
+      sector: 'MEDIOS DE COMUNICACIÓN',
+      medio: true,
+      accionistas: [{ clave: 'nif:A2', nombre: 'BANCO EJEMPLO, S.A.', porcentaje: '4.145' }],
+    }
+    c.cotizadas['nif:A1'].sector = 'TECNOLOGÍA'
+    const red = construirRed(c)
+    const prisa = red.nodos.get('nif:A3')
+    expect(prisa.medio).toBe(true)
+    expect(nombreDeTipo(prisa)).toBe('Grupo de medios de comunicación cotizado')
+    expect(red.nodos.get('nif:A1').medio).toBeUndefined()
+    const entradas = puntosDeEntrada(red)
+    expect(entradas.medios.map((n) => n.id)).toEqual(['nif:A3'])
+    expect(entradas.cotizadas.map((n) => n.id)).toEqual(['nif:A1'])
+  })
+
+  it('sin la marca de la CNMV no hay medios, aunque el nombre lo parezca', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A1'].nombre = 'MEDIOS DE COMUNICACIÓN EJEMPLO, S.A.'
+    expect(puntosDeEntrada(construirRed(c)).medios).toEqual([])
+  })
 })
 
 describe('el camino entre dos nodos', () => {

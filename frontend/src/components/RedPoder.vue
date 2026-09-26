@@ -20,6 +20,7 @@ import {
   nombreDeFuente,
   redDeCamino,
   nombreDeTipo,
+  capitalizar,
   puntosDeEntrada,
 } from '../poder.js'
 
@@ -122,7 +123,10 @@ function subtitulo(n) {
   if (n.tipo === 'gobierno') return n.formacion ? `Formación del presidente: ${n.formacion}` : ''
   if (n.tipo === 'partido') return n.largo && n.largo !== n.nombre ? n.largo : ''
   if (n.tipo === 'entidad' && n.subtipo === 'organo') return 'Paga o contrata con dinero público'
-  if (n.tipo === 'entidad' && n.cotizada) return 'Sus accionistas significativos, según la CNMV'
+  if (n.tipo === 'entidad' && n.cotizada)
+    return n.sector
+      ? `Sector según la CNMV: ${capitalizar(n.sector)}. Sus accionistas significativos, según la CNMV`
+      : 'Sus accionistas significativos, según la CNMV'
   return ''
 }
 
@@ -411,6 +415,12 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
         <span class="rotulo">Cotizadas</span>
         <button v-for="c in entradas.cotizadas" :key="c.id" type="button" class="chip" :class="`k-${claseDe(c)}`" @click="centrar(c.id)">
           {{ c.nombre }} <span class="n">{{ c.accionistas }}</span>
+        </button>
+      </div>
+      <div v-if="entradas.medios.length" class="fila">
+        <span class="rotulo">Medios</span>
+        <button v-for="m in entradas.medios" :key="m.id" type="button" class="chip" :class="`k-${claseDe(m)}`" @click="centrar(m.id)">
+          {{ m.nombre }} <span class="n">{{ m.accionistas }}</span>
         </button>
       </div>
       <div v-if="entradas.justicia.length" class="fila">
