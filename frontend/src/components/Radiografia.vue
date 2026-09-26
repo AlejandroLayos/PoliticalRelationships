@@ -6,7 +6,7 @@
   red, centrada en él.
 */
 import { computed, nextTick, ref, watch } from 'vue'
-import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla } from '../radiografia.js'
+import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla, enLineas, buscar, indiceDeBusqueda } from '../radiografia.js'
 import { nombreDeFuente } from '../poder.js'
 
 const props = defineProps({
@@ -17,6 +17,9 @@ const props = defineProps({
 const emit = defineEmits(['centrar'])
 
 const r = computed(() => (props.cargos ? radiografiaCompleta(props.cargos, props.grafo) : null))
+const indice = computed(() => (props.cargos ? indiceDeBusqueda(props.cargos) : []))
+const consulta = ref('')
+const resultados = computed(() => buscar(indice.value, consulta.value))
 const corto = (clave) => nombrePropio(nombreCorto(props.cargos?.cotizadas?.[clave]))
 
 const numero = (n) => Number(n ?? 0).toLocaleString('es-ES')
@@ -78,8 +81,19 @@ const vecinos = computed(() => {
   }
   return s
 })
+/** El rótulo de un nodo, en líneas: los núcleos en dos como mucho, sin cortar. */
+const lineasDe = (n) => (n.tipo === 'nucleo' ? enLineas(n.corto, n.lado === 'izq' || n.lado === 'der' ? 16 : 20) : [recortar(n.corto, 20)])
 /** Dónde va el rótulo de un nodo: por el lado que le toca, sin pisar el círculo. */
 function rotulo(n) {
+  const r = colocarRotulo(n)
+  // Con dos líneas: al lado, centrado en el círculo; encima, sube una línea.
+  const extra = lineasDe(n).length - 1
+  if (!extra) return r
+  if (n.lado === 'izq' || n.lado === 'der') return { ...r, y: r.y - 7 * extra }
+  if (!String(n.lado ?? '').startsWith('abajo')) return { ...r, y: r.y - 14 * extra }
+  return r
+}
+function colocarRotulo(n) {
   const sep = (n.r ?? 5) + 5
   if (n.tipo === 'persona') return { y: 14, 'text-anchor': 'middle' }
   switch (n.lado) {
@@ -241,21 +255,26 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <p class="antetitulo">Radiografía</p>
         <h1 class="titular">Quién tiene el poder en España</h1>
         <p class="entradilla">{{ entradilla }}</p>
-        <section v-if="r.esencial.length" class="esencial" aria-labelledby="t-esencial">
-          <h2 id="t-esencial" class="antetitulo">Lo esencial</h2>
-          <ol>
-            <li v-for="(e, i) in r.esencial" :key="i">
-              <a :href="`#${e.seccion}`" @click.prevent="irA(e.seccion)">{{ e.texto }}</a>
+        <div class="buscar-radio" role="search">
+          <label for="buscar-radio" class="antetitulo">Buscar a alguien</label>
+          <input
+            id="buscar-radio"
+            v-model="consulta"
+            type="search"
+            autocomplete="off"
+            placeholder="Una persona, una empresa, un accionista…"
+            @keydown.enter="resultados.length && ir(resultados[0].clave)"
+          />
+          <ul v-if="consulta.trim().length >= 2" class="resultados-radio">
+            <li v-for="x in resultados" :key="x.clave">
+              <button type="button" @click="ir(x.clave)">
+                <span class="nombre-r">{{ x.nombre }}</span>
+                <span class="que-r">{{ x.que }}</span>
+              </button>
             </li>
-          </ol>
-        </section>
-        <ul class="cifras" aria-label="Lo que cubre esta edición">
-          <li><b>{{ numero(r.cifras.cotizadas) }}</b> cotizadas</li>
-          <li><b>{{ numero(r.cifras.accionistas) }}</b> accionistas significativos</li>
-          <li><b>{{ numero(r.cifras.consejeros) }}</b> consejeros</li>
-          <li><b>{{ numero(r.cifras.altosCargos) }}</b> altos cargos del BOE</li>
-          <li><b>{{ numero(r.cifras.justicia) }}</b> cargos de las altas instancias judiciales</li>
-        </ul>
+            <li v-if="!resultados.length" class="nada">No está en esta edición.</li>
+          </ul>
+        </div>
       </header>
 
       <!-- 0. El mapa de los núcleos -->
@@ -293,7 +312,9 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
               @keydown.enter="pulsarNodo(n)"
             >
               <circle :r="n.r" />
-              <text v-bind="rotulo(n)">{{ recortar(n.corto, n.tipo === 'nucleo' ? (n.lado === 'izq' || n.lado === 'der' ? 22 : 26) : 20) }}</text>
+              <text v-bind="rotulo(n)">
+                <tspan v-for="(l, i) in lineasDe(n)" :key="i" :x="rotulo(n).x ?? 0" :dy="i ? 14 : 0">{{ l }}</tspan>
+              </text>
               <title>{{ n.nombre }}</title>
             </g>
           </svg>
@@ -305,6 +326,24 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
           <li><span class="punto k-par" />Una fortuna personal</li>
           <li><span class="punto cot" />Una cotizada</li>
           <li><span class="punto per" />Consejero en dos consejos</li>
+        </ul>
+      </section>
+
+      <section class="bloque resumen">
+        <section v-if="r.esencial.length" class="esencial" aria-labelledby="t-esencial">
+          <h2 id="t-esencial" class="antetitulo">Lo esencial</h2>
+          <ol>
+            <li v-for="(e, i) in r.esencial" :key="i">
+              <a :href="`#${e.seccion}`" @click.prevent="irA(e.seccion)">{{ e.texto }}</a>
+            </li>
+          </ol>
+        </section>
+        <ul class="cifras" aria-label="Lo que cubre esta edición">
+          <li><b>{{ numero(r.cifras.cotizadas) }}</b> cotizadas</li>
+          <li><b>{{ numero(r.cifras.accionistas) }}</b> accionistas significativos</li>
+          <li><b>{{ numero(r.cifras.consejeros) }}</b> consejeros</li>
+          <li><b>{{ numero(r.cifras.altosCargos) }}</b> altos cargos del BOE</li>
+          <li><b>{{ numero(r.cifras.justicia) }}</b> cargos de las altas instancias judiciales</li>
         </ul>
       </section>
 
@@ -577,6 +616,14 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
 .antetitulo { font-family: var(--sans); font-size: var(--t-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); margin: 0 0 var(--e1); }
 .titular { font-family: var(--serif); font-size: var(--t-titular); line-height: 1.05; margin: 0 0 var(--e4); font-weight: 600; }
 .entradilla { font-family: var(--serif); font-size: var(--t-l); line-height: 1.5; max-width: var(--medida); color: var(--tinta-2); margin: 0 0 var(--e5); }
+.buscar-radio { position: relative; max-width: 34rem; margin: 0 0 var(--e4); }
+.buscar-radio input { width: 100%; box-sizing: border-box; font: inherit; font-family: var(--sans); font-size: var(--t-m); padding: var(--e2) var(--e3); border: 1px solid var(--filete-medio); border-radius: var(--radio); background: var(--hoja); color: var(--tinta); }
+.resultados-radio { position: absolute; z-index: 3; left: 0; right: 0; list-style: none; margin: 2px 0 0; padding: var(--e1) 0; background: var(--hoja); border: 1px solid var(--filete-medio); border-radius: var(--radio); box-shadow: 0 6px 18px rgb(0 0 0 / 0.12); }
+.resultados-radio button { all: unset; cursor: pointer; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; padding: var(--e1) var(--e3); font-family: var(--sans); }
+.resultados-radio button:hover, .resultados-radio button:focus-visible { background: var(--papel-2); }
+.nombre-r { font-size: var(--t-s); color: var(--tinta); }
+.que-r { font-size: var(--t-xs); color: var(--tinta-3); }
+.resultados-radio .nada { padding: var(--e1) var(--e3); font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-3); }
 .esencial { margin: 0 0 var(--e5); max-width: 52rem; }
 .esencial ol { margin: var(--e2) 0 0; padding-left: 1.4rem; font-family: var(--serif); font-size: var(--t-l); line-height: 1.45; }
 .esencial li { margin-bottom: var(--e2); padding-left: var(--e1); }

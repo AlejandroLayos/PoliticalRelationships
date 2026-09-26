@@ -598,6 +598,39 @@ export function loEsencial(r, cargos) {
   return salida
 }
 
+/**
+ * Un índice para buscar desde la radiografía: cotizadas, accionistas,
+ * consejeros y cargos públicos, cada uno con lo que es. Por la misma clave
+ * que usa la red, para que elegir uno lleve a la red centrada en él.
+ */
+export function indiceDeBusqueda(cargos) {
+  const vistos = new Map()
+  const poner = (clave, nombre, que) => {
+    if (!clave || !nombre || vistos.has(clave)) return
+    vistos.set(clave, { clave, nombre: nombrePropio(nombre), que, plano: plano(nombre) })
+  }
+  for (const c of Object.values(cargos?.cotizadas ?? {})) {
+    poner(c.clave, c.nombre, c.medio ? 'Grupo de medios cotizado' : 'Cotizada')
+    for (const m of c.consejo ?? []) poner(m.clave, m.nombre, `Consejo de ${nombrePropio(nombreCorto(c))}`)
+    for (const a of c.accionistas ?? []) poner(a.clave, a.nombre, `Accionista de ${nombrePropio(nombreCorto(c))}`)
+  }
+  for (const p of cargos?.personas ?? []) {
+    const ultimo = [...(p.periodos ?? [])].sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))[0]
+    poner(p.clave, p.nombre, ultimo?.cargo ?? 'Cargo público')
+  }
+  return [...vistos.values()]
+}
+
+/** Busca en el índice: todas las palabras de la consulta, en cualquier orden. */
+export function buscar(indice, consulta, limite = 8) {
+  const palabras = plano(consulta).split(' ').filter((w) => w.length > 1)
+  if (!palabras.length) return []
+  return indice
+    .filter((x) => palabras.every((w) => x.plano.includes(w)))
+    .sort((a, b) => (a.plano.startsWith(palabras[0]) ? 0 : 1) - (b.plano.startsWith(palabras[0]) ? 0 : 1) || a.plano.length - b.plano.length)
+    .slice(0, limite)
+}
+
 /** Las cifras de cabecera. */
 export function cifras(cargos) {
   const cot = Object.values(cargos?.cotizadas ?? {})
@@ -615,6 +648,39 @@ export function cifras(cargos) {
 /** El nombre corto de una cotizada: el que le da la CNMV, si está. */
 export function nombreCorto(c) {
   return c?.abreviada || (c?.nombre ?? '').replace(/,.*$/, '')
+}
+
+// Lo que sobra al final del nombre de un accionista para reconocerlo: la forma
+// jurídica y el envoltorio del vehículo. «Capital» o «Authority» se quedan:
+// son parte del nombre por el que se le conoce.
+const COLA = new Set(['inc', 'ltd', 'llp', 'plc', 'lp', 'icav', 'group', 'investment', 'management', 'sa', 'sau', 'sl', 'bv', 'nv', 'ag', 'se'])
+
+/**
+ * El rótulo de un núcleo en el mapa: el nombre por el que se le reconoce,
+ * sin forma jurídica ni el fondo concreto. «The Goldman Sachs Group, INC.» →
+ * «Goldman Sachs»; «Amber Capital Investment Management ICAV - Amber Global
+ * Opportunities Fund» → «Amber Capital». Sólo quita; nunca añade nada.
+ */
+export function rotuloDeNucleo(nombre) {
+  const base = nombrePropio(nombre)
+    .split(/\s+[-–/]\s+|\s+\(/)[0]
+    .replace(/,.*$/, '')
+    .replace(/^the\s+/i, '')
+  const palabras = base.split(/\s+/)
+  while (palabras.length > 1 && COLA.has(palabras.at(-1).replace(/\./g, '').toLowerCase())) palabras.pop()
+  return palabras.join(' ')
+}
+
+/** Un rótulo partido en dos líneas como mucho, por palabras. */
+export function enLineas(texto, ancho = 18) {
+  const lineas = ['']
+  for (const p of texto.split(/\s+/)) {
+    const actual = lineas.at(-1)
+    if (actual && actual.length + 1 + p.length > ancho && lineas.length < 2) lineas.push(p)
+    else lineas[lineas.length - 1] = actual ? `${actual} ${p}` : p
+  }
+  if (lineas.at(-1).length > ancho + 4) lineas[lineas.length - 1] = `${lineas.at(-1).slice(0, ancho + 3)}…`
+  return lineas
 }
 
 /** Una sigla para un nombre largo: «Sociedad Estatal de Participaciones Industriales» → SEPI. */
@@ -742,7 +808,7 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
       estado: n.estado,
       clave: n.estado ? '' : n.titulares[0].clave,
       nombre: n.estado ? 'El Estado' : n.titulares.map((t) => t.nombre).join(' · '),
-      corto: n.estado ? 'El Estado' : nombrePropio(n.titulares[0].nombre).replace(/,.*$/, ''),
+      corto: n.estado ? 'El Estado' : rotuloDeNucleo(n.titulares[0].nombre),
       persona: !n.estado && n.titulares.every((t) => t.persona),
       peso: n.cotizadas.length,
       x: pos.get(id)[0],

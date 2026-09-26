@@ -5,6 +5,8 @@ import {
   estadoAccionista,
   flujosEntreAreas,
   nombrePropio,
+  buscar,
+  indiceDeBusqueda,
   loEsencial,
   cupulaJudicial,
   nombramientosClave,
@@ -12,6 +14,8 @@ import {
   nombreCorto,
   radiografiaCompleta,
   sigla,
+  rotuloDeNucleo,
+  enLineas,
   nucleosEconomicos,
   puentes,
   radiografia,
@@ -248,6 +252,20 @@ describe('rótulos y nombres cortos', () => {
     expect(sigla('Sociedad Estatal de Participaciones Industriales')).toBe('SEPI')
     expect(sigla('FROB')).toBe('FROB')
   })
+  it('el rótulo de un núcleo quita el envoltorio y nunca añade', () => {
+    expect(rotuloDeNucleo('The Goldman Sachs Group, INC.')).toBe('Goldman Sachs')
+    expect(rotuloDeNucleo('Amber Capital Investment Management ICAV - Amber Global Opportunities Fund')).toBe('Amber Capital')
+    expect(rotuloDeNucleo('Qatar Investment Authority')).toBe('Qatar Investment Authority')
+    expect(rotuloDeNucleo('Criteria Caixa, S.A.U.')).toBe('Criteria Caixa')
+    expect(rotuloDeNucleo('Morgan Stanley')).toBe('Morgan Stanley')
+    expect(rotuloDeNucleo('Group')).toBe('Group')
+  })
+  it('un rótulo largo va en dos líneas y no se corta si cabe', () => {
+    expect(enLineas('Corporacion Financiera Alba', 18)).toEqual(['Corporacion', 'Financiera Alba'])
+    expect(enLineas('Aena', 18)).toEqual(['Aena'])
+    expect(enLineas('Banco Bilbao Vizcaya Argentaria', 20)).toEqual(['Banco Bilbao Vizcaya', 'Argentaria'])
+    expect(enLineas('Una Dos Tres Cuatro Cinco Seis Siete Ocho', 8).length).toBe(2)
+  })
   it('el nombre corto de la CNMV, o el nombre sin la forma jurídica', () => {
     expect(nombreCorto({ nombre: 'PROMOTORA DE INFORMACIONES, S.A.', abreviada: 'PRISA' })).toBe('PRISA')
     expect(nombreCorto({ nombre: 'TELCO, S.A.' })).toBe('TELCO')
@@ -379,5 +397,16 @@ describe('a quién sienta cada núcleo', () => {
     expect(nucleos.find((n) => n.estado).sienta.map((x) => x.nombre)).toEqual(['CARLOS OCAÑA'])
     const caixa = nucleos.find((n) => n.titulares.some((t) => t.clave === 'cnmv:sociedad:caixa'))
     expect(caixa.sienta).toEqual([{ persona: 'cnmv:persona:faine', nombre: 'ISIDRO FAINÉ', cotizada: 'nif:A2', cargo: 'Consejero', titular: 'cnmv:sociedad:caixa' }])
+  })
+})
+
+describe('buscar desde la radiografía', () => {
+  it('cotizadas, accionistas, consejeros y cargos, por todas las palabras y sin acentos', () => {
+    const indice = indiceDeBusqueda(cargos())
+    expect(buscar(indice, 'telco').map((x) => x.clave)).toEqual(['nif:A1'])
+    expect(buscar(indice, 'rica amancia')[0]).toMatchObject({ clave: 'cnmv:persona:familia', que: 'Accionista de Banco' })
+    expect(buscar(indice, 'ana sepi')[0]).toMatchObject({ clave: 'boe:persona:sepi' })
+    expect(buscar(indice, 'puente')[0].que).toBe('Consejo de Telco')
+    expect(buscar(indice, 'x')).toEqual([])
   })
 })
