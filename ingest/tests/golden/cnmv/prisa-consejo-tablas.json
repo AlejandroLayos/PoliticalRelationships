@@ -1,0 +1,877 @@
+{
+"ejercicio": "2025",
+"registro": "2026042679",
+"paginas": 191,
+"tablas": [
+{
+"pagina": 15,
+"columnas": 7,
+"encima": "Número máximo de consejeros 15 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 14 C.1.2 Complete el siguiente cuadro con los miembros del consejo:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DON JOSEPH OUGHOURLIAN",
+"",
+"Dominical",
+"PRESIDENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"",
+"Independiente",
+"VICEPRESIDENT 1º",
+"E <fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA PILAR GIL MIGUEL",
+"",
+"Ejecutivo",
+"VICEPRESIDENT 2º",
+"E <fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA SYLVIA BIGIO ZUSMAN",
+"",
+"Dominical",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON FRANCISCO CUADRADO PÉREZ",
+"",
+"Ejecutivo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA BEATRICE DE CLERMONT- TONNERRE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 16,
+"columnas": 7,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"FERNÁNDEZ DE ALARCÓN ROCA",
+"",
+"",
+"",
+"",
+"",
+"GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA MARGARITA GARIJO- BETTENCOURT",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA MARÍA JOSÉ MARÍN REY-STOLLE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON MANUEL POLANCO MORENO",
+"",
+"Dominical",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA ISABEL SÁNCHEZ GARCÍA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JAVIER SANTISO GUIMARAS",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON ANDRES VARELA ENTRECANALES",
+"",
+"Dominical",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 17,
+"columnas": 6,
+"encima": "Indique los ceses que, ya sea por dimisión o por acuerdo de la junta general, se hayan producido en el consejo de administración durante el periodo sujeto a información:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Categoría del consejero en el momento del cese",
+"Fecha del último nombramiento",
+"Fecha de baja",
+"Comisiones especializadas de las que era miembro",
+"Indique si el cese se ha producido antes del fin del mandato"
+],
+[
+"DON CARLOS NÚÑEZ MURIAS",
+"Ejecutivo",
+"<fecha>",
+"<fecha>",
+"Comisión Delegada",
+"SI"
+]
+]
+},
+{
+"pagina": 26,
+"columnas": 9,
+"encima": "Nombre o denominación Fecha del cambio Categoría anterior Categoría actual social del consejero Sin datos C.1.4 Complete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"",
+"Número de consejeras",
+"",
+"",
+"",
+"% sobre el total de consejeros de cada categoría",
+"",
+"",
+""
+],
+[
+"",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022"
+],
+[
+"Ejecutivas",
+"1",
+"1",
+"1",
+"",
+"50,00",
+"33,33",
+"33,33",
+"0,00"
+],
+[
+"Dominicales",
+"2",
+"2",
+"1",
+"1",
+"40,00",
+"40,00",
+"20,00",
+"16,66"
+],
+[
+"Independientes",
+"5",
+"5",
+"5",
+"4",
+"71,43",
+"71,43",
+"71,43",
+"66,66"
+],
+[
+"Otras Externas",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Total",
+"8",
+"8",
+"7",
+"5",
+"57,14",
+"53,33",
+"46,67",
+"35,71"
+]
+]
+},
+{
+"pagina": 45,
+"columnas": 3,
+"encima": "ualmente la Sociedad publica su Informe Anual de Gobierno Corporativo. C.2. Comisiones del consejo de administración C.2.1 Detalle todas las comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Auditoría, Riesgos y Cumplimiento",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA MARGARITA GARIJO- BETTENCOURT",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CARMEN FERNÁNDEZ DE ALARCÓN ROCA",
+"VOCAL",
+"Dominical"
+],
+[
+"DOÑA BEATRICE DE CLERMONT-TONNERRE",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 46,
+"columnas": 3,
+"encima": "Nombres de los consejeros QUIRÓS ÁLVAREZ / DOÑA CARMEN con experiencia FERNÁNDEZ DE ALARCÓN ROCA / DOÑA BEATRICE DE CLERMONT- TONNERRE Fecha de nombramiento <fecha> del presidente en el cargo",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Nombramientos, Retribuciones y Gobierno Corporativo",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA CARMEN FERNÁNDEZ DE ALARCÓN ROCA",
+"VOCAL",
+"Dominical"
+],
+[
+"DOÑA BEATRICE DE CLERMONT-TONNERRE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JAVIER SANTISO GUIMARAS",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 47,
+"columnas": 3,
+"encima": "ón. Sin perjuicio de lo anterior, las actuaciones más importantes de la Comisión en 2025 están detalladas en el informe anual de actividades que ha emitido (y que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa).",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Sostenibilidad",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA MARGARITA GARIJO- BETTENCOURT",
+"VOCAL",
+"Independiente"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CARMEN FERNÁNDEZ DE ALARCÓN ROCA",
+"VOCAL",
+"Dominical"
+]
+]
+},
+{
+"pagina": 48,
+"columnas": 3,
+"encima": "mo la explicación de cómo ha ejercido en la práctica sus funciones, están detalladas en el informe anual de actividades emitido por la Comisión (que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa www.prisa.com).",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión Delegada",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON JOSEPH OUGHOURLIAN",
+"PRESIDENTE",
+"Dominical"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA PILAR GIL MIGUEL",
+"VOCAL",
+"Ejecutivo"
+],
+[
+"DON FRANCISCO CUADRADO PÉREZ",
+"VOCAL",
+"Ejecutivo"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 101,
+"columnas": 7,
+"encima": "Número máximo de consejeros 15 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 14 C.1.2 Complete el siguiente cuadro con los miembros del consejo:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DON JOSEPH OUGHOURLIAN",
+"",
+"Dominical",
+"PRESIDENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"",
+"Independiente",
+"VICEPRESIDENT 1º",
+"E <fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA PILAR GIL MIGUEL",
+"",
+"Ejecutivo",
+"VICEPRESIDENT 2º",
+"E <fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA SYLVIA BIGIO ZUSMAN",
+"",
+"Dominical",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON FRANCISCO CUADRADO PÉREZ",
+"",
+"Ejecutivo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA BEATRICE DE CLERMONT- TONNERRE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 102,
+"columnas": 7,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"FERNÁNDEZ DE ALARCÓN ROCA",
+"",
+"",
+"",
+"",
+"",
+"GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA MARGARITA GARIJO- BETTENCOURT",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA MARÍA JOSÉ MARÍN REY-STOLLE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON MANUEL POLANCO MORENO",
+"",
+"Dominical",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA ISABEL SÁNCHEZ GARCÍA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JAVIER SANTISO GUIMARAS",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON ANDRES VARELA ENTRECANALES",
+"",
+"Dominical",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 103,
+"columnas": 6,
+"encima": "Indique los ceses que, ya sea por dimisión o por acuerdo de la junta general, se hayan producido en el consejo de administración durante el periodo sujeto a información:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Categoría del consejero en el momento del cese",
+"Fecha del último nombramiento",
+"Fecha de baja",
+"Comisiones especializadas de las que era miembro",
+"Indique si el cese se ha producido antes del fin del mandato"
+],
+[
+"DON CARLOS NÚÑEZ MURIAS",
+"Ejecutivo",
+"<fecha>",
+"<fecha>",
+"Comisión Delegada",
+"SI"
+]
+]
+},
+{
+"pagina": 112,
+"columnas": 9,
+"encima": "Nombre o denominación Fecha del cambio Categoría anterior Categoría actual social del consejero Sin datos C.1.4 Complete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"",
+"Número de consejeras",
+"",
+"",
+"",
+"% sobre el total de consejeros de cada categoría",
+"",
+"",
+""
+],
+[
+"",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022"
+],
+[
+"Ejecutivas",
+"1",
+"1",
+"1",
+"",
+"50,00",
+"33,33",
+"33,33",
+"0,00"
+],
+[
+"Dominicales",
+"2",
+"2",
+"1",
+"1",
+"40,00",
+"40,00",
+"20,00",
+"16,66"
+],
+[
+"Independientes",
+"5",
+"5",
+"5",
+"4",
+"71,43",
+"71,43",
+"71,43",
+"66,66"
+],
+[
+"Otras Externas",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Total",
+"8",
+"8",
+"7",
+"5",
+"57,14",
+"53,33",
+"46,67",
+"35,71"
+]
+]
+},
+{
+"pagina": 131,
+"columnas": 3,
+"encima": "ualmente la Sociedad publica su Informe Anual de Gobierno Corporativo. C.2. Comisiones del consejo de administración C.2.1 Detalle todas las comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Auditoría, Riesgos y Cumplimiento",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA MARGARITA GARIJO- BETTENCOURT",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CARMEN FERNÁNDEZ DE ALARCÓN ROCA",
+"VOCAL",
+"Dominical"
+],
+[
+"DOÑA BEATRICE DE CLERMONT-TONNERRE",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 132,
+"columnas": 3,
+"encima": "Nombres de los consejeros QUIRÓS ÁLVAREZ / DOÑA CARMEN con experiencia FERNÁNDEZ DE ALARCÓN ROCA / DOÑA BEATRICE DE CLERMONT- TONNERRE Fecha de nombramiento <fecha> del presidente en el cargo",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Nombramientos, Retribuciones y Gobierno Corporativo",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA CARMEN FERNÁNDEZ DE ALARCÓN ROCA",
+"VOCAL",
+"Dominical"
+],
+[
+"DOÑA BEATRICE DE CLERMONT-TONNERRE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JAVIER SANTISO GUIMARAS",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 133,
+"columnas": 3,
+"encima": "ón. Sin perjuicio de lo anterior, las actuaciones más importantes de la Comisión en 2025 están detalladas en el informe anual de actividades que ha emitido (y que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa).",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Sostenibilidad",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA MARGARITA GARIJO- BETTENCOURT",
+"VOCAL",
+"Independiente"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CARMEN FERNÁNDEZ DE ALARCÓN ROCA",
+"VOCAL",
+"Dominical"
+]
+]
+},
+{
+"pagina": 134,
+"columnas": 3,
+"encima": "mo la explicación de cómo ha ejercido en la práctica sus funciones, están detalladas en el informe anual de actividades emitido por la Comisión (que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa www.prisa.com).",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión Delegada",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON JOSEPH OUGHOURLIAN",
+"PRESIDENTE",
+"Dominical"
+],
+[
+"DON FERNANDO CARRILLO FLÓREZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA PILAR GIL MIGUEL",
+"VOCAL",
+"Ejecutivo"
+]
+]
+},
+{
+"pagina": 135,
+"columnas": 3,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión Delegada",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON FRANCISCO CUADRADO PÉREZ",
+"VOCAL",
+"Ejecutivo"
+],
+[
+"DOÑA TERESA QUIRÓS ÁLVAREZ",
+"VOCAL",
+"Independiente"
+]
+]
+}
+]
+}

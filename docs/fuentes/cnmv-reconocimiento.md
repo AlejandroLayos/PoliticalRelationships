@@ -1,5 +1,161 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Octava vuelta: 2026-09-26T12:23:58.828521+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Octava vuelta: el consejo del IAGC, tabla a tabla
+
+- portada → HTTP 200 (text/html; charset=utf-8); cookies: 1
+- participaciones de Telefónica → HTTP 200 (text/html; charset=utf-8)
+
+### El IAGC del último ejercicio, tabla a tabla
+
+- telefonica: IAGC 2025 (registro 2026028797), 4,008,466 bytes, 167 páginas; bajada 3 s, lectura 29 s; 13 tablas con filas de consejo
+  - página 7, 12 columnas, 19 filas; nacimiento en la página: False; encima: «efónica, S.A. está integrado por 15 miembros. A continuación, se detalla la actual composición del Consejo de Administración y la de cada una de sus Comisiones:»
+    - primera fila: ['Consejo de Administración Comisiones del Consejo', '', '', '', '', '', '', '', '', '', '', '']
+  - página 87, 5 columnas, 15 filas; nacimiento en la página: False; encima: «denominación social Repre- Categoría del Cargo en el Fecha primer nombra- Procedimiento de del consejero sentante consejero Consejo nombramiento miento elección»
+    - primera fila: ['—', 'Ejecutivo', 'Presidente', '<fecha>', '<fecha>']
+  - página 88, 4 columnas, 6 filas; nacimiento en la página: False; encima: «ique si el cese se denominación social consejero en el nombramiento de las que era miembro ha producido antes del consejero momento del cese del fin del mandato»
+    - primera fila: ['Ejecutivo', '<fecha>', '<fecha>', 'Comisión Delegada']
+  - página 91, 9 columnas, 7 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de Consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales Consejeras:»
+    - primera fila: ['', 'Número de Consejeras', '', '', '', '% sobre el total de Consejeros de cada categoría', '', '', '']
+  - página 126, 7 columnas, 7 filas; nacimiento en la página: False; encima: «ximo de consejeros 20 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 127, 7 columnas, 10 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 128, 6 columnas, 7 filas; nacimiento en la página: False; encima: «os ceses que, ya sea por dimisión o por acuerdo de la junta general, se hayan producido en el consejo de administración durante el periodo sujeto a información:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Categoría del consejero en el momento del cese', 'Fecha del último nombramiento', 'Fecha de baja', 'Comisiones especializadas de las que era miembro', 'Indique si el cese se ha producido antes del fin del mandato']
+  - página 131, 9 columnas, 6 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:»
+    - primera fila: ['', 'Número de consejeras', '', '', '', '% sobre el total de consejeros de cada categoría', '', '', '']
+  - página 139, 3 columnas, 8 filas; nacimiento en la página: False; encima: « comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:»
+    - primera fila: ['COMISIÓN DELEGADA', '', '']
+  - página 140, 3 columnas, 5 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['COMISIÓN DELEGADA', '', '']
+  - página 140, 3 columnas, 6 filas; nacimiento en la página: False; encima: « VOCAL Independiente % de consejeros ejecutivos 22,22 % de consejeros dominicales 33,33 % de consejeros independientes 44,44 % de consejeros otros externos 0,00»
+    - primera fila: ['COMISIÓN DE AUDITORÍA Y CONTROL', '', '']
+  - página 140, 3 columnas, 7 filas; nacimiento en la página: False; encima: «ejeros BLANCO / DON PETER LÖSCHER / con experiencia DON CARLOS OCAÑA ORBIS / DON ALEJANDRO REYNAL AMPLE Fecha de nombramiento <fecha> del presidente en el cargo»
+    - primera fila: ['COMISIÓN DE NOMBRAMIENTOS, RETRIBUCIONES Y BUEN GOBIERNO', '', '']
+  - página 141, 3 columnas, 6 filas; nacimiento en la página: False; encima: «% de consejeros ejecutivos 0,00 % de consejeros dominicales 20,00 % de consejeros independientes 80,00 % de consejeros otros externos 0,00»
+    - primera fila: ['COMISIÓN DE SOSTENIBILIDAD Y REGULACIÓN', '', '']
+- prisa: IAGC 2025 (registro 2026042679), 4,334,018 bytes, 191 páginas; bajada 2 s, lectura 98 s; 17 tablas con filas de consejo
+  - página 15, 7 columnas, 7 filas; nacimiento en la página: False; encima: «ximo de consejeros 15 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 14 C.1.2 Complete el siguiente cuadro con los miembros del consejo:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 16, 7 columnas, 9 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 17, 6 columnas, 2 filas; nacimiento en la página: False; encima: «os ceses que, ya sea por dimisión o por acuerdo de la junta general, se hayan producido en el consejo de administración durante el periodo sujeto a información:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Categoría del consejero en el momento del cese', 'Fecha del último nombramiento', 'Fecha de baja', 'Comisiones especializadas de las que era miembro', 'Indique si el cese se ha producido antes del fin del mandato']
+  - página 26, 9 columnas, 7 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:»
+    - primera fila: ['', 'Número de consejeras', '', '', '', '% sobre el total de consejeros de cada categoría', '', '', '']
+  - página 45, 3 columnas, 6 filas; nacimiento en la página: False; encima: « comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:»
+    - primera fila: ['Comisión de Auditoría, Riesgos y Cumplimiento', '', '']
+  - página 46, 3 columnas, 6 filas; nacimiento en la página: False; encima: «S ÁLVAREZ / DOÑA CARMEN con experiencia FERNÁNDEZ DE ALARCÓN ROCA / DOÑA BEATRICE DE CLERMONT- TONNERRE Fecha de nombramiento <fecha> del presidente en el cargo»
+    - primera fila: ['Comisión de Nombramientos, Retribuciones y Gobierno Corporativo', '', '']
+  - página 47, 3 columnas, 6 filas; nacimiento en la página: False; encima: « que ha emitido (y que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa).»
+    - primera fila: ['Comisión de Sostenibilidad', '', '']
+  - página 48, 3 columnas, 7 filas; nacimiento en la página: False; encima: «ión (que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa www.prisa.com).»
+    - primera fila: ['Comisión Delegada', '', '']
+  - página 101, 7 columnas, 7 filas; nacimiento en la página: False; encima: «ximo de consejeros 15 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 14 C.1.2 Complete el siguiente cuadro con los miembros del consejo:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 102, 7 columnas, 9 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 103, 6 columnas, 2 filas; nacimiento en la página: False; encima: «os ceses que, ya sea por dimisión o por acuerdo de la junta general, se hayan producido en el consejo de administración durante el periodo sujeto a información:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Categoría del consejero en el momento del cese', 'Fecha del último nombramiento', 'Fecha de baja', 'Comisiones especializadas de las que era miembro', 'Indique si el cese se ha producido antes del fin del mandato']
+  - página 112, 9 columnas, 7 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:»
+    - primera fila: ['', 'Número de consejeras', '', '', '', '% sobre el total de consejeros de cada categoría', '', '', '']
+  - página 131, 3 columnas, 6 filas; nacimiento en la página: False; encima: « comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:»
+    - primera fila: ['Comisión de Auditoría, Riesgos y Cumplimiento', '', '']
+  - página 132, 3 columnas, 6 filas; nacimiento en la página: False; encima: «S ÁLVAREZ / DOÑA CARMEN con experiencia FERNÁNDEZ DE ALARCÓN ROCA / DOÑA BEATRICE DE CLERMONT- TONNERRE Fecha de nombramiento <fecha> del presidente en el cargo»
+    - primera fila: ['Comisión de Nombramientos, Retribuciones y Gobierno Corporativo', '', '']
+  - página 133, 3 columnas, 6 filas; nacimiento en la página: False; encima: « que ha emitido (y que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa).»
+    - primera fila: ['Comisión de Sostenibilidad', '', '']
+  - página 134, 3 columnas, 5 filas; nacimiento en la página: False; encima: «ión (que se publicará al tiempo de publicarse el anuncio de convocatoria de la Junta Ordinaria de Accionistas 2026, en la página web corporativa www.prisa.com).»
+    - primera fila: ['Comisión Delegada', '', '']
+  - página 135, 3 columnas, 4 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Comisión Delegada', '', '']
+- santander: IAGC 2025 (registro 2026029544), 6,644,367 bytes, 216 páginas; bajada 4 s, lectura 39 s; 11 tablas con filas de consejo
+  - página 142, 2 columnas, 2 filas; nacimiento en la página: False; encima: «externos que las integran: Comisión ejecutiva Nombre Cargo Categoría Ana Botín-Sanz de Sautuola y O’Shea Presidente Ejecutivo Héctor Grisi Checa Vocal Ejecutivo»
+    - primera fila: ['', 'Otro externo']
+  - página 175, 7 columnas, 7 filas; nacimiento en la página: False; encima: «imo de consejeros 17 Número mínimo de consejeros 12 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 176, 7 columnas, 10 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 183, 9 columnas, 7 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:»
+    - primera fila: ['', 'Número de consejeras', '', '', '', '% sobre el total de consejeros de cada categoría', '', '', '']
+  - página 190, 3 columnas, 7 filas; nacimiento en la página: False; encima: « comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:»
+    - primera fila: ['COMISIÓN DE AUDITORÍA', '', '']
+  - página 191, 3 columnas, 7 filas; nacimiento en la página: False; encima: «nsejeros ESCAMILLA / DOÑA HOMAIRA con experiencia AKBARI / DON HENRIQUE DE CASTRO / DOÑA PAMELA WALKDEN Fecha de nombramiento <fecha> del presidente en el cargo»
+    - primera fila: ['COMISIÓN DE BANCA RESPONSABLE, SOSTENIBILIDAD Y CULTURA', '', '']
+  - página 191, 3 columnas, 10 filas; nacimiento en la página: False; encima: «N VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 100,00 % de consejeros otros externos 0,00»
+    - primera fila: ['COMISIÓN DE INNOVACIÓN Y TECNOLOGÍA', '', '']
+  - página 192, 3 columnas, 7 filas; nacimiento en la página: False; encima: «% de consejeros dominicales 0,00 % de consejeros independientes 62,50 % de consejeros otros externos 12,50»
+    - primera fila: ['COMISIÓN DE NOMBRAMIENTOS', '', '']
+  - página 192, 3 columnas, 7 filas; nacimiento en la página: False; encima: «S VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 100,00 % de consejeros otros externos 0,00»
+    - primera fila: ['COMISIÓN DE RETRIBUCIONES', '', '']
+  - página 192, 3 columnas, 7 filas; nacimiento en la página: False; encima: «S VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 80,00 % de consejeros otros externos 20,00»
+    - primera fila: ['COMISIÓN DE SUPERVISIÓN DE RIESGOS, REGULACIÓN Y CUMPLIMIENTO', '', '']
+  - página 193, 3 columnas, 7 filas; nacimiento en la página: False; encima: «% de consejeros dominicales 0,00 % de consejeros independientes 60,00 % de consejeros otros externos 40,00»
+    - primera fila: ['COMISIÓN EJECUTIVA', '', '']
+- bbva: IAGC 2025 (registro 2026023386), 12,593,738 bytes, 180 páginas; bajada 4 s, lectura 39 s; 18 tablas con filas de consejo
+  - página 26, 6 columnas, 16 filas; nacimiento en la página: True; encima: «Consejo (C.1.2) A 31 de diciembre de 2025, los miembros del Consejo de Administración son los siguientes, todos ellos nombrados por acuerdo de la Junta General:»
+    - primera fila: ['Nombre', 'Cargo en el Consejo', 'Año de nacimiento', 'Categoría', 'Fecha primer nombramiento', 'Fecha último nombramiento']
+  - página 55, 3 columnas, 6 filas; nacimiento en la página: False; encima: «te del Consejo de Administración será miembro nato de la Comisión. A 31 de diciembre de 2025, la composición de la Comisión Delegada Permanente es la siguiente:»
+    - primera fila: ['Nombre', 'Cargo', 'Categoría']
+  - página 58, 3 columnas, 7 filas; nacimiento en la página: False; encima: «o años, pudiendo ser reelegido una vez transcurrido un año desde su cese. A 31 de diciembre de 2025, la composición de la Comisión de Auditoría es la siguiente:»
+    - primera fila: ['Nombre', 'Cargo', 'Categoría']
+  - página 65, 3 columnas, 6 filas; nacimiento en la página: False; encima: «de independientes, al igual que su presidente. A 31 de diciembre de 2025, la composición de la Comisión de Nombramientos y Gobierno Corporativo es la siguiente:»
+    - primera fila: ['Nombre', 'Cargo', 'Categoría']
+  - página 69, 3 columnas, 6 filas; nacimiento en la página: False; encima: «yoría de ellos consejeros independientes, al igual que su presidente. A 31 de diciembre de 2025, la composición de la Comisión de Retribuciones es la siguiente:»
+    - primera fila: ['Nombre', 'Cargo', 'Categoría']
+  - página 74, 3 columnas, 6 filas; nacimiento en la página: False; encima: «llos, consejeros independientes, al igual que su presidente. A 31 de diciembre de 2025, la composición de la Comisión de Riesgos y Cumplimiento es la siguiente:»
+    - primera fila: ['Nombre', 'Cargo', 'Categoría']
+  - página 79, 3 columnas, 6 filas; nacimiento en la página: False; encima: «ría de los cuales deberán ser consejeros no ejecutivos. A 31 de diciembre de 2025, la composición de la Comisión de Tecnología y Ciberseguridad es la siguiente:»
+    - primera fila: ['Nombre', 'Cargo', 'Categoría']
+  - página 140, 7 columnas, 7 filas; nacimiento en la página: False; encima: «ximo de consejeros 15 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 141, 7 columnas, 10 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 149, 9 columnas, 7 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:»
+    - primera fila: ['', 'Número de consejeras', '', '', '', '% sobre el total de consejeros de cada categoría', '', '', '']
+  - página 155, 3 columnas, 6 filas; nacimiento en la página: False; encima: « comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:»
+    - primera fila: ['COMISIÓN DE NOMBRAMIENTOS Y GOBIERNO CORPORATIVO', '', '']
+  - página 156, 3 columnas, 3 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['COMISIÓN DE NOMBRAMIENTOS Y GOBIERNO CORPORATIVO', '', '']
+  - página 156, 3 columnas, 7 filas; nacimiento en la página: False; encima: «A VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 60,00 % de consejeros otros externos 40,00»
+    - primera fila: ['COMISIÓN DE RETRIBUCIONES', '', '']
+  - página 156, 3 columnas, 7 filas; nacimiento en la página: False; encima: «ÍN VOCAL Otro Externo % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 80,00 % de consejeros otros externos 20,00»
+    - primera fila: ['COMISIÓN DE RIESGOS Y CUMPLIMIENTO', '', '']
+  - página 156, 3 columnas, 4 filas; nacimiento en la página: False; encima: «A VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 100,00 % de consejeros otros externos 0,00»
+    - primera fila: ['COMISIÓN DELEGADA PERMANENTE', '', '']
+  - página 157, 3 columnas, 5 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['COMISIÓN DELEGADA PERMANENTE', '', '']
+  - página 157, 3 columnas, 7 filas; nacimiento en la página: False; encima: «GENÇ VOCAL Ejecutivo % de consejeros ejecutivos 40,00 % de consejeros dominicales 0,00 % de consejeros independientes 40,00 % de consejeros otros externos 20,00»
+    - primera fila: ['COMISIÓN DE TECNOLOGÍA Y CIBERSEGURIDAD', '', '']
+  - página 157, 3 columnas, 8 filas; nacimiento en la página: False; encima: « VOCAL Independiente % de consejeros ejecutivos 20,00 % de consejeros dominicales 0,00 % de consejeros independientes 60,00 % de consejeros otros externos 20,00»
+    - primera fila: ['COMISIÓN DE AUDITORÍA', '', '']
+- repsol: IAGC 2025 (registro 2026025989), 39,982,065 bytes, 143 páginas; bajada 8 s, lectura 24 s; 9 tablas con filas de consejo
+  - página 97, 7 columnas, 7 filas; nacimiento en la página: False; encima: «ximo de consejeros 16 Número mínimo de consejeros 9 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 98, 7 columnas, 10 filas; nacimiento en la página: False; encima: «INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS»
+    - primera fila: ['Nombre o denominación social del consejero', 'Representante', 'Categoría del consejero', 'Cargo en el consejo', 'Fecha primer nombramiento', 'Fecha último nombramiento', 'Procedimiento de elección']
+  - página 113, 4 columnas, 2 filas; nacimiento en la página: False; encima: « externos 4 % sobre el total del consejo 26,67 Indique las variaciones que, en su caso, se hayan producido durante el periodo en la categoría de cada consejero:»
+    - primera fila: ['Nombre o denominación social del consejero', 'Fecha del cambio', 'Categoría anterior', 'Categoría actual']
+  - página 113, 9 columnas, 7 filas; nacimiento en la página: False; encima: «mplete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:»
+    - primera fila: ['', 'Número de consejeras', '', '', '', '% sobre el total de consejeros de cada categoría', '', '', '']
+  - página 120, 3 columnas, 7 filas; nacimiento en la página: False; encima: « comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:»
+    - primera fila: ['Comisión de Auditoría y Control', '', '']
+  - página 121, 3 columnas, 5 filas; nacimiento en la página: False; encima: «de los consejeros FERREZUELO / DOÑA TERESA con experiencia GARCÍA-MILÁ LLOVERAS / DOÑA AURORA CATÁ SALA Fecha de nombramiento <fecha> del presidente en el cargo»
+    - primera fila: ['Comisión de Nombramientos', '', '']
+  - página 121, 3 columnas, 5 filas; nacimiento en la página: False; encima: «SIDENTE Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 66,67 % de consejeros otros externos 33,33»
+    - primera fila: ['Comisión de Retribuciones', '', '']
+  - página 121, 3 columnas, 6 filas; nacimiento en la página: False; encima: «xterno DOÑA AURORA CATÁ SALA PRESIDENTE Independiente % de consejeros dominicales 0,00 % de consejeros independientes 66,67 % de consejeros otros externos 33,33»
+    - primera fila: ['Comisión de Sostenibilidad', '', '']
+  - página 122, 3 columnas, 10 filas; nacimiento en la página: False; encima: «% de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 75,00 % de consejeros otros externos 25,00»
+    - primera fila: ['Comisión Delegada', '', '']
+
+
+---
+
+
 Octava vuelta: 2026-09-26T12:15:52.306386+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -675,6 +831,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 

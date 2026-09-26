@@ -1,0 +1,593 @@
+{
+"ejercicio": "2025",
+"registro": "2026029544",
+"paginas": 216,
+"tablas": [
+{
+"pagina": 142,
+"columnas": 2,
+"encima": "as las comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran: Comisión ejecutiva Nombre Cargo Categoría Ana Botín-Sanz de Sautuola y O’Shea Presidente Ejecutivo Héctor Grisi Checa Vocal Ejecutivo",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"",
+"Otro externo"
+],
+[
+"Luis Isasi Fernández de Bobadilla Vocal Otro externo",
+""
+]
+]
+},
+{
+"pagina": 175,
+"columnas": 7,
+"encima": "Número máximo de consejeros 17 Número mínimo de consejeros 12 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DOÑA BELÉN ROMANA GARCÍA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JOSÉ ANTONIO ÁLVAREZ ÁLVAREZ",
+"",
+"Otro Externo",
+"VICEPRESIDENT",
+"E <fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA ANA BOTÍN-SANZ DE SAUTUOLA Y O´SHEA",
+"",
+"Ejecutivo",
+"PRESIDENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JAVIER BOTÍN-SANZ DE SAUTUOLA Y O´SHEA",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON LUIS ISASI FERNÁNDEZ DE BOBADILLA",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA SOL DAURELLA COMADRÁN",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 176,
+"columnas": 7,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DON GERMÁN DE LA FUENTE ESCAMILLA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA HOMAIRA AKBARI",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JUAN CARLOS BARRABÉS CÓNSUL",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA GINA DÍEZ BARROSO AZCÁRRAGA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON ANTONIO FRANCESCO WEISS",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON HENRIQUE DE CASTRO",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA PAMELA WALKDEN",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON HÉCTOR GRISI CHECA",
+"",
+"Ejecutivo",
+"CONSEJERO DELEGADO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON GLENN H. HUTCHINS",
+"",
+"Independiente",
+"CONSEJERO COORDINADOR INDEPENDIENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 183,
+"columnas": 9,
+"encima": "C.1.4 Complete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"",
+"Número de consejeras",
+"",
+"",
+"",
+"% sobre el total de consejeros de cada categoría",
+"",
+"",
+""
+],
+[
+"",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022"
+],
+[
+"Ejecutivas",
+"1",
+"1",
+"1",
+"1",
+"50,00",
+"50,00",
+"50,00",
+"50,00"
+],
+[
+"Dominicales",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Independientes",
+"5",
+"5",
+"5",
+"5",
+"50,00",
+"50,00",
+"50,00",
+"50,00"
+],
+[
+"Otras Externas",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Total",
+"6",
+"6",
+"6",
+"6",
+"40,00",
+"40,00",
+"40,00",
+"40,00"
+]
+]
+},
+{
+"pagina": 190,
+"columnas": 3,
+"encima": "¿Se informa a la junta √ general sobre las cláusulas? C.2. Comisiones del consejo de administración C.2.1 Detalle todas las comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE AUDITORÍA",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN ROMANA GARCÍA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON GERMÁN DE LA FUENTE ESCAMILLA",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA HOMAIRA AKBARI",
+"VOCAL",
+"Independiente"
+],
+[
+"DON HENRIQUE DE CASTRO",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA PAMELA WALKDEN",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 191,
+"columnas": 3,
+"encima": "DON GERMÁN DE LA FUENTE Nombres de los consejeros ESCAMILLA / DOÑA HOMAIRA con experiencia AKBARI / DON HENRIQUE DE CASTRO / DOÑA PAMELA WALKDEN Fecha de nombramiento <fecha> del presidente en el cargo",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE BANCA RESPONSABLE, SOSTENIBILIDAD Y CULTURA",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA SOL DAURELLA COMADRÁN",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA HOMAIRA AKBARI",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JUAN CARLOS BARRABÉS CÓNSUL",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA GINA DÍEZ BARROSO AZCÁRRAGA",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA PAMELA WALKDEN",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 191,
+"columnas": 3,
+"encima": "DOÑA PAMELA WALKDEN VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 100,00 % de consejeros otros externos 0,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE INNOVACIÓN Y TECNOLOGÍA",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN ROMANA GARCÍA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JOSÉ ANTONIO ÁLVAREZ ÁLVAREZ",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DOÑA ANA BOTÍN-SANZ DE SAUTUOLA Y O´SHEA",
+"VOCAL",
+"Ejecutivo"
+],
+[
+"DOÑA HOMAIRA AKBARI",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JUAN CARLOS BARRABÉS CÓNSUL",
+"VOCAL",
+"Independiente"
+],
+[
+"DON HENRIQUE DE CASTRO",
+"VOCAL",
+"Independiente"
+],
+[
+"DON HÉCTOR GRISI CHECA",
+"VOCAL",
+"Ejecutivo"
+],
+[
+"DON GLENN H. HUTCHINS",
+"PRESIDENTE",
+"Independiente"
+]
+]
+},
+{
+"pagina": 192,
+"columnas": 3,
+"encima": "% de consejeros dominicales 0,00 % de consejeros independientes 62,50 % de consejeros otros externos 12,50",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE NOMBRAMIENTOS",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN ROMANA GARCÍA",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA SOL DAURELLA COMADRÁN",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JUAN CARLOS BARRABÉS CÓNSUL",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA GINA DÍEZ BARROSO AZCÁRRAGA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON GLENN H. HUTCHINS",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 192,
+"columnas": 3,
+"encima": "DON GLENN H. HUTCHINS VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 100,00 % de consejeros otros externos 0,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE RETRIBUCIONES",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON LUIS ISASI FERNÁNDEZ DE BOBADILLA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DOÑA SOL DAURELLA COMADRÁN",
+"VOCAL",
+"Independiente"
+],
+[
+"DON HENRIQUE DE CASTRO",
+"VOCAL",
+"Independiente"
+],
+[
+"DON GLENN H. HUTCHINS",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DON ANTONIO FRANCESCO WEISS",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 192,
+"columnas": 3,
+"encima": "DON ANTONIO FRANCESCO WEISS VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 80,00 % de consejeros otros externos 20,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE SUPERVISIÓN DE RIESGOS, REGULACIÓN Y CUMPLIMIENTO",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN ROMANA GARCÍA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON LUIS ISASI FERNÁNDEZ DE BOBADILLA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON GERMÁN DE LA FUENTE ESCAMILLA",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA PAMELA WALKDEN",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DON JOSÉ ANTONIO ÁLVAREZ ÁLVAREZ",
+"VOCAL",
+"Otro Externo"
+]
+]
+},
+{
+"pagina": 193,
+"columnas": 3,
+"encima": "% de consejeros dominicales 0,00 % de consejeros independientes 60,00 % de consejeros otros externos 40,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN EJECUTIVA",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN ROMANA GARCÍA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JOSÉ ANTONIO ÁLVAREZ ÁLVAREZ",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DOÑA ANA BOTÍN-SANZ DE SAUTUOLA Y O´SHEA",
+"PRESIDENTE",
+"Ejecutivo"
+],
+[
+"DON LUIS ISASI FERNÁNDEZ DE BOBADILLA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON HÉCTOR GRISI CHECA",
+"VOCAL",
+"Ejecutivo"
+]
+]
+}
+]
+}

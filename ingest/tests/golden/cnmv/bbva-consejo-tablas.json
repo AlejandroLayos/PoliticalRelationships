@@ -1,0 +1,929 @@
+{
+"ejercicio": "2025",
+"registro": "2026023386",
+"paginas": 180,
+"tablas": [
+{
+"pagina": 26,
+"columnas": 6,
+"encima": "5.1. Composición del Consejo (C.1.2) A 31 de diciembre de 2025, los miembros del Consejo de Administración son los siguientes, todos ellos nombrados por acuerdo de la Junta General:",
+"nacimiento_en_la_pagina": true,
+"filas": [
+[
+"Nombre",
+"Cargo en el Consejo",
+"Año de nacimiento",
+"Categoría",
+"Fecha primer nombramiento",
+"Fecha último nombramiento"
+],
+[
+"Carlos Torres Vila",
+"Presidente",
+"1966",
+"Ejecutivo",
+"<fecha>",
+"<fecha>"
+],
+[
+"Onur Genç",
+"Consejero Delegado",
+"1974",
+"Ejecutivo",
+"<fecha>",
+"<fecha>"
+],
+[
+"José Miguel Andrés Torrecillas",
+"Vicepresidente",
+"1955",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Jaime Caruana Lacorte",
+"Consejero",
+"1952",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Enrique Casanueva Nárdiz",
+"Consejero",
+"1961",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Sonia Dulá",
+"Consejera",
+"1961",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Raúl Galamba de Oliveira",
+"Consejero Coordinador",
+"1964",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Belén Garijo López",
+"Consejera",
+"1960",
+"Externa",
+"<fecha>",
+"<fecha>"
+],
+[
+"Connie Hedegaard Koksbang",
+"Consejera",
+"1960",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Lourdes Máiz Carro",
+"Consejera",
+"1959",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Cristina de Parias Halcón",
+"Consejera",
+"1965",
+"Externa",
+"<fecha>",
+"<fecha>"
+],
+[
+"Ana Peralta Moreno",
+"Consejera",
+"1961",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Ana Revenga Shanklin",
+"Consejera",
+"1963",
+"Independiente",
+"<fecha>",
+"<fecha>"
+],
+[
+"Carlos Salazar Lomelín",
+"Consejero",
+"1951",
+"Externo",
+"<fecha>",
+"<fecha>"
+],
+[
+"Jan Verplancke",
+"Consejero",
+"1963",
+"Independiente",
+"<fecha>",
+"<fecha>"
+]
+]
+},
+{
+"pagina": 55,
+"columnas": 3,
+"encima": "o de Administración, procurando que en su composición los consejeros no ejecutivos sean mayoría sobre los consejeros ejecutivos. El Presidente del Consejo de Administración será miembro nato de la Comisión. A 31 de diciembre de 2025, la composición de la Comisión Delegada Permanente es la siguiente:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"Carlos Torres Vila",
+"Presidente",
+"Ejecutivo"
+],
+[
+"Onur Genç",
+"Vocal",
+"Ejecutivo"
+],
+[
+"José Miguel Andrés Torrecillas",
+"Vocal",
+"Independiente"
+],
+[
+"Jaime Caruana Lacorte",
+"Vocal",
+"Independiente"
+],
+[
+"Belén Garijo López",
+"Vocal",
+"Otra externa"
+]
+]
+},
+{
+"pagina": 58,
+"columnas": 3,
+"encima": "El Consejo designará asimismo al presidente de esta Comisión entre sus miembros, que deberá ser sustituido cada cuatro años, pudiendo ser reelegido una vez transcurrido un año desde su cese. A 31 de diciembre de 2025, la composición de la Comisión de Auditoría es la siguiente:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"José Miguel Andrés Torrecillas (*)",
+"Presidente (desde el 26 de abril de 2023)",
+"Independiente"
+],
+[
+"Enrique Casanueva Nárdiz (*)",
+"Vocal",
+"Independiente"
+],
+[
+"Sonia Dulá (*)",
+"Vocal",
+"Independiente"
+],
+[
+"Connie Hedegaard Koksbang",
+"Vocal",
+"Independiente"
+],
+[
+"Lourdes Máiz Carro (*)",
+"Vocal",
+"Independiente"
+],
+[
+"Ana Peralta Moreno (*)",
+"Vocal",
+"Independiente"
+]
+]
+},
+{
+"pagina": 65,
+"columnas": 3,
+"encima": "estará compuesta por un mínimo de tres consejeros, todos ellos no ejecutivos y la mayoría de ellos con la categoría de independientes, al igual que su presidente. A 31 de diciembre de 2025, la composición de la Comisión de Nombramientos y Gobierno Corporativo es la siguiente:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"José Miguel Andrés Torrecillas",
+"Presidente",
+"Independiente"
+],
+[
+"Jaime Caruana Lacorte",
+"Vocal",
+"Independiente"
+],
+[
+"Raúl Galamba de Oliveira",
+"Vocal",
+"Independiente"
+],
+[
+"Belén Garijo López",
+"Vocal",
+"Otra externa"
+],
+[
+"Cristina de Parias Halcón",
+"Vocal",
+"Otra externa"
+]
+]
+},
+{
+"pagina": 69,
+"columnas": 3,
+"encima": "mento de la Comisión de Retribuciones (artículo 3), la Comisión está formada por al menos tres consejeros, todos ellos no ejecutivos y la mayoría de ellos consejeros independientes, al igual que su presidente. A 31 de diciembre de 2025, la composición de la Comisión de Retribuciones es la siguiente:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"Ana Revenga Shanklin",
+"Presidente",
+"Independiente"
+],
+[
+"Lourdes Máiz Carro",
+"Vocal",
+"Independiente"
+],
+[
+"Ana Peralta Moreno",
+"Vocal",
+"Independiente"
+],
+[
+"Carlos Salazar Lomelín",
+"Vocal",
+"Otra externo"
+],
+[
+"Jan Verplancke",
+"Vocal",
+"Independiente"
+]
+]
+},
+{
+"pagina": 74,
+"columnas": 3,
+"encima": "Cumplimiento estará compuesta por al menos tres consejeros, la mayoría de ellos, consejeros independientes, al igual que su presidente. A 31 de diciembre de 2025, la composición de la Comisión de Riesgos y Cumplimiento es la siguiente:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"Raúl Galamba de Oliveira",
+"Presidente",
+"Independiente"
+],
+[
+"Enrique Casanueva Nárdiz",
+"Vocal",
+"Independiente"
+],
+[
+"Jaime Caruana Lacorte",
+"Vocal",
+"Independiente"
+],
+[
+"Sonia Dulá",
+"Vocal",
+"Independiente"
+],
+[
+"Ana Revenga Shanklin",
+"Vocal",
+"Independiente"
+]
+]
+},
+{
+"pagina": 79,
+"columnas": 3,
+"encima": "(artículo 3), ésta estará compuesta por un mínimo de tres consejeros, la mayoría de los cuales deberán ser consejeros no ejecutivos. A 31 de diciembre de 2025, la composición de la Comisión de Tecnología y Ciberseguridad es la siguiente:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"Carlos Torres Vila",
+"Presidente",
+"Ejecutivo"
+],
+[
+"Raúl Galamba de Oliveira",
+"Vocal",
+"Independiente"
+],
+[
+"Cristina de Parias Halcón",
+"Vocal",
+"Otra Externa"
+],
+[
+"Ana Revenga Shanklin",
+"Vocal",
+"Independiente"
+],
+[
+"Jan Verplancke",
+"Vocal",
+"Independiente"
+]
+]
+},
+{
+"pagina": 140,
+"columnas": 7,
+"encima": "Número máximo de consejeros 15 Número mínimo de consejeros 5 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DOÑA ANA CRISTINA PERALTA MORENO",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA ANA LEONOR REVENGA SHANKLIN",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON ENRIQUE CASANUEVA NÁRDIZ",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA BELÉN GARIJO LÓPEZ",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JAIME FÉLIX CARUANA LACORTE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA CONNIE HEDEGAARD KOKSBANG",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 141,
+"columnas": 7,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DE PARIAS HALCÓN",
+"",
+"",
+"",
+"",
+"",
+"GENERAL DE ACCIONISTAS"
+],
+[
+"DON CARLOS TORRES VILA",
+"",
+"Ejecutivo",
+"PRESIDENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA LOURDES MÁIZ CARRO",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JOSÉ MIGUEL ANDRÉS TORRECILLAS",
+"",
+"Independiente",
+"VICEPRESIDENT",
+"E <fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JAN PAUL MARIE FRANCIS VERPLANCKE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON ONUR GENÇ",
+"",
+"Ejecutivo",
+"CONSEJERO DELEGADO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON RAÚL CATARINO GALAMBA DE OLIVEIRA",
+"",
+"Independiente",
+"CONSEJERO COORDINADOR INDEPENDIENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA SONIA DULA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON CARLOS VICENTE SALAZAR LOMELÍN",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 149,
+"columnas": 9,
+"encima": "Nombre o denominación Fecha del cambio Categoría anterior Categoría actual social del consejero Sin datos C.1.4 Complete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"",
+"Número de consejeras",
+"",
+"",
+"",
+"% sobre el total de consejeros de cada categoría",
+"",
+"",
+""
+],
+[
+"",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022"
+],
+[
+"Ejecutivas",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Dominicales",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Independientes",
+"5",
+"5",
+"6",
+"5",
+"50,00",
+"50,00",
+"60,00",
+"50,00"
+],
+[
+"Otras Externas",
+"2",
+"2",
+"",
+"1",
+"66,66",
+"66,66",
+"0,00",
+"33,33"
+],
+[
+"Total",
+"7",
+"7",
+"6",
+"6",
+"46,67",
+"46,67",
+"40,00",
+"40,00"
+]
+]
+},
+{
+"pagina": 155,
+"columnas": 3,
+"encima": "¿Se informa a la junta √ general sobre las cláusulas? C.2. Comisiones del consejo de administración C.2.1 Detalle todas las comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE NOMBRAMIENTOS Y GOBIERNO CORPORATIVO",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN GARIJO LÓPEZ",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON JAIME FÉLIX CARUANA LACORTE",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CRISTINA DE PARIAS HALCÓN",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON JOSÉ MIGUEL ANDRÉS TORRECILLAS",
+"PRESIDENTE",
+"Independiente"
+]
+]
+},
+{
+"pagina": 156,
+"columnas": 3,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE NOMBRAMIENTOS Y GOBIERNO CORPORATIVO",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON RAÚL CATARINO GALAMBA DE OLIVEIRA",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 156,
+"columnas": 3,
+"encima": "DON RAÚL CATARINO GALAMBA DE OLIVEIRA VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 60,00 % de consejeros otros externos 40,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE RETRIBUCIONES",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ANA CRISTINA PERALTA MORENO",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA ANA LEONOR REVENGA SHANKLIN",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA LOURDES MÁIZ CARRO",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JAN PAUL MARIE FRANCIS VERPLANCKE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON CARLOS VICENTE SALAZAR LOMELÍN",
+"VOCAL",
+"Otro Externo"
+]
+]
+},
+{
+"pagina": 156,
+"columnas": 3,
+"encima": "DON CARLOS VICENTE SALAZAR LOMELÍN VOCAL Otro Externo % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 80,00 % de consejeros otros externos 20,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE RIESGOS Y CUMPLIMIENTO",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ANA LEONOR REVENGA SHANKLIN",
+"VOCAL",
+"Independiente"
+],
+[
+"DON ENRIQUE CASANUEVA NÁRDIZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JAIME FÉLIX CARUANA LACORTE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON RAÚL CATARINO GALAMBA DE OLIVEIRA",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA SONIA DULA",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 156,
+"columnas": 3,
+"encima": "DOÑA SONIA DULA VOCAL Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 100,00 % de consejeros otros externos 0,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DELEGADA PERMANENTE",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA BELÉN GARIJO LÓPEZ",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON JAIME FÉLIX CARUANA LACORTE",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 157,
+"columnas": 3,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DELEGADA PERMANENTE",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON CARLOS TORRES VILA",
+"PRESIDENTE",
+"Ejecutivo"
+],
+[
+"DON JOSÉ MIGUEL ANDRÉS TORRECILLAS",
+"VOCAL",
+"Independiente"
+],
+[
+"DON ONUR GENÇ",
+"VOCAL",
+"Ejecutivo"
+]
+]
+},
+{
+"pagina": 157,
+"columnas": 3,
+"encima": "DON ONUR GENÇ VOCAL Ejecutivo % de consejeros ejecutivos 40,00 % de consejeros dominicales 0,00 % de consejeros independientes 40,00 % de consejeros otros externos 20,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE TECNOLOGÍA Y CIBERSEGURIDAD",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ANA LEONOR REVENGA SHANKLIN",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CRISTINA DE PARIAS HALCÓN",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON CARLOS TORRES VILA",
+"PRESIDENTE",
+"Ejecutivo"
+],
+[
+"DON JAN PAUL MARIE FRANCIS VERPLANCKE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON RAÚL CATARINO GALAMBA DE OLIVEIRA",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 157,
+"columnas": 3,
+"encima": "DON RAÚL CATARINO GALAMBA DE OLIVEIRA VOCAL Independiente % de consejeros ejecutivos 20,00 % de consejeros dominicales 0,00 % de consejeros independientes 60,00 % de consejeros otros externos 20,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"COMISIÓN DE AUDITORÍA",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ANA CRISTINA PERALTA MORENO",
+"VOCAL",
+"Independiente"
+],
+[
+"DON ENRIQUE CASANUEVA NÁRDIZ",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA CONNIE HEDEGAARD KOKSBANG",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA LOURDES MÁIZ CARRO",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JOSÉ MIGUEL ANDRÉS TORRECILLAS",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA SONIA DULA",
+"VOCAL",
+"Independiente"
+]
+]
+}
+]
+}

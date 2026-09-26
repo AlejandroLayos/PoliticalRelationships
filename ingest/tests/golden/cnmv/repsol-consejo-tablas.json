@@ -1,0 +1,486 @@
+{
+"ejercicio": "2025",
+"registro": "2026025989",
+"paginas": 143,
+"tablas": [
+{
+"pagina": 97,
+"columnas": 7,
+"encima": "Número máximo de consejeros 16 Número mínimo de consejeros 9 Número de consejeros fijado por la junta 15 C.1.2 Complete el siguiente cuadro con los miembros del consejo:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DOÑA ISABEL TORREMOCHA FERREZUELO",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA MARÍA DEL PINO VELÁZQUEZ MEDINA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA ARANTZA ESTEFANÍA LARRAÑAGA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON IGNACIO MARTÍN SAN VICENTE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON EMILIANO LÓPEZ ACHURRA",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON JOSU JON IMAZ SAN MIGUEL",
+"",
+"Ejecutivo",
+"CONSEJERO DELEGADO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 98,
+"columnas": 7,
+"encima": "INFORME ANUAL DE GOBIERNO CORPORATIVO DE LAS SOCIEDADES ANÓNIMAS COTIZADAS",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Representante",
+"Categoría del consejero",
+"Cargo en el consejo",
+"Fecha primer nombramiento",
+"Fecha último nombramiento",
+"Procedimiento de elección"
+],
+[
+"DON IVÁN MARTÉN ULIARTE",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON ANTONIO BRUFAU NIUBÓ",
+"",
+"Otro Externo",
+"PRESIDENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA TERESA GARCÍA-MILÁ LLOVERAS",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA AURORA CATÁ SALA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON MANUEL MANRIQUE CECILIA",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON MARIANO MARZO CARPIO",
+"",
+"Independiente",
+"CONSEJERO COORDINADOR INDEPENDIENTE",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DOÑA CARMINA GANYET I CIRERA",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON J. ROBINSON WEST",
+"",
+"Independiente",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+],
+[
+"DON HENRI PHILIPPE REICHSTUL",
+"",
+"Otro Externo",
+"CONSEJERO",
+"<fecha>",
+"<fecha>",
+"ACUERDO JUNTA GENERAL DE ACCIONISTAS"
+]
+]
+},
+{
+"pagina": 113,
+"columnas": 4,
+"encima": "Número total de otros consejeros externos 4 % sobre el total del consejo 26,67 Indique las variaciones que, en su caso, se hayan producido durante el periodo en la categoría de cada consejero:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Fecha del cambio",
+"Categoría anterior",
+"Categoría actual"
+],
+[
+"DON MANUEL MANRIQUE CECILIA",
+"<fecha>",
+"Independiente",
+"Otro Externo"
+]
+]
+},
+{
+"pagina": 113,
+"columnas": 9,
+"encima": "social del consejero DON MANUEL <fecha> Independiente Otro Externo MANRIQUE CECILIA C.1.4 Complete el siguiente cuadro con la información relativa al número de consejeras al cierre de los últimos 4 ejercicios, así como la categoría de tales consejeras:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"",
+"Número de consejeras",
+"",
+"",
+"",
+"% sobre el total de consejeros de cada categoría",
+"",
+"",
+""
+],
+[
+"",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022",
+"Ejercicio 2025",
+"Ejercicio 2024",
+"Ejercicio 2023",
+"Ejercicio 2022"
+],
+[
+"Ejecutivas",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Dominicales",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Independientes",
+"6",
+"6",
+"6",
+"5",
+"55,00",
+"55,00",
+"55,00",
+"50,00"
+],
+[
+"Otras Externas",
+"",
+"",
+"",
+"",
+"0,00",
+"0,00",
+"0,00",
+"0,00"
+],
+[
+"Total",
+"6",
+"6",
+"6",
+"5",
+"40,00",
+"40,00",
+"40,00",
+"33,33"
+]
+]
+},
+{
+"pagina": 120,
+"columnas": 3,
+"encima": "¿Se informa a la junta √ general sobre las cláusulas? C.2. Comisiones del consejo de administración C.2.1 Detalle todas las comisiones del consejo de administración, sus miembros y la proporción de consejeros ejecutivos, dominicales, independientes y otros externos que las integran:",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Auditoría y Control",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ISABEL TORREMOCHA FERREZUELO",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA MARÍA DEL PINO VELÁZQUEZ MEDINA",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA TERESA GARCÍA-MILÁ LLOVERAS",
+"PRESIDENTE",
+"Independiente"
+],
+[
+"DOÑA AURORA CATÁ SALA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON MARIANO MARZO CARPIO",
+"VOCAL",
+"Independiente"
+]
+]
+},
+{
+"pagina": 121,
+"columnas": 3,
+"encima": "DOÑA ISABEL TORREMOCHA Nombres de los consejeros FERREZUELO / DOÑA TERESA con experiencia GARCÍA-MILÁ LLOVERAS / DOÑA AURORA CATÁ SALA Fecha de nombramiento <fecha> del presidente en el cargo",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Nombramientos",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON EMILIANO LÓPEZ ACHURRA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DOÑA TERESA GARCÍA-MILÁ LLOVERAS",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA AURORA CATÁ SALA",
+"PRESIDENTE",
+"Independiente"
+]
+]
+},
+{
+"pagina": 121,
+"columnas": 3,
+"encima": "DOÑA AURORA CATÁ SALA PRESIDENTE Independiente % de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 66,67 % de consejeros otros externos 33,33",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Retribuciones",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ARANTZA ESTEFANÍA LARRAÑAGA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON EMILIANO LÓPEZ ACHURRA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DOÑA AURORA CATÁ SALA",
+"PRESIDENTE",
+"Independiente"
+]
+]
+},
+{
+"pagina": 121,
+"columnas": 3,
+"encima": "DON EMILIANO LÓPEZ ACHURRA VOCAL Otro Externo DOÑA AURORA CATÁ SALA PRESIDENTE Independiente % de consejeros dominicales 0,00 % de consejeros independientes 66,67 % de consejeros otros externos 33,33",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión de Sostenibilidad",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DOÑA ISABEL TORREMOCHA FERREZUELO",
+"VOCAL",
+"Independiente"
+],
+[
+"DOÑA ARANTZA ESTEFANÍA LARRAÑAGA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON EMILIANO LÓPEZ ACHURRA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DON MARIANO MARZO CARPIO",
+"PRESIDENTE",
+"Independiente"
+]
+]
+},
+{
+"pagina": 122,
+"columnas": 3,
+"encima": "% de consejeros ejecutivos 0,00 % de consejeros dominicales 0,00 % de consejeros independientes 75,00 % de consejeros otros externos 25,00",
+"nacimiento_en_la_pagina": false,
+"filas": [
+[
+"Comisión Delegada",
+"",
+""
+],
+[
+"Nombre",
+"Cargo",
+"Categoría"
+],
+[
+"DON IGNACIO MARTÍN SAN VICENTE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON JOSU JON IMAZ SAN MIGUEL",
+"VOCAL",
+"Ejecutivo"
+],
+[
+"DON IVÁN MARTÉN ULIARTE",
+"VOCAL",
+"Independiente"
+],
+[
+"DON ANTONIO BRUFAU NIUBÓ",
+"PRESIDENTE",
+"Otro Externo"
+],
+[
+"DON MANUEL MANRIQUE CECILIA",
+"VOCAL",
+"Otro Externo"
+],
+[
+"DOÑA CARMINA GANYET I CIRERA",
+"VOCAL",
+"Independiente"
+],
+[
+"DON J. ROBINSON WEST",
+"VOCAL",
+"Independiente"
+],
+[
+"DON HENRI PHILIPPE REICHSTUL",
+"VOCAL",
+"Otro Externo"
+]
+]
+}
+]
+}
