@@ -27,7 +27,7 @@ import { nombreLegible } from './poder.js'
  * consejero o accionista, según la CNMV; cargo público, según el BOE o la OCI.
  */
 
-const FORMAS = new Set(['sa', 'sl', 'sau', 'slu', 'sme', 'socimi', 'sfl', 'inc', 'plc', 'llc', 'llp', 'lp', 'ag', 'icav', 'sgiic', 'srl', 'se', 'nv', 'bv', 'fi', 'frob', 'sepi', 'bbva', 'caf', 'acs', 'gic', 'fmr', 'tci', 'disa', 'enaire', 'mfe', 'uk', 'usa', 'ee', 'uu'])
+const FORMAS = new Set(['sa', 'sl', 'sau', 'slu', 'sme', 'socimi', 'sfl', 'inc', 'plc', 'llc', 'llp', 'lp', 'ag', 'icav', 'sgiic', 'srl', 'se', 'nv', 'bv', 'fi', 'frob', 'sepi', 'bbva', 'caf', 'acs', 'gic', 'fmr', 'tci', 'disa', 'enaire', 'mfe', 'uk', 'usa', 'ee', 'uu', 'it'])
 
 /**
  * Un nombre de la CNMV o del BOE, legible: «CRITERIA CAIXA, S.A.U.» →
@@ -560,6 +560,18 @@ export function loEsencial(r, cargos) {
       seccion: 't-areas',
       texto: `${n(puertas.n)} ${puertas.n === 1 ? 'ex alto cargo fue autorizado' : 'ex altos cargos fueron autorizados'} por la Oficina de Conflictos de Intereses a trabajar en una cotizada.`,
     })
+  }
+  // La cotizada que más ex altos cargos recibió, si recibió más de uno.
+  if (puertas) {
+    const porEmpresa = new Map()
+    for (const h of puertas.hechos) porEmpresa.set(h.entidad, [...(porEmpresa.get(h.entidad) ?? []), h])
+    const [clave, lista] = [...porEmpresa.entries()].sort((a, b) => b[1].length - a[1].length)[0] ?? []
+    if (lista?.length > 1) {
+      salida.push({
+        seccion: 't-puentes',
+        texto: `La cotizada con más ex altos cargos autorizados a trabajar en ella es ${corta(clave)}: ${n(lista.length)}.`,
+      })
+    }
   }
   const cgpj = r.flujos.find((f) => f.de === 'justicia' && f.a === 'justicia')
   if (cgpj) salida.push({ seccion: 't-jueces', texto: `El CGPJ propuso ${n(cgpj.n)} nombramientos de la cúpula judicial; el Congreso y el Senado proponen a los suyos en el Constitucional.` })

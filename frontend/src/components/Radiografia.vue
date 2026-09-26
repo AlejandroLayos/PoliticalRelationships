@@ -201,6 +201,8 @@ const medios = computed(() =>
     .filter((c) => c.medio)
     .map((c) => ({ ...c, accionistas: [...(c.accionistas ?? [])].sort((a, b) => b.porcentaje - a.porcentaje) })),
 )
+/** Quien preside el consejo de una cotizada, según su informe de gobierno. */
+const presidenteDe = (c) => (c.consejo ?? []).find((m) => /^presidente\b/i.test(m.cargo ?? '')) ?? null
 const GRUPOS_DE_PUENTES = {
   consejos: 'En más de un consejo de administración',
   accionista: 'Personas con participación significativa en más de una cotizada',
@@ -470,7 +472,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
               — nombramientos por Real Decreto del Consejo de Ministros.
             </p>
             <p v-if="n.consejeros?.length" class="puentes-nucleo">
-              <b>Consejeros que comparte:</b>{{ ' ' }}
+              <b>En uno de sus consejos y en el de otra cotizada:</b>{{ ' ' }}
               <template v-for="(c, i) in n.consejeros" :key="c.clave">
                 <span v-if="i">; </span>
                 <button type="button" class="enlace" @click="ir(c.clave)">{{ nombre(c.nombre) }}</button>
@@ -488,6 +490,11 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <div class="medios">
           <section v-for="m in medios" :key="m.clave" class="medio">
             <h3><button type="button" class="enlace" @click="ir(m.clave)">{{ nombre(m.nombre) }}</button></h3>
+            <p v-if="presidenteDe(m)" class="preside">
+              Lo preside
+              <button type="button" class="enlace" @click="ir(presidenteDe(m).clave)">{{ nombre(presidenteDe(m).nombre) }}</button>
+              <span v-if="presidenteDe(m).categoria" class="dato">consejero {{ presidenteDe(m).categoria.toLowerCase() }}</span>
+            </p>
             <ul class="barras">
               <li v-for="a in m.accionistas" :key="a.clave">
                 <button type="button" class="enlace cot" @click="ir(a.clave)">{{ nombre(a.nombre) }}</button>
@@ -684,6 +691,8 @@ a.fuente { color: var(--tinta-2); }
 .quien, .cruce { grid-column: 1 / -1; font-size: var(--t-xs); color: var(--tinta-3); margin-top: -2px; }
 .cruce { color: var(--emp); }
 .cadena, .puentes-nucleo { font-family: var(--sans); font-size: var(--t-s); line-height: 1.5; color: var(--tinta-2); margin: var(--e3) 0 0; }
+.medio .barras li { grid-template-columns: minmax(11rem, 2fr) minmax(3rem, 1fr) 3.8rem; }
+.preside { font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); margin: 0 0 var(--e2); display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; }
 .medios { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: var(--e4); }
 
 /* Referencias y puentes */

@@ -356,6 +356,13 @@ describe('lo esencial', () => {
     expect(texto).toMatch(/1 persona se sienta en dos consejos/)
     expect(e.every((x) => x.seccion.startsWith('t-'))).toBe(true)
   })
+  it('la cotizada que más ex altos cargos recibió, sólo si son varios', () => {
+    const c = cargos()
+    expect(loEsencial(radiografia(c), c).some((x) => /más ex altos cargos/.test(x.texto))).toBe(false)
+    c.empresas['nif:A1'].push({ persona: 'oci:persona:z', nombre: 'Otro', actividad: 'TELCO', fecha: '2021-01-01' })
+    const e = loEsencial(radiografia(c), c).find((x) => /más ex altos cargos/.test(x.texto))
+    expect(e.texto).toBe('La cotizada con más ex altos cargos autorizados a trabajar en ella es Telco: 2.')
+  })
   it('sin datos, sin frases', () => {
     expect(loEsencial(radiografia({}), {})).toEqual([])
   })
