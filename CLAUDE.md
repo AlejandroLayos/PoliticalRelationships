@@ -160,6 +160,16 @@ cd ingest && pytest
   `pytest`, así que los tests de integración se dejan de ejecutar y el único
   rastro es un paso en rojo que parece de estilo. Usa el `ruff` del entorno
   virtual (`ingest/.venv/bin/ruff`), no el que haya en el `PATH`.
+- **Dos reconocimientos a la vez se pisaban.** El paso de publicar copiaba
+  `docs/fuentes` entero desde la copia del runner, y el 26/9/2026 el de la
+  CNMV se llevó por delante el informe de justicia que había llegado un
+  minuto antes. Ahora cada ejecución publica sólo lo que ella cambió; aun así,
+  si un informe «no cambió», mira `git log` de ese fichero antes de relanzar.
+- **La CNMV no se deja enlazar.** Las tablas de cada cotizada cuelgan de un
+  identificador de sesión (`qS`) que cambia en cada visita, y para un tercio
+  de las cotizadas la página por NIF no enlaza a nada: hay que pasar por su
+  buscador, un formulario ASP.NET. El enlace que se publica es la página
+  estable por NIF. Ver `docs/data-sources.md` §2.septies.
 - **`followthemoney` compila PyICU desde fuente** y necesita `pkg-config` y
   `libicu-dev`. Está en el Dockerfile y en la CI.
 - **`/healthz` no consulta dependencias** a propósito. Es liveness. La
