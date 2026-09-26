@@ -745,7 +745,7 @@ a.fuente { color: var(--tinta-2); }
 .nodo.nucleo text .propia:hover { fill: var(--tinta); text-decoration: underline; }
 .nodo.nucleo text .propia.mas { font-style: italic; fill: var(--tinta-3); cursor: default; text-decoration: none; }
 .nodo text .puerta, .nodo.nucleo text .propia .puerta { fill: var(--adm); font-weight: 600; }
-.anillo-puerta { fill: none; stroke: var(--adm); stroke-width: 2; }
+.nodo.cotizada circle.anillo-puerta { fill: none; stroke: var(--adm); stroke-width: 2; }
 .nodo.persona text { pointer-events: none; font-size: 10.5px; font-style: italic; fill: var(--tinta-3); }
 .nodo:focus-visible circle { stroke: var(--tinta); stroke-width: 3; }
 .desliza { display: none; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); margin: var(--e1) 0 0; }
