@@ -383,7 +383,7 @@ Cuatro líneas, en este orden:
 4. **Contexto de gobierno.** Qué partido gobernaba una administración cuando
    pagó, con fuente para cada periodo.
 
-Estado a 25/9/2026:
+Estado a 26/9/2026:
 
 - Línea 1: hecha. Nivel y comunidad desde la jerarquía de la fuente, la
   plataforma autonómica y, para lo local, el municipio según la relación
@@ -414,6 +414,15 @@ Estado a 25/9/2026:
   Decreto que nombra a cada presidente autonómico, en la edición de cada
   comunidad. Falta su partido —el BOE no lo dice y el Congreso no sirve para
   quien no fue diputado— y el de los gobiernos locales.
+- Línea 5 (ampliación del 26/9/2026): la red de poder. Altas instancias
+  judiciales y fiscales por su Real Decreto, con quién las propuso según su
+  propio cuerpo («a propuesta del Senado»), y sin Gobierno salvo que la
+  propuesta sea suya; accionistas significativos de las cotizadas de la
+  lista, según la CNMV. En la web, una vista de red —personas y entidades
+  unidas por hechos con fuente, sin aristas entre personas— con el camino
+  más corto entre dos nodos y las contrapartes de dinero de cada entidad.
+  Falta el consejo de administración: está en el informe de gobierno
+  corporativo, un PDF que sólo a veces trae la tabla reconocible.
 - Línea 2: reconocida y parada. Las resoluciones de la Comisión Mixta sobre
   las cuentas de los partidos están en el BOE, pero el informe con las
   cifras va como imágenes de página; sin OCR no hay cifras, y con OCR serían
