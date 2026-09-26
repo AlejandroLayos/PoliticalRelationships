@@ -93,30 +93,62 @@ jobs:
         run: cat docs/fuentes/*-reconocimiento.md docs/fuentes/*-anatomia-pdf.md >> "$GITHUB_STEP_SUMMARY" || true
 
       # Mismo patrón que en `datos.yml`: no fusiona, rehace sobre el remoto.
-      # Ver allí el porqué. Aquí son varios ficheros generados, así que se
-      # apartan todos antes del reset.
+      # Ver allí el porqué.
+      #
+      # Se publica SÓLO lo que esta ejecución ha cambiado o creado, y sólo
+      # dentro de la lista de abajo. Antes se copiaban las carpetas enteras
+      # desde la copia del runner, y el 26/9/2026 dos reconocimientos
+      # lanzados a la vez se pisaron: el de la CNMV publicó su copia vieja de
+      # `docs/fuentes` y se llevó por delante el informe nuevo de justicia,
+      # que había llegado un minuto antes.
       - name: publicar el informe
         if: always()
         run: |
           set -euo pipefail
+          # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
+          # nombres de personas y está en .gitignore, pero la barrera que de
+          # verdad importa es no pedir nunca que se añada todo.
+          #   - docs/fuentes: los informes.
+          #   - TdC, BOE y BORME: del BOE sólo altos cargos; del BORME, texto
+          #     con los nombres de persona ya sustituidos (scripts/explorar_boe.py).
+          #   - oci: autorizaciones a ex altos cargos, publicables por §12.
+          #   - congreso, senado: cargos públicos en su papel.
+          #   - partidos_boe: formaciones políticas, personas jurídicas.
+          #   - cnmv: consejos y accionistas de cotizadas tal como los publica
+          #     la CNMV, publicables en ese papel (§12, ampliación del 26/9/2026).
+          #   - boe_justicia: nombramientos de altas instancias en el BOE.
+          PERMITIDOS=(
+            docs/fuentes
+            'ingest/tests/golden/tcu_*.pdf'
+            ingest/tests/golden/boe_altos_cargos_muestra.json
+            ingest/tests/golden/borme_seccion1_muestra.txt
+            ingest/tests/golden/boe_altos_cargos_historico.json
+            ingest/tests/golden/boe_disposiciones
+            ingest/sinapsis_ingest/datos/municipios_ine.csv
+            ingest/tests/golden/oci
+            ingest/tests/golden/congreso
+            ingest/tests/golden/partidos_boe
+            ingest/tests/golden/senado
+            ingest/tests/golden/cnmv
+            ingest/tests/golden/boe_justicia
+          )
           GUARDADO=$(mktemp -d)
-          mkdir -p "$GUARDADO/docs" "$GUARDADO/golden"
-          cp -r docs/fuentes "$GUARDADO/docs/" 2>/dev/null || true
-          cp ingest/tests/golden/tcu_*.pdf "$GUARDADO/golden/" 2>/dev/null || true
-          # Del BOE, sólo altos cargos; del BORME, texto con los nombres de
-          # persona ya sustituidos (ver scripts/explorar_boe.py).
-          cp ingest/tests/golden/boe_altos_cargos_muestra.json "$GUARDADO/golden/" 2>/dev/null || true
-          cp ingest/tests/golden/borme_seccion1_muestra.txt "$GUARDADO/golden/" 2>/dev/null || true
-          cp ingest/tests/golden/boe_altos_cargos_historico.json "$GUARDADO/golden/" 2>/dev/null || true
-          cp -r ingest/tests/golden/boe_disposiciones "$GUARDADO/golden/" 2>/dev/null || true
-          mkdir -p "$GUARDADO/datos"
-          cp ingest/sinapsis_ingest/datos/municipios_ine.csv "$GUARDADO/datos/" 2>/dev/null || true
-          cp -r ingest/tests/golden/oci "$GUARDADO/golden/" 2>/dev/null || true
-          cp -r ingest/tests/golden/congreso "$GUARDADO/golden/" 2>/dev/null || true
-          cp -r ingest/tests/golden/partidos_boe "$GUARDADO/golden/" 2>/dev/null || true
-          cp -r ingest/tests/golden/senado "$GUARDADO/golden/" 2>/dev/null || true
-          cp -r ingest/tests/golden/cnmv "$GUARDADO/golden/" 2>/dev/null || true
-          cp -r ingest/tests/golden/boe_justicia "$GUARDADO/golden/" 2>/dev/null || true
+          # Modificados y nuevos (sin los ignorados), dentro de lo permitido.
+          # `-m` lista también lo borrado; un reconocimiento no borra, y si
+          # algo falta no se publica su ausencia.
+          git ls-files -m -o --exclude-standard -- "${PERMITIDOS[@]}" \
+            | while IFS= read -r f; do [ -f "$f" ] && echo "$f"; done \
+            | sort -u > "$GUARDADO/lista" || true
+          echo "a publicar:"
+          cat "$GUARDADO/lista"
+          if [ ! -s "$GUARDADO/lista" ]; then
+            echo "sin cambios"
+            exit 0
+          fi
+          while IFS= read -r f; do
+            mkdir -p "$GUARDADO/arbol/$(dirname "$f")"
+            cp "$f" "$GUARDADO/arbol/$f"
+          done < "$GUARDADO/lista"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -124,42 +156,10 @@ jobs:
           for intento in 1 2 3 4 5; do
             git fetch --quiet origin "$GITHUB_REF_NAME"
             git reset --quiet --hard "origin/$GITHUB_REF_NAME"
-            mkdir -p docs ingest/tests/golden
-            cp -r "$GUARDADO/docs/fuentes" docs/ 2>/dev/null || true
-            cp "$GUARDADO"/golden/tcu_*.pdf ingest/tests/golden/ 2>/dev/null || true
-            cp "$GUARDADO"/golden/boe_*.json "$GUARDADO"/golden/borme_*.txt ingest/tests/golden/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/boe_disposiciones ingest/tests/golden/ 2>/dev/null || true
-            mkdir -p ingest/sinapsis_ingest/datos
-            cp "$GUARDADO"/datos/municipios_ine.csv ingest/sinapsis_ingest/datos/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/oci ingest/tests/golden/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/congreso ingest/tests/golden/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/partidos_boe ingest/tests/golden/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/senado ingest/tests/golden/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/cnmv ingest/tests/golden/ 2>/dev/null || true
-            cp -r "$GUARDADO"/golden/boe_justicia ingest/tests/golden/ 2>/dev/null || true
-            # Rutas explícitas, nunca `git add -A`: detalle-pdf/ lleva texto con
-            # nombres de personas y está en .gitignore, pero la barrera que de
-            # verdad importa es no pedir nunca que se añada todo.
-            git add docs/fuentes/ || true
-            git add ingest/tests/golden/tcu_*.pdf 2>/dev/null || true
-            git add ingest/tests/golden/boe_altos_cargos_muestra.json 2>/dev/null || true
-            git add ingest/tests/golden/borme_seccion1_muestra.txt 2>/dev/null || true
-            git add ingest/tests/golden/boe_altos_cargos_historico.json 2>/dev/null || true
-            git add ingest/tests/golden/boe_disposiciones/ 2>/dev/null || true
-            git add ingest/sinapsis_ingest/datos/municipios_ine.csv 2>/dev/null || true
-            # Autorizaciones a ex altos cargos: publicables por §12.
-            git add ingest/tests/golden/oci/ 2>/dev/null || true
-            # Diputados: cargos públicos del Congreso, publicables por §12.
-            git add ingest/tests/golden/congreso/ 2>/dev/null || true
-            # Las cuentas de los partidos: formaciones políticas, personas jurídicas.
-            git add ingest/tests/golden/partidos_boe/ 2>/dev/null || true
-            # Senadores: cargos públicos del Senado, publicables por §12.
-            git add ingest/tests/golden/senado/ 2>/dev/null || true
-            # Consejos y accionistas de cotizadas, tal como los publica la
-            # CNMV: publicables en ese papel por §12 (ampliación del 26/9/2026).
-            git add ingest/tests/golden/cnmv/ 2>/dev/null || true
-            # Nombramientos de altas instancias judiciales y fiscales en el BOE.
-            git add ingest/tests/golden/boe_justicia/ 2>/dev/null || true
+            cp -r "$GUARDADO/arbol/." .
+            while IFS= read -r f; do
+              git add -- "$f"
+            done < "$GUARDADO/lista"
             if git diff --cached --quiet; then
               echo "sin cambios"
               exit 0
