@@ -1,5 +1,51 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Cuarta vuelta: 2026-09-26T11:03:09.318976+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Cuarta vuelta
+
+### DatosEntidad por NIF en una muestra amplia
+
+- repsol (A78374725) → HTTP 200 · «REPSOL, S.A.»
+- bbva (A48265169) → HTTP 200 · «BANCO BILBAO VIZCAYA ARGENTARIA, S.A.»
+- inditex (A15075062) → HTTP 200 · «sin datos»
+- aena (A86212420) → HTTP 200 · «AENA, S.M.E., S.A.»
+- endesa (A81948077) → HTTP 200 · «sin datos»
+- naturgy (A08015497) → HTTP 200 · «NATURGY ENERGY GROUP, S.A.»
+- caixabank (A08663619) → HTTP 200 · «CAIXABANK, S.A.»
+- sabadell (A08000143) → HTTP 200 · «BANCO DE SABADELL, S.A.»
+- mapfre (A08055741) → HTTP 200 · «MAPFRE, S.A.»
+- acciona (A08001851) → HTTP 200 · «ACCIONA, S.A.»
+- grifols (A58389123) → HTTP 200 · «GRIFOLS, S.A.»
+- cellnex (A64907306) → HTTP 200 · «CELLNEX TELECOM, S.A.»
+- colonial (A28027399) → HTTP 200 · «sin datos»
+- merlin (A86977790) → HTTP 200 · «MERLIN PROPERTIES, SOCIMI, S.A.»
+- sacyr (A28013811) → HTTP 200 · «sin datos»
+- bankinter (A28157360) → HTTP 200 · «BANKINTER, S.A.»
+- enagas (A28294726) → HTTP 200 · «sin datos»
+- amadeus (A84236934) → HTTP 200 · «sin datos»
+- acerinox (A28250777) → HTTP 200 · «sin datos»
+- unicaja (A93139053) → HTTP 200 · «UNICAJA BANCO, S.A.»
+- vocento (A48001655) → HTTP 200 · «sin datos»
+- logista (A87008579) → HTTP 200 · «LOGISTA INTEGRAL, S.A.»
+
+Con datos: 14; sin datos: 8 (['inditex', 'endesa', 'colonial', 'sacyr', 'enagas', 'amadeus', 'acerinox', 'vocento'])
+
+### El buscador de participaciones significativas
+
+- `https://www.cnmv.es/portal/Consultas/busqueda.aspx?id=7` → HTTP 200 · «CNMV - Participaciones Significativas y Autocartera en Sociedades cotizadas» · final `https://www.cnmv.es/portal/Consultas/busqueda?id=7`
+- ocultos: ['__EVENTVALIDATION', '__VIEWSTATE', '__VIEWSTATEGENERATOR']
+- de texto: []
+- botones: [('ctl00$WucCookiesPolicy$btnCookiesConfirmTech', 'Aceptar solo las imprescindibles'), ('ctl00$WucCookiesPolicy$btnCookiesConfirmAll', 'Aceptar todas'), ('ctl00$WucCookiesPolicy$btnCookiesConfirmSelected', 'Confirmar selección'), ('ctl00$WucCookiesPolicy$btnCookiesConfirmAll2', 'Aceptar todas'), ('ctl00$ContentPrincipal$btnOk', 'Buscar'), ('ctl00$ContentPrincipal$btnLimpiar', 'Limpiar')]
+- desplegables: []
+- contenido: 'ContentPrincipal_wNombreEntidad_txtDenominacion" id="ctl00_ContentPrincipal_wNombreEntidad_lblDenominacion" class="enlinea3">Por denominación de la entidad: Por intervalo de fechas de registro (dd/mm/aaaa): Fecha desde: Fecha hasta: Por los registros de los últimos días <'
+- no hay campo de texto reconocible
+
+
+---
+
+
 Tercera vuelta: 2026-09-26T10:57:43.367136+00:00 (`scripts/explorar_cnmv.py`).
 La segunda vuelta sigue debajo.
 
@@ -533,5 +579,6 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
