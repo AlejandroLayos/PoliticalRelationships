@@ -418,6 +418,53 @@ describe('las cotizadas de la CNMV', () => {
     expect(entradas.cotizadas.map((n) => n.id)).toEqual(['nif:A1'])
   })
 
+  it('el consejo: cada miembro unido a su cotizada, con su puesto y su informe', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A1'].consejo = [
+      { clave: 'cnmv:persona:x', nombre: 'JOSEPH OUGHOURLIAN', persona: true, cargo: 'PRESIDENTE', categoria: 'Dominical', ejercicio: 2025, url: 'https://cnmv/iagc' },
+      { clave: 'cnmv:persona:y', nombre: 'ANA EJEMPLO GARCÍA', persona: true, cargo: 'CONSEJERO', categoria: 'Independiente', ejercicio: 2025 },
+      { clave: 'nif:A2', nombre: 'BANCO EJEMPLO, S.A.', cargo: 'CONSEJERO', categoria: 'Dominical', ejercicio: 2025 },
+    ]
+    const red = construirRed(c)
+    const grupo = conexionesDe(red, 'nif:A1').find((g) => g.relacion === 'consejo')
+    expect(grupo.titulo).toBe('Consejo de administración')
+    expect(grupo.items.map((i) => i.nodo.id).sort()).toEqual(['cnmv:persona:x', 'cnmv:persona:y', 'nif:A2'])
+    const presidente = grupo.items.find((i) => i.nodo.id === 'cnmv:persona:x')
+    expect(presidente.hechos[0]).toMatchObject({
+      texto: 'Presidente · consejero dominical · informe de gobierno corporativo de 2025',
+      fuente: 'cnmv',
+      url: 'https://cnmv/iagc',
+    })
+    // Consejero y accionista a la vez: se presenta por el consejo, y su
+    // participación sigue ahí.
+    const x = red.nodos.get('cnmv:persona:x')
+    expect(x.papel).toBe('consejero')
+    expect(nombreDeTipo(x)).toBe('En el consejo de una cotizada, según la CNMV')
+    expect(conexionesDe(red, 'cnmv:persona:x').map((g) => g.relacion).sort()).toEqual(['accionista', 'consejo'])
+    // Una sociedad consejera es una entidad, no una persona.
+    expect(red.nodos.get('nif:A2').tipo).toBe('entidad')
+    // Y sigue sin haber aristas entre personas.
+    for (const a of red.aristas) {
+      const tipos = [red.nodos.get(a.source).tipo, red.nodos.get(a.target).tipo]
+      expect(tipos.filter((t) => t === 'persona').length).toBeLessThan(2)
+    }
+  })
+
+  it('dos consejos con la misma persona quedan unidos por ella', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A1'].consejo = [{ clave: 'cnmv:persona:y', nombre: 'ANA EJEMPLO GARCÍA', persona: true, cargo: 'CONSEJERO' }]
+    c.cotizadas['nif:A3'] = {
+      clave: 'nif:A3',
+      nombre: 'OTRA COTIZADA, S.A.',
+      accionistas: [],
+      consejo: [{ clave: 'cnmv:persona:y', nombre: 'ANA EJEMPLO GARCÍA', persona: true, cargo: 'PRESIDENTE' }],
+    }
+    const red = construirRed(c)
+    const consejos = conexionesDe(red, 'cnmv:persona:y').find((g) => g.relacion === 'consejo')
+    expect(consejos.titulo).toBe('En el consejo de administración de')
+    expect(consejos.items.map((i) => i.nodo.id).sort()).toEqual(['nif:A1', 'nif:A3'])
+  })
+
   it('sin la marca de la CNMV no hay medios, aunque el nombre lo parezca', () => {
     const c = conCotizadas()
     c.cotizadas['nif:A1'].nombre = 'MEDIOS DE COMUNICACIÓN EJEMPLO, S.A.'

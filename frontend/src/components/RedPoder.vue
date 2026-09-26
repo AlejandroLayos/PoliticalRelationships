@@ -117,6 +117,9 @@ function alBuscar(e) {
   if (e.key === 'Escape') consulta.value = ''
 }
 
+/* Quien sale sólo por la CNMV no tiene cargos públicos: no hay ficha que abrir. */
+const SIN_FICHA_DE_CARGOS = new Set(['accionista', 'consejero'])
+
 function subtitulo(n) {
   if (!n) return ''
   if (n.tipo === 'persona') return n.cargo
@@ -474,7 +477,7 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
         <h2 class="nombre">{{ actual.nombre }}</h2>
         <p v-if="subtitulo(actual)" class="sub">{{ subtitulo(actual) }}</p>
         <div class="acciones">
-          <button v-if="actual.tipo === 'persona'" type="button" @click="emit('ver-cargo', actual.id)">Ficha de sus cargos →</button>
+          <button v-if="actual.tipo === 'persona' && !SIN_FICHA_DE_CARGOS.has(actual.papel)" type="button" @click="emit('ver-cargo', actual.id)">Ficha de sus cargos →</button>
           <button v-if="actual.entidad" type="button" @click="emit('ver-entidad', actual.entidad)">Su dinero en el mapa →</button>
           <button
             v-if="actual.tipo === 'gobierno' && red.nodos.has(actual.presidente)"

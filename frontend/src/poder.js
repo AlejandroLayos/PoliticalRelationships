@@ -64,6 +64,7 @@ export const RELACIONES = {
   declaracion: { ida: 'Actividad declarada en', vuelta: 'Diputados que declararon actividad aquí' },
   ministerio: { ida: 'Ministerios y organismos con nombramientos', vuelta: 'Gobiernos con nombramientos aquí' },
   dinero: { ida: 'Pagó o adjudicó a', vuelta: 'Cobró de' },
+  consejo: { ida: 'En el consejo de administración de', vuelta: 'Consejo de administración' },
   accionista: { ida: 'Accionista significativo de', vuelta: 'Accionistas significativos' },
 }
 
@@ -78,6 +79,7 @@ const ORDEN_RELACION = [
   'cargo',
   'nombramiento',
   'ministerio',
+  'consejo',
   'accionista',
   'dinero',
 ]
@@ -368,11 +370,11 @@ export function construirRed(cargos, grafo = null) {
     }
   }
 
-  // Las cotizadas y sus accionistas significativos, según la CNMV. Una
-  // cotizada con NIF es el mismo nodo que esa empresa en el resto de la red:
-  // la Indra de las autorizaciones de la OCI es la Indra de la CNMV.
-  for (const c of Object.values(cargos?.cotizadas ?? {})) {
-    if (!c?.clave) continue
+  // Las cotizadas, su consejo y sus accionistas significativos, según la
+  // CNMV. Una cotizada con NIF es el mismo nodo que esa empresa en el resto de
+  // la red: la Indra de las autorizaciones de la OCI es la Indra de la CNMV.
+  const cotizadas = Object.values(cargos?.cotizadas ?? {}).filter((c) => c?.clave)
+  const nodoCotizada = (c) => {
     const f = formaDeNif(c.clave)
     const cotizada = nodo(c.clave, {
       tipo: 'entidad',
@@ -385,16 +387,54 @@ export function construirRed(cargos, grafo = null) {
     // los medios de comunicación. Lo dice la fuente, no una lista nuestra.
     if (c.sector) cotizada.sector = c.sector
     if (c.medio) cotizada.medio = true
+    return cotizada
+  }
+  const nodoSociedad = (clave, nombre) =>
+    nodo(clave, {
+      tipo: 'entidad',
+      nombre,
+      ...(clave.startsWith('nif:') ? { entidad: clave } : {}),
+      ...(formaDeNif(clave) ? { forma: formaDeNif(clave).forma, clase: formaDeNif(clave).clase } : {}),
+    })
+  // Los consejos, antes que los accionistas: quien es las dos cosas se
+  // presenta por su puesto en el consejo, y su participación sale igual.
+  for (const c of cotizadas) {
+    const cotizada = nodoCotizada(c)
+    for (const m of c.consejo ?? []) {
+      if (!m?.clave) continue
+      const puesto = capitalizar(m.cargo ?? '') || 'Consejero'
+      const miembro = m.persona
+        ? nodo(m.clave, {
+            tipo: 'persona',
+            papel: 'consejero',
+            nombre: nombreLegible(m.nombre),
+            rango: 1,
+            cargo: `${puesto} de ${c.nombre}`,
+          })
+        : nodoSociedad(m.clave, m.nombre)
+      unir(miembro.id, cotizada.id, 'consejo', {
+        texto: [
+          puesto,
+          m.categoria ? `consejero ${m.categoria.toLowerCase()}` : '',
+          m.ejercicio ? `informe de gobierno corporativo de ${m.ejercicio}` : '',
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        desde: null,
+        hasta: null,
+        ejercicio: m.ejercicio ?? null,
+        fuente: 'cnmv',
+        url: m.url ?? c.url ?? '',
+      })
+    }
+  }
+  for (const c of cotizadas) {
+    const cotizada = nodoCotizada(c)
     for (const a of c.accionistas ?? []) {
       if (!a?.clave) continue
       const titular = a.persona
         ? nodo(a.clave, { tipo: 'persona', papel: 'accionista', nombre: nombreLegible(a.nombre), rango: 1, cargo: 'Accionista significativo' })
-        : nodo(a.clave, {
-            tipo: 'entidad',
-            nombre: a.nombre,
-            ...(a.clave.startsWith('nif:') ? { entidad: a.clave } : {}),
-            ...(formaDeNif(a.clave) ? { forma: formaDeNif(a.clave).forma, clase: formaDeNif(a.clave).clase } : {}),
-          })
+        : nodoSociedad(a.clave, a.nombre)
       const pct = a.porcentaje ? `${String(a.porcentaje).replace('.', ',')} % de los derechos de voto` : 'Participación significativa'
       unir(titular.id, cotizada.id, 'accionista', {
         texto: pct,
@@ -523,7 +563,7 @@ export function relevancia(red, id) {
   if (n.tipo !== 'persona') return 100 + (n.grado ?? 0)
   let fuertes = 0
   for (const a of red.porNodo.get(id) ?? []) {
-    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta', 'accionista'].includes(a.relacion)) fuertes += 1
+    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta', 'consejo', 'accionista'].includes(a.relacion)) fuertes += 1
   }
   return fuertes * 10 + (n.rango ?? 1) * 3 + Math.min(5, n.grado ?? 0)
 }
@@ -649,6 +689,7 @@ export function nombreDeTipo(n) {
   if (!n) return ''
   // Un accionista de la CNMV no tiene cargo público: se dice lo que es.
   if (n.tipo === 'persona' && n.papel === 'accionista') return 'Accionista significativo, según la CNMV'
+  if (n.tipo === 'persona' && n.papel === 'consejero') return 'En el consejo de una cotizada, según la CNMV'
   if (n.tipo === 'entidad' && n.medio) return 'Grupo de medios de comunicación cotizado'
   if (n.tipo === 'entidad' && n.cotizada && n.forma) return `${n.forma} cotizada`
   if (n.tipo === 'entidad' && n.subtipo === 'organo') return 'Órgano de la administración'
