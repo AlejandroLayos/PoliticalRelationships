@@ -270,6 +270,25 @@ Reglas:
     `review_queue` y no se publica hasta que una persona lo confirme. Con
     dos apellidos los homónimos son menos, no ninguno, y un homónimo
     publicado es una acusación falsa.
+  **Ampliación, acordada el 26/9/2026** para la radiografía del poder:
+
+  - **Consejos de sociedades cotizadas.** Salen con nombre los consejeros,
+    los altos directivos y los accionistas significativos de las sociedades
+    cotizadas **tal como los publica la CNMV**, y sólo en ese papel: la ley
+    les obliga a esa transparencia precisamente porque su posición es de
+    interés público. Cubre el IBEX, la banca, las eléctricas, las
+    constructoras y los grupos de medios cotizados. Un administrador de una
+    sociedad no cotizada (BORME) **no** sale: son millones de particulares
+    sin identificador en la fuente; como mucho, candidato a revisión.
+  - **Altas instancias judiciales y fiscales.** Tribunal Supremo, Tribunal
+    Constitucional, CGPJ, Audiencia Nacional, presidencias de los TSJ,
+    Fiscal General y fiscales de sala, por su nombramiento en el BOE y sólo
+    en ese papel. La carrera ordinaria —traslados, destinos— sigue fuera:
+    no dice nada del poder y taparía lo que sí.
+  - Todo lo demás de §12 sigue igual: el vínculo lo afirma la fuente o no se
+    publica; nada de familias; la misma persona en dos fuentes se une sólo
+    con dos señales.
+
   - **Familias, no.** Ninguna fuente oficial publica parentescos, y
     deducirlos por apellidos da falsos positivos por construcción. Un
     familiar aparece sólo por lo que él mismo hace —si administra una
