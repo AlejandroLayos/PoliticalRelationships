@@ -644,3 +644,119 @@ export function centroInicial(red, cargos) {
   const primero = [...red.nodos.values()].sort((a, b) => (b.grado ?? 0) - (a.grado ?? 0))[0]
   return primero?.id ?? ''
 }
+
+/** Un montículo binario de [coste, …]: saca siempre el de menor coste. */
+function monticulo() {
+  const h = []
+  const sube = (i) => {
+    while (i > 0) {
+      const p = (i - 1) >> 1
+      if (h[p][0] <= h[i][0]) break
+      ;[h[p], h[i]] = [h[i], h[p]]
+      i = p
+    }
+  }
+  const baja = (i) => {
+    for (;;) {
+      const l = 2 * i + 1
+      const r = l + 1
+      let m = i
+      if (l < h.length && h[l][0] < h[m][0]) m = l
+      if (r < h.length && h[r][0] < h[m][0]) m = r
+      if (m === i) break
+      ;[h[m], h[i]] = [h[i], h[m]]
+      i = m
+    }
+  }
+  return {
+    tamano: () => h.length,
+    mete(x) {
+      h.push(x)
+      sube(h.length - 1)
+    },
+    saca() {
+      const cima = h[0]
+      const ultimo = h.pop()
+      if (h.length) {
+        h[0] = ultimo
+        baja(0)
+      }
+      return cima
+    },
+  }
+}
+
+/**
+ * El camino más corto entre dos nodos, con los hechos de cada paso.
+ *
+ * «¿Cómo se une esta persona con esta empresa?». Pasar por un nodo cuesta
+ * más cuanto más conectado está: un Gobierno une a mil quinientas personas,
+ * y un camino por él es cierto pero no dice nada. Así que se prefiere el que
+ * va por vínculos concretos —una empresa, un órgano, un partido— y sólo si
+ * no hay otro se pasa por un eje.
+ *
+ * Un camino es una cadena de hechos, no una relación entre sus extremos: la
+ * vista lo dice con esas palabras.
+ *
+ * @returns {{nodos: string[], aristas: object[]} | null} null si no hay.
+ */
+export function camino(red, desde, hasta, { maxPasos = 6 } = {}) {
+  if (!red?.nodos?.has(desde) || !red.nodos.has(hasta)) return null
+  if (desde === hasta) return { nodos: [desde], aristas: [] }
+  // Con la raíz y no con el logaritmo: un Gobierno de 1.200 nombramientos
+  // cuesta doce pasos, un ministerio de sesenta, tres y medio, y una empresa
+  // con cinco vínculos, poco más de uno. Con el logaritmo el camino cruzaba
+  // dos Gobiernos antes que dar un rodeo por una empresa.
+  const coste = (id) => 1 + Math.sqrt(red.nodos.get(id)?.grado ?? 0) / 3
+  // El estado es (nodo, pasos dados): con el límite de pasos, llegar a un
+  // nodo barato pero por un camino largo no puede impedir llegar a él por
+  // uno más caro y más corto. Con el estado sólo por nodo, pasaba.
+  const k = (id, n) => `${n}|${id}`
+  const dist = new Map([[k(desde, 0), 0]])
+  const previo = new Map()
+  const cola = monticulo()
+  cola.mete([0, desde, 0])
+  let final = null
+  while (cola.tamano()) {
+    const [d, actual, n] = cola.saca()
+    if (actual === hasta) {
+      final = k(actual, n)
+      break
+    }
+    if (d > (dist.get(k(actual, n)) ?? Infinity) || n >= maxPasos) continue
+    for (const a of red.porNodo.get(actual) ?? []) {
+      const siguiente = otro(a, actual)
+      if (siguiente === desde) continue
+      // El coste es el del nodo al que se entra; el destino no penaliza.
+      const nd = d + (siguiente === hasta ? 1 : coste(siguiente))
+      const clave = k(siguiente, n + 1)
+      if (nd < (dist.get(clave) ?? Infinity)) {
+        dist.set(clave, nd)
+        previo.set(clave, { estado: k(actual, n), nodo: actual, arista: a })
+        cola.mete([nd, siguiente, n + 1])
+      }
+    }
+  }
+  if (!final) return null
+  const nodos = [hasta]
+  const aristas = []
+  let x = final
+  while (previo.has(x)) {
+    const p = previo.get(x)
+    aristas.unshift(p.arista)
+    nodos.unshift(p.nodo)
+    x = p.estado
+  }
+  return { nodos, aristas }
+}
+
+/** Un camino como red para dibujar: sus nodos, en orden, y sus aristas. */
+export function redDeCamino(red, c) {
+  if (!c) return { nodos: [], aristas: [], ocultos: 0, centro: '' }
+  return {
+    centro: c.nodos[0],
+    ocultos: 0,
+    nodos: c.nodos.map((id, i) => ({ ...red.nodos.get(id), salto: i === 0 || i === c.nodos.length - 1 ? 0 : 1 })),
+    aristas: c.aristas,
+  }
+}

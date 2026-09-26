@@ -29,7 +29,7 @@
  * pagan las administraciones andaluzas. Sólo en esas dos vistas; una ficha es
  * la misma se mire desde donde se mire.
  */
-export function parametrosDeVista({ vista, clave, territorio, destacada, grupo, persona, nodo }) {
+export function parametrosDeVista({ vista, clave, territorio, destacada, grupo, persona, nodo, hasta }) {
   const p = new URLSearchParams()
   /*
     La red de poder lleva el nodo del centro (`n`): una persona, un Gobierno,
@@ -39,6 +39,8 @@ export function parametrosDeVista({ vista, clave, territorio, destacada, grupo, 
   if (vista === 'poder') {
     p.set('v', 'poder')
     if (nodo) p.set('n', nodo)
+    // Y, si se busca cómo se une con otro, el otro extremo del camino.
+    if (nodo && hasta) p.set('h', hasta)
     return p
   }
   /*
@@ -89,7 +91,8 @@ export function vistaDeParametros(busqueda) {
   const conTerritorio = t ? { territorio: t } : {}
   if (v === 'poder') {
     const nodo = (p.get('n') ?? '').trim()
-    return { vista: 'poder', clave: '', ...(nodo ? { nodo } : {}) }
+    const hasta = (p.get('h') ?? '').trim()
+    return { vista: 'poder', clave: '', ...(nodo ? { nodo } : {}), ...(nodo && hasta ? { hasta } : {}) }
   }
   if (v === 'cargos') {
     const persona = (p.get('p') ?? '').trim()
@@ -118,7 +121,8 @@ export function mismoEstado(a, b) {
     (a.destacada ?? '') === (b.destacada ?? '') &&
     (a.grupo ?? '') === (b.grupo ?? '') &&
     (a.persona ?? '') === (b.persona ?? '') &&
-    (a.nodo ?? '') === (b.nodo ?? '')
+    (a.nodo ?? '') === (b.nodo ?? '') &&
+    (a.hasta ?? '') === (b.hasta ?? '')
   )
 }
 

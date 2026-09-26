@@ -4,18 +4,21 @@ import Graph from 'graphology'
 import Sigma from 'sigma'
 import EdgeCurveProgram from '@sigma/edge-curve'
 import forceAtlas2 from 'graphology-layout-forceatlas2'
-import { dibujarEtiquetaConPlaca } from '../etiquetas.js'
+import { dibujarEtiquetaCentrada, dibujarEtiquetaConPlaca } from '../etiquetas.js'
 import { aclarar, apagar, hexSobreFondo } from '../color.js'
 import { semillaDePosicion } from '../vida.js'
 import { fechaCorta, tramo } from '../cargos.js'
 import {
+  RELACIONES,
   buscarEnRed,
+  camino,
   centroInicial,
   claseDe,
   conexionesDe,
   construirRed,
   egoRed,
   nombreDeFuente,
+  redDeCamino,
   nombreDeTipo,
   puntosDeEntrada,
 } from '../poder.js'
@@ -25,9 +28,11 @@ const props = defineProps({
   grafo: { type: Object, default: null },
   /** El nodo del centro, por su clave; '' para el de entrada. */
   nodo: { type: String, default: '' },
+  /** El otro extremo de un camino desde el centro, o ''. */
+  hasta: { type: String, default: '' },
   cargando: { type: Boolean, default: false },
 })
-const emit = defineEmits(['centrar', 'ver-cargo', 'ver-entidad'])
+const emit = defineEmits(['centrar', 'camino', 'ver-cargo', 'ver-entidad'])
 
 /* --- Los datos ----------------------------------------------------------- */
 
@@ -39,7 +44,42 @@ const centro = computed(() => {
 })
 /** Se pidió un nodo que esta edición no tiene: se dice, no se disimula. */
 const perdido = computed(() => Boolean(red.value && props.nodo && !red.value.nodos.has(props.nodo)))
-const ego = computed(() => (red.value && centro.value ? egoRed(red.value, centro.value) : null))
+/** El camino hasta `hasta`, si se pidió y existe. */
+const trayecto = computed(() =>
+  red.value && centro.value && props.hasta && red.value.nodos.has(props.hasta)
+    ? camino(red.value, centro.value, props.hasta)
+    : null,
+)
+const ego = computed(() => {
+  if (!red.value || !centro.value) return null
+  if (trayecto.value) return { ...redDeCamino(red.value, trayecto.value), camino: true }
+  return egoRed(red.value, centro.value)
+})
+/** Los pasos del camino, para leerlo: de un nodo al siguiente, con sus hechos. */
+const pasos = computed(() => {
+  const c = trayecto.value
+  if (!c) return []
+  return c.aristas.map((a, i) => {
+    const de = c.nodos[i]
+    const r = RELACIONES[a.relacion] ?? { ida: a.relacion, vuelta: a.relacion }
+    return {
+      de: red.value.nodos.get(de),
+      a: red.value.nodos.get(c.nodos[i + 1]),
+      como: a.source === de ? r.ida : r.vuelta,
+      hechos: a.hechos,
+    }
+  })
+})
+const destino = computed(() => (props.hasta ? red.value?.nodos.get(props.hasta) ?? null : null))
+
+const consultaCamino = ref('')
+const resultadosCamino = computed(() =>
+  red.value ? buscarEnRed(red.value, consultaCamino.value, 8).filter((n) => n.id !== centro.value) : [],
+)
+function buscarCamino(id) {
+  consultaCamino.value = ''
+  emit('camino', id)
+}
 const actual = computed(() => red.value?.nodos.get(centro.value) ?? null)
 const conexiones = computed(() => (red.value && centro.value ? conexionesDe(red.value, centro.value) : []))
 const entradas = computed(() => (red.value ? puntosDeEntrada(red.value) : null))
@@ -132,6 +172,7 @@ const menosMovimiento =
 
 function construirGrafo(e) {
   const g = new Graph({ type: 'undirected', multi: false })
+  if (e.camino) return grafoDeCamino(g, e)
   const directos = e.nodos.filter((n) => n.salto === 1)
   const segundos = e.nodos.filter((n) => n.salto === 2)
   for (const n of e.nodos) {
@@ -190,6 +231,37 @@ function construirGrafo(e) {
   return g
 }
 
+/*
+  Un camino se dibuja como lo que es, una cadena: de izquierda a derecha, en
+  zigzag para que los rótulos no se pisen. Sin fuerzas: el orden es el dato.
+*/
+function grafoDeCamino(g, e) {
+  e.nodos.forEach((n, i) => {
+    const extremo = i === 0 || i === e.nodos.length - 1
+    g.addNode(n.id, {
+      x: i * 10,
+      y: i % 2 ? -3 : 3,
+      size: extremo ? 14 : 9,
+      color: colorDe(n),
+      label: n.nombre,
+      etiquetaReal: n.nombre,
+      forceLabel: true,
+      zIndex: 2,
+    })
+  })
+  for (const a of e.aristas) {
+    if (g.hasEdge(a.source, a.target)) continue
+    const rgb = COLOR_ARISTA[a.relacion] ?? [200, 205, 215]
+    g.addEdge(a.source, a.target, {
+      color: hexSobreFondo(`#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`, 0.85),
+      size: 2.4,
+      relacion: a.relacion,
+      curvature: 0,
+    })
+  }
+  return g
+}
+
 function reducirNodo(id, d) {
   if (!apuntado || !grafo?.hasNode(apuntado)) return d
   if (id === apuntado) return { ...d, label: d.etiquetaReal, forceLabel: true, color: aclarar(d.color, 0.3), zIndex: 3 }
@@ -228,8 +300,10 @@ function pintar() {
     labelColor: { color: '#ecebe6' },
     labelSize: 12,
     labelWeight: '600',
-    defaultDrawNodeLabel: dibujarEtiquetaConPlaca,
-    defaultDrawNodeHover: dibujarEtiquetaConPlaca,
+    // En un camino, el rótulo debajo del nodo: a la derecha, el del último se
+    // salía del lienzo y el de cada uno pisaba al siguiente.
+    defaultDrawNodeLabel: ego.value.camino ? dibujarEtiquetaCentrada : dibujarEtiquetaConPlaca,
+    defaultDrawNodeHover: ego.value.camino ? dibujarEtiquetaCentrada : dibujarEtiquetaConPlaca,
     nodeReducer: reducirNodo,
     edgeReducer: reducirArista,
     // Aire alrededor: arriba va el hilo recorrido y abajo la leyenda.
@@ -396,6 +470,58 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
           Cada línea es un hecho publicado por la fuente que se cita. Dos personas cerca en el dibujo no
           tienen por eso relación entre sí: comparten el nodo que las une, y nada más.
         </p>
+
+        <!-- El camino hasta otro nodo: una cadena de hechos, no una relación. -->
+        <section class="camino">
+          <label class="antetitulo" for="buscar-camino">¿Cómo se une con…?</label>
+          <input
+            id="buscar-camino"
+            v-model="consultaCamino"
+            type="search"
+            autocomplete="off"
+            placeholder="Otra persona, entidad, partido…"
+            @keydown.enter="resultadosCamino.length && buscarCamino(resultadosCamino[0].id)"
+          />
+          <ul v-if="consultaCamino.trim().length >= 2" class="resultados-camino">
+            <li v-for="r in resultadosCamino" :key="r.id">
+              <button type="button" @click="buscarCamino(r.id)">
+                <span class="punto" :class="`k-${claseDe(r)}`" /> {{ r.nombre }}
+              </button>
+            </li>
+            <li v-if="!resultadosCamino.length" class="sin">Nada con ese nombre en la red.</li>
+          </ul>
+          <template v-if="hasta && destino">
+            <p v-if="!trayecto" class="aviso">
+              No hay camino de menos de seis pasos entre {{ actual.nombre }} y {{ destino.nombre }}.
+            </p>
+            <template v-else>
+              <p class="nota">
+                Un camino es una cadena de hechos, cada uno con su fuente. Que exista no dice que
+                {{ actual.nombre }} y {{ destino.nombre }} tengan relación entre sí.
+              </p>
+              <ol class="pasos">
+                <li v-for="(p, i) in pasos" :key="i">
+                  <button type="button" class="otro" @click="centrar(p.de.id)">
+                    <span class="punto" :class="`k-${claseDe(p.de)}`" /> {{ p.de.nombre }}
+                  </button>
+                  <p class="como">{{ p.como }}</p>
+                  <ul class="hechos">
+                    <li v-for="(h, j) in p.hechos.slice(0, 2)" :key="j">
+                      <span class="texto">{{ h.texto }}</span>
+                      <span v-if="tramo(h)" class="cuando">{{ tramo(h) }}</span>
+                      <a v-if="h.url" :href="h.url" target="_blank" rel="noopener" class="fuente">{{ nombreDeFuente(h.fuente) }}</a>
+                      <span v-else class="fuente">{{ nombreDeFuente(h.fuente) }}</span>
+                    </li>
+                  </ul>
+                  <button v-if="i === pasos.length - 1" type="button" class="otro" @click="centrar(p.a.id)">
+                    <span class="punto" :class="`k-${claseDe(p.a)}`" /> {{ p.a.nombre }}
+                  </button>
+                </li>
+              </ol>
+            </template>
+            <button type="button" class="ver-todos" @click="emit('camino', '')">Quitar el camino</button>
+          </template>
+        </section>
 
         <p class="recuento">{{ totalConexiones.toLocaleString('es-ES') }} conexiones</p>
         <section v-for="g in conexiones" :key="`${g.relacion}|${g.sentido}`" class="grupo">
@@ -614,6 +740,23 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
   background: var(--papel-2); border: 1px solid var(--filete-suave); border-radius: var(--radio-s);
   padding: var(--e1) var(--e3); cursor: pointer;
 }
+
+.camino { margin-top: var(--e4); border-top: 1px solid var(--filete-suave); padding-top: var(--e3); position: relative; }
+.camino input {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: var(--t-s);
+  padding: var(--e1) var(--e2); background: var(--hoja); color: var(--tinta);
+  border: 1px solid var(--filete-medio); border-radius: var(--radio);
+}
+.resultados-camino { list-style: none; margin: var(--e1) 0 0; padding: 0; }
+.resultados-camino button {
+  display: flex; align-items: center; gap: var(--e2); width: 100%; text-align: left;
+  font: inherit; font-size: var(--t-s); color: var(--tinta); background: none; border: 0;
+  padding: var(--e1) 0; cursor: pointer;
+}
+.resultados-camino .sin { font-size: var(--t-s); color: var(--tinta-3); }
+.pasos { list-style: none; margin: var(--e3) 0 0; padding: 0; border-left: 2px solid var(--filete-medio); }
+.pasos > li { padding: 0 0 var(--e3) var(--e3); }
+.como { margin: var(--e1) 0 0 1.1rem; font-size: var(--t-xs); font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-3); }
 
 @media (max-width: 60rem) {
   .poder { padding: var(--e4) var(--e4) var(--e7); }

@@ -356,3 +356,34 @@ def test_fiscal_de_sala_jefa_es_el_mismo_puesto_que_jefe():
     assert puesto("Fiscal de Sala Jefa de la Fiscalía del Tribunal Supremo (Sección Civil)") == (
         "Fiscal de Sala Jefe de la Fiscalía del Tribunal Supremo (Sección Civil)"
     )
+
+
+def test_la_vicepresidencia_del_constitucional_no_es_alto_cargo_ni_lleva_gobierno():
+    """«Vicepresidenta del Tribunal Constitucional» empezaba como un alto cargo
+    («Vicepresidente de…») y salía nombrada «con el Gobierno de Rajoy»; la
+    elige el Pleno del Tribunal."""
+    assert not es_alto_cargo("Vicepresidenta del Tribunal Constitucional")
+    assert es_alta_instancia("Vicepresidenta del Tribunal Constitucional")
+    raw = (
+        (XML / "BOE-A-2024-15661.xml")
+        .read_bytes()
+        .replace(
+            b"se nombra Magistrado del Tribunal Constitucional",
+            b"se nombra Vicepresidenta del Tribunal Constitucional",
+        )
+    )
+    [r] = list(
+        BOEConnector().parse(
+            RawDocument(source_id="boe", url="u", content=raw, media_type="application/xml")
+        )
+    )
+    props = BOEConnector().normalize(r).aristas[0].properties
+    assert props["ambito"] == "justicia"
+    assert props["departamento"] == "Tribunal Constitucional"
+
+
+def test_el_fiscal_general_conserva_su_gobierno():
+    from sinapsis_ingest.cargos import nombrado_por_el_gobierno
+
+    assert nombrado_por_el_gobierno("Fiscal General del Estado")
+    assert not nombrado_por_el_gobierno("Fiscal de Sala del Tribunal Supremo")

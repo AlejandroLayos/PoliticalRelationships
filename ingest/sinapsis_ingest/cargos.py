@@ -335,7 +335,11 @@ _ALTOS_CARGOS = tuple(
 # «Director de la Escuela Judicial»—, no es un cargo político y su titular no
 # entra en la regla de §12.
 _CARRERAS = re.compile(
+    # El Constitucional y el CGPJ no son la Administración General del Estado:
+    # su presidencia o vicepresidencia no es alto cargo de la Ley 3/2015 aunque
+    # empiece por «Vicepresidente de». Van por la regla de altas instancias.
     r"\b(fiscal|fiscalia|magistrad[oa]|juez|jueza|juzgado|audiencia|tribunal supremo"
+    r"|tribunal constitucional|consejo general del poder judicial"
     r"|tribunal superior de justicia|sala de lo|escuela judicial|poder judicial"
     r"|general de brigada|general de division|teniente general|almirante"
     # «Notario» y «registrador» son la persona; «Dirección General de los
@@ -450,6 +454,11 @@ def propuesta_de(parrafos: list[str]) -> str:
     texto = re.sub(r"\s+", " ", _plano(" ".join(parrafos)))
     hallados = {nombre for patron, nombre in _PROPUESTAS if patron.search(texto)}
     return hallados.pop() if len(hallados) == 1 else ""
+
+
+def nombrado_por_el_gobierno(cargo: str) -> bool:
+    """¿Una alta instancia que propone siempre el Gobierno? El Fiscal General."""
+    return bool(_NOMBRADOS_POR_EL_GOBIERNO.search(_plano(puesto(cargo))))
 
 
 def es_alto_cargo(cargo: str) -> bool:

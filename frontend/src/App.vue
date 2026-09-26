@@ -123,9 +123,12 @@ async function abrirPorClave(clave) {
 
 /** El nodo del centro de la red de poder, por su clave, o ''. */
 const nodoPoder = ref('')
-function verPoder(nodo = '') {
+/** El otro extremo de un camino en la red de poder, o ''. */
+const hastaPoder = ref('')
+function verPoder(nodo = '', hasta = '') {
   vista.value = 'poder'
   nodoPoder.value = nodo
+  hastaPoder.value = nodo ? hasta : ''
   traerCargos()
 }
 
@@ -633,7 +636,12 @@ const estadoDeVista = computed(() => {
     return { vista: 'cargos', clave: '', ...(personaCargo.value ? { persona: personaCargo.value } : {}) }
   }
   if (vista.value === 'poder') {
-    return { vista: 'poder', clave: '', ...(nodoPoder.value ? { nodo: nodoPoder.value } : {}) }
+    return {
+      vista: 'poder',
+      clave: '',
+      ...(nodoPoder.value ? { nodo: nodoPoder.value } : {}),
+      ...(nodoPoder.value && hastaPoder.value ? { hasta: hastaPoder.value } : {}),
+    }
   }
   return {
     vista: vista.value,
@@ -659,7 +667,7 @@ watch(estadoDeVista, (ahora) => {
 
 // `nodo: centroRed` y no `nodo` a secas: dentro hay otro `nodo` —la entidad
 // de la clave— que lo tapaba, y el enlace a la red perdía su centro.
-async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona, nodo: centroRed }) {
+async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona, nodo: centroRed, hasta }) {
   restaurando = true
   try {
     if (v === 'portada' || v === 'mapa') territorio.value = t ?? ''
@@ -685,7 +693,7 @@ async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, per
         verCargos(persona ?? '')
         return
       case 'poder':
-        verPoder(centroRed ?? '')
+        verPoder(centroRed ?? '', hasta ?? '')
         return
       case 'portada':
         volverAlMapa()
@@ -1378,8 +1386,10 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :cargos="cargos"
         :grafo="grafoEntero"
         :nodo="nodoPoder"
+        :hasta="hastaPoder"
         :cargando="cargandoCargos"
-        @centrar="(id) => (nodoPoder = id)"
+        @centrar="(id) => verPoder(id)"
+        @camino="(id) => (hastaPoder = id)"
         @ver-cargo="verCargos"
         @ver-entidad="abrirPorClave"
       />

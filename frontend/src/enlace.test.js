@@ -203,3 +203,20 @@ describe('la red de poder', () => {
     expect(p.toString()).toBe('v=poder&n=nif%3AB2')
   })
 })
+
+describe('el camino de la red de poder', () => {
+  it('lleva los dos extremos y vuelve igual', () => {
+    const estado = { vista: 'poder', clave: '', nodo: 'boe:persona:a', hasta: 'nif:A1' }
+    expect(direccionDeVista(estado)).toBe('/?v=poder&n=boe%3Apersona%3Aa&h=nif%3AA1')
+    expect(vistaDeParametros('?v=poder&n=boe:persona:a&h=nif:A1')).toEqual(estado)
+  })
+
+  it('sin centro no hay camino', () => {
+    expect(vistaDeParametros('?v=poder&h=nif:A1')).toEqual({ vista: 'poder', clave: '' })
+    expect(parametrosDeVista({ vista: 'poder', hasta: 'nif:A1' }).toString()).toBe('v=poder')
+  })
+
+  it('quitar el camino es otra entrada de historial', () => {
+    expect(mismoEstado({ vista: 'poder', nodo: 'a', hasta: 'b' }, { vista: 'poder', nodo: 'a' })).toBe(false)
+  })
+})

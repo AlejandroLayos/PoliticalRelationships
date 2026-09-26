@@ -370,3 +370,41 @@ describe('las cotizadas de la CNMV', () => {
     expect(puntosDeEntrada(red).cotizadas.map((n) => n.id)).toEqual(['nif:A1'])
   })
 })
+
+describe('el camino entre dos nodos', () => {
+  it('une a dos personas por lo que comparten, con los hechos de cada paso', async () => {
+    const { camino } = await import('./poder.js')
+    const red = construirRed(cargos())
+    // Ana (ministra) y Luis (OCI) comparten Indra y el Ministerio de Defensa,
+    // igual de conectados aquí: cualquiera de los dos es un camino de dos pasos.
+    const c = camino(red, 'boe:persona:ana', 'oci:persona:luis')
+    expect(c.nodos).toHaveLength(3)
+    expect(['nif:A1', 'organismo:ministerio-de-defensa']).toContain(c.nodos[1])
+    expect(c.aristas.every((a) => a.hechos.length > 0)).toBe(true)
+  })
+
+  it('prefiere el nodo concreto al eje', async () => {
+    const { camino } = await import('./poder.js')
+    const c = cargos()
+    // Un eje: veinte personas nombradas en el mismo ministerio que Ana.
+    for (let i = 0; i < 20; i++) {
+      c.personas.push({
+        clave: `boe:persona:relleno-${i}`,
+        nombre: `Relleno ${i}`,
+        periodos: [{ puesto: 'Director General de X', cargo: 'Director General de X', organismo: 'Ministerio de Defensa', desde: '2019-01-01', gobierno: SANCHEZ }],
+      })
+    }
+    const red = construirRed(c)
+    const r = camino(red, 'boe:persona:ana', 'oci:persona:luis')
+    // Ana y Luis también comparten el Ministerio de Defensa, que ahora es un
+    // eje con veintitantas personas: se va por Indra.
+    expect(r.nodos[1]).toBe('nif:A1')
+  })
+
+  it('sin camino, null; y el mismo nodo, un camino de uno', async () => {
+    const { camino } = await import('./poder.js')
+    const red = construirRed(cargos())
+    expect(camino(red, 'boe:persona:ana', 'no-existe')).toBeNull()
+    expect(camino(red, 'boe:persona:ana', 'boe:persona:ana').nodos).toEqual(['boe:persona:ana'])
+  })
+})

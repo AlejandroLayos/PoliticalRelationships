@@ -61,11 +61,11 @@ import structlog
 
 from sinapsis_ingest.cargos import (
     es_alta_instancia,
-    es_alto_cargo,
     es_publicable,
     institucion_judicial,
     leer_cuerpo,
     leer_titulo,
+    nombrado_por_el_gobierno,
     organismo_del_acto,
     propuesta_de,
     puesto,
@@ -401,7 +401,7 @@ class BOEConnector:
         # departamento es quien publica (el CGPJ, la Jefatura del Estado).
         # El Fiscal General lo propone el Gobierno y ya era alto cargo: ése
         # conserva su Gobierno. Los demás son ámbito de la justicia.
-        judicial = es_alta_instancia(d["cargo"]) and not es_alto_cargo(d["cargo"])
+        judicial = es_alta_instancia(d["cargo"]) and not nombrado_por_el_gobierno(d["cargo"])
         departamento = (
             institucion_judicial(d["cargo"])
             if es_alta_instancia(d["cargo"])
