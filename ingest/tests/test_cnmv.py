@@ -472,7 +472,7 @@ def test_ninguna_muestra_del_consejo_lleva_fechas_ni_nacimientos():
     """
     import json
 
-    for f in GOLDEN.glob("*consejo*.json"):
+    for f in [*GOLDEN.glob("*consejo*.json"), *GOLDEN.glob("*dominicales*.json")]:
         texto = f.read_text(encoding="utf-8")
         assert not re.search(r"\b\d{1,2}/\d{1,2}/\d{4}\b", texto), f.name
         datos = json.loads(texto)
@@ -485,6 +485,11 @@ def test_ninguna_muestra_del_consejo_lleva_fechas_ni_nacimientos():
                     ), f"{f.name}, página {t['pagina']}"
             for fila in t["filas"][1:]:
                 assert not any(re.fullmatch(r"(19|20)\d\d", c) for c in fila), f.name
+        if "dominicales" in f.name:
+            # Aquí, ni un año dentro de un texto: los perfiles los traen.
+            assert not re.search(
+                r"\b(19|20)\d\d\b", texto.replace(datos.get("ejercicio", ""), "")
+            ), f.name
 
 
 # --- El consejo, del cuadro C.1.2 del IAGC ------------------------------------------

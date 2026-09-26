@@ -813,7 +813,18 @@ def dominicales(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
                 for t in d.pages[i].extract_tables() or []:
                     if not t:
                         continue
-                    filas = [[_enmascarar(x) for x in fila[:2]] for fila in t]
+                    # Dos columnas; y por si la maqueta pone el perfil entre
+                    # ellas, ninguna celda larga (las biografías lo son) y
+                    # ningún año, ni dentro de un texto.
+                    filas = [
+                        [
+                            "<largo>"
+                            if len(_enmascarar(x)) > 120
+                            else re.sub(r"\b(19|20)\d\d\b", "<año>", _enmascarar(x))
+                            for x in fila[:2]
+                        ]
+                        for fila in t
+                    ]
                     tablas.append(
                         {
                             "pagina": i + 1,
