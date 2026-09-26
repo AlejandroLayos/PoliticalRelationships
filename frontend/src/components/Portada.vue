@@ -424,16 +424,16 @@ function filasVisibles(l) {
     -->
     <section v-if="hayRed && !territorio" class="red-entrada">
       <header class="seccion-cabeza">
-        <p class="antetitulo">Red de poder</p>
-        <h2>Quién está unido a quién, y quién lo dice</h2>
+        <p class="antetitulo">Radiografía del poder</p>
+        <h2>Quién tiene el poder en España</h2>
         <p class="que">
-          Gobiernos, ministerios, partidos, tribunales, empresas cotizadas y sus accionistas, con
-          las personas que la fuente une a cada uno: un nombramiento, un escaño, una autorización,
-          una participación. Cada línea, con su documento.
+          Los núcleos que controlan las grandes empresas —el Estado, los grupos accionistas, las
+          grandes fortunas—, quién es dueño de los medios, quién nombra a los árbitros y qué personas
+          saltan de un sitio a otro. Cada línea, con su documento.
         </p>
       </header>
       <ul class="red-enlaces">
-        <li><a href="?v=poder" @click.prevent="emit('verRed', '')">El Gobierno en curso y sus ministerios →</a></li>
+        <li><a href="?v=poder" @click.prevent="emit('verRed', '')">Ver la radiografía →</a></li>
         <li v-if="nAltasInstancias">
           <a href="?v=poder&n=organismo:tribunal-constitucional" @click.prevent="emit('verRed', 'organismo:tribunal-constitucional')">
             El Constitucional: quién propuso a cada magistrado →
