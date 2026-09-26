@@ -305,6 +305,22 @@ describe('el mapa de los núcleos', () => {
     // La persona que está en dos consejos, unida a los dos.
     expect(a.aristas.filter((e) => e.tipo === 'consejo')).toHaveLength(2)
   })
+  it('la cotizada de un solo núcleo va escrita bajo él, no como punto', () => {
+    const r = radiografia(cargos())
+    const m = mapaDeNucleos(r, cargos())
+    const puntos = m.nodos.filter((n) => n.tipo === 'cotizada')
+    expect(puntos.every((c) => c.compartida)).toBe(true)
+    const propias = m.nodos.filter((n) => n.tipo === 'nucleo').flatMap((n) => n.propias.map((c) => c.clave))
+    expect(propias.length).toBeGreaterThan(0)
+    // Ninguna es a la vez punto y propia, y ninguna propia lleva arista de participación.
+    expect(propias.filter((c) => puntos.some((p) => p.id === c))).toEqual([])
+    expect(m.aristas.filter((e) => e.tipo === 'participacion' && propias.includes(e.target))).toEqual([])
+    // Cada propia, con lo que tiene su núcleo, de mayor a menor.
+    for (const n of m.nodos.filter((x) => x.tipo === 'nucleo')) {
+      const pc = n.propias.map((c) => c.porcentaje)
+      expect(pc).toEqual([...pc].sort((x, y) => y - x))
+    }
+  })
 })
 
 describe('lo que nombra cada Gobierno', () => {

@@ -318,7 +318,7 @@ await paso('la radiografía dibuja los núcleos y lleva a la red', async () => {
   await pagina.locator('.flujos button').first().click()
   await pagina.waitForSelector('.hechos li', { timeout: 5000 })
   // Un núcleo que no sea el Estado lleva a la red, centrada en él.
-  await pagina.locator('.lienzo-mapa .nodo.nucleo:not(.k-adm)').first().click()
+  await pagina.locator('.lienzo-mapa .nodo.nucleo:not(.k-adm) circle').first().click()
   await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
   if (!pagina.url().includes('n=')) throw new Error(`dirección: ${pagina.url()}`)
   await pagina.locator('.volver-radiografia').click()
@@ -338,7 +338,7 @@ await paso('la red de poder cambia de centro y deja un enlace que lo reproduce',
   // La red, ya no la radiografía: entrando por un núcleo del mapa.
   await enlace.click()
   await pagina.waitForSelector('.lienzo-mapa .nodo.nucleo', { timeout: 15000 })
-  await pagina.locator('.lienzo-mapa .nodo.nucleo:not(.k-adm)').first().click()
+  await pagina.locator('.lienzo-mapa .nodo.nucleo:not(.k-adm) circle').first().click()
   await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
   await pagina.waitForSelector('.poder .lienzo canvas', { timeout: 15000 })
   const antes = await pagina.locator('.poder .panel .nombre').innerText()

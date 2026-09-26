@@ -81,15 +81,32 @@ const vecinos = computed(() => {
   }
   return s
 })
-/** El rótulo de un nodo, en líneas: los núcleos en dos como mucho, sin cortar. */
-const lineasDe = (n) => (n.tipo === 'nucleo' ? enLineas(n.corto, n.lado === 'izq' || n.lado === 'der' ? 16 : 20) : [recortar(n.corto, 20)])
+/**
+ * El rótulo de un nodo, en líneas. Un núcleo: su nombre en dos como mucho, sin
+ * cortar, y debajo las cotizadas que sólo están en él, con su porcentaje.
+ */
+const MAX_PROPIAS = 4
+function lineasDe(n) {
+  if (n.tipo !== 'nucleo') return [{ texto: recortar(n.corto, 20) }]
+  const lado = n.lado === 'izq' || n.lado === 'der'
+  const nombre = enLineas(n.corto, lado ? 16 : 20).map((texto) => ({ texto }))
+  const propias = n.propias ?? []
+  const vistas = propias.slice(0, propias.length > MAX_PROPIAS ? MAX_PROPIAS - 1 : MAX_PROPIAS).map((c) => ({
+    texto: `${recortar(c.corto, lado ? 20 : 24)} ${porcentaje(c.porcentaje)}`,
+    titulo: c.corto,
+    clase: c.medio ? 'propia medio' : 'propia',
+    clave: c.clave,
+  }))
+  if (propias.length > vistas.length) vistas.push({ texto: `y ${propias.length - vistas.length} más`, clase: 'propia mas' })
+  return [...nombre, ...vistas]
+}
 /** Dónde va el rótulo de un nodo: por el lado que le toca, sin pisar el círculo. */
 function rotulo(n) {
   const r = colocarRotulo(n)
   // Con dos líneas: al lado, centrado en el círculo; encima, sube una línea.
   const extra = lineasDe(n).length - 1
   if (!extra) return r
-  if (n.lado === 'izq' || n.lado === 'der') return { ...r, y: r.y - 7 * extra }
+  if (n.lado === 'izq' || n.lado === 'der') return { ...r, y: r.y - 7 * Math.min(extra, 2) }
   if (!String(n.lado ?? '').startsWith('abajo')) return { ...r, y: r.y - 14 * extra }
   return r
 }
@@ -104,13 +121,13 @@ function colocarRotulo(n) {
     case 'abajo':
       return { y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'middle' }
     case 'abajo-izq':
-      return { x: 4, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
+      return { x: (n.r ?? 5) * 0.8, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
     case 'abajo-der':
-      return { x: -4, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
+      return { x: -(n.r ?? 5) * 0.8, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
     case 'arriba-izq':
-      return { x: 4, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
+      return { x: (n.r ?? 5) * 0.8, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
     case 'arriba-der':
-      return { x: -4, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
+      return { x: -(n.r ?? 5) * 0.8, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
     default:
       return { y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'middle' }
   }
@@ -281,10 +298,10 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
       <section v-if="mapa" class="bloque" aria-labelledby="t-mapa">
         <h2 id="t-mapa" class="seccion">El mapa de los núcleos</h2>
         <p class="nota">
-          Cada círculo grande es un núcleo: el Estado, un grupo accionista o una fortuna personal. Cada punto, una
-          cotizada, atada a los núcleos que tienen en ella al menos un 5 %; la que está entre dos, se la disputan. Las
-          líneas de puntos son personas que se sientan en dos consejos. Pasa por encima para aislar un núcleo; pulsa para
-          verlo en la red.
+          Cada círculo es un núcleo: el Estado, un grupo accionista o una fortuna personal. Bajo su nombre, las cotizadas
+          en las que sólo él tiene al menos un 5 %. Los puntos del centro son las cotizadas que se reparten dos núcleos o
+          más, atadas a cada uno. Las líneas de puntos, personas que se sientan en dos consejos. Pasa por encima para
+          aislar un núcleo; pulsa para verlo en la red.
         </p>
         <div ref="lienzo" class="lienzo-mapa">
           <svg :viewBox="`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`" role="img" aria-labelledby="t-mapa" @mouseleave="resaltado = ''">
@@ -313,7 +330,14 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             >
               <circle :r="n.r" />
               <text v-bind="rotulo(n)">
-                <tspan v-for="(l, i) in lineasDe(n)" :key="i" :x="rotulo(n).x ?? 0" :dy="i ? 14 : 0">{{ l }}</tspan>
+                <tspan
+                  v-for="(l, i) in lineasDe(n)"
+                  :key="i"
+                  :x="rotulo(n).x ?? 0"
+                  :dy="i ? (l.clase ? 15 : 14) : 0"
+                  :class="l.clase"
+                  @click.stop="l.clave && ir(l.clave)"
+                >{{ l.texto }}<title v-if="l.titulo">{{ l.titulo }}</title></tspan>
               </text>
               <title>{{ n.nombre }}</title>
             </g>
@@ -324,7 +348,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
           <li><span class="punto k-adm" />El Estado</li>
           <li><span class="punto k-emp" />Un grupo accionista</li>
           <li><span class="punto k-par" />Una fortuna personal</li>
-          <li><span class="punto cot" />Una cotizada</li>
+          <li><span class="punto cot" />Una cotizada en dos núcleos o más</li>
           <li><span class="punto per" />Consejero en dos consejos</li>
         </ul>
       </section>
@@ -694,6 +718,9 @@ a.fuente { color: var(--tinta-2); }
 .nodo.persona circle { fill: var(--hoja); stroke: var(--tinta-2); stroke-width: 1.5; }
 .nodo text { font-size: 12px; fill: var(--tinta-2); paint-order: stroke; stroke: var(--hoja); stroke-width: 3px; stroke-linejoin: round; }
 .nodo.nucleo text { font-size: 14px; font-weight: 700; fill: var(--tinta); }
+.nodo.nucleo text .propia { font-size: 11.5px; font-weight: 400; fill: var(--tinta-2); cursor: pointer; }
+.nodo.nucleo text .propia:hover { fill: var(--tinta); text-decoration: underline; }
+.nodo.nucleo text .propia.mas { font-style: italic; fill: var(--tinta-3); cursor: default; text-decoration: none; }
 .nodo.persona text { font-size: 10.5px; font-style: italic; fill: var(--tinta-3); }
 .nodo:focus-visible circle { stroke: var(--tinta); stroke-width: 3; }
 .desliza { display: none; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); margin: var(--e1) 0 0; }

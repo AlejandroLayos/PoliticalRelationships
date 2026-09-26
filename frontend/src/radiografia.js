@@ -746,14 +746,22 @@ export function rotulos(cargos, grafo, r) {
 /**
  * El mapa de los núcleos, en una colocación que se puede explicar en una
  * frase: los núcleos en un anillo, ordenados para que los que comparten
- * cotizadas queden juntos; la cotizada de un solo núcleo, por fuera de él; la
- * que está en varios, dentro del anillo, entre ellos y más cerca de quien más
- * tiene. «Entre dos» es literal: se la disputan. Los consejeros compartidos,
+ * cotizadas queden juntos; la cotizada de un solo núcleo, escrita bajo su
+ * nombre (`propias`); la que está en varios, un punto dentro del anillo, entre
+ * ellos y más cerca de quien más tiene. «Entre dos» es literal: se la disputan. Los consejeros compartidos,
  * entre las dos cotizadas que unen. Sin simulación: el mismo dato da siempre
  * el mismo dibujo.
  *
  * @returns {{nodos: Array, aristas: Array, caja: [number, number, number, number]}}
  */
+function ladoDelRotulo(a) {
+  const c = Math.cos(a)
+  if (c > 0.55) return 'der'
+  if (c < -0.55) return 'izq'
+  const v = Math.sin(a) > 0 ? 'abajo' : 'arriba'
+  return c < -0.12 ? `${v}-izq` : c > 0.12 ? `${v}-der` : v
+}
+
 export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
   const cot = cargos?.cotizadas ?? {}
   const nucleos = r.nucleos
@@ -813,10 +821,11 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
       peso: n.cotizadas.length,
       x: pos.get(id)[0],
       y: pos.get(id)[1],
-      // El rótulo: a un lado en los costados; arriba y abajo, hacia dentro
-      // del anillo, que por fuera van sus cotizadas.
-      lado:
-        Math.cos(angulo.get(id)) > 0.55 ? 'der' : Math.cos(angulo.get(id)) < -0.55 ? 'izq' : Math.sin(angulo.get(id)) > 0 ? 'arriba' : 'abajo',
+      // El rótulo, hacia fuera del anillo: dentro están las disputadas.
+      // Arriba y abajo, el rótulo se abre hacia su lado, para no chocar con
+      // el del vecino.
+      lado: ladoDelRotulo(angulo.get(id)),
+      propias: [],
     })
   }
 
@@ -860,32 +869,15 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
       cotizadas.push({ ...base, x: cx + (mx - cx) * 0.62, y: cy + (my - cy) * 0.62, lado: 'arriba' })
     }
   }
-  // Las de un solo núcleo, en abanico por fuera de él.
+  // Las de un solo núcleo no son un punto: van escritas bajo su nombre. No
+  // dicen nada de la estructura —nadie se las disputa— y, como puntos, cada
+  // una con su rótulo, eran casi todo el ruido del mapa.
+  const nodoDe = new Map(nodos.map((n) => [n.id, n]))
+  const pesoEn = (clave, id) => de.get(clave)?.get(id) ?? 0
   for (const [id, lista] of solas) {
-    const a = angulo.get(id)
-    const [nx, ny] = pos.get(id)
-    lista.sort((p, q) => p.nombre.localeCompare(q.nombre, 'es'))
-    lista.forEach((c, i) => {
-      const abre = (i - (lista.length - 1) / 2) * 0.55
-      const x = nx + Math.cos(a + abre) * 74
-      const y = ny + Math.sin(a + abre) * 60
-      // El rótulo, por el lado que se aleja de su núcleo.
-      const dx = x - nx
-      const dy = y - ny
-      const lado = Math.abs(dx) > Math.abs(dy) * 1.2 ? (dx > 0 ? 'der' : 'izq') : dy < 0 ? 'arriba' : 'abajo'
-      // En abanico, los rótulos alternan de altura para no pisarse.
-      cotizadas.push({ ...c, x, y, lado, escalon: i % 2, abanico: id })
-    })
-    // Un abanico vertical de varias: los rótulos se abren a los lados, el de
-    // más a la izquierda hacia la izquierda y el resto hacia la derecha.
-    if (lista.length > 1 && Math.abs(Math.sin(a)) > 0.7) {
-      const suyas = cotizadas.filter((c) => c.abanico === id).sort((p, q) => p.x - q.x)
-      suyas.forEach((c, i) => {
-        const vertical = Math.sin(a) > 0 ? 'abajo' : 'arriba'
-        c.lado = `${vertical}-${i < suyas.length / 2 ? 'izq' : 'der'}`
-        c.escalon = i % 2
-      })
-    }
+    nodoDe.get(id).propias = lista
+      .map((c) => ({ clave: c.clave, corto: c.corto, medio: c.medio, porcentaje: pesoEn(c.clave, id) }))
+      .sort((p, q) => q.porcentaje - p.porcentaje || p.corto.localeCompare(q.corto, 'es'))
   }
   // Las de dentro, separadas por la caja de su rótulo (unos 6,5 px por letra,
   // encima del punto), no sólo por el punto: dos rótulos no se pisan.
@@ -924,18 +916,37 @@ export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
 
   const aristas = []
   for (const [clave, nus] of de) {
+    if (nus.size < 2) continue
     for (const [id, pc] of nus) aristas.push({ source: id, target: clave, tipo: 'participacion', porcentaje: pc })
   }
-  // Los consejeros compartidos, entre las cotizadas que unen.
+  // Los consejeros compartidos, entre las cotizadas que unen; si una es de un
+  // solo núcleo, hasta ese núcleo, que es donde está escrita.
   const enMapa = new Map(nodos.map((n) => [n.id, n]))
+  const dueno = new Map()
+  for (const [id, lista] of solas) for (const c of lista) dueno.set(c.clave, id)
   for (const x of r.compartidos ?? []) {
     if (!x.persona) continue
-    const en = x.en.filter((e) => enMapa.has(e.clave))
-    if (en.length < 2) continue
-    const mx = en.reduce((s, e) => s + enMapa.get(e.clave).x, 0) / en.length
-    const my = en.reduce((s, e) => s + enMapa.get(e.clave).y, 0) / en.length
-    nodos.push({ id: x.clave, tipo: 'persona', clave: x.clave, nombre: x.nombre, corto: nombrePropio(x.nombre), x: mx, y: my + 10 })
-    for (const e of en) aristas.push({ source: x.clave, target: e.clave, tipo: 'consejo' })
+    const ids = [...new Set(x.en.map((e) => (enMapa.has(e.clave) ? e.clave : dueno.get(e.clave))).filter(Boolean))]
+    if (ids.length < 2) continue
+    const mx = ids.reduce((s, id) => s + enMapa.get(id).x, 0) / ids.length
+    const my = ids.reduce((s, id) => s + enMapa.get(id).y, 0) / ids.length
+    // Fuera de los círculos de los núcleos, que su rótulo no los tape.
+    let px = mx
+    let py = my + 10
+    for (const n of nodos) {
+      if (n.tipo !== 'nucleo') continue
+      const dx = px - n.x
+      const dy = py - n.y
+      const d = Math.hypot(dx, dy)
+      const min = 20 + 7 * Math.sqrt(n.peso) + 18
+      if (d < min) {
+        const k = d ? min / d : 1
+        px = n.x + (d ? dx * k : 0)
+        py = n.y + (d ? dy * k : min)
+      }
+    }
+    nodos.push({ id: x.clave, tipo: 'persona', clave: x.clave, nombre: x.nombre, corto: nombrePropio(x.nombre), x: px, y: py })
+    for (const id of ids) aristas.push({ source: x.clave, target: id, tipo: 'consejo' })
   }
   return { nodos, aristas, caja: [0, 0, ancho, alto] }
 }
