@@ -688,6 +688,76 @@ def dinero_del_organo(store: Store, organo: str, empresa: str) -> dict[str, Any]
     }
 
 
+def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
+    """Las cotizadas y sus accionistas significativos, según la CNMV.
+
+    Por la clave de la cotizada (`nif:…` si está en la lista, o la de la
+    CNMV). Una persona física sólo sale si pasa SU puerta: la clave
+    `cnmv:persona:`, la marca `accionista_cnmv` y la arista con procedencia de
+    la CNMV. En su papel de accionista significativo y en ningún otro (spec
+    §12, ampliación del 26/9/2026): no entra en `personas`, ni en el grafo, ni
+    se une a nadie.
+    """
+    filas = store.conn.execute(
+        """
+        SELECT es.dedupe_key AS clave_titular, es.caption AS titular,
+               es.ftm_schema AS esquema_titular, es.properties AS props_titular,
+               et.dedupe_key AS clave_cotizada, et.caption AS cotizada,
+               COALESCE(et.nif, '') AS nif_cotizada, r.properties
+        FROM relationships r
+        JOIN entities es ON es.id = r.source_entity_id AND es.canonical_id IS NULL
+        JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
+        WHERE r.ftm_schema = 'Ownership'
+          AND r.status <> 'retracted'
+          AND EXISTS (
+              SELECT 1 FROM provenance pv
+              JOIN raw_documents rd ON rd.id = pv.raw_document_id
+              WHERE pv.relationship_id = r.id AND rd.source_id = 'cnmv'
+          )
+        """
+    ).fetchall()
+    cotizadas: dict[str, dict[str, Any]] = {}
+    descartadas = 0
+    for f in filas:
+        props = f["properties"] or {}
+        persona = f["esquema_titular"] == "Person"
+        if persona and not (
+            f["clave_titular"].startswith("cnmv:persona:")
+            and (f["props_titular"] or {}).get("accionista_cnmv") is True
+        ):
+            descartadas += 1
+            continue
+        c = cotizadas.setdefault(
+            f["clave_cotizada"],
+            {
+                "clave": f["clave_cotizada"],
+                "nombre": f["cotizada"],
+                **({"nif": f["nif_cotizada"]} if f["nif_cotizada"] else {}),
+                "url": props.get("url", ""),
+                "accionistas": [],
+            },
+        )
+        c["accionistas"].append(
+            {
+                "clave": f["clave_titular"],
+                "nombre": f["titular"],
+                **({"persona": True} if persona else {}),
+                **{
+                    k: props[k]
+                    for k in ("porcentaje", "porAcciones", "porInstrumentos", "fechaRegistroCNMV")
+                    if props.get(k)
+                },
+            }
+        )
+    for c in cotizadas.values():
+        c["accionistas"].sort(key=lambda a: -float(a.get("porcentaje") or 0))
+        if not c["url"]:
+            c.pop("url")
+    if descartadas:
+        log.error("cnmv: accionistas personas sin su marca; no salen", descartadas=descartadas)
+    return cotizadas
+
+
 def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     """Escribe `destino` con las personas que pasan las condiciones de §12."""
     filas = _filas_de_la_puerta(store, "Occupancy")
@@ -1006,6 +1076,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
     fechas = [
         a["fecha"] for clave, lista in actos.items() if clave.startswith("boe:") for a in lista
     ]
+    cotizadas = participaciones_cnmv(store)
     documento = {
         "generado": datetime.now(UTC).isoformat(),
         "fuente": "Boletín Oficial del Estado",
@@ -1025,6 +1096,8 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "organos": al_frente,
         "empresas": en_empresas,
         "declarantes": declarantes,
+        # Las cotizadas y sus accionistas significativos, según la CNMV.
+        "cotizadas": cotizadas,
     }
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(
@@ -1089,7 +1162,13 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         "cargos_organos": len(al_frente),
         # El Senado no aporta personas sino el puente de las siglas: cuenta lo
         # que dio, para que la web no lo anuncie como caído el día que respondió.
-        "cargos_por_fuente": {**por_fuente, "senado": len(puente)},
+        # Y la CNMV, las participaciones: si respondió, no está caída.
+        "cargos_por_fuente": {
+            **por_fuente,
+            "senado": len(puente),
+            "cnmv": sum(len(c["accionistas"]) for c in cotizadas.values()),
+        },
+        "cotizadas": len(cotizadas),
         "cruces": cruces[:MAX_CRUCES_EN_PORTADA],
         "n_cruces": len(cruces),
         "declarados": declarados[:MAX_CRUCES_EN_PORTADA],

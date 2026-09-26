@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, boe, congreso, oci, placsp, senado, tcu
+from sinapsis_ingest.connectors import bdns, boe, cnmv, congreso, oci, placsp, senado, tcu
 
 
 @dataclass(frozen=True)
@@ -66,6 +66,12 @@ FUENTES: dict[str, FichaFuente] = {
         url="https://www.senado.es/web/relacionesciudadanos/datosabiertos/catalogodatos/index.html",
         license="Datos abiertos del Senado; reutilización libre (Ley 37/2007)",
     ),
+    "cnmv": FichaFuente(
+        id="cnmv",
+        name="Comisión Nacional del Mercado de Valores",
+        url="https://www.cnmv.es/portal/Consultas/busqueda.aspx?id=7",
+        license="Registros oficiales de la CNMV; reutilización libre (Ley 37/2007)",
+    ),
     "oci": FichaFuente(
         id="oci",
         name="Oficina de Conflictos de Intereses",
@@ -97,6 +103,9 @@ _CONECTORES: dict[str, Any] = {
     # Los partidos de cada legislatura con sus siglas: el puente oficial entre
     # la formación de un diputado y el partido del mapa del dinero.
     "senado": senado.crear,
+    # Accionistas significativos de las cotizadas y sus participaciones: la
+    # red empresarial (spec §12, ampliación del 26/9/2026).
+    "cnmv": cnmv.crear,
 }
 
 

@@ -1,0 +1,46 @@
+# Cotizadas que se consultan en la CNMV, por NIF.
+#
+# No es la fuente de nada: es la lista de a quién se pregunta. El nombre de
+# cada una lo da la propia CNMV (el título de su página de participaciones
+# para ese NIF), y si la CNMV no reconoce el NIF, la cotizada se salta y se
+# anota; no se completa a mano.
+#
+# El Ibex 35 con domicilio en España, más los grupos de medios cotizados y las
+# sociedades con participación del Estado (SEPI). Se amplía añadiendo filas.
+nif;referencia
+A08001851;Acciona
+A28250777;Acerinox
+A28004885;ACS
+A86212420;Aena
+A84236934;Amadeus
+A08000143;Banco Sabadell
+A39000013;Banco Santander
+A28157360;Bankinter
+A48265169;BBVA
+A08663619;CaixaBank
+A64907306;Cellnex
+A28027399;Colonial
+A28294726;Enagás
+A81948077;Endesa
+A58389123;Grifols
+A48010615;Iberdrola
+A15075062;Inditex
+A28599033;Indra
+A87008579;Logista
+A08055741;Mapfre
+A86977790;Merlin Properties
+A08015497;Naturgy
+A78003662;Redeia
+A78374725;Repsol
+A28013811;Sacyr
+A83511501;Solaria
+A28015865;Telefónica
+A93139053;Unicaja
+A28041283;Rovi
+A17728593;Fluidra
+A28297059;Prisa
+A78839271;Atresmedia
+A48001655;Vocento
+A20001020;CAF
+A28092583;Técnicas Reunidas
+A28212264;Ence

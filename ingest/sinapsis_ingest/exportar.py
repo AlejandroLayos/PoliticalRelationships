@@ -325,6 +325,10 @@ def exportar(
           AND es.dedupe_key NOT LIKE 'oci:%' AND et.dedupe_key NOT LIKE 'oci:%'
           AND es.dedupe_key NOT LIKE 'congreso:%' AND et.dedupe_key NOT LIKE 'congreso:%'
           AND es.dedupe_key NOT LIKE 'senado:%' AND et.dedupe_key NOT LIKE 'senado:%'
+          -- Los accionistas de la CNMV, tampoco: no llevan dinero, y entre sus
+          -- titulares hay personas. Salen en `cargos.json` (`cotizadas`).
+          AND es.dedupe_key NOT LIKE 'cnmv:%' AND et.dedupe_key NOT LIKE 'cnmv:%'
+          AND r.ftm_schema <> 'Ownership'
         ORDER BY r.amount DESC NULLS LAST, r.id
         """
     ).fetchall()
@@ -820,6 +824,9 @@ def _exportar_indice(
               -- Los partidos del Senado son el puente de las siglas, no
               -- entidades del mapa: el partido que cobra ya está, con su NIF.
               AND e.dedupe_key NOT LIKE 'senado:%%'
+              -- Fondos y sociedades que sólo nombra la CNMV como accionistas:
+              -- sin dinero en ninguna fuente, salen en `cargos.json`.
+              AND e.dedupe_key NOT LIKE 'cnmv:%%'
             GROUP BY e.id
         ),
         -- Órgano -> (UnknownLink) -> expediente -> (ContractAward) -> empresa.

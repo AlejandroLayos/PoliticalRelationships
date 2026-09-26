@@ -1431,3 +1431,99 @@ def test_el_relevo_autonomico_del_mismo_dia_va_en_orden():
         "Lambán",
         "Azcón",
     ]
+
+
+# --- La CNMV: accionistas significativos -----------------------------------------
+
+
+@con_base
+def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tmp_path):
+    """Las páginas reales de Prisa y Santander, por el conector de verdad."""
+    from decimal import Decimal
+
+    from sinapsis_ingest.connectors.cnmv import CNMVConnector
+
+    store.upsert_source(Source(id="cnmv", name="CNMV", url="https://ejemplo.test"))
+    store.conn.commit()
+    golden = Path(__file__).parent / "golden" / "cnmv"
+    conocidas = {
+        "BANCO SANTANDER, S.A.": "A39000013",
+        "PROMOTORA DE INFORMACIONES, S.A.": "A28297059",
+    }
+    for fichero, nif, emisor, tabla in (
+        (
+            "prisa-notificaciones-participaciones-aspx.html",
+            "A28297059",
+            "PROMOTORA DE INFORMACIONES, S.A.",
+            "accionistas",
+        ),
+        (
+            "santander-sociedadesparticipa-aspx.html",
+            "A39000013",
+            "BANCO SANTANDER, S.A.",
+            "participadas",
+        ),
+    ):
+        _ingerir_real(
+            store,
+            CNMVConnector(),
+            RawDocument(
+                source_id="cnmv",
+                url=f"https://www.cnmv.es/x/{fichero}",
+                content=(golden / fichero).read_bytes(),
+                media_type="text/html",
+                metadata={
+                    "nif": nif,
+                    "emisor": emisor,
+                    "tabla": tabla,
+                    "url_publica": f"https://www.cnmv.es/ps_ac_ini.aspx?nif={nif}",
+                    "conocidas": conocidas,
+                },
+            ),
+        )
+    # Una persona de la CNMV sin su marca: no pasa la puerta.
+    _ingerir(
+        store,
+        "cnmv",
+        Normalizado(
+            entidades=[
+                EntidadNormalizada("Person", "Sin Marca", "cnmv:persona:sin-marca", properties={}),
+                EntidadNormalizada("Company", "PROMOTORA", "nif:A28297059", nif="A28297059"),
+            ],
+            aristas=[
+                AristaNormalizada(
+                    "Ownership",
+                    "cnmv:persona:sin-marca",
+                    "nif:A28297059",
+                    "cnmv:participacion:sin-marca",
+                    confidence=1.0,
+                    properties={"porcentaje": "3.5"},
+                )
+            ],
+        ),
+        b"sin-marca",
+    )
+    grafo, indice, cargos = _volcar(store, tmp_path)
+
+    prisa = cargos["cotizadas"]["nif:A28297059"]
+    accionistas = {a["nombre"]: a for a in prisa["accionistas"]}
+    assert accionistas["KHALID THANI ABDULLAH AL THANI"]["persona"] is True
+    assert accionistas["KHALID THANI ABDULLAH AL THANI"]["porcentaje"] == "3.353"
+    # Santander por su NIF, el mismo que en el mapa del dinero, y una sola vez
+    # aunque lo digan las dos tablas.
+    santander = [a for a in prisa["accionistas"] if a["clave"] == "nif:A39000013"]
+    assert len(santander) == 1 and santander[0]["porcentaje"] == "4.145"
+    assert "Sin Marca" not in accionistas
+    # De mayor a menor.
+    porcentajes = [Decimal(a["porcentaje"]) for a in prisa["accionistas"]]
+    assert porcentajes == sorted(porcentajes, reverse=True)
+    # Y las participadas de Santander, con sus accionistas.
+    assert any(c["nombre"] == "METROVACESA, S.A." for c in cargos["cotizadas"].values())
+
+    # Nada de esto en el mapa del dinero ni en el índice.
+    assert not any(n["schema"] == "Person" for n in grafo["nodes"])
+    assert not any((n.get("clave") or "").startswith("cnmv:") for n in grafo["nodes"])
+    assert not any(e["schema"] == "Ownership" for e in grafo["edges"])
+    assert not any((e.get("clave") or "").startswith("cnmv:") for e in indice["entidades"])
+    # Ni entre las personas de los cargos.
+    assert not any(p["clave"].startswith("cnmv:") for p in cargos["personas"])

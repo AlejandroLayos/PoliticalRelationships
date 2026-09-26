@@ -175,6 +175,11 @@ jobs:
           # mapa. Siete ficheros pequeños. Ignora el rango de fechas.
           ejecutar senado --desde "$D" --hasta "$H"
 
+          # Los accionistas significativos de las cotizadas de la lista
+          # (`datos/cotizadas.csv`), según la CNMV: unas cien páginas, con
+          # pausa. Ignora el rango de fechas: es la foto de hoy.
+          ejecutar cnmv --desde "$D" --hasta "$H"
+
           # La Plataforma publica tres feeds y hasta el 18/9/2026 sólo se
           # leía uno. `agregadas` trae lo que vuelcan las plataformas
           # autonómicas; `licitaciones` es el feed principal del Estado y

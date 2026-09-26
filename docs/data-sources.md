@@ -513,6 +513,58 @@ partido (Organization) --UnknownLink{relacion: partido_en_grupo, legislatura}-->
 
 ---
 
+## 2.septies CNMV — accionistas significativos de las cotizadas
+
+**Aporta:** quién tiene más del 3 % de los derechos de voto de cada cotizada,
+y en qué otras cotizadas participa ella: la red de propiedad entre las grandes
+empresas, sus fondos y sus accionistas de referencia. Es la mitad empresarial
+de la red de poder (spec §12, ampliación del 26/9/2026).
+
+**Acceso:** el portal de la CNMV, sin registro. Cinco vueltas de
+reconocimiento (`docs/fuentes/cnmv-reconocimiento.md`) encontraron el camino:
+
+- `Consultas/derechosvoto/ps_ac_ini.aspx?nif=…` da en su título el nombre que
+  la CNMV tiene para ese NIF, y enlaza a las dos tablas con un identificador
+  de sesión (`qS`).
+- Para un tercio de las cotizadas esa página no trae enlaces (Iberdrola,
+  Inditex, Indra, Endesa…). El buscador de participaciones
+  (`busqueda.aspx?id=7`, un formulario ASP.NET) sí los da por denominación.
+- `Notificaciones-Participaciones.aspx?qS=…` → tabla
+  `gridAccionistasSignificativos`; `SociedadesParticipa.aspx?qS=…` → tabla
+  `gridSociedades`. Cada celda trae su columna en `data-th`.
+
+**Qué cotizadas.** Las de `ingest/sinapsis_ingest/datos/cotizadas.csv`: el
+Ibex 35 con domicilio en España, los grupos de medios cotizados y las
+sociedades con participación de la SEPI. La lista dice a quién se pregunta; el
+nombre lo pone la CNMV, y un NIF que la CNMV no reconoce se salta.
+
+**Personas.** Entre los accionistas hay personas físicas («AL THANI ,
+KHALID THANI ABDULLAH»). Salen con nombre, en su papel de accionista
+significativo y en ningún otro: no entran en el mapa del dinero, ni en la
+lista de cargos, ni se unen a nadie. La CNMV escribe igual a una sociedad y
+a una persona, así que la duda cae del lado de la persona: sólo es sociedad lo
+que lleva una forma jurídica reconocible (`es_persona_fisica` en
+`sinapsis_ingest/cnmv.py`).
+
+**Límites conocidos:**
+
+- La fecha de la tabla es la del registro de la última notificación en la
+  CNMV, no la de compra. Se publica con ese nombre.
+- El `qS` cambia en cada sesión: el enlace que se publica es la página estable
+  de la cotizada (`ps_ac_ini.aspx?nif=`).
+- Los consejos de administración están en el informe anual de gobierno
+  corporativo, un PDF cuya tabla C.1.2 trae también la fecha de nacimiento de
+  cada consejero. Se reconoce en unos informes y no en otros (formato libre);
+  queda para una segunda fase.
+
+**Mapeo a FollowTheMoney:**
+
+```
+titular (Company | Person) --Ownership--> cotizada (Company, nif:…)
+```
+
+---
+
 ## 2.quinquies Cuentas de los partidos (Tribunal de Cuentas) — reconocida, sin conector
 
 Para la línea 2 de la fase 7. El Tribunal de Cuentas fiscaliza cada año los
