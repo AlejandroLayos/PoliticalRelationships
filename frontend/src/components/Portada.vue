@@ -50,8 +50,14 @@ const props = defineProps({
   nDeclarados: { type: Number, default: 0 },
   /** {comunidad: [presidencias]} según el BOE, para la edición de cada comunidad. */
   presidenciasAutonomicas: { type: Object, default: () => ({}) },
+  /** Si la edición trae cargos: sin ellos no hay red de poder que ofrecer. */
+  hayRed: { type: Boolean, default: false },
+  /** Cuántas cotizadas trae la edición (CNMV), para la entrada de la red. */
+  nCotizadas: { type: Number, default: 0 },
+  /** Cuántas personas con cargo de alta instancia judicial o fiscal. */
+  nAltasInstancias: { type: Number, default: 0 },
 })
-const emit = defineEmits(['seleccionar', 'verMapa', 'territorio', 'verCargo', 'verClave', 'verCargos'])
+const emit = defineEmits(['seleccionar', 'verMapa', 'territorio', 'verCargo', 'verClave', 'verCargos', 'verRed'])
 
 /** Lo que cobra una sociedad, si está en el extracto del índice. Contexto, no ranking. */
 function cobraDe(clave) {
@@ -412,6 +418,36 @@ function filasVisibles(l) {
       arriba, antetítulo, título, qué mide y —antes de la primera fila— lo
       que NO significa.
     -->
+    <!--
+      La entrada a la red de poder: personas y entidades unidas por hechos
+      con fuente. Cada enlace sólo sale si la edición trae con qué.
+    -->
+    <section v-if="hayRed && !territorio" class="red-entrada">
+      <header class="seccion-cabeza">
+        <p class="antetitulo">Red de poder</p>
+        <h2>Quién está unido a quién, y quién lo dice</h2>
+        <p class="que">
+          Gobiernos, ministerios, partidos, tribunales, empresas cotizadas y sus accionistas, con
+          las personas que la fuente une a cada uno: un nombramiento, un escaño, una autorización,
+          una participación. Cada línea, con su documento.
+        </p>
+      </header>
+      <ul class="red-enlaces">
+        <li><a href="?v=poder" @click.prevent="emit('verRed', '')">El Gobierno en curso y sus ministerios →</a></li>
+        <li v-if="nAltasInstancias">
+          <a href="?v=poder&n=organismo:tribunal-constitucional" @click.prevent="emit('verRed', 'organismo:tribunal-constitucional')">
+            El Constitucional: quién propuso a cada magistrado →
+          </a>
+        </li>
+        <li v-if="nCotizadas">
+          <a href="?v=poder&n=nif:A28297059" @click.prevent="emit('verRed', 'nif:A28297059')">Los accionistas de un grupo de medios: Prisa →</a>
+        </li>
+        <li v-if="nCotizadas">
+          <a href="?v=poder&n=nif:A28599033" @click.prevent="emit('verRed', 'nif:A28599033')">Indra: sus accionistas, sus ex altos cargos y de quién cobra →</a>
+        </li>
+      </ul>
+    </section>
+
     <div class="rejilla">
       <section v-for="l in listas" :key="l.clave" class="seccion" :class="l.tono">
         <header class="seccion-cabeza">
@@ -502,6 +538,7 @@ function filasVisibles(l) {
         por dinero: ordenada por euros se leería como una lista de
         sospechosos, y no lo es.
       -->
+
       <section v-if="cruces.length && !territorio" class="seccion puertas">
         <header class="seccion-cabeza">
           <p class="antetitulo">Puertas giratorias</p>
@@ -971,5 +1008,23 @@ function filasVisibles(l) {
   .apoyo div { padding: var(--e3) var(--e2) var(--e3) 0; margin-right: var(--e3); }
   .apoyo dd { font-size: var(--t-h3); }
   .rejilla { gap: var(--e6); margin-top: var(--e6); }
+}
+/*
+  La franja de la red de poder: a lo ancho, bajo la cabecera, antes de las
+  listas del dinero. Texto a la izquierda, entradas a la derecha.
+*/
+.red-entrada {
+  display: grid; gap: var(--e3) var(--e7);
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 26rem);
+  align-items: end;
+  /* Sólo arriba y abajo: los lados los pone la maqueta de la portada. */
+  margin-top: var(--e6); margin-bottom: var(--e2); padding-top: var(--e3);
+  border-top: 3px solid var(--filete);
+}
+.red-entrada h2 { margin: 0; }
+.red-enlaces { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e2); }
+.red-enlaces a { color: var(--tinta); font-weight: 600; }
+@media (max-width: 60rem) {
+  .red-entrada { grid-template-columns: minmax(0, 1fr); }
 }
 </style>

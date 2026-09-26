@@ -1169,6 +1169,10 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
             "cnmv": sum(len(c["accionistas"]) for c in cotizadas.values()),
         },
         "cotizadas": len(cotizadas),
+        # Personas con algún cargo de alta instancia judicial o fiscal.
+        "altas_instancias": sum(
+            1 for p in salida if any(x.get("ambito") == "justicia" for x in p["periodos"])
+        ),
         "cruces": cruces[:MAX_CRUCES_EN_PORTADA],
         "n_cruces": len(cruces),
         "declarados": declarados[:MAX_CRUCES_EN_PORTADA],

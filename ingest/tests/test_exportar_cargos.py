@@ -1060,7 +1060,9 @@ def test_una_alta_instancia_judicial_sale_con_su_tribunal_y_sin_gobierno(store_c
     )
     _ingerir_real(store_congreso, BOEConnector(), raw(otro, "BOE-A-2024-99999"))
 
-    _, _, cargos = _volcar(store_congreso, tmp_path)
+    grafo, _, cargos = _volcar(store_congreso, tmp_path)
+    # La portada sabe que hay altas instancias, para ofrecer la entrada.
+    assert grafo["cargos"]["altasInstancias"] == 2
     por_nombre = {p["nombre"]: p for p in cargos["personas"]}
     [senado] = por_nombre["José María Macías Castaño"]["periodos"]
     assert senado["organismo"] == "Tribunal Constitucional"
@@ -1505,6 +1507,7 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
     )
     grafo, indice, cargos = _volcar(store, tmp_path)
 
+    assert grafo["cargos"]["cotizadas"] == len(cargos["cotizadas"]) > 1
     prisa = cargos["cotizadas"]["nif:A28297059"]
     accionistas = {a["nombre"]: a for a in prisa["accionistas"]}
     assert accionistas["KHALID THANI ABDULLAH AL THANI"]["persona"] is True

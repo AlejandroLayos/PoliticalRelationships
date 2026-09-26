@@ -725,6 +725,10 @@ def exportar(
             "nDeclarados": cargos["n_declarados"],
             # Quién presidió cada comunidad en lo leído del BOE.
             "presidenciasAutonomicas": cargos["presidencias_autonomicas"],
+            # Para las entradas de la red de poder en la portada: sólo se
+            # ofrece lo que la edición trae.
+            "cotizadas": cargos["cotizadas"],
+            "altasInstancias": cargos["altas_instancias"],
         },
     }
 
