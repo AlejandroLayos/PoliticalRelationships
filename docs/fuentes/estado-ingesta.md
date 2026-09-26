@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `36247811565` · 2026-09-26T15:15:02Z
+- Ejecución: `36252676448` · 2026-09-26T16:48:50Z
 
 Todas las fuentes respondieron.
 
