@@ -126,6 +126,9 @@ def test_el_emisor_sale_del_titulo():
         "FROB",
         "INSTITUTO VASCO DE FINANZAS",
         "FI COBAS SELECCION",
+        # Con coma, pero fondos de inversión: así los escribe la CNMV (26/9/2026).
+        "COBAS SELECCION , FI",
+        "COBAS IBERIA, F.I.",
         "INDEPENDANCE AM",
         "EDIZIONE S.R.L.",
         # Con coma, pero con forma jurídica.
@@ -146,6 +149,8 @@ def test_sociedades(denominacion):
         "UTOR MARTÍNEZ, JUAN ADOLFO",
         "GRIFOLS ROURA , ENRIQUE Y NURIA",
         "ANDERSEN , MARC P.",
+        # «FI» sólo cuenta como forma cuando va suelto.
+        "FIGUEROA FINCA , FILOMENA",
     ],
 )
 def test_personas(denominacion):
