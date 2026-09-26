@@ -1367,3 +1367,24 @@ def test_sin_partido_en_el_mapa_la_formacion_sale_sin_ficha(store_congreso, tmp_
     _, _, cargos = _volcar(store_congreso, tmp_path)
     [vox] = cargos["formaciones"].values()
     assert "entidad" not in vox
+
+
+def test_el_relevo_autonomico_del_mismo_dia_va_en_orden():
+    from sinapsis_ingest.exportar_cargos import presidencias_autonomicas
+
+    personas = [
+        {
+            "clave": "a",
+            "nombre": "Azcón",
+            "periodos": [{"puesto": "Presidente de Aragón", "desde": "2023-08-11"}],
+        },
+        {
+            "clave": "l",
+            "nombre": "Lambán",
+            "periodos": [{"puesto": "Presidente de Aragón", "hasta": "2023-08-11"}],
+        },
+    ]
+    assert [x["nombre"] for x in presidencias_autonomicas(personas)["Aragón"]] == [
+        "Lambán",
+        "Azcón",
+    ]

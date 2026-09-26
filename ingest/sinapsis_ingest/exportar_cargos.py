@@ -344,8 +344,10 @@ def presidencias_autonomicas(personas: list[dict[str, Any]]) -> dict[str, list[d
                     **{k: p[k] for k in ("desde", "hasta") if p.get(k)},
                 }
             )
+    # A igual fecha, el cese del saliente antes que el nombramiento del
+    # entrante: el relevo de Lambán por Azcón es del mismo día.
     for lista in salida.values():
-        lista.sort(key=lambda x: x.get("desde") or x.get("hasta") or "")
+        lista.sort(key=lambda x: (x.get("desde") or x.get("hasta") or "", "desde" in x))
     return salida
 
 

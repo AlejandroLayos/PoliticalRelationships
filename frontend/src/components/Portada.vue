@@ -369,6 +369,7 @@ function filasVisibles(l) {
         <li v-for="p in presidentesDe" :key="p.persona + (p.desde ?? p.hasta ?? '')">
           <a href="#" @click.prevent="emit('verCargo', p.persona)">{{ p.nombre }}</a>
           <span v-if="p.desde" class="tramo">nombramiento del {{ fechaCorta(p.desde) }}</span>
+          <span v-else-if="p.hasta" class="tramo">cese el {{ fechaCorta(p.hasta) }}</span>
         </li>
       </ol>
       <p class="nota">
