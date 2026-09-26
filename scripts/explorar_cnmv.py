@@ -433,7 +433,7 @@ def filas_de_consejo(pdf: bytes) -> tuple[int, list[list[str]]]:
 def consejos(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
     salida = ["### El consejo en el informe de gobierno corporativo, por filas", ""]
     for empresa, nif in empresas.items():
-        codigo, cuerpo, _, _ = pedir(
+        codigo, cuerpo, tipo_o_error, _ = pedir(
             c, urljoin(BASE, f"ee/informaciongobcorp.aspx?nif={nif}")
         )
         html = cuerpo.decode("utf-8", errors="replace")
@@ -445,7 +445,12 @@ def consejos(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
             )
         ]
         if not docs:
-            salida.append(f"- {empresa}: sin informes por NIF")
+            # Por qué no: sin esto la vuelta anterior sólo dijo «sin informes»
+            # y no se supo si era la página o la conexión.
+            salida.append(
+                f"- {empresa}: sin informes por NIF (HTTP {codigo}, {len(html):,}"
+                f" caracteres, «{titulo(html)[:80]}», {tipo_o_error})"
+            )
             continue
         codigo, pdf, _, _ = pedir(c, docs[0])
         if codigo != 200 or pdf[:4] != b"%PDF":
@@ -477,12 +482,14 @@ def directivos(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
     """
     salida = ["### Notificaciones de directivos: sólo la forma", ""]
     for empresa, nif in empresas.items():
-        codigo, cuerpo, _, _ = pedir(
+        codigo, cuerpo, tipo_o_error, _ = pedir(
             c, urljoin(BASE, f"directivos-resultado.aspx?nif={nif}")
         )
         html = cuerpo.decode("utf-8", errors="replace")
         tablas_html = re.findall(r"<table.*?</table>", html, flags=re.S | re.I)
-        salida.append(f"- {empresa}: HTTP {codigo}, {len(tablas_html)} tablas")
+        salida.append(
+            f"- {empresa}: HTTP {codigo}, {len(tablas_html)} tablas ({tipo_o_error})"
+        )
         for t in tablas_html[:3]:
             cab = [
                 texto(x)[:40]
@@ -516,13 +523,22 @@ def main() -> int:
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Sexta vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        f"Séptima vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
         "Las anteriores siguen debajo.",
         "",
-        "## Sexta vuelta: consejos y directivos",
+        "## Séptima vuelta: consejos y directivos, con la sesión hecha",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
+        # La tercera vuelta llegó a los informes después de pasar por otras
+        # páginas; la sexta entró en frío y no vio ninguno. Primero la
+        # portada y la página de participaciones, que dejan la sesión hecha.
+        codigo, _, tipo, _ = pedir(c, PORTADA)
+        informe.append(f"- portada → HTTP {codigo} ({tipo}); cookies: {len(c.cookies)}")
+        codigo, _, tipo, _ = pedir(
+            c, urljoin(BASE, "derechosvoto/ps_ac_ini.aspx?nif=A28015865")
+        )
+        informe += [f"- participaciones de Telefónica → HTTP {codigo} ({tipo})", ""]
         muestra = {
             "telefonica": "A28015865",
             "prisa": "A28297059",
