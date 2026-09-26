@@ -269,6 +269,10 @@ describe('rótulos y nombres cortos', () => {
   it('el nombre corto de la CNMV, o el nombre sin la forma jurídica', () => {
     expect(nombreCorto({ nombre: 'PROMOTORA DE INFORMACIONES, S.A.', abreviada: 'PRISA' })).toBe('PRISA')
     expect(nombreCorto({ nombre: 'TELCO, S.A.' })).toBe('TELCO')
+    expect(nombreCorto({ nombre: 'COLONIAL SFL, SOCIMI, S.A.', abreviada: 'INMOBILIARIA COLONIAL' })).toBe('COLONIAL SFL')
+    expect(nombreCorto({ nombre: 'LOGISTA INTEGRAL, S.A.', abreviada: 'LOG' })).toBe('LOGISTA INTEGRAL')
+    expect(nombreCorto({ nombre: 'CONSTRUCCIONES Y AUXILIAR DE FERROCARRILES, S.A.', abreviada: 'CAF' })).toBe('CAF')
+    expect(nombreCorto({ nombre: 'INDUSTRIA DE DISEÑO TEXTIL, S.A.', abreviada: 'INDITEX' })).toBe('INDITEX')
   })
   it('cada caja con sus nombres', () => {
     const r = radiografiaCompleta(cargos())

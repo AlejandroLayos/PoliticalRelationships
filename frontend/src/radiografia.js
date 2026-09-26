@@ -647,7 +647,15 @@ export function cifras(cargos) {
 
 /** El nombre corto de una cotizada: el que le da la CNMV, si está. */
 export function nombreCorto(c) {
-  return c?.abreviada || (c?.nombre ?? '').replace(/,.*$/, '')
+  const base = (c?.nombre ?? '').replace(/,.*$/, '')
+  const ab = (c?.abreviada ?? '').trim()
+  if (!ab) return base
+  // La abreviada de la CNMV, sólo si abrevia: no cuando es más larga que la
+  // denominación («INMOBILIARIA COLONIAL» por «COLONIAL SFL»), ni cuando es el
+  // principio del nombre cortado («LOG» por «LOGISTA INTEGRAL»).
+  if (ab.length > base.length) return base
+  if (ab.length <= 3 && plano(base).startsWith(plano(ab)) && plano(base) !== plano(ab)) return base
+  return ab
 }
 
 // Lo que sobra al final del nombre de un accionista para reconocerlo: la forma

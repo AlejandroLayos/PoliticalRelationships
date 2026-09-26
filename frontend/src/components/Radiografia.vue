@@ -262,6 +262,16 @@ const CORTO_PROPONENTE = {
   'Consejo General del Poder Judicial': 'Propone el CGPJ',
 }
 const hayJusticia = computed(() => Object.keys(r.value?.justicia?.recuento ?? {}).length > 0)
+/** Quién se sienta dónde, una vez por persona: «Isidro Fainé (ACS y Telefónica)». */
+function porPersona(lista) {
+  const m = new Map()
+  for (const x of lista ?? []) {
+    const g = m.get(x.persona) ?? { persona: x.persona, nombre: x.nombre, en: [] }
+    g.en.push(x)
+    m.set(x.persona, g)
+  }
+  return [...m.values()]
+}
 const abiertos = ref(new Set())
 const abrir = (k) => (abiertos.value = new Set([...abiertos.value, k]))
 const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
@@ -549,10 +559,10 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             </p>
             <p v-if="n.sienta?.length" class="sienta">
               <b>Sienta en los consejos:</b>{{ ' ' }}
-              <template v-for="(x, i) in n.sienta" :key="x.persona + x.cotizada">
+              <template v-for="(x, i) in porPersona(n.sienta)" :key="x.persona">
                 <span v-if="i">; </span>
                 <button type="button" class="enlace" @click="ir(x.persona)">{{ nombre(x.nombre) }}</button>
-                ({{ corto(x.cotizada) }}<template v-if="n.estado">, por {{ sigla(nombre(nombreTitular(x.titular))) }}</template>)
+                ({{ x.en.map((e) => corto(e.cotizada) + (n.estado ? `, por ${sigla(nombre(nombreTitular(e.titular)))}` : '')).join(' y ') }})
               </template>
             </p>
             <details v-if="n.consejeros?.length" class="puentes-nucleo">
