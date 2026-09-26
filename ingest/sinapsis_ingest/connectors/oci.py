@@ -29,6 +29,8 @@ en que viene y no se reordena: darle la vuelta inventaría un nombre.
 from __future__ import annotations
 
 import io
+import json
+import os
 import re
 import time
 import unicodedata
@@ -37,6 +39,7 @@ import zipfile
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from html.parser import HTMLParser
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -276,9 +279,72 @@ class OCIConnector:
     source_id = "oci"
     extractor_version = "oci-autorizaciones/1"
 
-    def __init__(self, cliente: httpx.Client | None = None, buscador: str = BUSCADOR):
+    def __init__(
+        self,
+        cliente: httpx.Client | None = None,
+        buscador: str = BUSCADOR,
+        copia: Path | None = None,
+        esperas: tuple[float, ...] = (10.0, 30.0),
+    ):
         self._cliente = cliente
         self._buscador = buscador
+        # Dónde se guarda la última exportación descargada. El 26/9/2026 el
+        # buscador no respondió, la base de la ingesta empieza vacía cada
+        # noche, y la web se quedó un día sin ninguna autorización. Con la
+        # copia, un día sin respuesta enseña la lista del último día que la
+        # hubo —con su fecha de descarga, y diciéndolo—, no un hueco.
+        self._copia = copia
+        self._esperas = esperas
+
+    def _pedir(self, cliente: httpx.Client, url: str | httpx.URL) -> httpx.Response:
+        """GET con reintentos: la fuente a veces tarda más de un minuto."""
+        for intento, espera in enumerate((*self._esperas, None)):
+            try:
+                r = cliente.get(url)
+                r.raise_for_status()
+                return r
+            except httpx.HTTPError as exc:
+                if espera is None:
+                    raise
+                log.warning("oci: reintento", intento=intento + 1, detalle=str(exc))
+                time.sleep(espera)
+        raise AssertionError("inalcanzable")
+
+    def _guardar_copia(self, raw: RawDocument) -> None:
+        if self._copia is None:
+            return
+        self._copia.mkdir(parents=True, exist_ok=True)
+        (self._copia / "exportacion.bin").write_bytes(raw.content)
+        (self._copia / "exportacion.json").write_text(
+            json.dumps(
+                {
+                    "url": raw.url,
+                    "media_type": raw.media_type,
+                    "retrieved_at": raw.retrieved_at.isoformat(),
+                }
+            ),
+            encoding="utf-8",
+        )
+
+    def _desde_la_copia(self, motivo: str) -> Iterator[RawDocument]:
+        """La última exportación guardada, con SU fecha de descarga, o nada."""
+        if self._copia is None or not (self._copia / "exportacion.bin").exists():
+            log.warning("oci: sin respuesta y sin copia guardada", motivo=motivo)
+            return
+        meta = json.loads((self._copia / "exportacion.json").read_text(encoding="utf-8"))
+        log.error(
+            "oci: la fuente no responde; se usa la copia de la última descarga",
+            motivo=motivo,
+            descargada=meta["retrieved_at"],
+        )
+        yield RawDocument(
+            source_id=self.source_id,
+            url=meta["url"],
+            content=(self._copia / "exportacion.bin").read_bytes(),
+            media_type=meta["media_type"],
+            retrieved_at=datetime.fromisoformat(meta["retrieved_at"]),
+            metadata={"copia": True},
+        )
 
     def fetch(self, **_: Any) -> Iterator[RawDocument]:
         """La exportación entera del buscador, de una vez.
@@ -295,10 +361,10 @@ class OCIConnector:
         propio = self._cliente is None
         try:
             try:
-                r = cliente.get(self._buscador)
-                r.raise_for_status()
+                r = self._pedir(cliente, self._buscador)
             except httpx.HTTPError as exc:
                 log.warning("oci: el buscador no responde", detalle=str(exc))
+                yield from self._desde_la_copia("el buscador no responde")
                 return
             enlace = _EXPORTACION.search(r.text)
             encontrados = re.search(r"(\d[\d.]*)\s+Resultados encontrados", r.text)
@@ -308,22 +374,28 @@ class OCIConnector:
                 )
             if not enlace:
                 log.warning("oci: el buscador ya no enlaza la exportación")
+                yield from self._desde_la_copia("el buscador ya no enlaza la exportación")
                 return
             url = httpx.URL(self._buscador).join(enlace.group(1).replace("&amp;", "&"))
             time.sleep(0.5)
             try:
-                x = cliente.get(url)
-                x.raise_for_status()
+                x = self._pedir(cliente, url)
             except httpx.HTTPError as exc:
                 log.warning("oci: la exportación no se descarga", detalle=str(exc))
+                yield from self._desde_la_copia("la exportación no se descarga")
                 return
-            yield RawDocument(
+            raw = RawDocument(
                 source_id=self.source_id,
                 url=str(url),
                 content=x.content,
                 media_type=x.headers.get("content-type", "application/zip").split(";")[0],
                 retrieved_at=datetime.now(UTC),
             )
+            # Sólo se guarda lo que se puede leer: una exportación rota no
+            # debe tapar la última buena.
+            if list(self.parse(raw)):
+                self._guardar_copia(raw)
+            yield raw
         finally:
             if propio:
                 cliente.close()
@@ -435,4 +507,5 @@ class OCIConnector:
 
 
 def crear() -> OCIConnector:
-    return OCIConnector()
+    copia = os.environ.get("SINAPSIS_COPIA_OCI")
+    return OCIConnector(copia=Path(copia) if copia else None)

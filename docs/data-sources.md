@@ -378,6 +378,15 @@ ex alto cargo (Person) --UnknownLink--> texto de la autorización (Organization)
 
 ---
 
+
+**Si no responde.** El 26/9/2026 el buscador no contestó en un minuto y, como la
+base de la ingesta empieza vacía cada noche, la web se quedó un día sin
+ninguna autorización. Ahora el conector reintenta dos veces con esperas, y si
+aun así no hay respuesta publica la **última exportación descargada**, con
+su fecha de descarga (caché de Actions, `/tmp/copia-oci`), y el estado de la
+ingesta dice que la fuente no respondió. Sin copia, no se publica nada: no se
+inventa.
+
 ## 2.quater Congreso de los Diputados — diputados por legislatura
 
 **Aporta:** quién fue diputado en cada legislatura, por qué circunscripción,

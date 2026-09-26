@@ -85,6 +85,17 @@ jobs:
       # come el desmontaje de contenedores. Por eso el detalle del fallo se
       # guarda en fichero y se vuelca en un paso posterior — al final del job,
       # que es lo único que se puede leer después.
+      # La última exportación buena de la OCI. El 26/9/2026 su buscador no
+      # respondió y, como la base empieza vacía cada noche, la web se quedó un
+      # día sin ninguna autorización. Con la copia, un día sin respuesta
+      # enseña la del último día que la hubo, con su fecha, y se dice.
+      - name: recuperar la copia de la OCI
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/copia-oci
+          key: oci-${{ github.run_id }}
+          restore-keys: oci-
+
       - name: ingerir
         working-directory: ingest
         continue-on-error: true
@@ -143,7 +154,17 @@ jobs:
           # Las autorizaciones de la Oficina de Conflictos de Intereses: dos
           # peticiones —el buscador y su exportación— y la lista entera. Como el
           # TdC, ignora el rango de fechas.
+          export SINAPSIS_COPIA_OCI=/tmp/copia-oci
           ejecutar oci --desde "$D" --hasta "$H"
+          # Si se tiró de la copia, la fuente NO respondió hoy: se dice aunque
+          # la instantánea traiga sus datos.
+          if grep -q "se usa la copia de la última descarga" /tmp/log-oci.txt; then
+            {
+              echo "### oci (no respondió: se publica la última exportación descargada)"
+              grep "se usa la copia de la última descarga" /tmp/log-oci.txt | tail -n 1
+              echo
+            } >> /tmp/fuentes-caidas.txt
+          fi
 
           # Los diputados del Congreso por legislatura, desde la IX: una página y
           # un fichero por legislatura. Ignora el rango de fechas.
@@ -178,6 +199,13 @@ jobs:
       # `restore` y `save` por separado, y el `save` con `always()`: si el paso
       # agota su tiempo, lo que sí se leyó se guarda igual. Con el `cache`
       # combinado sólo se guardaría si el job entero sale bien.
+      - name: guardar la copia de la OCI
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/copia-oci
+          key: oci-${{ github.run_id }}
+
       - name: recuperar la caché del BOE
         uses: actions/cache/restore@v4
         with:

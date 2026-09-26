@@ -226,3 +226,69 @@ def test_fetch_baja_la_exportacion_que_enlaza_el_buscador():
     assert doc.media_type == "application/zip"
     assert len(pedidas) == 2
     assert len(list(OCIConnector().parse(doc))) == 644
+
+
+def _servidor_bueno(peticion: httpx.Request) -> httpx.Response:
+    if "expTab.htm" in str(peticion.url):
+        return httpx.Response(
+            200, content=HOJA.read_bytes(), headers={"content-type": "application/zip"}
+        )
+    return httpx.Response(
+        200, content=BUSCADOR_HTML.read_bytes(), headers={"content-type": "text/html"}
+    )
+
+
+def _servidor_caido(peticion: httpx.Request) -> httpx.Response:
+    raise httpx.ReadTimeout("The read operation timed out", request=peticion)
+
+
+def test_un_fallo_pasajero_se_reintenta():
+    llamadas = {"n": 0}
+
+    def servidor(peticion: httpx.Request) -> httpx.Response:
+        llamadas["n"] += 1
+        if llamadas["n"] == 1:
+            raise httpx.ReadTimeout("lento", request=peticion)
+        return _servidor_bueno(peticion)
+
+    cliente = httpx.Client(transport=httpx.MockTransport(servidor))
+    [doc] = list(OCIConnector(cliente=cliente, esperas=(0.0,)).fetch())
+    assert "expTab.htm" in doc.url
+
+
+def test_sin_respuesta_se_usa_la_ultima_exportacion_con_su_fecha(tmp_path):
+    bueno = httpx.Client(transport=httpx.MockTransport(_servidor_bueno))
+    [descargada] = list(OCIConnector(cliente=bueno, copia=tmp_path, esperas=()).fetch())
+
+    caido = httpx.Client(transport=httpx.MockTransport(_servidor_caido))
+    [de_la_copia] = list(OCIConnector(cliente=caido, copia=tmp_path, esperas=(0.0,)).fetch())
+    # Los mismos bytes, con la fecha de cuando SÍ se descargaron, y marcada.
+    assert de_la_copia.content == descargada.content
+    assert de_la_copia.retrieved_at == descargada.retrieved_at
+    assert de_la_copia.metadata == {"copia": True}
+    assert len(list(OCIConnector().parse(de_la_copia))) == 644
+
+
+def test_sin_respuesta_ni_copia_no_se_inventa_nada(tmp_path):
+    caido = httpx.Client(transport=httpx.MockTransport(_servidor_caido))
+    assert list(OCIConnector(cliente=caido, copia=tmp_path, esperas=(0.0,)).fetch()) == []
+
+
+def test_una_exportacion_ilegible_no_tapa_la_copia_buena(tmp_path):
+    bueno = httpx.Client(transport=httpx.MockTransport(_servidor_bueno))
+    list(OCIConnector(cliente=bueno, copia=tmp_path, esperas=()).fetch())
+    buena = (tmp_path / "exportacion.bin").read_bytes()
+
+    def rota(peticion: httpx.Request) -> httpx.Response:
+        if "expTab.htm" in str(peticion.url):
+            return httpx.Response(
+                200, content=b"PK roto", headers={"content-type": "application/zip"}
+            )
+        return _servidor_bueno(peticion)
+
+    list(
+        OCIConnector(
+            cliente=httpx.Client(transport=httpx.MockTransport(rota)), copia=tmp_path
+        ).fetch()
+    )
+    assert (tmp_path / "exportacion.bin").read_bytes() == buena
