@@ -367,3 +367,17 @@ describe('lo esencial', () => {
     expect(loEsencial(radiografia({}), {})).toEqual([])
   })
 })
+
+describe('a quién sienta cada núcleo', () => {
+  it('los dominicales que representan a un titular del núcleo', () => {
+    const c = cargos()
+    c.cotizadas['nif:A1'].consejo.push({ clave: 'cnmv:persona:ocana', nombre: 'CARLOS OCAÑA', persona: true, cargo: 'Vicepresidente', categoria: 'Dominical', representa: 'SEPI', representaClave: 'cnmv:sociedad:sepi' })
+    c.cotizadas['nif:A2'].consejo.push({ clave: 'cnmv:persona:faine', nombre: 'ISIDRO FAINÉ', persona: true, cargo: 'Consejero', categoria: 'Dominical', representa: 'CRITERIA', representaClave: 'cnmv:sociedad:caixa' })
+    // Uno que dice representar a alguien que no casó con ningún accionista: no se une.
+    c.cotizadas['nif:A2'].consejo.push({ clave: 'cnmv:persona:x2', nombre: 'SIN CASAR', persona: true, categoria: 'Dominical', representa: 'OTRA COSA' })
+    const { nucleos } = nucleosEconomicos(c)
+    expect(nucleos.find((n) => n.estado).sienta.map((x) => x.nombre)).toEqual(['CARLOS OCAÑA'])
+    const caixa = nucleos.find((n) => n.titulares.some((t) => t.clave === 'cnmv:sociedad:caixa'))
+    expect(caixa.sienta).toEqual([{ persona: 'cnmv:persona:faine', nombre: 'ISIDRO FAINÉ', cotizada: 'nif:A2', cargo: 'Consejero', titular: 'cnmv:sociedad:caixa' }])
+  })
+})

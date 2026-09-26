@@ -65,6 +65,7 @@ export const RELACIONES = {
   ministerio: { ida: 'Ministerios y organismos con nombramientos', vuelta: 'Gobiernos con nombramientos aquí' },
   dinero: { ida: 'Pagó o adjudicó a', vuelta: 'Cobró de' },
   consejo: { ida: 'En el consejo de administración de', vuelta: 'Consejo de administración' },
+  representa: { ida: 'En los consejos, en nombre de', vuelta: 'Se sientan en consejos en su nombre' },
   accionista: { ida: 'Accionista significativo de', vuelta: 'Accionistas significativos' },
 }
 
@@ -80,6 +81,7 @@ const ORDEN_RELACION = [
   'nombramiento',
   'ministerio',
   'consejo',
+  'representa',
   'accionista',
   'dinero',
 ]
@@ -417,6 +419,24 @@ export function construirRed(cargos, grafo = null) {
             cargo: `${puesto} de ${c.nombre}`,
           })
         : nodoSociedad(m.clave, m.nombre)
+      // El dominical, además, unido al accionista que representa, si el
+      // volcado lo casó con uno de esta misma cotizada.
+      if (m.representaClave) {
+        const titular = c.accionistas?.find((a) => a.clave === m.representaClave)
+        if (titular) {
+          const nt = titular.persona
+            ? nodo(titular.clave, { tipo: 'persona', papel: 'accionista', nombre: nombreLegible(titular.nombre), rango: 1, cargo: 'Accionista significativo' })
+            : nodoSociedad(titular.clave, titular.nombre)
+          unir(miembro.id, nt.id, 'representa', {
+            texto: `Consejero dominical de ${c.nombre}, en su nombre`,
+            desde: null,
+            hasta: null,
+            ejercicio: m.ejercicio ?? null,
+            fuente: 'cnmv',
+            url: m.url ?? c.url ?? '',
+          })
+        }
+      }
       unir(miembro.id, cotizada.id, 'consejo', {
         texto: [
           puesto,
@@ -569,7 +589,7 @@ export function relevancia(red, id) {
   if (n.tipo !== 'persona') return 100 + (n.grado ?? 0)
   let fuertes = 0
   for (const a of red.porNodo.get(id) ?? []) {
-    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta', 'consejo', 'accionista'].includes(a.relacion)) fuertes += 1
+    if (['autorizacion', 'declaracion', 'dirigio', 'escano', 'preside', 'propuesta', 'consejo', 'representa', 'accionista'].includes(a.relacion)) fuertes += 1
   }
   return fuertes * 10 + (n.rango ?? 1) * 3 + Math.min(5, n.grado ?? 0)
 }

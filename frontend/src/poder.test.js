@@ -470,6 +470,18 @@ describe('las cotizadas de la CNMV', () => {
     expect(construirRed(c).nodos.has('cnmv:persona:z')).toBe(true)
   })
 
+  it('el dominical, unido al accionista que representa', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A1'].consejo = [
+      { clave: 'cnmv:persona:d', nombre: 'DOMINICAL EJEMPLO', persona: true, cargo: 'CONSEJERO', categoria: 'Dominical', representaClave: 'cnmv:sociedad:sepi', representa: 'SEPI' },
+    ]
+    const red = construirRed(c)
+    const g = conexionesDe(red, 'cnmv:sociedad:sepi').find((x) => x.relacion === 'representa')
+    expect(g.titulo).toBe('Se sientan en consejos en su nombre')
+    expect(g.items[0].nodo.id).toBe('cnmv:persona:d')
+    expect(g.items[0].hechos[0].texto).toMatch(/^Consejero dominical de INDRA/)
+  })
+
   it('dos consejos con la misma persona quedan unidos por ella', () => {
     const c = conCotizadas()
     c.cotizadas['nif:A1'].consejo = [{ clave: 'cnmv:persona:y', nombre: 'ANA EJEMPLO GARCÍA', persona: true, cargo: 'CONSEJERO' }]

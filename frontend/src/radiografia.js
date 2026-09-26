@@ -211,6 +211,16 @@ export function nucleosEconomicos(cargos) {
   for (const nu of nucleos) for (const c of nu.cotizadas) enNucleo.set(c.clave, [...(enNucleo.get(c.clave) ?? []), nu.id])
   for (const nu of nucleos) {
     nu.consejeros = compartidos.filter((x) => x.en.some((e) => enNucleo.get(e.clave)?.includes(nu.id)))
+    // A quién sienta el núcleo en los consejos: los dominicales que el propio
+    // informe de cada cotizada dice que representan a uno de sus titulares.
+    const suyos = new Set(nu.titulares.map((t) => t.clave))
+    nu.sienta = Object.values(cotizadas)
+      .flatMap((c) =>
+        (c.consejo ?? [])
+          .filter((m) => m.representaClave && suyos.has(m.representaClave))
+          .map((m) => ({ persona: m.clave, nombre: m.nombre, cotizada: c.clave, cargo: m.cargo ?? '', titular: m.representaClave })),
+      )
+      .sort((a, b) => a.cotizada.localeCompare(b.cotizada) || a.nombre.localeCompare(b.nombre, 'es'))
   }
   const referencias = Object.values(cotizadas)
     .filter((c) => !enNucleo.has(c.clave))
@@ -514,6 +524,16 @@ export function loEsencial(r, cargos) {
       texto: `El Estado es accionista de referencia de ${n(estado.cotizadas.length)} cotizadas; las mayores participaciones, en ${mayores
         .map((p) => `${corta(p.cotizada)} (${String(Math.round(p.porcentaje * 10) / 10).replace('.', ',')} %)`)
         .join(', ')}.`,
+    })
+  }
+  if (estado?.sienta?.length) {
+    const ejemplo = estado.sienta[0]
+    salida.push({
+      seccion: 't-nucleos',
+      texto:
+        estado.sienta.length === 1
+          ? `A través de esas participaciones, el Estado sienta a ${nombrePropio(ejemplo.nombre)} en el consejo de ${corta(ejemplo.cotizada)}.`
+          : `A través de esas participaciones, el Estado sienta ${n(estado.sienta.length)} consejeros dominicales en esos consejos; entre ellos, ${nombrePropio(ejemplo.nombre)} en ${corta(ejemplo.cotizada)}.`,
     })
   }
   const grupos = r.nucleos.filter((x) => !x.estado).slice(0, 3)

@@ -6,7 +6,7 @@
   red, centrada en él.
 */
 import { computed, nextTick, ref, watch } from 'vue'
-import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta } from '../radiografia.js'
+import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla } from '../radiografia.js'
 import { nombreDeFuente } from '../poder.js'
 
 const props = defineProps({
@@ -202,6 +202,11 @@ const medios = computed(() =>
     .map((c) => ({ ...c, accionistas: [...(c.accionistas ?? [])].sort((a, b) => b.porcentaje - a.porcentaje) })),
 )
 /** Quien preside el consejo de una cotizada, según su informe de gobierno. */
+/** El nombre de un titular por su clave, del registro de la CNMV. */
+const nombreTitular = (clave) => {
+  for (const c of Object.values(props.cargos?.cotizadas ?? {})) for (const a of c.accionistas ?? []) if (a.clave === clave) return a.nombre
+  return ''
+}
 const presidenteDe = (c) => (c.consejo ?? []).find((m) => /^presidente\b/i.test(m.cargo ?? '')) ?? null
 const GRUPOS_DE_PUENTES = {
   consejos: 'En más de un consejo de administración',
@@ -471,6 +476,14 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
               </template>
               — nombramientos por Real Decreto del Consejo de Ministros.
             </p>
+            <p v-if="n.sienta?.length" class="sienta">
+              <b>Sienta en los consejos:</b>{{ ' ' }}
+              <template v-for="(x, i) in n.sienta" :key="x.persona + x.cotizada">
+                <span v-if="i">; </span>
+                <button type="button" class="enlace" @click="ir(x.persona)">{{ nombre(x.nombre) }}</button>
+                ({{ corto(x.cotizada) }}<template v-if="n.estado">, por {{ sigla(nombre(nombreTitular(x.titular))) }}</template>)
+              </template>
+            </p>
             <p v-if="n.consejeros?.length" class="puentes-nucleo">
               <b>En uno de sus consejos y en el de otra cotizada:</b>{{ ' ' }}
               <template v-for="(c, i) in n.consejeros" :key="c.clave">
@@ -690,7 +703,7 @@ a.fuente { color: var(--tinta-2); }
 .pct { font-family: var(--mono); font-size: var(--t-xs); text-align: right; }
 .quien, .cruce { grid-column: 1 / -1; font-size: var(--t-xs); color: var(--tinta-3); margin-top: -2px; }
 .cruce { color: var(--emp); }
-.cadena, .puentes-nucleo { font-family: var(--sans); font-size: var(--t-s); line-height: 1.5; color: var(--tinta-2); margin: var(--e3) 0 0; }
+.cadena, .puentes-nucleo, .sienta { font-family: var(--sans); font-size: var(--t-s); line-height: 1.5; color: var(--tinta-2); margin: var(--e3) 0 0; }
 .medio .barras li { grid-template-columns: minmax(11rem, 2fr) minmax(3rem, 1fr) 3.8rem; }
 .preside { font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); margin: 0 0 var(--e2); display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; }
 .medios { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: var(--e4); }
