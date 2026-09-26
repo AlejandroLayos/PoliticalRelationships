@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<documento fecha_actualizacion="20181023185408">
+  <metadatos>
+    <identificador>BOE-A-2009-5086</identificador>
+    <origen_legislativo codigo="1">Estatal</origen_legislativo>
+    <departamento codigo="1820">Consejo General del Poder Judicial</departamento>
+    <rango codigo="1340">Real Decreto</rango>
+    <fecha_disposicion>20090213</fecha_disposicion>
+    <numero_oficial>165/2009</numero_oficial>
+    <titulo>Real Decreto 165/2009, de 13 de febrero, por el que se nombra Presidente de la Sala de lo Social de la Audiencia Nacional a don Ricardo Bodas Martín.</titulo>
+    <diario codigo="BOE">Boletín Oficial del Estado</diario>
+    <fecha_publicacion>20090327</fecha_publicacion>
+    <diario_numero>74</diario_numero>
+    <seccion>2</seccion>
+    <subseccion>A</subseccion>
+    <pagina_inicial>29364</pagina_inicial>
+    <pagina_final>29364</pagina_final>
+    <suplemento_pagina_inicial/>
+    <suplemento_pagina_final/>
+    <url_pdf>https://www.boe.es/boe/dias/2009/03/27/pdfs/BOE-A-2009-5086.pdf</url_pdf>
+    <url_epub/>
+    <url_pdf_catalan/>
+    <url_pdf_euskera/>
+    <url_pdf_gallego/>
+    <url_pdf_valenciano/>
+    <estatus_legislativo/>
+    <fecha_vigencia/>
+    <estatus_derogacion>N</estatus_derogacion>
+    <fecha_derogacion/>
+    <judicialmente_anulada>N</judicialmente_anulada>
+    <fecha_anulacion/>
+    <vigencia_agotada>N</vigencia_agotada>
+    <estado_consolidacion codigo="0"/>
+    <letra_imagen>A</letra_imagen>
+    <suplemento_letra_imagen/>
+  </metadatos>
+  <analisis>
+    <materias/>
+    <notas/>
+    <referencias>
+      <anteriores/>
+      <posteriores/>
+    </referencias>
+    <alertas/>
+  </analisis>
+  <texto>
+    <p class="parrafo">A propuesta del Pleno del Consejo General del Poder Judicial, en su reunión del día 29 de enero de 2009, y de conformidad con lo establecido en los artículos 127.2, 333 y 335.1 de la Ley Orgánica 6/1985, de 1 de julio, del Poder Judicial,</p>
+    <p class="parrafo">Vengo en nombrar Presidente de la Sala de lo Social de la Audiencia Nacional a don Ricardo Bodas Martín, Magistrado con destino en el Juzgado de lo Social número 31 de Madrid, en provisión de vacante producida por fallecimiento del anteriormente nombrado.</p>
+    <p class="parrafo_2">Dado en Madrid, el 13 de febrero de 2009.</p>
+    <p class="firma_rey">JUAN CARLOS R.</p>
+    <p class="firma_ministro">El Ministro de Justicia,</p>
+    <p class="firma_ministro">MARIANO FERNÁNDEZ BERMEJO</p>
+  </texto>
+</documento>
