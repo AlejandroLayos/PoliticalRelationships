@@ -5,6 +5,7 @@ import {
   estadoAccionista,
   flujosEntreAreas,
   nombrePropio,
+  nombramientosClave,
   mapaDeNucleos,
   nombreCorto,
   radiografiaCompleta,
@@ -283,5 +284,34 @@ describe('el mapa de los núcleos', () => {
     expect(a.aristas.filter((e) => e.tipo === 'participacion' && e.target === 'nif:A1')).toHaveLength(2)
     // La persona que está en dos consejos, unida a los dos.
     expect(a.aristas.filter((e) => e.tipo === 'consejo')).toHaveLength(2)
+  })
+})
+
+describe('lo que nombra cada Gobierno', () => {
+  it('reguladores, empresas públicas y órganos de control, por el nombre de la institución', () => {
+    const c = cargos()
+    const g = { persona: 'boe:persona:pres', nombre: 'Presidente Ejemplo' }
+    c.personas.push(
+      { clave: 'boe:persona:cnmv', nombre: 'Presi CNMV', periodos: [{ cargo: 'Presidenta de la Comisión Nacional del Mercado de Valores', desde: '2020-01-01', gobierno: g }] },
+      {
+        clave: 'boe:persona:be',
+        nombre: 'Gobernador BE',
+        periodos: [
+          { cargo: 'Ministro de Inclusión', desde: '2020-01-13', gobierno: g },
+          { cargo: 'Gobernador del Banco de España', desde: '2024-09-01', gobierno: g },
+        ],
+      },
+      { clave: 'boe:persona:sec', nombre: 'Sección', periodos: [{ cargo: 'Presidenta de la Sección Segunda del Consejo de Estado', gobierno: g }] },
+      { clave: 'boe:persona:min', nombre: 'Ministra', periodos: [{ cargo: 'Ministra de Hacienda', gobierno: g }] },
+    )
+    const [gob] = nombramientosClave(c)
+    expect(gob.grupos.reguladores.map((x) => x.nombre)).toEqual(['Gobernador BE', 'Presi CNMV'])
+    expect(gob.grupos.empresas.map((x) => x.nombre)).toEqual(['Ana Sepi'])
+    // Del Gobierno al regulador, según el mismo BOE.
+    expect(gob.grupos.reguladores[0].antes).toBe('Ministro de Inclusión')
+    expect(gob.grupos.reguladores[1].antes).toBeUndefined()
+    // Una sección del Consejo de Estado no es su presidencia.
+    expect(gob.grupos.control).toBeUndefined()
+    expect(gob.ministros).toBe(2)
   })
 })

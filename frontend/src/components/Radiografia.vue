@@ -6,7 +6,7 @@
   red, centrada en él.
 */
 import { computed, nextTick, ref, watch } from 'vue'
-import { AREAS, nombreCorto, nombrePropio, radiografiaCompleta } from '../radiografia.js'
+import { AREAS, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta } from '../radiografia.js'
 import { nombreDeFuente } from '../poder.js'
 
 const props = defineProps({
@@ -219,6 +219,8 @@ const puentesPorTipo = computed(() => {
   return g
 })
 const anio = (f) => (f ? f.slice(0, 4) : '')
+const abiertos = ref(new Set())
+const abrir = (k) => (abiertos.value = new Set([...abiertos.value, k]))
 const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
 </script>
 
@@ -342,6 +344,44 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             </li>
             <li v-if="flujoActual.hechos.length > 14" class="mas">y {{ numero(flujoActual.hechos.length - 14) }} más</li>
           </ul>
+        </div>
+      </section>
+
+      <!-- 1b. Lo que nombra cada Gobierno -->
+      <section v-if="r.gobiernos?.some((g) => Object.keys(g.grupos).length)" class="bloque" aria-labelledby="t-gobiernos">
+        <h2 id="t-gobiernos" class="seccion">Quién nombra a los árbitros</h2>
+        <p class="nota">
+          Quien preside los reguladores, las empresas públicas y los órganos consultivos se nombra por Real Decreto del
+          Consejo de Ministros; en algunos casos —la CNMC, la CNMV, el Consejo de Seguridad Nuclear, Protección de
+          Datos— el Congreso tiene que dar antes su visto bueno. Estos son los que el BOE atribuye a cada Gobierno.
+          Donde pone «antes», esa misma persona había estado en el Gobierno, según el mismo BOE. La presidencia del
+          Tribunal de Cuentas no se cuenta: la elige su propio Pleno.
+        </p>
+        <div class="gobiernos">
+          <section v-for="g in r.gobiernos.filter((x) => Object.keys(x.grupos).length)" :key="g.persona" class="gobierno">
+            <h3>
+              <button type="button" class="enlace" @click="ir(`gobierno:${g.persona}`)">Gobierno de {{ g.nombre }}</button>
+              <span v-if="g.formacion" class="formacion">{{ g.formacion }}</span>
+            </h3>
+            <p class="sub">{{ numero(g.altosCargos) }} altos cargos en el BOE · {{ numero(g.ministros) }} ministros</p>
+            <div v-for="(titulo, tipo) in TIPOS_DE_INSTITUCION" v-show="g.grupos[tipo]?.length" :key="tipo" class="grupo-nombramientos">
+              <h4>{{ titulo }} <span class="n">{{ g.grupos[tipo]?.length }}</span></h4>
+              <ul>
+                <li v-for="x in (g.grupos[tipo] ?? []).slice(0, abiertos.has(`${g.persona}|${tipo}`) ? 99 : 6)" :key="`${x.persona}|${x.cargo}|${x.desde}`">
+                  <button type="button" class="enlace" @click="ir(x.persona)">{{ x.nombre }}</button>
+                  <span class="cargo">{{ x.cargo.replace(/^(President[ae]|Gobernador[a]?) del? (la )?/, '') }}</span>
+                  <span v-if="x.desde" class="dato">{{ anio(x.desde) }}</span>
+                  <span v-if="x.antes" class="antes">antes: {{ x.antes }}</span>
+                </li>
+              </ul>
+              <button
+                v-if="(g.grupos[tipo]?.length ?? 0) > 6 && !abiertos.has(`${g.persona}|${tipo}`)"
+                type="button"
+                class="mas-boton"
+                @click="abrir(`${g.persona}|${tipo}`)"
+              >y {{ g.grupos[tipo].length - 6 }} más</button>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -554,6 +594,20 @@ a.fuente { color: var(--tinta-2); }
 .leyenda-mapa .punto.k-par { background: var(--par); }
 .leyenda-mapa .punto.cot { background: var(--tinta); width: 0.5rem; height: 0.5rem; }
 .leyenda-mapa .punto.per { border: 1.5px solid var(--tinta-2); width: 0.45rem; height: 0.45rem; }
+
+/* Lo que nombra cada Gobierno */
+.gobiernos { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: var(--e5); }
+.gobierno { border-top: 3px solid var(--adm); padding-top: var(--e3); }
+.gobierno h3 { font-family: var(--serif); font-size: var(--t-h3); margin: 0; }
+.gobierno .formacion { font-family: var(--mono); font-size: var(--t-xs); color: var(--tinta-3); margin-left: var(--e2); }
+.gobierno .sub { font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); margin: var(--e1) 0 var(--e3); }
+.grupo-nombramientos h4 { font-family: var(--sans); font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--tinta-2); margin: var(--e3) 0 var(--e1); }
+.grupo-nombramientos h4 .n { font-family: var(--mono); color: var(--tinta-3); }
+.grupo-nombramientos ul { list-style: none; margin: 0; padding: 0; font-family: var(--sans); font-size: var(--t-s); }
+.grupo-nombramientos li { padding: 3px 0; border-bottom: 1px solid var(--filete-suave); display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; }
+.grupo-nombramientos .cargo { color: var(--tinta-2); flex: 1 1 12rem; }
+.grupo-nombramientos .antes { flex-basis: 100%; font-size: var(--t-xs); color: var(--adm); }
+.mas-boton { all: unset; cursor: pointer; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-2); text-decoration: underline; margin-top: var(--e1); }
 
 /* Núcleos */
 .nucleos { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: var(--e4); }

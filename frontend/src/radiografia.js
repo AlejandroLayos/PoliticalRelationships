@@ -383,6 +383,79 @@ export function puentes(cargos) {
   return salida.sort((a, b) => orden[a.tipo] - orden[b.tipo] || b.n - a.n || a.nombre.localeCompare(b.nombre, 'es'))
 }
 
+/**
+ * Qué tipo de institución preside un cargo, por su nombre oficial. No se
+ * clasifica a nadie: se clasifica la institución, y sólo con nombres que no
+ * admiten duda. Lo que no casa no sale en este bloque (sí en la red).
+ */
+const INSTITUCIONES = [
+  {
+    tipo: 'reguladores',
+    patron:
+      /banco de espana|comision nacional del mercado de valores|comision nacional de los mercados y la competencia|comision nacional de energia|comision nacional de la competencia|comision del mercado de las telecomunicaciones|consejo de seguridad nuclear|agencia espanola de proteccion de datos|autoridad independiente de responsabilidad fiscal|consejo de transparencia|comision nacional del sector postal/,
+  },
+  {
+    tipo: 'empresas',
+    patron:
+      /sociedad estatal de participaciones industriales|fondo de reestructuracion ordenada bancaria|instituto de credito oficial|administrador de infraestructuras ferroviarias|renfe|puertos del estado|enaire|aena|compania espanola de seguros de credito|correos|paradores|patrimonio nacional|entidad publica empresarial|sociedad mercantil estatal/,
+  },
+  // Sin el Tribunal de Cuentas: su presidencia la elige su propio Pleno, y el
+  // Real Decreto sólo la formaliza. Contarla como «la nombra el Gobierno»
+  // sería falso.
+  { tipo: 'control', patron: /^presidente del consejo de estado$|instituto nacional de estadistica/ },
+]
+export const TIPOS_DE_INSTITUCION = {
+  reguladores: 'Reguladores y supervisores',
+  empresas: 'Empresas y entidades públicas',
+  control: 'Órganos consultivos y estadística',
+}
+
+/**
+ * Lo que nombra cada Gobierno: las presidencias de reguladores, empresas
+ * públicas y órganos de control, del BOE, con el Gobierno que las nombró.
+ */
+export function nombramientosClave(cargos) {
+  const gobiernos = new Map()
+  for (const p of cargos?.presidencias ?? []) {
+    if (!gobiernos.has(p.persona)) gobiernos.set(p.persona, { persona: p.persona, nombre: p.nombre, formacion: p.formacion ?? '', desde: p.desde ?? null, grupos: {}, altosCargos: new Set(), ministros: new Set() })
+  }
+  for (const p of cargos?.personas ?? []) {
+    for (const x of p.periodos ?? []) {
+      if (x.ambito === 'justicia' || (x.fuente ?? 'boe') !== 'boe') continue
+      const g = gobiernos.get(x.gobierno?.persona)
+      if (!g) continue
+      g.altosCargos.add(p.clave)
+      const cargo = x.cargo ?? ''
+      const plano_ = plano(cargo.replace(/^president[ae]/i, 'presidente'))
+      if (/^ministr[oa]\b/.test(plano_)) g.ministros.add(p.clave)
+      if (!/^(presidente|gobernador|gobernadora)\b/.test(plano_) || /\bseccion\b/.test(plano_)) continue
+      const inst = INSTITUCIONES.find((i) => i.patron.test(plano_))
+      if (!inst) continue
+      // Si antes estuvo en el Gobierno —ministro, vicepresidente, secretario
+      // de Estado—, según el mismo BOE y la misma persona: del Gobierno al
+      // árbitro. Sólo cargos anteriores a este nombramiento.
+      const antes = (p.periodos ?? [])
+        .filter((y) => y !== x && (y.fuente ?? 'boe') === 'boe' && y.desde && x.desde && y.desde < x.desde)
+        .filter((y) => /^(ministr[oa]|vicepresident[ae] (primer|segund|tercer|cuart)[oa]? del gobierno|vicepresident[ae] del gobierno|secretari[oa] de estado)/i.test(y.cargo ?? ''))
+        .sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))[0]
+      ;(g.grupos[inst.tipo] ??= []).push({
+        persona: p.clave,
+        nombre: p.nombre,
+        cargo,
+        desde: x.desde ?? null,
+        url: x.urlDesde ?? '',
+        ...(antes ? { antes: antes.cargo } : {}),
+      })
+    }
+  }
+  return [...gobiernos.values()]
+    .map((g) => {
+      for (const l of Object.values(g.grupos)) l.sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))
+      return { ...g, altosCargos: g.altosCargos.size, ministros: g.ministros.size }
+    })
+    .sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))
+}
+
 /** Las cifras de cabecera. */
 export function cifras(cargos) {
   const cot = Object.values(cargos?.cotizadas ?? {})
@@ -672,6 +745,7 @@ export function radiografia(cargos, grafo = null) {
     estado: estadoAccionista(cargos),
     flujos: flujosEntreAreas(cargos, grafo),
     puentes: puentes(cargos),
+    gobiernos: nombramientosClave(cargos),
   }
 }
 
