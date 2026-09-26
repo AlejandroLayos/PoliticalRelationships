@@ -512,7 +512,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
           </template>
         </p>
         <div class="nucleos">
-          <section v-for="n in r.nucleos" :key="n.id" class="nucleo" :class="{ 'es-estado': n.estado }">
+          <section v-for="n in r.nucleos.slice(0, abiertos.has('nucleos') ? 999 : 6)" :key="n.id" class="nucleo" :class="{ 'es-estado': n.estado }">
             <p class="antetitulo">{{ n.estado ? 'El Estado accionista' : n.titulares.some((t) => t.persona) ? 'Una fortuna personal' : 'Un grupo accionista' }}</p>
             <h3>
               <template v-if="n.estado">El Estado</template>
@@ -555,16 +555,24 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
                 ({{ corto(x.cotizada) }}<template v-if="n.estado">, por {{ sigla(nombre(nombreTitular(x.titular))) }}</template>)
               </template>
             </p>
-            <p v-if="n.consejeros?.length" class="puentes-nucleo">
-              <b>En uno de sus consejos y en el de otra cotizada:</b>{{ ' ' }}
-              <template v-for="(c, i) in n.consejeros" :key="c.clave">
-                <span v-if="i">; </span>
-                <button type="button" class="enlace" @click="ir(c.clave)">{{ nombre(c.nombre) }}</button>
-                ({{ c.en.map((e) => nombre(e.nombre)).join(' y ') }})
-              </template>
-            </p>
+            <details v-if="n.consejeros?.length" class="puentes-nucleo">
+              <summary>
+                {{ n.consejeros.length === 1 ? 'Una persona se sienta' : `${n.consejeros.length} personas se sientan` }} en uno de sus
+                consejos y en el de otra cotizada
+              </summary>
+              <p>
+                <template v-for="(c, i) in n.consejeros" :key="c.clave">
+                  <span v-if="i">; </span>
+                  <button type="button" class="enlace" @click="ir(c.clave)">{{ nombre(c.nombre) }}</button>
+                  ({{ c.en.map((e) => nombre(e.nombre)).join(' y ') }})
+                </template>
+              </p>
+            </details>
           </section>
         </div>
+        <button v-if="r.nucleos.length > 6 && !abiertos.has('nucleos')" type="button" class="mas-boton" @click="abrir('nucleos')">
+          Ver los otros {{ r.nucleos.length - 6 }} núcleos
+        </button>
       </section>
 
       <!-- 3. Los medios y sus dueños -->
@@ -619,11 +627,17 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
           <section v-for="(titulo, tipo) in GRUPOS_DE_PUENTES" v-show="puentesPorTipo[tipo]?.length" :key="tipo" class="grupo-puentes">
             <h3>{{ titulo }}</h3>
             <ul>
-              <li v-for="p in puentesPorTipo[tipo] ?? []" :key="`${tipo}|${p.clave}|${p.detalle[0]}`">
+              <li v-for="p in (puentesPorTipo[tipo] ?? []).slice(0, abiertos.has(`puentes|${tipo}`) ? 999 : 8)" :key="`${tipo}|${p.clave}|${p.detalle[0]}`">
                 <button type="button" class="enlace" @click="ir(p.clave)">{{ nombre(p.nombre) }}</button>
                 <span class="detalle">{{ p.detalle.map(nombre).join(' · ') }}{{ p.gobierno ? ` · Gobierno de ${p.gobierno}` : '' }}</span>
               </li>
             </ul>
+            <button
+              v-if="(puentesPorTipo[tipo]?.length ?? 0) > 8 && !abiertos.has(`puentes|${tipo}`)"
+              type="button"
+              class="mas-boton"
+              @click="abrir(`puentes|${tipo}`)"
+            >y {{ puentesPorTipo[tipo].length - 8 }} más</button>
           </section>
         </div>
       </section>
@@ -790,6 +804,8 @@ a.fuente { color: var(--tinta-2); }
 .quien, .cruce { grid-column: 1 / -1; font-size: var(--t-xs); color: var(--tinta-3); margin-top: -2px; }
 .cruce { color: var(--emp); }
 .cadena, .puentes-nucleo, .sienta { font-family: var(--sans); font-size: var(--t-s); line-height: 1.5; color: var(--tinta-2); margin: var(--e3) 0 0; }
+.puentes-nucleo summary { cursor: pointer; font-weight: 600; color: var(--tinta); }
+.puentes-nucleo p { margin: var(--e1) 0 0; }
 .medio .barras li { grid-template-columns: minmax(11rem, 2fr) minmax(3rem, 1fr) 3.8rem; }
 .preside { font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); margin: 0 0 var(--e2); display: flex; flex-wrap: wrap; gap: 0 var(--e2); align-items: baseline; }
 .medios { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: var(--e4); }
