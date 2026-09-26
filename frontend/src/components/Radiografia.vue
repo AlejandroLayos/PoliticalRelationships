@@ -89,6 +89,8 @@ const MAX_PROPIAS = 4
 const exAltos = (n) => `${n} ${n === 1 ? 'ex alto cargo' : 'ex altos cargos'}`
 function lineasDe(n) {
   if (n.tipo !== 'nucleo') return [{ texto: recortar(n.corto, 20) }]
+  // El Estado: a través de quién.
+  if (n.estado) return [{ texto: n.corto }, ...(r.value?.rotulos?.estado ? [{ texto: r.value.rotulos.estado, clase: 'sub' }] : [])]
   const lado = n.lado === 'izq' || n.lado === 'der'
   const nombre = enLineas(n.corto, lado ? 16 : 20).map((texto) => ({ texto }))
   const propias = n.propias ?? []
@@ -302,7 +304,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <p class="nota">
           Cada círculo es un núcleo: el Estado, un grupo accionista o una fortuna personal. Bajo su nombre, las cotizadas
           en las que sólo él tiene al menos un 5 %. Los puntos del centro son las cotizadas que se reparten dos núcleos o
-          más, atadas a cada uno. Las líneas de puntos, personas que se sientan en dos consejos. En rojo, por donde
+          más, atadas a cada uno. Las líneas de puntos, personas que se sientan en dos consejos (su nombre sale al pasar por encima). En rojo, por donde
           entra el Gobierno: ex altos cargos a los que la Oficina de Conflictos de Intereses autorizó a trabajar en esa
           cotizada. Pasa por encima para aislar un núcleo; pulsa para verlo en la red.
         </p>
@@ -333,7 +335,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             >
               <circle v-if="n.puertas && n.tipo === 'cotizada'" class="anillo-puerta" :r="n.r + 4" />
               <circle :r="n.r" />
-              <text v-bind="rotulo(n)">
+              <text v-if="n.tipo !== 'persona' || (vecinos && vecinos.has(n.id))" v-bind="rotulo(n)">
                 <tspan
                   v-for="(l, i) in lineasDe(n)"
                   :key="i"
@@ -724,12 +726,13 @@ a.fuente { color: var(--tinta-2); }
 .nodo.persona circle { fill: var(--hoja); stroke: var(--tinta-2); stroke-width: 1.5; }
 .nodo text { font-size: 12px; fill: var(--tinta-2); paint-order: stroke; stroke: var(--hoja); stroke-width: 3px; stroke-linejoin: round; }
 .nodo.nucleo text { font-size: 14px; font-weight: 700; fill: var(--tinta); }
+.nodo.nucleo text .sub { font-size: 11.5px; font-weight: 400; fill: var(--tinta-3); }
 .nodo.nucleo text .propia { font-size: 11.5px; font-weight: 400; fill: var(--tinta-2); cursor: pointer; }
 .nodo.nucleo text .propia:hover { fill: var(--tinta); text-decoration: underline; }
 .nodo.nucleo text .propia.mas { font-style: italic; fill: var(--tinta-3); cursor: default; text-decoration: none; }
 .nodo text .puerta, .nodo.nucleo text .propia .puerta { fill: var(--adm); font-weight: 600; }
 .anillo-puerta { fill: none; stroke: var(--adm); stroke-width: 2; }
-.nodo.persona text { font-size: 10.5px; font-style: italic; fill: var(--tinta-3); }
+.nodo.persona text { pointer-events: none; font-size: 10.5px; font-style: italic; fill: var(--tinta-3); }
 .nodo:focus-visible circle { stroke: var(--tinta); stroke-width: 3; }
 .desliza { display: none; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); margin: var(--e1) 0 0; }
 .leyenda-mapa { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5); padding: 0; margin: var(--e2) 0 0; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); }
