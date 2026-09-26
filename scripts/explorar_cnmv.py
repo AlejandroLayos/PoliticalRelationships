@@ -774,6 +774,70 @@ def otra_puerta(c: httpx.Client, empresas: dict[str, tuple[str, str]]) -> list[s
     return [*salida, ""]
 
 
+def dominicales(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
+    """El cuadro de los consejeros dominicales: a qué accionista representa cada uno.
+
+    Del IAGC, las tablas de las páginas que dicen «a quien representa» y de la
+    siguiente. De cada fila sólo las DOS primeras columnas —el consejero y el
+    accionista—: la tercera es su perfil, una biografía que no hace falta. Las
+    fechas, enmascaradas, como siempre.
+    """
+    import pdfplumber
+    import pypdfium2 as pdfium
+
+    salida = ["### Consejeros dominicales: a quién representan", ""]
+    for empresa, nif in empresas.items():
+        codigo, cuerpo, tipo_o_error, _ = pedir(
+            c, urljoin(BASE, f"ee/informaciongobcorp.aspx?nif={nif}")
+        )
+        html = cuerpo.decode("utf-8", errors="replace")
+        ejercicio, registro, url = iagc_del_ultimo_ejercicio(html)
+        if not url:
+            salida.append(f"- {empresa}: sin IAGC (HTTP {codigo}, {tipo_o_error})")
+            continue
+        codigo, pdf, _, _ = pedir(c, url)
+        if codigo != 200 or pdf[:4] != b"%PDF":
+            salida.append(f"- {empresa}: el IAGC no es un PDF (HTTP {codigo})")
+            continue
+        doc = pdfium.PdfDocument(pdf)
+        paginas = set()
+        for i in range(len(doc)):
+            texto = " ".join(doc[i].get_textpage().get_text_range().split())
+            if re.search(r"(?i)a quien representa", texto):
+                paginas.update({i, i + 1})
+        total = len(doc)
+        doc.close()
+        tablas = []
+        with pdfplumber.open(io.BytesIO(pdf)) as d:
+            for i in sorted(x for x in paginas if x < total):
+                for t in d.pages[i].extract_tables() or []:
+                    if not t:
+                        continue
+                    filas = [[_enmascarar(x) for x in fila[:2]] for fila in t]
+                    tablas.append(
+                        {
+                            "pagina": i + 1,
+                            "columnas": max(len(f) for f in t),
+                            "filas": filas,
+                        }
+                    )
+        salida.append(
+            f"- {empresa}: IAGC {ejercicio}; páginas {sorted(p + 1 for p in paginas)}; {len(tablas)} tablas"
+        )
+        for t in tablas[:6]:
+            salida.append(
+                f"  - página {t['pagina']}, {t['columnas']} columnas, {len(t['filas'])} filas; primera: {t['filas'][0]}"
+            )
+        (Path("ingest/tests/golden/cnmv") / f"{empresa}-dominicales.json").write_text(
+            json.dumps(
+                {"ejercicio": ejercicio, "tablas": tablas}, ensure_ascii=False, indent=0
+            ),
+            encoding="utf-8",
+        )
+        time.sleep(1.0)
+    return [*salida, ""]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", default="docs/fuentes/cnmv-reconocimiento.md")
@@ -784,10 +848,10 @@ def main() -> int:
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Novena vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        f"Décima vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
         "Las anteriores siguen debajo.",
         "",
-        "## Novena vuelta: las cotizadas «sin datos»",
+        "## Décima vuelta: los consejeros dominicales y a quién representan",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
@@ -800,13 +864,13 @@ def main() -> int:
             c, urljoin(BASE, "derechosvoto/ps_ac_ini.aspx?nif=A28015865")
         )
         informe += [f"- participaciones de Telefónica → HTTP {codigo} ({tipo})", ""]
-        informe += otra_puerta(
+        informe += dominicales(
             c,
             {
-                "iberdrola": ("A48010615", "IBERDROLA"),
-                "atresmedia": ("A78839271", "ATRESMEDIA"),
-                "vocento": ("A48001655", "VOCENTO"),
-                "inditex": ("A15075062", "INDUSTRIA DE DISEÑO TEXTIL"),
+                "telefonica": "A28015865",
+                "prisa": "A28297059",
+                "naturgy": "A08015497",
+                "caixabank": "A08663619",
             },
         )
     if anterior:
