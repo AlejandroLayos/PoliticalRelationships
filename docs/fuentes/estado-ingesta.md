@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `36238895468` · 2026-09-26T12:30:25Z
+- Ejecución: `36242682351` · 2026-09-26T13:45:33Z
 
 Todas las fuentes respondieron.
 
@@ -13,7 +13,7 @@ Todas las fuentes respondieron.
 | --- | ---: |
 | Base de Datos Nacional de Subvenciones | 549 |
 | Boletín Oficial del Estado | 2324 |
-| Comisión Nacional del Mercado de Valores | 204 |
+| Comisión Nacional del Mercado de Valores | 202 |
 | Congreso de los Diputados | 1477 |
 | Oficina de Conflictos de Intereses | 341 |
 | Plataforma de Contratación del Sector Público | 2830 |
