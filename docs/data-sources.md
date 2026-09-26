@@ -563,6 +563,38 @@ que lleva una forma jurídica reconocible (`es_persona_fisica` en
 titular (Company | Person) --Ownership--> cotizada (Company, nif:…)
 ```
 
+### Los consejos de administración (`cnmv-consejos`)
+
+**Qué:** los miembros del consejo de cada cotizada de la lista, con su
+cargo y su categoría (ejecutivo, dominical, independiente, otro externo),
+tal como los publica la cotizada en el cuadro C.1.2 de su informe anual de
+gobierno corporativo (IAGC), registrado en la CNMV.
+
+**Acceso:** `ee/informaciongobcorp.aspx?nif=…` lista los informes; se toma
+el IAGC del último ejercicio de su propia tabla (`wGridIAGC_gridDatos`), no
+el de remuneraciones. Es un PDF de 4 a 40 MB. Se guarda en caché por su
+número de registro, que no cambia: la primera noche se bajan todos y las
+demás sólo los nuevos. Sin pasar antes por la portada, la lista de informes
+vuelve vacía; y la CNMV corta conexiones a ratos (octava vuelta, 26/9/2026),
+así que cada petición se reintenta.
+
+**Lectura:** sólo el cuadro del modelo de la CNMV, reconocido por su
+cabecera exacta, que se repite en cada página. Ese modelo no trae fecha de
+nacimiento; el cuadro propio que añaden algunas (el BBVA, «Año de
+nacimiento») no se lee. De cada fila, nombre, representante (si la consejera
+es una sociedad), categoría y cargo, en listas cerradas; **ninguna fecha**.
+Una fila partida entre dos páginas llega sin categoría y se deja, contada:
+en las cinco muestras faltan así uno de Prisa y uno del BBVA. El apartado
+C.1.1 dice cuántos consejeros fijó la junta, y si se leen menos se anota.
+
+**En la web:** en `cargos.json` (`cotizadas[x].consejo`), nunca en el grafo
+ni en el índice. Una persona consejera tiene la misma clave que un
+accionista de la CNMV con el mismo nombre —Oughourlian, presidente y
+accionista de Prisa, es un nodo—, pero no se une con nadie de otra fuente:
+un exministro en un consejo no se enlaza con su ficha del BOE sólo por el
+nombre.
+
+
 ---
 
 ## 2.quinquies Cuentas de los partidos (Tribunal de Cuentas) — reconocida, sin conector

@@ -258,6 +258,52 @@ jobs:
           path: /tmp/cache-boe
           key: boe-${{ github.run_id }}
 
+      # Los consejos de administración de las cotizadas, del informe anual de
+      # gobierno corporativo (IAGC) de cada una: un PDF de 4 a 20 MB por
+      # cotizada y ejercicio. Paso propio, como el BOE, con su tiempo y su
+      # caché: el informe es anual, así que la primera noche se bajan todos y
+      # las demás sólo los nuevos. La caché va dentro del espacio de trabajo
+      # para poder ponerle de clave el resumen de lo que guarda: si esa noche
+      # no llegó ningún informe nuevo, no se guarda otra copia igual.
+      - name: recuperar la caché de la CNMV
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache-cnmv
+          key: cnmv-iagc-sin-clave
+          restore-keys: cnmv-iagc-
+
+      - name: ingerir consejos (CNMV)
+        working-directory: ingest
+        continue-on-error: true
+        timeout-minutes: 25
+        env:
+          SINAPSIS_CACHE_CNMV: ${{ github.workspace }}/.cache-cnmv
+          # Por debajo del timeout del paso (25): deja de pedir informes nuevos
+          # a los 20 minutos y termina bien.
+          SINAPSIS_CNMV_TOPE_MINUTOS: "20"
+        run: |
+          set +e
+          sinapsis-worker --run cnmv-consejos --desde 2025-01-01 --hasta "$(date -u +%F)" > /tmp/log-cnmv-consejos.txt 2>&1
+          rc=$?
+          set -e
+          cat /tmp/log-cnmv-consejos.txt
+          if [ "$rc" -ne 0 ]; then
+            {
+              echo "### cnmv-consejos (código $rc)"
+              tail -n 6 /tmp/log-cnmv-consejos.txt
+              echo
+            } >> /tmp/fuentes-caidas.txt
+            echo "::warning title=Fuente sin datos::cnmv-consejos no aportó nada a esta instantánea"
+          fi
+          echo "informes en caché: $(find "$SINAPSIS_CACHE_CNMV" -name '*.pdf' 2>/dev/null | wc -l)"
+
+      - name: guardar la caché de la CNMV
+        if: always() && hashFiles('.cache-cnmv/*.pdf') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .cache-cnmv
+          key: cnmv-iagc-${{ hashFiles('.cache-cnmv/*.pdf') }}
+
       # Acotado a propósito. Este paso propone fusiones para que las revise una
       # persona: no fusiona nada y la web no depende de él. El emparejamiento
       # difuso por trigramas crece mucho más rápido que el número de entidades,

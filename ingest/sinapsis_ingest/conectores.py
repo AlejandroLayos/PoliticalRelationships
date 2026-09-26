@@ -15,7 +15,17 @@ from dataclasses import dataclass
 from typing import Any
 
 from sinapsis_ingest import registry
-from sinapsis_ingest.connectors import bdns, boe, cnmv, congreso, oci, placsp, senado, tcu
+from sinapsis_ingest.connectors import (
+    bdns,
+    boe,
+    cnmv,
+    cnmv_consejos,
+    congreso,
+    oci,
+    placsp,
+    senado,
+    tcu,
+)
 
 
 @dataclass(frozen=True)
@@ -106,6 +116,10 @@ _CONECTORES: dict[str, Any] = {
     # Accionistas significativos de las cotizadas y sus participaciones: la
     # red empresarial (spec §12, ampliación del 26/9/2026).
     "cnmv": cnmv.crear,
+    # Los consejos de administración, del informe de gobierno corporativo de
+    # cada cotizada. Aparte porque baja un PDF por cotizada: tiene su paso, su
+    # tiempo y su caché en datos.yml.
+    "cnmv-consejos": cnmv_consejos.crear,
 }
 
 
