@@ -403,7 +403,12 @@ export function construirRed(cargos, grafo = null) {
     for (const m of c.consejo ?? []) {
       if (!m?.clave) continue
       const puesto = capitalizar(m.cargo ?? '') || 'Consejero'
-      const miembro = m.persona
+      // Unido a un cargo público con dos señales (nombre y un vínculo propio
+      // con esta misma sociedad): es esa persona, no otra con su nombre.
+      const cruzado = m.persona && m.cargoPublico && nodos.has(m.cargoPublico) ? nodos.get(m.cargoPublico) : null
+      const miembro = cruzado
+        ? cruzado
+        : m.persona
         ? nodo(m.clave, {
             tipo: 'persona',
             papel: 'consejero',
@@ -423,6 +428,7 @@ export function construirRed(cargos, grafo = null) {
         desde: null,
         hasta: null,
         ejercicio: m.ejercicio ?? null,
+        ...(cruzado ? { cruce: m.cruce ?? '' } : {}),
         fuente: 'cnmv',
         url: m.url ?? c.url ?? '',
       })

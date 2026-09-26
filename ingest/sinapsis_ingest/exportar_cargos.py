@@ -700,6 +700,52 @@ def _orden_en_el_consejo(cargo: str) -> int:
     return 3
 
 
+def cruzar_consejo(
+    cotizadas: dict[str, dict[str, Any]],
+    personas: list[dict[str, Any]],
+    en_empresas: dict[str, list[dict[str, Any]]],
+    declarantes: dict[str, list[dict[str, Any]]],
+) -> int:
+    """Une a un consejero de la CNMV con un cargo público, con dos señales.
+
+    La primera es el nombre, normalizado igual en los dos lados (`_plano`). No
+    basta: dos personas se llaman igual. La segunda es que ese cargo público
+    ya esté unido a ESA MISMA sociedad por su propia fuente: una autorización
+    de la Oficina de Conflictos de Intereses para trabajar en ella, o una
+    actividad que declaró al Congreso. Sólo con las dos se pone
+    `cargoPublico` en el consejero, con el porqué en `cruce`; la web entonces
+    los presenta como una sola persona. Con el nombre solo, no: se ven como
+    dos nodos unidos a la misma sociedad, que es lo que dicen las fuentes.
+
+    Una filial no es la sociedad: una autorización para el consejo de «MAPFRE
+    GLOBAL RISKS» no une con el consejo de MAPFRE, S.A. Devuelve cuántos unió.
+    """
+    por_nombre: dict[str, list[str]] = {}
+    for p in personas:
+        por_nombre.setdefault(_plano(p["nombre"]), []).append(p["clave"])
+    unidos = 0
+    for clave_sociedad, c in cotizadas.items():
+        autorizados = {a["persona"] for a in en_empresas.get(clave_sociedad, [])}
+        declarados = {a["persona"] for a in declarantes.get(clave_sociedad, [])}
+        for m in c.get("consejo", []):
+            if not m.get("persona"):
+                continue
+            candidatos = [
+                (clave, "nombre y autorización de la OCI para esta misma sociedad")
+                for clave in por_nombre.get(_plano(m["nombre"]), [])
+                if clave in autorizados
+            ] + [
+                (clave, "nombre y actividad declarada al Congreso en esta misma sociedad")
+                for clave in por_nombre.get(_plano(m["nombre"]), [])
+                if clave in declarados and clave not in autorizados
+            ]
+            # Dos cargos públicos que casan: no se elige.
+            if len({clave for clave, _ in candidatos}) == 1:
+                m["cargoPublico"], m["cruce"] = candidatos[0]
+                unidos += 1
+    return unidos
+
+
 def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
     """Las cotizadas, sus accionistas significativos y su consejo, según la CNMV.
 
@@ -1117,6 +1163,7 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         a["fecha"] for clave, lista in actos.items() if clave.startswith("boe:") for a in lista
     ]
     cotizadas = participaciones_cnmv(store)
+    consejeros_cruzados = cruzar_consejo(cotizadas, salida, en_empresas, declarantes)
     documento = {
         "generado": datetime.now(UTC).isoformat(),
         "fuente": "Boletín Oficial del Estado",
@@ -1212,6 +1259,8 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
         # Las que la CNMV clasifica como medios de comunicación.
         "medios": sum(1 for c in cotizadas.values() if c.get("medio")),
         # Personas con algún cargo de alta instancia judicial o fiscal.
+        # Consejeros de la CNMV unidos a un cargo público con dos señales.
+        "consejeros_cruzados": consejeros_cruzados,
         "altas_instancias": sum(
             1 for p in salida if any(x.get("ambito") == "justicia" for x in p["periodos"])
         ),

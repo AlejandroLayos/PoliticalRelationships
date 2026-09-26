@@ -450,6 +450,26 @@ describe('las cotizadas de la CNMV', () => {
     }
   })
 
+  it('un consejero unido con dos señales a un cargo público es esa persona', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A1'].consejo = [
+      { clave: 'cnmv:persona:ana', nombre: 'ANA', persona: true, cargo: 'CONSEJERO', cargoPublico: 'boe:persona:ana', cruce: 'nombre y autorización de la OCI para esta misma sociedad' },
+    ]
+    const red = construirRed(c)
+    expect(red.nodos.has('cnmv:persona:ana')).toBe(false)
+    const consejo = conexionesDe(red, 'boe:persona:ana').find((g) => g.relacion === 'consejo')
+    expect(consejo.items[0].nodo.id).toBe('nif:A1')
+    expect(consejo.items[0].hechos[0].cruce).toContain('autorización de la OCI')
+  })
+
+  it('si el cargo público no está en la red, el consejero sigue siendo el de la CNMV', () => {
+    const c = conCotizadas()
+    c.cotizadas['nif:A1'].consejo = [
+      { clave: 'cnmv:persona:z', nombre: 'ZOE', persona: true, cargo: 'CONSEJERO', cargoPublico: 'boe:persona:no-esta' },
+    ]
+    expect(construirRed(c).nodos.has('cnmv:persona:z')).toBe(true)
+  })
+
   it('dos consejos con la misma persona quedan unidos por ella', () => {
     const c = conCotizadas()
     c.cotizadas['nif:A1'].consejo = [{ clave: 'cnmv:persona:y', nombre: 'ANA EJEMPLO GARCÍA', persona: true, cargo: 'CONSEJERO' }]

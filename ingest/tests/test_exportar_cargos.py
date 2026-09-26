@@ -1615,3 +1615,62 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
     assert not any((e.get("clave") or "").startswith("cnmv:") for e in indice["entidades"])
     # Ni entre las personas de los cargos.
     assert not any(p["clave"].startswith("cnmv:") for p in cargos["personas"])
+
+
+# --- Consejero y cargo público: dos señales -------------------------------------
+
+
+def _consejo(nombre: str) -> dict:
+    return {
+        "nif:A1": {
+            "clave": "nif:A1",
+            "nombre": "EJEMPLO, S.A.",
+            "accionistas": [],
+            "consejo": [{"clave": "cnmv:persona:x", "nombre": nombre, "persona": True}],
+        }
+    }
+
+
+def test_consejero_y_cargo_publico_con_nombre_y_autorizacion_para_esa_sociedad():
+    from sinapsis_ingest.exportar_cargos import cruzar_consejo
+
+    cotizadas = _consejo("CARLOS OCAÑA ORBIS")
+    personas = [{"clave": "boe:persona:ocana", "nombre": "Carlos Ocaña Orbis"}]
+    empresas = {"nif:A1": [{"persona": "boe:persona:ocana"}]}
+    assert cruzar_consejo(cotizadas, personas, empresas, {}) == 1
+    m = cotizadas["nif:A1"]["consejo"][0]
+    assert m["cargoPublico"] == "boe:persona:ocana"
+    assert "autorización de la OCI" in m["cruce"]
+
+
+def test_consejero_con_el_nombre_solo_no_se_une():
+    from sinapsis_ingest.exportar_cargos import cruzar_consejo
+
+    cotizadas = _consejo("CARLOS OCAÑA ORBIS")
+    personas = [{"clave": "boe:persona:ocana", "nombre": "Carlos Ocaña Orbis"}]
+    # Autorizado, pero para otra sociedad (una filial, p. ej.).
+    empresas = {"nif:A2": [{"persona": "boe:persona:ocana"}]}
+    assert cruzar_consejo(cotizadas, personas, empresas, {}) == 0
+    assert "cargoPublico" not in cotizadas["nif:A1"]["consejo"][0]
+
+
+def test_la_declaracion_al_congreso_tambien_es_segunda_senal():
+    from sinapsis_ingest.exportar_cargos import cruzar_consejo
+
+    cotizadas = _consejo("ANA PÉREZ-GÓMEZ RUIZ")
+    personas = [{"clave": "congreso:persona:ana", "nombre": "Ana Pérez-Gómez Ruiz"}]
+    declarantes = {"nif:A1": [{"persona": "congreso:persona:ana"}]}
+    assert cruzar_consejo(cotizadas, personas, {}, declarantes) == 1
+    assert "Congreso" in cotizadas["nif:A1"]["consejo"][0]["cruce"]
+
+
+def test_dos_cargos_publicos_que_casan_no_se_elige():
+    from sinapsis_ingest.exportar_cargos import cruzar_consejo
+
+    cotizadas = _consejo("JUAN GARCÍA LÓPEZ")
+    personas = [
+        {"clave": "boe:persona:juan-1", "nombre": "Juan García López"},
+        {"clave": "oci:persona:juan-2", "nombre": "Juan García López"},
+    ]
+    empresas = {"nif:A1": [{"persona": "boe:persona:juan-1"}, {"persona": "oci:persona:juan-2"}]}
+    assert cruzar_consejo(cotizadas, personas, empresas, {}) == 0

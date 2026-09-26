@@ -559,6 +559,7 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
                   <span class="texto">{{ h.texto }}</span>
                   <span v-if="tramo(h)" class="cuando">{{ tramo(h) }}</span>
                   <span v-if="h.registro" class="cuando" title="Fecha en que la CNMV registró la última notificación; no es la de compra">registro {{ fechaCorta(h.registro) }}</span>
+                  <span v-if="h.cruce" class="cuando" title="Por qué se da por la misma persona">unido por {{ h.cruce }}</span>
                   <a v-if="h.url" :href="h.url" target="_blank" rel="noopener" class="fuente">{{ nombreDeFuente(h.fuente) }}</a>
                   <span v-else class="fuente">{{ nombreDeFuente(h.fuente) }}</span>
                 </li>
