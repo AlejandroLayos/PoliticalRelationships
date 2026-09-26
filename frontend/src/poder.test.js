@@ -3,6 +3,7 @@ import {
   buscarEnRed,
   capitalizar,
   claseDe,
+  nombreLegible,
   formaDeNif,
   nombreDeTipo,
   centroInicial,
@@ -433,5 +434,17 @@ describe('el camino entre dos nodos', () => {
     const red = construirRed(cargos())
     expect(camino(red, 'boe:persona:ana', 'no-existe')).toBeNull()
     expect(camino(red, 'boe:persona:ana', 'boe:persona:ana').nodos).toEqual(['boe:persona:ana'])
+  })
+})
+
+describe('nombreLegible', () => {
+  it('pasa a mayúscula inicial lo que viene en mayúsculas, con sus partículas', () => {
+    expect(nombreLegible('KHALID THANI ABDULLAH AL THANI')).toBe('Khalid Thani Abdullah al Thani')
+    expect(nombreLegible('JUAN ADOLFO UTOR MARTÍNEZ')).toBe('Juan Adolfo Utor Martínez')
+    expect(nombreLegible('MARÍA DE LOS ÁNGELES PÉREZ-CASTEJÓN')).toBe('María de los Ángeles Pérez-Castejón')
+  })
+
+  it('lo que ya trae minúsculas no se toca', () => {
+    expect(nombreLegible('Juan del Alcázar Narváez')).toBe('Juan del Alcázar Narváez')
   })
 })

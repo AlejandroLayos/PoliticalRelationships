@@ -139,6 +139,27 @@ export function formaDeNif(clave) {
   return f ? { forma: f[0], clase: f[1] } : null
 }
 
+const PARTICULAS = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'i', 'e', 'da', 'do', 'dos', 'van', 'von', 'al'])
+
+/**
+ * «KHALID THANI ABDULLAH AL THANI» → «Khalid Thani Abdullah al Thani». Sólo
+ * para mostrar el nombre de una persona que la fuente escribe en mayúsculas;
+ * lo que ya trae minúsculas se deja como viene.
+ */
+export function nombreLegible(nombre) {
+  const t = (nombre ?? '').trim()
+  if (!t || t !== t.toUpperCase()) return t
+  return t
+    .toLocaleLowerCase('es')
+    .split(/\s+/)
+    .map((palabra, i) =>
+      i > 0 && PARTICULAS.has(palabra)
+        ? palabra
+        : palabra.replace(/(^|[-'’])(\p{L})/gu, (_, sep, letra) => sep + letra.toLocaleUpperCase('es')),
+    )
+    .join(' ')
+}
+
 /** La clave de un organismo del BOE por su nombre. */
 function claveOrganismo(nombre) {
   return `organismo:${normaliza(nombre).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`
@@ -363,7 +384,7 @@ export function construirRed(cargos, grafo = null) {
     for (const a of c.accionistas ?? []) {
       if (!a?.clave) continue
       const titular = a.persona
-        ? nodo(a.clave, { tipo: 'persona', papel: 'accionista', nombre: a.nombre, rango: 1, cargo: 'Accionista significativo' })
+        ? nodo(a.clave, { tipo: 'persona', papel: 'accionista', nombre: nombreLegible(a.nombre), rango: 1, cargo: 'Accionista significativo' })
         : nodo(a.clave, {
             tipo: 'entidad',
             nombre: a.nombre,

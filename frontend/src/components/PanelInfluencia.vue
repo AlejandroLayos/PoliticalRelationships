@@ -1,4 +1,5 @@
 <script setup>
+import { nombreLegible } from '../poder.js'
 /**
  * La ficha de influencia: los hechos, en texto y en cifras.
  *
@@ -305,7 +306,7 @@ const sinDatos = computed(
         <h3>Accionistas significativos, según la CNMV</h3>
         <ul class="lista">
           <li v-for="a in cotizada.accionistas.slice(0, 10)" :key="a.clave">
-            <span>{{ a.nombre }}</span>
+            <span>{{ a.persona ? nombreLegible(a.nombre) : a.nombre }}</span>
             <span class="cargo-frente">{{ porcentaje(a.porcentaje) }} de los derechos de voto</span>
           </li>
         </ul>
@@ -541,7 +542,7 @@ const sinDatos = computed(
         <h3>Accionistas significativos, según la CNMV</h3>
         <ul class="lista">
           <li v-for="a in cotizada.accionistas.slice(0, 10)" :key="a.clave">
-            <span>{{ a.nombre }}</span>
+            <span>{{ a.persona ? nombreLegible(a.nombre) : a.nombre }}</span>
             <span class="cargo-frente">{{ porcentaje(a.porcentaje) }} de los derechos de voto</span>
           </li>
         </ul>
