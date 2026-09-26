@@ -1,5 +1,97 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Novena vuelta: 2026-09-26T14:05:15.752613+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Novena vuelta: las cotizadas «sin datos»
+
+- portada → HTTP 200 (text/html; charset=utf-8); cookies: 1
+- participaciones de Telefónica → HTTP 200 (text/html; charset=utf-8)
+
+### Las cotizadas «sin datos»: otra puerta
+
+#### iberdrola (A48010615)
+
+- `ee/datosgenerales.aspx?nif=A48010615` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=A48010615` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=A-48010615` → HTTP 200: con la ficha (sector)
+- `ee/informaciongobcorp.aspx?nif=A-48010615` → HTTP 200: con la tabla del IAGC
+- `ee/datosgenerales.aspx?nif=a48010615` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=a48010615` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=48010615` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=48010615` → HTTP 200: sin datos
+- buscador «IBERDROLA» → HTTP 200; enlaces: ['../../ANCV/ConsultaISIN.aspx', '../../Advertencias.aspx', '../../AlDia/Comunicaciones-Publicas.aspx', '../../AlDia/Contacto.aspx', '../../AlDia/Discursos-Articulos.aspx', '../../AlDia/Eventos.aspx', '../../AlDia/Galeria-Multimedia.aspx', '../../AlDia/Newsletter-CNMV.aspx', '../../AlDia/Otras-Organizaciones.aspx', '../../AlDia/Premio-Periodismo.aspx', '../../Aldia/ActInternacional/ActInterCNMV.aspx', '../../Aldia/ActInternacional/ActInternacionales.aspx', '../../Aldia/ActInternacional/ComentariosOI.aspx', '../../Aldia/ActInternacional/Glosario.aspx', '../../Aldia/ActInternacional/MapaOrg.aspx', '../../Aldia/ActInternacional/NotasPrensa.aspx', '../../Aldia/ActInternacional/OrgInter.aspx', '../../Aldia/ActInternacional/Revitalizacion-Capitales.aspx', '../../Aldia/TransparenciaSupervisora.aspx', '../../Aldia/VideosCorporativos.aspx', '../../Benchmark/Indices-Referencia.aspx', '../../CSD/Depositario-Central-Valores.aspx', '../../Ciberseguridad.aspx', '../../Finanzas-Sostenibles/Indice.aspx', '../../Fintech/Innovacion.aspx']
+- `ee/datosgenerales.aspx?qS={94d3176e-5928-410b-b81b-af3db8c37f26}` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?qS={94d3176e-5928-410b-b81b-af3db8c37f26}` → HTTP 200: con la tabla del IAGC
+- `DatosEntidad.aspx?qS={94d3176e-5928-410b-b81b-af3db8c37f26}` → HTTP 200: sin datos
+
+#### atresmedia (A78839271)
+
+- `ee/datosgenerales.aspx?nif=A78839271` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=A78839271` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=A-78839271` → HTTP 200: con la ficha (sector)
+- `ee/informaciongobcorp.aspx?nif=A-78839271` → HTTP 200: con la tabla del IAGC
+- `ee/datosgenerales.aspx?nif=a78839271` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=a78839271` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=78839271` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=78839271` → HTTP 200: sin datos
+- buscador «ATRESMEDIA» → HTTP 200; enlaces: ['../../ANCV/ConsultaISIN.aspx', '../../Advertencias.aspx', '../../AlDia/Comunicaciones-Publicas.aspx', '../../AlDia/Contacto.aspx', '../../AlDia/Discursos-Articulos.aspx', '../../AlDia/Eventos.aspx', '../../AlDia/Galeria-Multimedia.aspx', '../../AlDia/Newsletter-CNMV.aspx', '../../AlDia/Otras-Organizaciones.aspx', '../../AlDia/Premio-Periodismo.aspx', '../../Aldia/ActInternacional/ActInterCNMV.aspx', '../../Aldia/ActInternacional/ActInternacionales.aspx', '../../Aldia/ActInternacional/ComentariosOI.aspx', '../../Aldia/ActInternacional/Glosario.aspx', '../../Aldia/ActInternacional/MapaOrg.aspx', '../../Aldia/ActInternacional/NotasPrensa.aspx', '../../Aldia/ActInternacional/OrgInter.aspx', '../../Aldia/ActInternacional/Revitalizacion-Capitales.aspx', '../../Aldia/TransparenciaSupervisora.aspx', '../../Aldia/VideosCorporativos.aspx', '../../Benchmark/Indices-Referencia.aspx', '../../CSD/Depositario-Central-Valores.aspx', '../../Ciberseguridad.aspx', '../../Finanzas-Sostenibles/Indice.aspx', '../../Fintech/Innovacion.aspx']
+- `ee/datosgenerales.aspx?qS={766768ae-8126-433f-b16c-d8e79c188970}` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?qS={766768ae-8126-433f-b16c-d8e79c188970}` → HTTP 200: con la tabla del IAGC
+- `DatosEntidad.aspx?qS={766768ae-8126-433f-b16c-d8e79c188970}` → HTTP 200: sin datos
+
+#### vocento (A48001655)
+
+- `ee/datosgenerales.aspx?nif=A48001655` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=A48001655` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=A-48001655` → HTTP 200: con la ficha (sector)
+- `ee/informaciongobcorp.aspx?nif=A-48001655` → HTTP 200: con la tabla del IAGC
+- `ee/datosgenerales.aspx?nif=a48001655` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=a48001655` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=48001655` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=48001655` → HTTP 200: sin datos
+- buscador «VOCENTO» → HTTP 200; enlaces: ['../../ANCV/ConsultaISIN.aspx', '../../Advertencias.aspx', '../../AlDia/Comunicaciones-Publicas.aspx', '../../AlDia/Contacto.aspx', '../../AlDia/Discursos-Articulos.aspx', '../../AlDia/Eventos.aspx', '../../AlDia/Galeria-Multimedia.aspx', '../../AlDia/Newsletter-CNMV.aspx', '../../AlDia/Otras-Organizaciones.aspx', '../../AlDia/Premio-Periodismo.aspx', '../../Aldia/ActInternacional/ActInterCNMV.aspx', '../../Aldia/ActInternacional/ActInternacionales.aspx', '../../Aldia/ActInternacional/ComentariosOI.aspx', '../../Aldia/ActInternacional/Glosario.aspx', '../../Aldia/ActInternacional/MapaOrg.aspx', '../../Aldia/ActInternacional/NotasPrensa.aspx', '../../Aldia/ActInternacional/OrgInter.aspx', '../../Aldia/ActInternacional/Revitalizacion-Capitales.aspx', '../../Aldia/TransparenciaSupervisora.aspx', '../../Aldia/VideosCorporativos.aspx', '../../Benchmark/Indices-Referencia.aspx', '../../CSD/Depositario-Central-Valores.aspx', '../../Ciberseguridad.aspx', '../../Finanzas-Sostenibles/Indice.aspx', '../../Fintech/Innovacion.aspx']
+- `ee/datosgenerales.aspx?qS={ce8acff8-8be3-4e2f-91ba-2d6cac7a0fab}` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?qS={ce8acff8-8be3-4e2f-91ba-2d6cac7a0fab}` → HTTP 200: con la tabla del IAGC
+- `DatosEntidad.aspx?qS={ce8acff8-8be3-4e2f-91ba-2d6cac7a0fab}` → HTTP 200: sin datos
+
+#### inditex (A15075062)
+
+- `ee/datosgenerales.aspx?nif=A15075062` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=A15075062` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=A-15075062` → HTTP 200: con la ficha (sector)
+- `ee/informaciongobcorp.aspx?nif=A-15075062` → HTTP 200: con la tabla del IAGC
+- `ee/datosgenerales.aspx?nif=a15075062` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=a15075062` → HTTP 200: sin datos
+- `ee/datosgenerales.aspx?nif=15075062` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?nif=15075062` → HTTP 200: sin datos
+- buscador «INDUSTRIA DE DISEÑO TEXTIL» → HTTP 200; enlaces: ['../../ANCV/ConsultaISIN.aspx', '../../Advertencias.aspx', '../../AlDia/Comunicaciones-Publicas.aspx', '../../AlDia/Contacto.aspx', '../../AlDia/Discursos-Articulos.aspx', '../../AlDia/Eventos.aspx', '../../AlDia/Galeria-Multimedia.aspx', '../../AlDia/Newsletter-CNMV.aspx', '../../AlDia/Otras-Organizaciones.aspx', '../../AlDia/Premio-Periodismo.aspx', '../../Aldia/ActInternacional/ActInterCNMV.aspx', '../../Aldia/ActInternacional/ActInternacionales.aspx', '../../Aldia/ActInternacional/ComentariosOI.aspx', '../../Aldia/ActInternacional/Glosario.aspx', '../../Aldia/ActInternacional/MapaOrg.aspx', '../../Aldia/ActInternacional/NotasPrensa.aspx', '../../Aldia/ActInternacional/OrgInter.aspx', '../../Aldia/ActInternacional/Revitalizacion-Capitales.aspx', '../../Aldia/TransparenciaSupervisora.aspx', '../../Aldia/VideosCorporativos.aspx', '../../Benchmark/Indices-Referencia.aspx', '../../CSD/Depositario-Central-Valores.aspx', '../../Ciberseguridad.aspx', '../../Finanzas-Sostenibles/Indice.aspx', '../../Fintech/Innovacion.aspx']
+- `ee/datosgenerales.aspx?qS={2d4e4466-7ada-4703-bc85-9614b46c3d28}` → HTTP 200: sin datos
+- `ee/informaciongobcorp.aspx?qS={2d4e4466-7ada-4703-bc85-9614b46c3d28}` → HTTP 200: con la tabla del IAGC
+- `DatosEntidad.aspx?qS={2d4e4466-7ada-4703-bc85-9614b46c3d28}` → HTTP 200: sin datos
+
+#### Los buscadores del portal
+
+- `busqueda.aspx?id=1` → HTTP 200: «CNMV - Datos generales»; campos: []
+- `busqueda.aspx?id=2` → HTTP 200: «CNMV - Información financiera intermedia. Fondos de titulización»; campos: []
+- `busqueda.aspx?id=3` → HTTP 404: «CNMV - Error»; campos: []
+- `busqueda.aspx?id=4` → HTTP 400: «CNMV - Error»; campos: []
+- `busqueda.aspx?id=5` → HTTP 404: «CNMV - Error»; campos: []
+- `busqueda.aspx?id=6` → HTTP 200: «CNMV - Información financiera intermedia»; campos: []
+- `busqueda.aspx?id=7` → HTTP 200: «CNMV - Participaciones Significativas y Autocartera en Sociedades cotizadas»; campos: []
+- `busqueda.aspx?id=8` → HTTP 400: «CNMV - Error»; campos: []
+- `busqueda.aspx?id=9` → HTTP 400: «CNMV - Error»; campos: []
+- `busqueda.aspx?id=10` → HTTP 400: «CNMV - Error»; campos: []
+- `busqueda.aspx?id=11` → HTTP 200: «CNMV - Pasaportes recibidos por la CNMV»; campos: []
+- `busqueda.aspx?id=12` → HTTP 200: «CNMV - Consulta por entidades»; campos: []
+- `busqueda.aspx?id=13` → HTTP 200: «CNMV - Consulta de Sociedades y Agencias de Valores, Sociedades Gestoras de Cartera y Empr»; campos: []
+- `busqueda.aspx?id=14` → HTTP 200: «CNMV - Consulta de empresas de servicios de inversión extranjeras»; campos: []
+- `busqueda.aspx?id=15` → HTTP 200: «CNMV - Consulta de entidades de crédito»; campos: []
+
+
+---
+
+
 Octava vuelta: 2026-09-26T12:23:58.828521+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -831,6 +923,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 
