@@ -729,6 +729,7 @@ def exportar(
             # ofrece lo que la edición trae.
             "cotizadas": cargos["cotizadas"],
             "altasInstancias": cargos["altas_instancias"],
+            "medios": cargos["medios"],
         },
     }
 

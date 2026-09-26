@@ -65,7 +65,9 @@ def ingerir_documento(
 
     for registro in conector.parse(raw):
         normalizado = conector.normalize(registro)
-        if normalizado is None or not normalizado.aristas:
+        if normalizado is None or not (
+            normalizado.aristas or (normalizado.ficha and normalizado.entidades)
+        ):
             # El registro no traía lo imprescindible. No se rellena el hueco.
             resultado.registros_descartados += 1
             continue

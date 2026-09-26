@@ -23,6 +23,10 @@ La forma la encontraron cinco vueltas de reconocimiento
 3. Las dos tablas (accionistas y participadas) se guardan como crudo. De
    cada una se comprueba que su título nombra a la cotizada pedida; si no,
    no se usa.
+4. Y su ficha, `ee/datosgenerales.aspx?nif=…`: el LEI y el sector en que la
+   CNMV la clasifica. De ahí sale qué cotizadas son grupos de medios de
+   comunicación: lo dice la CNMV, no una lista nuestra. La ficha sólo se usa
+   si trae el NIF pedido.
 
 El `qS` cambia en cada sesión, así que no sirve como enlace para la web: a
 cada hecho se le pone como enlace la página estable de su cotizada.
@@ -56,6 +60,7 @@ from sinapsis_ingest.cnmv import (
     enlaces_de_participaciones,
     es_persona_fisica,
     leer_accionistas,
+    leer_datos_generales,
     leer_participadas,
     nombre_de_persona,
 )
@@ -67,6 +72,7 @@ log = structlog.get_logger()
 
 BASE = "https://www.cnmv.es/portal/Consultas/"
 PS_AC_INI = BASE + "derechosvoto/ps_ac_ini.aspx?nif={}"
+DATOS_GENERALES = BASE + "ee/datosgenerales.aspx?nif={}"
 BUSCADOR = BASE + "busqueda.aspx?id=7"
 CAMPO_DENOMINACION = "ctl00$ContentPrincipal$wNombreEntidad$txtDenominacion"
 BOTON_BUSCAR = "ctl00$ContentPrincipal$btnOk"
@@ -97,7 +103,7 @@ class CNMVConnector:
     """Accionistas significativos y participaciones de las cotizadas de la lista."""
 
     source_id = "cnmv"
-    extractor_version = "cnmv-participaciones/1"
+    extractor_version = "cnmv-participaciones/2"
 
     def __init__(
         self,
@@ -160,7 +166,21 @@ class CNMVConnector:
                 emisores.append((nif, nombre, enlaces, base))
 
             conocidas = {nombre: nif for nif, nombre, _, _ in emisores}
-            # 2. Sus dos tablas.
+            # 2. La ficha de cada una: su sector.
+            for nif, nombre, _, _ in emisores:
+                url = DATOS_GENERALES.format(nif)
+                r = self._get(cliente, url)
+                if r is None:
+                    continue
+                yield RawDocument(
+                    source_id=self.source_id,
+                    url=url,
+                    content=r.content,
+                    media_type="text/html",
+                    retrieved_at=datetime.now(UTC),
+                    metadata={"nif": nif, "emisor": nombre, "tabla": "datosgenerales"},
+                )
+            # 3. Sus dos tablas.
             for nif, nombre, enlaces, base in emisores:
                 for tabla in ("accionistas", "participadas"):
                     if tabla not in enlaces:
@@ -190,6 +210,9 @@ class CNMVConnector:
     def parse(self, raw: RawDocument) -> Iterator[ParsedRecord]:
         html = raw.content.decode("utf-8", errors="replace")
         tabla = raw.metadata.get("tabla")
+        if tabla == "datosgenerales":
+            yield from self._parse_ficha(raw, html)
+            return
         leer = leer_accionistas if tabla == "accionistas" else leer_participadas
         de_la_pagina, filas = leer(html)
         # La página tiene que ser de la cotizada que se pidió.
@@ -223,8 +246,35 @@ class CNMVConnector:
                 },
             )
 
+    def _parse_ficha(self, raw: RawDocument, html: str) -> Iterator[ParsedRecord]:
+        ficha = leer_datos_generales(html)
+        # La ficha tiene que ser la del NIF pedido: una página de error o de
+        # otra entidad no le pone sector a nadie.
+        if ficha is None or ficha.nif != raw.metadata.get("nif"):
+            log.warning(
+                "cnmv: la ficha no es la del NIF pedido",
+                pedido=raw.metadata.get("nif"),
+                ficha=ficha.nif if ficha else None,
+            )
+            return
+        yield ParsedRecord(
+            raw_content_hash=raw.content_hash,
+            extractor_version=self.extractor_version,
+            data={
+                "id_registro": f"{ficha.nif}:datosgenerales",
+                "tabla": "datosgenerales",
+                "nif": ficha.nif,
+                "emisor": ficha.emisor or raw.metadata.get("emisor", ""),
+                "lei": ficha.lei,
+                "abreviada": ficha.abreviada,
+                "sector": ficha.sector,
+            },
+        )
+
     def normalize(self, record: ParsedRecord) -> Normalizado | None:
         d = record.data
+        if d.get("tabla") == "datosgenerales":
+            return self._normalize_ficha(d)
         conocidas: dict[str, str] = d.get("conocidas") or {}
 
         def sociedad(nombre: str) -> EntidadNormalizada:
@@ -282,6 +332,34 @@ class CNMVConnector:
                     properties={**propiedades, "relacion": "accionista_significativo"},
                 )
             ],
+        )
+
+    def _normalize_ficha(self, d: dict[str, Any]) -> Normalizado | None:
+        if not d.get("nif") or not d.get("emisor"):
+            return None
+        propiedades: dict[str, Any] = {
+            "name": d["emisor"],
+            "nombreCNMV": d["emisor"],
+            "cotizada": True,
+        }
+        if d.get("sector"):
+            propiedades["sectorCNMV"] = d["sector"]
+        if d.get("lei"):
+            propiedades["leiCode"] = d["lei"]
+        if d.get("abreviada"):
+            propiedades["alias"] = d["abreviada"]
+        return Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    ftm_schema="Company",
+                    caption=d["emisor"],
+                    dedupe_key=f"nif:{d['nif']}",
+                    nif=d["nif"],
+                    country="es",
+                    properties=propiedades,
+                )
+            ],
+            ficha=True,
         )
 
 

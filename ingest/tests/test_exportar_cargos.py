@@ -1451,8 +1451,15 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
     conocidas = {
         "BANCO SANTANDER, S.A.": "A39000013",
         "PROMOTORA DE INFORMACIONES, S.A.": "A28297059",
+        "TELEFONICA, S.A.": "A28015865",
     }
     for fichero, nif, emisor, tabla in (
+        (
+            "telefonica-notificaciones-participaciones-aspx.html",
+            "A28015865",
+            "TELEFONICA, S.A.",
+            "accionistas",
+        ),
         (
             "prisa-notificaciones-participaciones-aspx.html",
             "A28297059",
@@ -1481,6 +1488,22 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
                     "url_publica": f"https://www.cnmv.es/ps_ac_ini.aspx?nif={nif}",
                     "conocidas": conocidas,
                 },
+            ),
+        )
+    # Las fichas: el sector que la CNMV da a cada una.
+    for fichero, nif, emisor in (
+        ("prisa-datosgenerales.html", "A28297059", "PROMOTORA DE INFORMACIONES, S.A."),
+        ("telefonica-datosgenerales.html", "A28015865", "TELEFONICA, S.A."),
+    ):
+        _ingerir_real(
+            store,
+            CNMVConnector(),
+            RawDocument(
+                source_id="cnmv",
+                url=f"https://www.cnmv.es/x/{fichero}",
+                content=(golden / fichero).read_bytes(),
+                media_type="text/html",
+                metadata={"nif": nif, "emisor": emisor, "tabla": "datosgenerales"},
             ),
         )
     # Una persona de la CNMV sin su marca: no pasa la puerta.
@@ -1517,6 +1540,12 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
     santander = [a for a in prisa["accionistas"] if a["clave"] == "nif:A39000013"]
     assert len(santander) == 1 and santander[0]["porcentaje"] == "4.145"
     assert "Sin Marca" not in accionistas
+    # Prisa es un medio porque así la clasifica la CNMV; Telefónica, no.
+    assert prisa["sector"] == "MEDIOS DE COMUNICACIÓN" and prisa["medio"] is True
+    telefonica = cargos["cotizadas"]["nif:A28015865"]
+    assert telefonica["sector"] == "TRANSPORTES Y COMUNICACIONES/COMUNICACIONES"
+    assert "medio" not in telefonica
+    assert grafo["cargos"]["medios"] == 1
     # De mayor a menor.
     porcentajes = [Decimal(a["porcentaje"]) for a in prisa["accionistas"]]
     assert porcentajes == sorted(porcentajes, reverse=True)

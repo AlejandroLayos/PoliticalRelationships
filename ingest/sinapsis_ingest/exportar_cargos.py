@@ -46,6 +46,7 @@ from typing import Any
 import structlog
 
 from sinapsis_ingest.cargos import organo_del_puesto
+from sinapsis_ingest.cnmv import es_medio_de_comunicacion
 from sinapsis_ingest.store import Store
 from sinapsis_ingest.territorio import COMUNIDADES, clasificar_entidad
 from sinapsis_ingest.util import es_identificador_personal, parece_forma_societaria
@@ -703,7 +704,8 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
         SELECT es.dedupe_key AS clave_titular, es.caption AS titular,
                es.ftm_schema AS esquema_titular, es.properties AS props_titular,
                et.dedupe_key AS clave_cotizada, et.caption AS cotizada,
-               COALESCE(et.nif, '') AS nif_cotizada, r.properties
+               COALESCE(et.nif, '') AS nif_cotizada, et.properties AS props_cotizada,
+               r.properties
         FROM relationships r
         JOIN entities es ON es.id = r.source_entity_id AND es.canonical_id IS NULL
         JOIN entities et ON et.id = r.target_entity_id AND et.canonical_id IS NULL
@@ -727,12 +729,17 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
         ):
             descartadas += 1
             continue
+        sector = (f["props_cotizada"] or {}).get("sectorCNMV") or ""
         c = cotizadas.setdefault(
             f["clave_cotizada"],
             {
                 "clave": f["clave_cotizada"],
                 "nombre": f["cotizada"],
                 **({"nif": f["nif_cotizada"]} if f["nif_cotizada"] else {}),
+                # El sector es el que le da la CNMV en su ficha; «medio» sale
+                # de ese sector, no de una lista nuestra.
+                **({"sector": sector} if sector else {}),
+                **({"medio": True} if es_medio_de_comunicacion(sector) else {}),
                 "url": props.get("url", ""),
                 "accionistas": [],
             },
@@ -1169,6 +1176,8 @@ def exportar_cargos(store: Store, destino: Path) -> dict[str, Any]:
             "cnmv": sum(len(c["accionistas"]) for c in cotizadas.values()),
         },
         "cotizadas": len(cotizadas),
+        # Las que la CNMV clasifica como medios de comunicación.
+        "medios": sum(1 for c in cotizadas.values() if c.get("medio")),
         # Personas con algún cargo de alta instancia judicial o fiscal.
         "altas_instancias": sum(
             1 for p in salida if any(x.get("ambito") == "justicia" for x in p["periodos"])

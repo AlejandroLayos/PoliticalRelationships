@@ -52,6 +52,11 @@ class Normalizado:
 
     entidades: list[EntidadNormalizada] = field(default_factory=list)
     aristas: list[AristaNormalizada] = field(default_factory=list)
+    ficha: bool = False
+    """El registro es la ficha de una entidad —su sector, su LEI—, no un
+    vínculo. Sólo entonces se persiste sin aristas: en cualquier otro caso,
+    un registro sin aristas es uno al que le faltaba lo imprescindible, y se
+    descarta. Tiene que decirlo el conector; no se deduce."""
 
     def claves_de_entidad(self) -> set[str]:
         return {e.dedupe_key for e in self.entidades}

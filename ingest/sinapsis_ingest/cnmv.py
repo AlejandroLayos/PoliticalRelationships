@@ -188,6 +188,45 @@ def enlaces_de_participaciones(html: str) -> dict[str, str]:
     return salida
 
 
+@dataclass(frozen=True)
+class DatosGenerales:
+    """La ficha de una cotizada en `ee/datosgenerales.aspx?nif=…`."""
+
+    emisor: str
+    """El nombre completo, del título de la página."""
+
+    nif: str
+    lei: str
+    abreviada: str
+    """«Denominación abreviada»: PRISA, TELEFONICA…"""
+
+    sector: str
+    """El sector que le asigna la CNMV, tal como lo escribe."""
+
+
+def leer_datos_generales(html: str) -> DatosGenerales | None:
+    """La ficha de la tabla `gridDatos`, por el nombre de cada columna."""
+    filas = _filas_de(html, "gridDatos")
+    if not filas:
+        return None
+    fila = filas[0]
+    nif = _columna(fila, r"^nif$").upper()
+    if not nif:
+        return None
+    return DatosGenerales(
+        emisor=emisor_del_titulo(html),
+        nif=nif,
+        lei=_columna(fila, r"^lei$"),
+        abreviada=_columna(fila, r"abreviada"),
+        sector=_columna(fila, r"^sector$"),
+    )
+
+
+def es_medio_de_comunicacion(sector: str) -> bool:
+    """¿El sector de la CNMV es el de los medios? Por su nombre, no por lista."""
+    return "medios de comunicacion" in _plano(sector or "")
+
+
 # Formas jurídicas y palabras que sólo lleva una sociedad o un fondo. Lista
 # cerrada: lo que no la lleva se trata como persona (ver arriba).
 _FORMAS = re.compile(

@@ -15,8 +15,10 @@ import pytest
 from sinapsis_ingest.cnmv import (
     emisor_del_titulo,
     enlaces_de_participaciones,
+    es_medio_de_comunicacion,
     es_persona_fisica,
     leer_accionistas,
+    leer_datos_generales,
     leer_participadas,
     nombre_de_persona,
 )
@@ -279,6 +281,12 @@ class _Servidor:
         if "busqueda.aspx?id=7" in url:
             oculto = '<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="v" />'
             return httpx.Response(200, text=f"<form>{oculto}</form>")
+        if "datosgenerales.aspx?nif=" in url:
+            nif = url.rsplit("=", 1)[1]
+            empresa = {TELEFONICA: "telefonica", SANTANDER: "santander"}.get(nif)
+            if empresa is None:
+                return httpx.Response(404)
+            return httpx.Response(200, text=_html(f"{empresa}-datosgenerales.html"))
         for clave_url, pagina in self.paginas.items():
             if url.endswith(clave_url):
                 return httpx.Response(200, text=pagina)
@@ -303,7 +311,13 @@ def test_el_recorrido_entero():
     conector = CNMVConnector(
         cliente=cliente, semillas=[TELEFONICA, SANTANDER, "A00000000"], pausa=0
     )
-    docs = list(conector.fetch())
+    todos = list(conector.fetch())
+    fichas = [d for d in todos if d.metadata["tabla"] == "datosgenerales"]
+    docs = [d for d in todos if d.metadata["tabla"] != "datosgenerales"]
+    # Una ficha por cotizada reconocida, y cada una es la de su NIF.
+    assert {d.metadata["nif"] for d in fichas} == {TELEFONICA, SANTANDER}
+    sectores = {r.data["nif"]: r.data["sector"] for d in fichas for r in conector.parse(d)}
+    assert sectores[SANTANDER] == "FINANCIACIÓN Y SEGUROS/BANCOS"
     # Telefónica por su NIF; Santander, por el buscador; la tercera no existe.
     assert any(p.startswith("POST ") for p in servidor.peticiones)
     emisores = {d.metadata["emisor"] for d in docs}
@@ -317,3 +331,85 @@ def test_el_recorrido_entero():
     # Y lo que se lee de la tabla de Santander es de Santander.
     tablas = [d for d in docs if d.metadata["emisor"] == "BANCO SANTANDER, S.A."]
     assert {d.metadata["tabla"] for d in tablas} == {"accionistas", "participadas"}
+
+
+# --- La ficha: el sector según la CNMV ------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("fichero", "nif", "abreviada", "sector"),
+    [
+        ("prisa-datosgenerales.html", PRISA, "PRISA", "MEDIOS DE COMUNICACIÓN"),
+        (
+            "telefonica-datosgenerales.html",
+            TELEFONICA,
+            "TELEFONICA",
+            "TRANSPORTES Y COMUNICACIONES/COMUNICACIONES",
+        ),
+        (
+            "santander-datosgenerales.html",
+            SANTANDER,
+            "BANCO SANTANDER",
+            "FINANCIACIÓN Y SEGUROS/BANCOS",
+        ),
+    ],
+)
+def test_la_ficha_de_cada_cotizada(fichero, nif, abreviada, sector):
+    ficha = leer_datos_generales(_html(fichero))
+    assert ficha is not None
+    assert (ficha.nif, ficha.abreviada, ficha.sector) == (nif, abreviada, sector)
+    assert len(ficha.lei) == 20
+
+
+def test_la_prisa_tiene_lei_y_nombre_completo():
+    ficha = leer_datos_generales(_html("prisa-datosgenerales.html"))
+    assert ficha.lei == "959800U3NGPXSCQHQW54"
+    assert ficha.emisor == "PROMOTORA DE INFORMACIONES, S.A."
+
+
+def test_una_pagina_sin_ficha_no_da_nada():
+    assert leer_datos_generales(_html("prisa-notificaciones-participaciones-aspx.html")) is None
+    assert leer_datos_generales("") is None
+
+
+@pytest.mark.parametrize(
+    ("sector", "medio"),
+    [
+        ("MEDIOS DE COMUNICACIÓN", True),
+        ("Medios de comunicacion y publicidad", True),
+        ("TRANSPORTES Y COMUNICACIONES/COMUNICACIONES", False),
+        ("FINANCIACIÓN Y SEGUROS/BANCOS", False),
+        ("", False),
+    ],
+)
+def test_que_sector_es_el_de_los_medios(sector, medio):
+    assert es_medio_de_comunicacion(sector) is medio
+
+
+def _ficha(nombre: str, nif: str, emisor: str) -> RawDocument:
+    return RawDocument(
+        source_id="cnmv",
+        url=f"https://www.cnmv.es/x/{nombre}",
+        content=(GOLDEN / nombre).read_bytes(),
+        media_type="text/html",
+        metadata={"nif": nif, "emisor": emisor, "tabla": "datosgenerales"},
+    )
+
+
+def test_la_ficha_normalizada_pone_el_sector_a_la_cotizada():
+    [n] = _normalizados(
+        _ficha("prisa-datosgenerales.html", PRISA, "PROMOTORA DE INFORMACIONES, S.A.")
+    )
+    assert n.aristas == [] and n.ficha is True
+    [prisa] = n.entidades
+    assert prisa.dedupe_key == f"nif:{PRISA}" and prisa.nif == PRISA
+    assert prisa.caption == "PROMOTORA DE INFORMACIONES, S.A."
+    assert prisa.properties["sectorCNMV"] == "MEDIOS DE COMUNICACIÓN"
+    assert prisa.properties["leiCode"] == "959800U3NGPXSCQHQW54"
+    assert prisa.properties["cotizada"] is True
+
+
+def test_una_ficha_de_otro_nif_no_se_usa():
+    # La ficha de Prisa servida al pedir la de Telefónica: no le pone sector.
+    raw = _ficha("prisa-datosgenerales.html", TELEFONICA, "TELEFONICA, S.A.")
+    assert list(CNMVConnector().parse(raw)) == []

@@ -299,3 +299,56 @@ def test_un_adjudicatario_con_nif_converge_con_bdns(store):
     ).fetchone()
     assert fila is not None
     assert str(fila["id"]) == id_desde_bdns, "PLACSP creó una entidad nueva en vez de converger"
+
+
+class _ConectorDeFichas:
+    """Dos registros sin aristas: uno se declara ficha, el otro no."""
+
+    source_id = "bdns"
+    extractor_version = "prueba/1"
+
+    def parse(self, raw):
+        from sinapsis_ingest.connectors.base import ParsedRecord
+
+        for ficha in (True, False):
+            yield ParsedRecord(
+                raw_content_hash=raw.content_hash,
+                extractor_version=self.extractor_version,
+                data={"id_registro": str(ficha), "ficha": ficha},
+            )
+
+    def normalize(self, record):
+        from sinapsis_ingest.normalizado import EntidadNormalizada, Normalizado
+
+        ficha = record.data["ficha"]
+        return Normalizado(
+            entidades=[
+                EntidadNormalizada(
+                    "Company",
+                    "FICHA" if ficha else "SUELTA",
+                    f"prueba:{ficha}",
+                    properties={"sectorCNMV": "X"},
+                )
+            ],
+            ficha=ficha,
+        )
+
+
+def test_sin_aristas_sólo_se_persiste_lo_que_se_declara_ficha(store):
+    from sinapsis_ingest.connectors.base import RawDocument
+
+    resultado = pipeline.Resultado()
+    pipeline.ingerir_documento(
+        store,
+        _ConectorDeFichas(),
+        RawDocument(
+            source_id="bdns", url="https://ejemplo.test/f", content=b"f", media_type="text/html"
+        ),
+        resultado,
+    )
+    store.conn.commit()
+    captions = {f["caption"] for f in store.conn.execute("SELECT caption FROM entities").fetchall()}
+    # La ficha entra, con su procedencia; la entidad suelta, no.
+    assert captions == {"FICHA"}
+    assert resultado.registros_descartados == 1
+    assert _contar(store, "provenance") == 1
