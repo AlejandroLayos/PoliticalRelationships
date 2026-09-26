@@ -152,24 +152,51 @@ describe('construirRed', () => {
 })
 
 describe('el dinero del grafo', () => {
-  it('sólo entre entidades que ya están en la red, y a través de los expedientes', () => {
-    const grafo = {
-      nodes: [
-        { id: 'o', clave: 'placsp:organo:mando', schema: 'PublicBody' },
-        { id: 'c', clave: 'placsp:contrato:1', schema: 'Contract' },
-        { id: 'e', clave: 'nif:Q1', schema: 'PublicBody' },
-        { id: 'x', clave: 'nif:ZZ', schema: 'Company' },
-      ],
-      edges: [
-        { id: '1', source: 'o', target: 'c', schema: 'UnknownLink' },
-        { id: '2', source: 'c', target: 'e', schema: 'ContractAward', amount: '200', start_date: '2024-01-02' },
-        { id: '3', source: 'o', target: 'x', schema: 'Payment', amount: '999' },
-      ],
-    }
+  const grafo = {
+    nodes: [
+      { id: 'o', clave: 'placsp:organo:mando', schema: 'PublicBody', caption: 'Mando de Apoyo' },
+      { id: 'c', clave: 'placsp:contrato:1', schema: 'Contract' },
+      { id: 'e', clave: 'nif:Q1', schema: 'PublicBody', caption: 'Universidad' },
+      { id: 'x', clave: 'nif:ZZ', schema: 'Company', caption: 'Otra SA' },
+      { id: 'm', clave: 'bdns:organo:interior', schema: 'PublicBody', caption: 'Ministerio del Interior' },
+    ],
+    edges: [
+      { id: '1', source: 'o', target: 'c', schema: 'UnknownLink' },
+      { id: '2', source: 'c', target: 'e', schema: 'ContractAward', amount: '200', start_date: '2024-01-02' },
+      { id: '3', source: 'o', target: 'x', schema: 'Payment', amount: '999' },
+      { id: '4', source: 'm', target: 'x', schema: 'Payment', amount: '5' },
+    ],
+  }
+
+  it('entre entidades de la red, a través de los expedientes', () => {
     const red = construirRed(cargos(), grafo)
     const d = red.aristas.filter((a) => a.relacion === 'dinero')
-    expect(d.map((a) => `${a.source}>${a.target}`).sort()).toEqual(['placsp:organo:mando>nif:A1', 'placsp:organo:mando>nif:Q1'])
-    expect(red.nodos.has('nif:ZZ')).toBe(false)
+    expect(d.map((a) => `${a.source}>${a.target}`)).toContain('placsp:organo:mando>nif:Q1')
+  })
+
+  it('y alrededor de cada entidad, sus contrapartes: el mapa se une a la red', () => {
+    const red = construirRed(cargos(), grafo)
+    // Otra SA no estaba en la red; cobra del órgano, que sí: entra.
+    expect(red.nodos.get('nif:ZZ')).toMatchObject({ tipo: 'entidad', clase: 'emp' })
+    // Pero no se tira del hilo: el Ministerio del Interior paga a Otra SA,
+    // que no era de la red, y no entra.
+    expect(red.nodos.has('bdns:organo:interior')).toBe(false)
+  })
+
+  it('como mucho cinco contrapartes por entidad, las de más dinero', () => {
+    const muchos = {
+      nodes: [
+        { id: 'o', clave: 'placsp:organo:mando', schema: 'PublicBody', caption: 'Mando' },
+        ...Array.from({ length: 8 }, (_, i) => ({ id: `e${i}`, clave: `nif:B${i}`, schema: 'Company', caption: `Empresa ${i}` })),
+      ],
+      edges: Array.from({ length: 8 }, (_, i) => ({ id: `p${i}`, source: 'o', target: `e${i}`, schema: 'Payment', amount: String((i + 1) * 100) })),
+    }
+    const red = construirRed(cargos(), muchos)
+    // (Más la de Indra, que viene de `delOrgano` y no cuenta aquí.)
+    const cobran = red.aristas
+      .filter((a) => a.relacion === 'dinero' && a.source === 'placsp:organo:mando' && a.target.startsWith('nif:B'))
+      .map((a) => a.target)
+    expect(cobran.sort()).toEqual(['nif:B3', 'nif:B4', 'nif:B5', 'nif:B6', 'nif:B7'])
   })
 })
 

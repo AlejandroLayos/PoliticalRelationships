@@ -33,6 +33,9 @@
 import { empiezaPalabra, normaliza } from './buscador.js'
 import { aNumero, colapsarNodosDePaso, dineroCorto } from './nucleos.js'
 
+/** Cuántas contrapartes de dinero, como mucho, se traen del mapa por cada entidad de la red. */
+export const DINERO_POR_NODO = 5
+
 /** Los tipos de nodo, y cómo se dicen. */
 export const TIPOS = {
   persona: { nombre: 'Persona con cargo público', plural: 'Personas' },
@@ -406,20 +409,26 @@ export function construirRed(cargos, grafo = null) {
     })
   }
 
-  // El dinero entre entidades que ya están en la red. Sólo entre ellas: la
-  // red no se convierte en el mapa del dinero entero, que ya existe.
+  // El dinero, del mapa publicado. Dos cosas:
+  //
+  // - Entre entidades que ya están en la red, todo.
+  // - Alrededor de cada entidad de la red, sus principales contrapartes —de
+  //   quién cobra, a quién paga—, hasta `DINERO_POR_NODO`. Es lo que une la
+  //   red de poder con el mapa del dinero: Indra, además de a quién se
+  //   autorizó a trabajar allí, cobra de estos órganos.
+  //
+  // No todo el mapa: la red no se convierte en él, que ya existe.
   if (grafo?.nodes?.length) {
     const colapsado = colapsarNodosDePaso(grafo)
-    const claveDeId = new Map(colapsado.nodes.map((n) => [n.id, n.clave]))
+    const porId = new Map(colapsado.nodes.map((n) => [n.id, n]))
     const suma = new Map()
     for (const a of colapsado.edges) {
       if (a.status === 'retracted') continue
-      const s = claveDeId.get(a.source)
-      const t = claveDeId.get(a.target)
-      if (!s || !t || !nodos.has(s) || !nodos.has(t)) continue
-      if (nodos.get(s).tipo === 'persona' || nodos.get(t).tipo === 'persona') continue
-      const k = `${s}|${t}`
-      const x = suma.get(k) ?? { importe: 0, veces: 0, desde: null, hasta: null }
+      const s = porId.get(a.source)
+      const t = porId.get(a.target)
+      if (!s?.clave || !t?.clave || s.clave === t.clave) continue
+      const k = `${s.clave}|${t.clave}`
+      const x = suma.get(k) ?? { s, t, importe: 0, veces: 0, desde: null, hasta: null }
       x.importe += aNumero(a.amount)
       x.veces += 1
       const f = a.start_date ?? null
@@ -427,8 +436,31 @@ export function construirRed(cargos, grafo = null) {
       if (f && (!x.hasta || f > x.hasta)) x.hasta = f
       suma.set(k, x)
     }
-    for (const [k, x] of suma) {
-      const [s, t] = k.split('|')
+    const enLaRed = (clave) => nodos.has(clave) && nodos.get(clave).tipo !== 'persona'
+    const alrededor = new Map()
+    for (const x of suma.values()) {
+      for (const [propio, ajeno] of [
+        [x.s.clave, x.t],
+        [x.t.clave, x.s],
+      ]) {
+        if (!enLaRed(propio) || enLaRed(ajeno.clave)) continue
+        if (!alrededor.has(propio)) alrededor.set(propio, [])
+        alrededor.get(propio).push({ x, ajeno })
+      }
+    }
+    const elegidas = [...suma.values()].filter((x) => enLaRed(x.s.clave) && enLaRed(x.t.clave))
+    for (const lista of alrededor.values()) {
+      lista.sort((a, b) => b.x.importe - a.x.importe)
+      for (const { x, ajeno } of lista.slice(0, DINERO_POR_NODO)) {
+        if (!x.importe) continue
+        const clase = ajeno.schema === 'PublicBody' ? 'adm' : ajeno.schema === 'Organization' ? 'par' : 'emp'
+        nodo(ajeno.clave, { tipo: 'entidad', nombre: ajeno.caption, entidad: ajeno.clave, clase, ...(ajeno.schema === 'PublicBody' ? { subtipo: 'organo' } : {}) })
+        elegidas.push(x)
+      }
+    }
+    for (const x of elegidas) {
+      const s = x.s.clave
+      const t = x.t.clave
       // Si el volcado ya lo dio por `delOrgano`, no se duplica.
       if (aristas.has(`dinero|${s}|${t}`)) continue
       unir(s, t, 'dinero', {
