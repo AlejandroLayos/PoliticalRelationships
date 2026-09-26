@@ -663,6 +663,117 @@ def consejos_enteros(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
     return [*salida, ""]
 
 
+def _enlaces(html: str) -> list[str]:
+    return sorted(
+        {
+            html_lib.unescape(h)
+            for h in re.findall(r'href="([^"#]+)"', html)
+            if re.search(r"(?i)aspx|verdocumento", h)
+            and not re.search(
+                r"(?i)cookies|mapa-web|nota-legal|accesibilidad|/portal/home", h
+            )
+        }
+    )
+
+
+def _que_trae(html: str) -> str:
+    if "No se han encontrado datos" in html:
+        return "sin datos"
+    if "wGridIAGC_gridDatos" in html:
+        return "con la tabla del IAGC"
+    if 'data-th="Sector"' in html:
+        return "con la ficha (sector)"
+    return f"«{titulo(html)[:70]}»"
+
+
+def otra_puerta(c: httpx.Client, empresas: dict[str, tuple[str, str]]) -> list[str]:
+    """Las cotizadas cuya ficha e informes por NIF vuelven «sin datos».
+
+    Con esas mismas, la página de participaciones sí responde, y el buscador
+    da enlaces con un identificador de sesión. Se prueba: variantes del NIF,
+    esas páginas con el identificador, y lo que enlaza lo que devuelve el
+    buscador. Sólo páginas de sociedades: aquí no hay datos de personas.
+    """
+    salida = ["### Las cotizadas «sin datos»: otra puerta", ""]
+    for empresa, (nif, nombre) in empresas.items():
+        salida += [f"#### {empresa} ({nif})", ""]
+        for variante in (nif, f"{nif[0]}-{nif[1:]}", nif.lower(), nif[1:]):
+            for pagina in ("ee/datosgenerales.aspx", "ee/informaciongobcorp.aspx"):
+                codigo, cuerpo, tipo, _ = pedir(
+                    c, urljoin(BASE, f"{pagina}?nif={variante}")
+                )
+                html = cuerpo.decode("utf-8", errors="replace")
+                salida.append(
+                    f"- `{pagina}?nif={variante}` → HTTP {codigo}: {_que_trae(html) if codigo else tipo}"
+                )
+        # El buscador de participaciones.
+        codigo, cuerpo, _, final = pedir(c, BUSCADOR_PARTICIPACIONES)
+        html = cuerpo.decode("utf-8", errors="replace")
+        ocultos = dict(
+            re.findall(
+                r'<input type="hidden" name="([^"]+)" id="[^"]*" value="([^"]*)"', html
+            )
+        )
+        datos = {
+            **ocultos,
+            "ctl00$ContentPrincipal$wNombreEntidad$txtDenominacion": nombre,
+            "ctl00$ContentPrincipal$btnOk": "Buscar",
+        }
+        try:
+            r = c.post(final, data=datos, headers=CABECERAS)
+            resultado = r.text
+        except httpx.HTTPError as exc:
+            salida += [f"- buscador: error {exc}", ""]
+            continue
+        enlaces = _enlaces(resultado)
+        salida.append(
+            f"- buscador «{nombre}» → HTTP {r.status_code}; enlaces: {enlaces[:25]}"
+        )
+        guid = next(iter(re.findall(r"qS=(\{[0-9a-f-]+\})", resultado)), "")
+        ps = next((h for h in enlaces if "ps_ac_ini" in h and "lang=es" in h), "")
+        if ps:
+            codigo, cuerpo, _, _ = pedir(c, urljoin(str(r.url), ps))
+            html = cuerpo.decode("utf-8", errors="replace")
+            salida.append(
+                f"- su `ps_ac_ini` → HTTP {codigo}; enlaces: {_enlaces(html)[:25]}"
+            )
+            guid_ps = next(iter(re.findall(r"qS=(\{[0-9a-f-]+\})", ps)), "")
+        else:
+            guid_ps = ""
+        for g in {guid, guid_ps} - {""}:
+            for pagina in (
+                "ee/datosgenerales.aspx",
+                "ee/informaciongobcorp.aspx",
+                "DatosEntidad.aspx",
+            ):
+                codigo, cuerpo, tipo, _ = pedir(c, urljoin(BASE, f"{pagina}?qS={g}"))
+                html = cuerpo.decode("utf-8", errors="replace")
+                salida.append(
+                    f"- `{pagina}?qS={g}` → HTTP {codigo}: {_que_trae(html) if codigo else tipo}"
+                )
+                if codigo == 200 and "wGridIAGC_gridDatos" in html:
+                    (
+                        Path("ingest/tests/golden/cnmv") / f"{empresa}-gobcorp-qs.html"
+                    ).write_text(html, encoding="utf-8")
+                if codigo == 200 and 'data-th="Sector"' in html:
+                    (
+                        Path("ingest/tests/golden/cnmv")
+                        / f"{empresa}-datosgenerales-qs.html"
+                    ).write_text(html, encoding="utf-8")
+        salida.append("")
+        time.sleep(1.0)
+    # Los otros buscadores del portal: cuál es el de emisores.
+    salida += ["#### Los buscadores del portal", ""]
+    for n in range(1, 16):
+        codigo, cuerpo, tipo, _ = pedir(c, urljoin(BASE, f"busqueda.aspx?id={n}"))
+        html = cuerpo.decode("utf-8", errors="replace")
+        campos = re.findall(r'<input[^>]+type="text"[^>]*name="([^"]+)"', html)
+        salida.append(
+            f"- `busqueda.aspx?id={n}` → HTTP {codigo}: «{titulo(html)[:90]}»; campos: {campos[:4]}"
+        )
+    return [*salida, ""]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", default="docs/fuentes/cnmv-reconocimiento.md")
@@ -673,10 +784,10 @@ def main() -> int:
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Octava vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        f"Novena vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
         "Las anteriores siguen debajo.",
         "",
-        "## Octava vuelta: el consejo del IAGC, tabla a tabla",
+        "## Novena vuelta: las cotizadas «sin datos»",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
@@ -689,13 +800,14 @@ def main() -> int:
             c, urljoin(BASE, "derechosvoto/ps_ac_ini.aspx?nif=A28015865")
         )
         informe += [f"- participaciones de Telefónica → HTTP {codigo} ({tipo})", ""]
-        muestra = {
-            "telefonica": "A28015865",
-            "prisa": "A28297059",
-            "santander": "A39000013",
-        }
-        informe += consejos_enteros(
-            c, {**muestra, "bbva": "A48265169", "repsol": "A78374725"}
+        informe += otra_puerta(
+            c,
+            {
+                "iberdrola": ("A48010615", "IBERDROLA"),
+                "atresmedia": ("A78839271", "ATRESMEDIA"),
+                "vocento": ("A48001655", "VOCENTO"),
+                "inditex": ("A15075062", "INDUSTRIA DE DISEÑO TEXTIL"),
+            },
         )
     if anterior:
         cuerpo_anterior = anterior.split("\n", 1)[1] if "\n" in anterior else anterior
