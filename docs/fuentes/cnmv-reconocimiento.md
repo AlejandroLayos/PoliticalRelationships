@@ -1,5 +1,25 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Octava vuelta: 2026-09-26T12:15:52.306386+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Octava vuelta: el consejo del IAGC, tabla a tabla
+
+- portada → HTTP 0 (error: Server disconnected without sending a response.); cookies: 0
+- participaciones de Telefónica → HTTP 0 (error: Server disconnected without sending a response.)
+
+### El IAGC del último ejercicio, tabla a tabla
+
+- telefonica: sin IAGC en su tabla (HTTP 0, error: The read operation timed out)
+- prisa: sin IAGC en su tabla (HTTP 0, error: Server disconnected without sending a response.)
+- santander: sin IAGC en su tabla (HTTP 0, error: Server disconnected without sending a response.)
+- bbva: sin IAGC en su tabla (HTTP 0, error: The read operation timed out)
+- repsol: sin IAGC en su tabla (HTTP 0, error: The read operation timed out)
+
+
+---
+
+
 Séptima vuelta: 2026-09-26T12:02:48.741256+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -655,6 +675,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 
