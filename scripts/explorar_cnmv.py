@@ -276,45 +276,130 @@ def sin_datos(empresa: str, nif: str) -> list[str]:
     return [*salida, ""]
 
 
+# Cuarta vuelta: cuántas cotizadas responden por NIF. Una lista de NIF
+# conocidos del Ibex y de grupos de medios; no es la fuente de nada, sólo la
+# muestra con la que medir.
+MUESTRA_AMPLIA = {
+    "repsol": "A78374725",
+    "bbva": "A48265169",
+    "inditex": "A15075062",
+    "aena": "A86212420",
+    "endesa": "A81948077",
+    "naturgy": "A08015497",
+    "caixabank": "A08663619",
+    "sabadell": "A08000143",
+    "mapfre": "A08055741",
+    "acciona": "A08001851",
+    "grifols": "A58389123",
+    "cellnex": "A64907306",
+    "colonial": "A28027399",
+    "merlin": "A86977790",
+    "sacyr": "A28013811",
+    "bankinter": "A28157360",
+    "enagas": "A28294726",
+    "amadeus": "A84236934",
+    "acerinox": "A28250777",
+    "unicaja": "A93139053",
+    "vocento": "A48001655",
+    "logista": "A87008579",
+}
+
+BUSCADOR_PARTICIPACIONES = BASE + "busqueda.aspx?id=7"
+
+
+def cuantas_responden(c: httpx.Client) -> list[str]:
+    salida = ["### DatosEntidad por NIF en una muestra amplia", ""]
+    con, sin = [], []
+    for empresa, nif in MUESTRA_AMPLIA.items():
+        codigo, cuerpo, _, _ = pedir(c, urljoin(BASE, f"DatosEntidad.aspx?nif={nif}"))
+        html = cuerpo.decode("utf-8", errors="replace")
+        nombre = (
+            titulo(html).replace("CNMV - Información de la Entidad", "").strip(" -")
+        )
+        (con if nombre else sin).append(empresa)
+        salida.append(
+            f"- {empresa} ({nif}) → HTTP {codigo} · «{nombre or 'sin datos'}»"
+        )
+        time.sleep(0.6)
+    salida += ["", f"Con datos: {len(con)}; sin datos: {len(sin)} ({sin})", ""]
+    return salida
+
+
+def buscador(c: httpx.Client) -> list[str]:
+    """El formulario de búsqueda de participaciones: sus campos, y una búsqueda."""
+    salida = ["### El buscador de participaciones significativas", ""]
+    codigo, cuerpo, _, final = pedir(c, BUSCADOR_PARTICIPACIONES)
+    html = cuerpo.decode("utf-8", errors="replace")
+    salida.append(
+        f"- `{BUSCADOR_PARTICIPACIONES}` → HTTP {codigo} · «{titulo(html)[:80]}» · final `{final}`"
+    )
+    ocultos = dict(
+        re.findall(
+            r'<input type="hidden" name="([^"]+)" id="[^"]*" value="([^"]*)"', html
+        )
+    )
+    visibles = re.findall(r'<input[^>]+type="(?:text|search)"[^>]*name="([^"]+)"', html)
+    botones = re.findall(
+        r'<input[^>]+type="submit"[^>]*name="([^"]+)"[^>]*value="([^"]*)"', html
+    )
+    selects = re.findall(r'<select[^>]*name="([^"]+)"', html)
+    salida += [
+        f"- ocultos: {sorted(ocultos)}",
+        f"- de texto: {visibles}",
+        f"- botones: {botones}",
+        f"- desplegables: {selects}",
+        f"- contenido: {contenido(html)[:500]!r}",
+    ]
+    campo = next(
+        (v for v in visibles if re.search(r"(?i)nombre|denom|texto|entidad|buscar", v)),
+        None,
+    )
+    boton = next((b for b in botones), None)
+    if not campo:
+        return [*salida, "- no hay campo de texto reconocible", ""]
+    for consulta in ("IBERDROLA", "INDRA"):
+        datos = {**ocultos, campo: consulta}
+        if boton:
+            datos[boton[0]] = boton[1]
+        try:
+            r = c.post(final, data=datos, headers=CABECERAS)
+        except httpx.HTTPError as exc:
+            salida.append(f"- «{consulta}» → error {exc}")
+            continue
+        enlaces = sorted(set(re.findall(r'href="([^"]*(?:nif=|qS=)[^"]*)"', r.text)))
+        salida.append(
+            f"- «{consulta}» → HTTP {r.status_code} · {len(r.text):,} caracteres ·"
+            f" enlaces: {[html_lib.unescape(e) for e in enlaces[:8]]}"
+        )
+        salida.append(f"  - contenido: {contenido(r.text)[:400]!r}")
+        time.sleep(1.0)
+    return [*salida, ""]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", default="docs/fuentes/cnmv-reconocimiento.md")
     ap.add_argument("--golden", default="ingest/tests/golden/cnmv")
     args = ap.parse_args()
-    golden = Path(args.golden)
-    golden.mkdir(parents=True, exist_ok=True)
-
     salida = Path(args.salida)
     anterior = salida.read_text(encoding="utf-8") if salida.exists() else ""
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Tercera vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
-        "La segunda vuelta sigue debajo.",
+        f"Cuarta vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        "Las anteriores siguen debajo.",
         "",
-        "## Tercera vuelta",
+        "## Cuarta vuelta",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
-        for empresa, nif in CON_DATOS.items():
-            informe += participaciones(c, empresa, nif, golden)
-            time.sleep(1.0)
-        for empresa in ("telefonica", "prisa"):
-            informe += iagc(c, empresa, CON_DATOS[empresa], golden)
-            time.sleep(1.0)
-    for empresa, nif in SIN_DATOS.items():
-        informe += sin_datos(empresa, nif)
-
+        informe += cuantas_responden(c)
+        informe += buscador(c)
     if anterior:
-        informe += [
-            "",
-            "---",
-            "",
-            anterior.replace("# Reconocimiento: CNMV", "## Segunda vuelta: CNMV", 1),
-        ]
-    salida.parent.mkdir(parents=True, exist_ok=True)
+        cuerpo_anterior = anterior.split("\n", 1)[1] if "\n" in anterior else anterior
+        informe += ["", "---", "", cuerpo_anterior]
     salida.write_text("\n".join(informe) + "\n", encoding="utf-8")
-    print("\n".join(informe[:200]))
+    print("\n".join(informe[:120]))
     return 0
 
 
