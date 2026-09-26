@@ -508,9 +508,9 @@ function filasVisibles(l) {
           <h2>Del cargo a la empresa</h2>
           <p class="que">
             Ex altos cargos a los que la Oficina de Conflictos de Intereses
-            autorizó a trabajar, tras su cese, en una entidad privada —una
-            sociedad, una fundación, una federación— que cobra dinero público en
-            esta edición.
+            autorizó a trabajar, tras su cese, en una entidad que cobra dinero
+            público en esta edición: una empresa, una fundación, una federación,
+            una universidad.
           </p>
           <p class="nota">
             Una autorización no dice que la persona llegara a ocupar el puesto,
