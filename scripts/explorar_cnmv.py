@@ -47,6 +47,7 @@ import json
 import re
 import sys
 import time
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urljoin
@@ -394,6 +395,117 @@ def buscador(c: httpx.Client) -> list[str]:
     return [*salida, ""]
 
 
+CATEGORIAS = re.compile(
+    r"(?i)^(ejecutiv[oa]s?|dominical(es)?|independientes?|otr[oa]s? extern[oa]s?)$"
+)
+FECHA = re.compile(r"^\d{2}/\d{2}/\d{4}$")
+
+
+def filas_de_consejo(pdf: bytes) -> tuple[int, list[list[str]]]:
+    """Las filas de tabla que parecen de un consejo: una categoría y fechas.
+
+    No se busca la cabecera, que a veces cae en otra página, sino la forma de
+    la fila. Devuelve (páginas, filas), y de cada fila SÓLO las cuatro
+    primeras celdas que no son fechas —nombre, representante, categoría,
+    cargo— y cuántas fechas trae. Ninguna fecha sale del runner: sin la
+    cabecera no se puede saber si una es la de nacimiento.
+    """
+    import pdfplumber
+
+    filas: list[list[str]] = []
+    with pdfplumber.open(io.BytesIO(pdf)) as doc:
+        for pagina in doc.pages:
+            for tabla in pagina.extract_tables() or []:
+                for fila in tabla:
+                    celdas = [" ".join((c or "").split()) for c in fila]
+                    if not any(CATEGORIAS.match(c) for c in celdas):
+                        continue
+                    fechas = [c for c in celdas if FECHA.match(c)]
+                    if not fechas:
+                        continue
+                    textos = [c for c in celdas if c and not FECHA.match(c)]
+                    # Sin la cabecera no se sabe si alguna fecha es la de
+                    # nacimiento: de las fechas, sólo cuántas hay.
+                    filas.append([*textos[:4], f"{len(fechas)} fechas"])
+        return len(doc.pages), filas
+
+
+def consejos(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
+    salida = ["### El consejo en el informe de gobierno corporativo, por filas", ""]
+    for empresa, nif in empresas.items():
+        codigo, cuerpo, _, _ = pedir(
+            c, urljoin(BASE, f"ee/informaciongobcorp.aspx?nif={nif}")
+        )
+        html = cuerpo.decode("utf-8", errors="replace")
+        docs = [
+            html_lib.unescape(h)
+            for h in re.findall(
+                r'href="(https://www\.cnmv\.es/webservices/verdocumento/ver\?e=[^"]+)"',
+                html,
+            )
+        ]
+        if not docs:
+            salida.append(f"- {empresa}: sin informes por NIF")
+            continue
+        codigo, pdf, _, _ = pedir(c, docs[0])
+        if codigo != 200 or pdf[:4] != b"%PDF":
+            salida.append(f"- {empresa}: el informe no es un PDF (HTTP {codigo})")
+            continue
+        paginas, filas = filas_de_consejo(pdf)
+        categorias = Counter(
+            next((x for x in f if CATEGORIAS.match(x)), "").lower() for f in filas
+        )
+        salida.append(
+            f"- {empresa}: {paginas} páginas, {len(filas)} filas de consejo;"
+            f" categorías {dict(categorias)}; forma de la primera: {[len(x) for x in filas[:1]]}"
+        )
+        if filas:
+            (
+                Path("ingest/tests/golden/cnmv") / f"{empresa}-consejo-filas.json"
+            ).write_text(
+                json.dumps(filas, ensure_ascii=False, indent=0), encoding="utf-8"
+            )
+        time.sleep(1.0)
+    return [*salida, ""]
+
+
+def directivos(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
+    """La forma de las notificaciones de directivos: columnas y tipos de fila.
+
+    Traen personas estrechamente vinculadas —familiares—, así que de aquí no
+    sale ningún nombre: sólo las cabeceras y cuántas filas hay de cada cargo.
+    """
+    salida = ["### Notificaciones de directivos: sólo la forma", ""]
+    for empresa, nif in empresas.items():
+        codigo, cuerpo, _, _ = pedir(
+            c, urljoin(BASE, f"directivos-resultado.aspx?nif={nif}")
+        )
+        html = cuerpo.decode("utf-8", errors="replace")
+        tablas_html = re.findall(r"<table.*?</table>", html, flags=re.S | re.I)
+        salida.append(f"- {empresa}: HTTP {codigo}, {len(tablas_html)} tablas")
+        for t in tablas_html[:3]:
+            cab = [
+                texto(x)[:40]
+                for x in re.findall(r"<th[^>]*>(.*?)</th>", t, flags=re.S | re.I)
+            ]
+            columnas = re.findall(r'data-th="([^"]*)"', t)
+            salida.append(
+                f"  - cabeceras: {cab[:12]}; columnas por data-th: {sorted(set(columnas))[:12]}"
+            )
+            cargos = Counter()
+            for fila in re.findall(r"<tr.*?</tr>", t, flags=re.S | re.I):
+                for col, valor in re.findall(
+                    r'<td[^>]*data-th="([^"]*)"[^>]*>(.*?)</td>',
+                    fila,
+                    flags=re.S | re.I,
+                ):
+                    if re.search(r"(?i)cargo|relaci|v[ií]nculo|condici", col):
+                        cargos[texto(valor)[:40]] += 1
+            salida.append(f"  - valores de cargo o relación: {cargos.most_common(12)}")
+        time.sleep(1.0)
+    return [*salida, ""]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", default="docs/fuentes/cnmv-reconocimiento.md")
@@ -404,14 +516,20 @@ def main() -> int:
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Quinta vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        f"Sexta vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
         "Las anteriores siguen debajo.",
         "",
-        "## Quinta vuelta: el buscador por denominación",
+        "## Sexta vuelta: consejos y directivos",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
-        informe += buscador(c)
+        muestra = {
+            "telefonica": "A28015865",
+            "prisa": "A28297059",
+            "santander": "A39000013",
+        }
+        informe += consejos(c, {**muestra, "bbva": "A48265169", "repsol": "A78374725"})
+        informe += directivos(c, muestra)
     if anterior:
         cuerpo_anterior = anterior.split("\n", 1)[1] if "\n" in anterior else anterior
         informe += ["", "---", "", cuerpo_anterior]
