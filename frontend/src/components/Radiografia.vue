@@ -6,7 +6,7 @@
   red, centrada en él.
 */
 import { computed, nextTick, ref, watch } from 'vue'
-import { AREAS, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta } from '../radiografia.js'
+import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta } from '../radiografia.js'
 import { nombreDeFuente } from '../poder.js'
 
 const props = defineProps({
@@ -219,6 +219,13 @@ const puentesPorTipo = computed(() => {
   return g
 })
 const anio = (f) => (f ? f.slice(0, 4) : '')
+const CORTO_PROPONENTE = {
+  'Congreso de los Diputados': 'Propone el Congreso',
+  Senado: 'Propone el Senado',
+  Gobierno: 'Propone el Gobierno',
+  'Consejo General del Poder Judicial': 'Propone el CGPJ',
+}
+const hayJusticia = computed(() => Object.keys(r.value?.justicia?.recuento ?? {}).length > 0)
 const abiertos = ref(new Set())
 const abrir = (k) => (abiertos.value = new Set([...abiertos.value, k]))
 const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
@@ -381,6 +388,34 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
                 @click="abrir(`${g.persona}|${tipo}`)"
               >y {{ g.grupos[tipo].length - 6 }} más</button>
             </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 1c. Quién elige a los jueces -->
+      <section v-if="hayJusticia" class="bloque" aria-labelledby="t-jueces">
+        <h2 id="t-jueces" class="seccion">Quién elige a los jueces</h2>
+        <p class="nota">
+          Los magistrados del Tribunal Constitucional, por quién los propuso, y cuántos nombramientos de la cúpula
+          judicial propuso cada institución, según el BOE. Son nombramientos leídos, no la composición de hoy: quien fue
+          nombrado hace años puede no seguir.
+        </p>
+        <div class="proponentes">
+          <section v-for="pr in PROPONENTES" :key="pr" class="proponente">
+            <h3>{{ CORTO_PROPONENTE[pr] }}</h3>
+            <p class="recuento-just">
+              <template v-for="(n, inst) in r.justicia.recuento[pr] ?? {}" :key="inst">
+                <span v-if="inst"><b>{{ numero(n) }}</b> {{ inst.replace(/^Tribunal /, 'T. ') }}</span>
+              </template>
+            </p>
+            <h4 v-if="r.justicia.constitucional[pr].length">Al Constitucional</h4>
+            <ul>
+              <li v-for="m in r.justicia.constitucional[pr]" :key="m.persona + m.desde">
+                <button type="button" class="enlace" @click="ir(m.persona)">{{ m.nombre }}</button>
+                <span v-if="m.desde" class="dato">{{ anio(m.desde) }}</span>
+                <span v-if="m.antes" class="antes">antes: {{ m.antes }}</span>
+              </li>
+            </ul>
           </section>
         </div>
       </section>
@@ -608,6 +643,19 @@ a.fuente { color: var(--tinta-2); }
 .grupo-nombramientos .cargo { color: var(--tinta-2); flex: 1 1 12rem; }
 .grupo-nombramientos .antes { flex-basis: 100%; font-size: var(--t-xs); color: var(--adm); }
 .mas-boton { all: unset; cursor: pointer; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-2); text-decoration: underline; margin-top: var(--e1); }
+
+/* Quién elige a los jueces */
+.proponentes { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--e4); }
+.proponente { border-top: 3px solid var(--par); padding-top: var(--e2); font-family: var(--sans); font-size: var(--t-s); }
+.proponente:nth-child(3) { border-top-color: var(--adm); }
+.proponente:nth-child(4) { border-top-color: var(--tinta-2); }
+.proponente h3 { font-family: var(--serif); font-size: var(--t-h3); margin: 0 0 var(--e2); }
+.proponente h4 { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--tinta-2); margin: var(--e3) 0 var(--e1); }
+.recuento-just { display: flex; flex-direction: column; gap: 2px; margin: 0; color: var(--tinta-2); }
+.recuento-just b { font-family: var(--mono); font-weight: 500; color: var(--tinta); }
+.proponente ul { list-style: none; margin: 0; padding: 0; }
+.proponente li { padding: 3px 0; border-bottom: 1px solid var(--filete-suave); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 var(--e2); }
+.proponente .antes { flex-basis: 100%; font-size: var(--t-xs); color: var(--adm); }
 
 /* Núcleos */
 .nucleos { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: var(--e4); }

@@ -411,6 +411,19 @@ export const TIPOS_DE_INSTITUCION = {
 }
 
 /**
+ * Si antes de este nombramiento la misma persona estuvo en el Gobierno
+ * —ministro, vicepresidente, secretario de Estado—, según el mismo BOE: del
+ * Gobierno al árbitro. Es la misma clave de persona, no un cruce entre
+ * fuentes. Devuelve ese periodo, o undefined.
+ */
+function antesEnElGobierno(persona, periodo) {
+  return (persona.periodos ?? [])
+    .filter((y) => y !== periodo && (y.fuente ?? 'boe') === 'boe' && y.desde && periodo.desde && y.desde < periodo.desde)
+    .filter((y) => /^(ministr[oa]|vicepresident[ae] (primer|segund|tercer|cuart)[oa]? del gobierno|vicepresident[ae] del gobierno|secretari[oa] de estado)/i.test(y.cargo ?? ''))
+    .sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))[0]
+}
+
+/**
  * Lo que nombra cada Gobierno: las presidencias de reguladores, empresas
  * públicas y órganos de control, del BOE, con el Gobierno que las nombró.
  */
@@ -431,13 +444,7 @@ export function nombramientosClave(cargos) {
       if (!/^(presidente|gobernador|gobernadora)\b/.test(plano_) || /\bseccion\b/.test(plano_)) continue
       const inst = INSTITUCIONES.find((i) => i.patron.test(plano_))
       if (!inst) continue
-      // Si antes estuvo en el Gobierno —ministro, vicepresidente, secretario
-      // de Estado—, según el mismo BOE y la misma persona: del Gobierno al
-      // árbitro. Sólo cargos anteriores a este nombramiento.
-      const antes = (p.periodos ?? [])
-        .filter((y) => y !== x && (y.fuente ?? 'boe') === 'boe' && y.desde && x.desde && y.desde < x.desde)
-        .filter((y) => /^(ministr[oa]|vicepresident[ae] (primer|segund|tercer|cuart)[oa]? del gobierno|vicepresident[ae] del gobierno|secretari[oa] de estado)/i.test(y.cargo ?? ''))
-        .sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))[0]
+      const antes = antesEnElGobierno(p, x)
       ;(g.grupos[inst.tipo] ??= []).push({
         persona: p.clave,
         nombre: p.nombre,
@@ -454,6 +461,39 @@ export function nombramientosClave(cargos) {
       return { ...g, altosCargos: g.altosCargos.size, ministros: g.ministros.size }
     })
     .sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))
+}
+
+export const PROPONENTES = ['Congreso de los Diputados', 'Senado', 'Gobierno', 'Consejo General del Poder Judicial']
+
+/**
+ * Quién propone a la cúpula judicial, según el BOE: los magistrados del
+ * Constitucional por quién los propuso, y cuántos nombramientos de cada
+ * institución propuso cada uno. Son nombramientos leídos, no la composición
+ * de hoy: quien fue nombrado en 2013 puede no seguir.
+ */
+export function cupulaJudicial(cargos) {
+  const constitucional = Object.fromEntries(PROPONENTES.map((p) => [p, []]))
+  const recuento = {}
+  for (const p of cargos?.personas ?? []) {
+    for (const x of p.periodos ?? []) {
+      if (x.ambito !== 'justicia' || !x.propuesta) continue
+      const inst = /^Tribunal Superior de Justicia/.test(x.organismo ?? '') ? 'Tribunales Superiores de Justicia' : (x.organismo ?? '')
+      recuento[x.propuesta] ??= {}
+      recuento[x.propuesta][inst] = (recuento[x.propuesta][inst] ?? 0) + 1
+      if (x.organismo === 'Tribunal Constitucional' && /^magistrad[oa] del tribunal constitucional$/i.test(x.cargo ?? '') && constitucional[x.propuesta]) {
+        const antes = antesEnElGobierno(p, x)
+        constitucional[x.propuesta].push({
+          persona: p.clave,
+          nombre: p.nombre,
+          desde: x.desde ?? null,
+          url: x.urlDesde ?? '',
+          ...(antes ? { antes: antes.cargo } : {}),
+        })
+      }
+    }
+  }
+  for (const l of Object.values(constitucional)) l.sort((a, b) => (b.desde ?? '').localeCompare(a.desde ?? ''))
+  return { constitucional, recuento }
 }
 
 /** Las cifras de cabecera. */
@@ -746,6 +786,7 @@ export function radiografia(cargos, grafo = null) {
     flujos: flujosEntreAreas(cargos, grafo),
     puentes: puentes(cargos),
     gobiernos: nombramientosClave(cargos),
+    justicia: cupulaJudicial(cargos),
   }
 }
 

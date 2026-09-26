@@ -5,6 +5,7 @@ import {
   estadoAccionista,
   flujosEntreAreas,
   nombrePropio,
+  cupulaJudicial,
   nombramientosClave,
   mapaDeNucleos,
   nombreCorto,
@@ -313,5 +314,32 @@ describe('lo que nombra cada Gobierno', () => {
     // Una sección del Consejo de Estado no es su presidencia.
     expect(gob.grupos.control).toBeUndefined()
     expect(gob.ministros).toBe(2)
+  })
+})
+
+describe('quién elige a los jueces', () => {
+  it('el Constitucional por quién propuso a cada magistrado, y lo que propone el CGPJ', () => {
+    const c = cargos()
+    c.personas.push(
+      { clave: 'boe:persona:tc1', nombre: 'Magistrada Uno', periodos: [{ cargo: 'Magistrada del Tribunal Constitucional', organismo: 'Tribunal Constitucional', ambito: 'justicia', propuesta: 'Senado', desde: '2024-07-30' }] },
+      {
+        clave: 'boe:persona:tc3',
+        nombre: 'Ex Ministro',
+        periodos: [
+          { cargo: 'Ministro de Justicia', desde: '2020-01-13' },
+          { cargo: 'Magistrado del Tribunal Constitucional', organismo: 'Tribunal Constitucional', ambito: 'justicia', propuesta: 'Gobierno', desde: '2022-12-31' },
+        ],
+      },
+      { clave: 'boe:persona:tc2', nombre: 'Vice Dos', periodos: [{ cargo: 'Vicepresidenta del Tribunal Constitucional', organismo: 'Tribunal Constitucional', ambito: 'justicia', propuesta: 'Senado' }] },
+      { clave: 'boe:persona:tsj', nombre: 'Presi TSJ', periodos: [{ cargo: 'Presidente del Tribunal Superior de Justicia de Aragón', organismo: 'Tribunal Superior de Justicia de Aragón', ambito: 'justicia', propuesta: 'Consejo General del Poder Judicial' }] },
+    )
+    const j = cupulaJudicial(c)
+    // La vicepresidencia no es un magistrado más: no se cuenta dos veces.
+    expect(j.constitucional.Senado.map((x) => x.nombre)).toEqual(['Magistrada Uno'])
+    // Las presidencias de los TSJ, juntas.
+    expect(j.recuento['Consejo General del Poder Judicial']['Tribunales Superiores de Justicia']).toBe(1)
+    expect(j.recuento.Senado['Tribunal Constitucional']).toBe(2)
+    // Del Gobierno al Constitucional, según el mismo BOE.
+    expect(j.constitucional.Gobierno[0]).toMatchObject({ nombre: 'Ex Ministro', antes: 'Ministro de Justicia' })
   })
 })
