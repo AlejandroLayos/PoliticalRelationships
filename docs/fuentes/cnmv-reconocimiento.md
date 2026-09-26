@@ -1,5 +1,28 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Sexta vuelta: 2026-09-26T11:39:45.204368+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Sexta vuelta: consejos y directivos
+
+### El consejo en el informe de gobierno corporativo, por filas
+
+- telefonica: sin informes por NIF
+- prisa: sin informes por NIF
+- santander: sin informes por NIF
+- bbva: sin informes por NIF
+- repsol: sin informes por NIF
+
+### Notificaciones de directivos: sólo la forma
+
+- telefonica: HTTP 0, 0 tablas
+- prisa: HTTP 0, 0 tablas
+- santander: HTTP 0, 0 tablas
+
+
+---
+
+
 Quinta vuelta: 2026-09-26T11:05:11.962821+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -606,6 +629,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 
