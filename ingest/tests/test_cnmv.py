@@ -117,6 +117,20 @@ def test_el_emisor_sale_del_titulo():
         "OVIEDO HOLDINGS S.A.R.L.",
         "CONTROL EMPRESARIAL DE CAPITALES, S.A. DE C.V.",
         "GLOBAL ALCONABA SL",
+        # Los que la primera instantánea real publicó como personas (26/9/2026):
+        # ninguno lleva la coma con la que la CNMV escribe a una persona.
+        "MORGAN STANLEY",
+        "DODGE & COX",
+        "SONATRACH",
+        "ENAIRE",
+        "FROB",
+        "INSTITUTO VASCO DE FINANZAS",
+        "FI COBAS SELECCION",
+        "INDEPENDANCE AM",
+        "EDIZIONE S.R.L.",
+        # Con coma, pero con forma jurídica.
+        "BERTELSMANN , A.G.",
+        "PLANETA CORPORACION , S.R.L.",
     ],
 )
 def test_sociedades(denominacion):
@@ -130,8 +144,8 @@ def test_sociedades(denominacion):
         "ORTEGA GAONA , AMANCIO",
         "PEREZ RODRIGUEZ , FLORENTINO",
         "UTOR MARTÍNEZ, JUAN ADOLFO",
-        # Sin la coma, también: sin forma jurídica, se trata como persona.
-        "JUAN CAJA PÉREZ",
+        "GRIFOLS ROURA , ENRIQUE Y NURIA",
+        "ANDERSEN , MARC P.",
     ],
 )
 def test_personas(denominacion):
@@ -553,3 +567,19 @@ def test_consejeros_fijados_por_la_junta():
     texto = "Número mínimo de consejeros 5 Número de consejeros fijado por la junta 14 C.1.2"
     assert consejeros_fijados(texto) == 14
     assert consejeros_fijados("nada") is None
+
+
+def test_la_accion_concertada_no_es_un_titular():
+    from sinapsis_ingest.cnmv import es_accion_concertada
+    from sinapsis_ingest.connectors.base import ParsedRecord
+
+    assert es_accion_concertada("ACCION CONCERTADA")
+    assert es_accion_concertada("ACCIÓN  CONCERTADA")
+    assert not es_accion_concertada("ACCIONA, S.A.")
+    registro = ParsedRecord(
+        raw_content_hash="x",
+        extractor_version="x",
+        data={"titular": "ACCION CONCERTADA", "sociedad": "VOCENTO, S.A.", "conocidas": {}},
+    )
+    # No se normaliza: como nodo uniría las cotizadas de grupos distintos.
+    assert CNMVConnector().normalize(registro) is None

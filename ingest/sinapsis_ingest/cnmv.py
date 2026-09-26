@@ -28,11 +28,21 @@ fecha de inicio.
 La CNMV escribe igual a una sociedad y a una persona: «BLACKROCK INC.» y «AL
 THANI , KHALID THANI ABDULLAH» van en la misma columna. Una persona física
 sólo se publica en su papel de accionista significativo (spec §12, ampliación
-del 26/9/2026), y el volcado la trata aparte. Por eso aquí la duda cae del
-lado de la persona: es sociedad sólo si su denominación lleva una forma
-jurídica reconocible; si no, se trata como persona. Una sociedad tratada
-como persona sale con menos (no entra en el mapa del dinero); una persona
-tratada como sociedad saldría donde no debe.
+del 26/9/2026), y el volcado la trata aparte.
+
+La señal es la que usa la propia CNMV: a una persona la escribe «APELLIDOS ,
+NOMBRE», con coma. La primera versión trataba como persona todo lo que no
+llevara forma jurídica, y la primera instantánea real (26/9/2026) publicó
+como personas a Morgan Stanley, Sonatrach, ENAIRE, el FROB o el Instituto
+Vasco de Finanzas; ninguno lleva coma, y las 34 personas de verdad, todas.
+Ahora es persona lo que lleva coma y no lleva forma jurídica (Bertelsmann y
+Planeta llevan coma: «BERTELSMANN , A.G.»). Lo demás, sociedad. Las dos
+cosas van con clave de la CNMV (`cnmv:persona:`, `cnmv:sociedad:`) y fuera
+del grafo y del índice; lo que cambia es cómo se presentan.
+
+«ACCION CONCERTADA» no es nadie: es como la CNMV rotula a un grupo de
+titulares que votan juntos. Como nodo uniría cotizadas que no tienen nada en
+común —el de ACS y el de Vocento serían el mismo—, así que no se publica.
 """
 
 from __future__ import annotations
@@ -379,8 +389,9 @@ _FORMAS = re.compile(
     r"\b("
     r"s\.?\s?a\.?\s?u?\.?|s\.?\s?l\.?\s?u?\.?|s\.?\s?c\.?\s?a\.?|sicav|socimi|s\.?\s?g\.?\s?i\.?\s?i\.?\s?c\.?"
     r"|f\.?\s?c\.?\s?r\.?|inc\.?|llc|l\.?l\.?p\.?|ltd\.?|limited|plc|p\.?l\.?c\.?|n\.?v\.?|b\.?v\.?"
-    r"|gmbh|ag|se|s\.e\.?|s\.?a\.?s\.?|s\.?a\.?r\.?l\.?|s\.?p\.?a\.?|l\.?p\.?|icav|lp"
-    r"|corp\.?|corporation|company|co\."
+    r"|gmbh|ag|a\.g\.?|se|s\.e\.?|s\.?a\.?s\.?|s\.?a\.?r\.?l\.?|s\.?r\.?l\.?|s\.?p\.?a\.?"
+    r"|l\.?p\.?|icav|lp"
+    r"|corp\.?|corporation|corporacion|company|co\."
     r"|fund|fondo|fonds|trust|holdings?|group|grupo|capital|management|investments?|partners"
     r"|asset|advisors?|bank|banco|banca|caixa|fundacion|fundacio|foundation|asociacion"
     r"|sociedad|societe|compania|kingdom|republic|authority|ministry"
@@ -391,8 +402,13 @@ _FORMAS = re.compile(
 
 
 def es_persona_fisica(denominacion: str) -> bool:
-    """¿Se trata como persona? Sí, salvo que lleve una forma de sociedad."""
-    return not _FORMAS.search(_plano(denominacion))
+    """¿Es una persona? Si la CNMV la escribe con coma y sin forma de sociedad."""
+    return "," in (denominacion or "") and not _FORMAS.search(_plano(denominacion))
+
+
+def es_accion_concertada(denominacion: str) -> bool:
+    """El rótulo de un grupo de titulares que votan juntos: no es un titular."""
+    return _plano(" ".join((denominacion or "").split())) in {"accion concertada"}
 
 
 def nombre_de_persona(denominacion: str) -> str:

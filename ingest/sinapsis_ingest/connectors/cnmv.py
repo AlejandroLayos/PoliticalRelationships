@@ -58,6 +58,7 @@ import structlog
 from sinapsis_ingest.cnmv import (
     emisor_del_titulo,
     enlaces_de_participaciones,
+    es_accion_concertada,
     es_persona_fisica,
     leer_accionistas,
     leer_datos_generales,
@@ -103,7 +104,7 @@ class CNMVConnector:
     """Accionistas significativos y participaciones de las cotizadas de la lista."""
 
     source_id = "cnmv"
-    extractor_version = "cnmv-participaciones/2"
+    extractor_version = "cnmv-participaciones/3"
 
     def __init__(
         self,
@@ -292,6 +293,9 @@ class CNMVConnector:
                 },
             )
 
+        if es_accion_concertada(d["titular"]) or es_accion_concertada(d["sociedad"]):
+            # No es un titular: ver `sinapsis_ingest/cnmv.py`.
+            return None
         cotizada = sociedad(d["sociedad"])
         if es_persona_fisica(d["titular"]) and d["titular"] not in conocidas:
             nombre = nombre_de_persona(d["titular"])
