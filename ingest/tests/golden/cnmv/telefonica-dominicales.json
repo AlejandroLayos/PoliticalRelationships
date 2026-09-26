@@ -1,0 +1,237 @@
+{
+"ejercicio": "2025",
+"tablas": [
+{
+"pagina": 15,
+"columnas": 11,
+"filas": [
+[
+"",
+""
+],
+[
+"",
+""
+]
+]
+},
+{
+"pagina": 15,
+"columnas": 1,
+"filas": [
+[
+"Observaciones"
+],
+[
+"<largo>"
+]
+]
+},
+{
+"pagina": 16,
+"columnas": 11,
+"filas": [
+[
+"",
+""
+],
+[
+"",
+""
+]
+]
+},
+{
+"pagina": 89,
+"columnas": 11,
+"filas": [
+[
+"",
+""
+]
+]
+},
+{
+"pagina": 89,
+"columnas": 1,
+"filas": [
+[
+"Banco Bilbao Vizcaya Argentaria, S.A."
+],
+[
+"Criteria Caixa, S.A.U."
+],
+[
+"Sociedad Estatal de Participaciones Industriales (SEPI)"
+],
+[
+"Green Bridge Investment Company SCS / Stc Group"
+]
+]
+},
+{
+"pagina": 90,
+"columnas": 11,
+"filas": [
+[
+"",
+""
+]
+]
+},
+{
+"pagina": 129,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EJECUTIVOS",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Cargo en el organigrama de la sociedad"
+],
+[
+"DON EMILIO GAYO RODRÍGUEZ",
+"Consejero Delegado (C.O.O.)"
+]
+]
+},
+{
+"pagina": 129,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros ejecutivos",
+"2"
+],
+[
+"% sobre el total del consejo",
+"13,33"
+]
+]
+},
+{
+"pagina": 129,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EXTERNOS DOMINICALES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+],
+[
+"DON JOSÉ MARÍA ABRIL PÉREZ",
+"BANCO BILBAO VIZCAYA ARGENTARIA, S.A."
+],
+[
+"DON ISIDRO FAINÉ CASAS",
+"CRITERIA CAIXA S.A.U."
+],
+[
+"DON CARLOS OCAÑA ORBIS",
+"SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES (SEPI)"
+],
+[
+"DON OLAYAN M. ALWETAID",
+"GREEN BRIDGE INVESTMENT COMPANY SCS"
+]
+]
+},
+{
+"pagina": 129,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros dominicales",
+"4"
+],
+[
+"% sobre el total del consejo",
+"26,67"
+]
+]
+},
+{
+"pagina": 129,
+"columnas": 2,
+"filas": [
+[
+"CONSEJEROS EXTERNOS INDEPENDIENTES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Perfil"
+],
+[
+"DOÑA MARÍA LUISA GARCÍA BLANCO",
+"<largo>"
+]
+]
+},
+{
+"pagina": 130,
+"columnas": 2,
+"filas": [
+[
+"CONSEJEROS EXTERNOS INDEPENDIENTES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Perfil"
+],
+[
+"DON PETER LÖSCHER",
+"<largo>"
+],
+[
+"DOÑA ANNA MARTÍNEZ BALAÑÁ",
+"<largo>"
+],
+[
+"DON CÉSAR MASCARAQUE ALONSO",
+"<largo>"
+],
+[
+"DOÑA MÓNICA REY AMADO",
+"<largo>"
+],
+[
+"DON ALEJANDRO REYNAL AMPLE",
+"<largo>"
+],
+[
+"DOÑA ANA MARÍA SALA ANDRÉS",
+"<largo>"
+],
+[
+"DOÑA CLAUDIA SENDER RAMÍREZ",
+"<largo>"
+],
+[
+"DOÑA SOLANGE SOBRAL TARGA",
+"<largo>"
+]
+]
+},
+{
+"pagina": 130,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros independientes",
+"9"
+],
+[
+"% sobre el total del consejo",
+"60,00"
+]
+]
+}
+]
+}

@@ -1,0 +1,141 @@
+{
+"ejercicio": "2025",
+"tablas": [
+{
+"pagina": 142,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EJECUTIVOS",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Cargo en el organigrama de la sociedad"
+],
+[
+"DON GONZALO GORTÁZAR ROTAECHE",
+"CONSEJERO DELEGADO"
+]
+]
+},
+{
+"pagina": 142,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros ejecutivos",
+"1"
+],
+[
+"% sobre el total del consejo",
+"6,67"
+]
+]
+},
+{
+"pagina": 142,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EXTERNOS DOMINICALES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+]
+]
+},
+{
+"pagina": 143,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EXTERNOS DOMINICALES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+],
+[
+"",
+""
+],
+[
+"DON TOMÁS MUNIESA ARANTEGUI",
+"FUNDACIÓN BANCARIA LA CAIXA"
+]
+]
+},
+{
+"pagina": 144,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EXTERNOS DOMINICALES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+],
+[
+"DON JOSÉ MARÍA MÉNDEZ ÁLVAREZ- CEDRÓN",
+"FUNDACIÓN BANCARIA LA CAIXA"
+]
+]
+},
+{
+"pagina": 144,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros dominicales",
+"3"
+],
+[
+"% sobre el total del consejo",
+"20,00"
+]
+]
+},
+{
+"pagina": 144,
+"columnas": 2,
+"filas": [
+[
+"CONSEJEROS EXTERNOS INDEPENDIENTES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Perfil"
+]
+]
+},
+{
+"pagina": 145,
+"columnas": 2,
+"filas": [
+[
+"CONSEJEROS EXTERNOS INDEPENDIENTES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Perfil"
+],
+[
+"",
+"<largo>"
+],
+[
+"DOÑA CRISTINA GARMENDIA MENDIZÁBAL",
+"<largo>"
+]
+]
+}
+]
+}

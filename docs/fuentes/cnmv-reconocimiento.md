@@ -1,5 +1,48 @@
 # Reconocimiento: CNMV (consejos y participaciones de cotizadas)
 
+Décima vuelta: 2026-09-26T15:25:45.701910+00:00 (`scripts/explorar_cnmv.py`).
+Las anteriores siguen debajo.
+
+## Décima vuelta: los consejeros dominicales y a quién representan
+
+- portada → HTTP 200 (text/html; charset=utf-8); cookies: 1
+- participaciones de Telefónica → HTTP 200 (text/html; charset=utf-8)
+
+### Consejeros dominicales: a quién representan
+
+- telefonica: IAGC 2025; páginas [15, 16, 89, 90, 129, 130]; 13 tablas
+  - página 15, 11 columnas, 2 filas; primera: ['', '']
+  - página 15, 1 columnas, 2 filas; primera: ['Observaciones']
+  - página 16, 11 columnas, 2 filas; primera: ['', '']
+  - página 89, 11 columnas, 1 filas; primera: ['', '']
+  - página 89, 1 columnas, 4 filas; primera: ['Banco Bilbao Vizcaya Argentaria, S.A.']
+  - página 90, 11 columnas, 1 filas; primera: ['', '']
+- prisa: IAGC 2025; páginas [19, 20, 21, 22, 105, 106, 107, 108]; 10 tablas
+  - página 19, 3 columnas, 3 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+  - página 20, 3 columnas, 5 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+  - página 21, 3 columnas, 3 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+  - página 21, 2 columnas, 2 filas; primera: ['Número total de consejeros dominicales', '5']
+  - página 22, 2 columnas, 4 filas; primera: ['CONSEJEROS EXTERNOS INDEPENDIENTES', '']
+  - página 105, 3 columnas, 3 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+- naturgy: IAGC 2025; páginas [16, 17, 93, 94, 95]; 13 tablas
+  - página 16, 1 columnas, 12 filas; primera: ['Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento']
+  - página 17, 1 columnas, 7 filas; primera: ['Número de consejeras']
+  - página 93, 6 columnas, 2 filas; primera: ['Nombre o denominación social del consejero', 'Categoría del consejero en el momento del cese']
+  - página 93, 3 columnas, 3 filas; primera: ['CONSEJEROS EJECUTIVOS', '']
+  - página 93, 2 columnas, 2 filas; primera: ['Número total de consejeros ejecutivos', '1']
+  - página 93, 3 columnas, 4 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+- caixabank: IAGC 2025; páginas [142, 143, 144, 145]; 8 tablas
+  - página 142, 3 columnas, 3 filas; primera: ['CONSEJEROS EJECUTIVOS', '']
+  - página 142, 2 columnas, 2 filas; primera: ['Número total de consejeros ejecutivos', '1']
+  - página 142, 3 columnas, 2 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+  - página 143, 3 columnas, 4 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+  - página 144, 3 columnas, 3 filas; primera: ['CONSEJEROS EXTERNOS DOMINICALES', '']
+  - página 144, 2 columnas, 2 filas; primera: ['Número total de consejeros dominicales', '3']
+
+
+---
+
+
 Novena vuelta: 2026-09-26T14:05:15.752613+00:00 (`scripts/explorar_cnmv.py`).
 Las anteriores siguen debajo.
 
@@ -923,6 +966,7 @@ Generado el 2026-09-26T10:42:43.796753+00:00 por `scripts/explorar_cnmv.py` (seg
 
 - rótulos: ['Notificaciones de los directivos y personas vinculadas (Reglamento de Ejecución (UE) 2016/']
 - no se guarda: trae personas vinculadas
+
 
 
 

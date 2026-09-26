@@ -1,0 +1,296 @@
+{
+"ejercicio": "2025",
+"tablas": [
+{
+"pagina": 16,
+"columnas": 1,
+"filas": [
+[
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+],
+[
+"CRITERIA CAIXA S.A.U"
+],
+[
+"CRITERIA CAIXA S.A.U"
+],
+[
+"CRITERIA CAIXA S.A.U"
+],
+[
+"GIP III Canary 1 S.à r.l."
+],
+[
+"GIP III Canary 1 S.à r.l."
+],
+[
+"GIP III Canary 1 S.à r.l."
+],
+[
+"Rioja Adcquisitions Sarl, S.L.U"
+],
+[
+"Rioja Acquisitions S.à.r.l."
+],
+[
+"Rioja Acquisitions S.à.r.l."
+],
+[
+"Global InfraCo O (2) S.à. r.l."
+],
+[
+"Global InfraCo O (2) S.à. r.l."
+]
+]
+},
+{
+"pagina": 17,
+"columnas": 1,
+"filas": [
+[
+"Número de consejeras"
+],
+[
+"Ejercicio t Ejercicio t-1 Ejercicio t-2 Ejercicio t-3"
+],
+[
+"0 0 0 0"
+],
+[
+"4 2 2 2"
+],
+[
+"1 1 1 1"
+],
+[
+"0 0 0 0"
+],
+[
+"5 3 3 3"
+]
+]
+},
+{
+"pagina": 93,
+"columnas": 6,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Categoría del consejero en el momento del cese"
+],
+[
+"DON ENRIQUE ALCANTARA- GARCIA IRAZOQUI",
+"Dominical"
+]
+]
+},
+{
+"pagina": 93,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EJECUTIVOS",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Cargo en el organigrama de la sociedad"
+],
+[
+"DON FRANCISCO REYNES MASSANET",
+"PRESIDENTE EJECUTIVO"
+]
+]
+},
+{
+"pagina": 93,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros ejecutivos",
+"1"
+],
+[
+"% sobre el total del consejo",
+"6,67"
+]
+]
+},
+{
+"pagina": 93,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EXTERNOS DOMINICALES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+],
+[
+"DON JOSE ANTONIO TORRE DE SILVA LOPEZ DE LETONA",
+"RIOJA ACQUISITION S.À.R.L"
+],
+[
+"DON JAIME SILES FERNANDEZ PALACIOS",
+"GLOBAL INFRACO O (2) S.À. R.L."
+]
+]
+},
+{
+"pagina": 94,
+"columnas": 3,
+"filas": [
+[
+"CONSEJEROS EXTERNOS DOMINICALES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Nombre o denominación del accionista significativo a quien representa o que ha propuesto su nombramiento"
+],
+[
+"",
+""
+],
+[
+"DOÑA ISABEL ESTAPÉ TOUS",
+"CRITERIA CAIXA, S.A.U."
+],
+[
+"DON RAJARAM RAO",
+"GLOBAL INFRASTRUCTURE PARTNERS III"
+],
+[
+"DOÑA LUCY CHADWICK",
+"GIP III CANARY 1, S.À R.L."
+],
+[
+"DON JAVIER DE JAIME GUIJARRO",
+"RIOJA ACQUISITION S.À.R.L"
+],
+[
+"DOÑA MARTA MARTÍNEZ ALONSO",
+"RIOJA ACQUISITION S.À.R.L"
+],
+[
+"DON NICOLÁS VILLÉN JIMÉNEZ",
+"GLOBAL INFRACO O (2) S.À. R.L."
+],
+[
+"DON MARTIN CATCHPOLE",
+"GIP III CANARY 1, S.À R.L."
+],
+[
+"DOÑA MARIA ISABEL GABARRÓ MIQUEL",
+"CRITERIA CAIXA, S.A.U."
+]
+]
+},
+{
+"pagina": 94,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros dominicales",
+"11"
+],
+[
+"% sobre el total del consejo",
+"73,33"
+]
+]
+},
+{
+"pagina": 95,
+"columnas": 2,
+"filas": [
+[
+"CONSEJEROS EXTERNOS INDEPENDIENTES",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Perfil"
+],
+[
+"DON PEDRO SAINZ DE BARANDA RIVA",
+"<largo>"
+],
+[
+"DOÑA HELENA HERRERO STARKIE",
+"<largo>"
+],
+[
+"DON CLAUDIO SANTIAGO PONSA",
+"<largo>"
+]
+]
+},
+{
+"pagina": 95,
+"columnas": 2,
+"filas": [
+[
+"Número total de consejeros independientes",
+"3"
+],
+[
+"% sobre el total del consejo",
+"20,00"
+]
+]
+},
+{
+"pagina": 95,
+"columnas": 3,
+"filas": [
+[
+"Nombre o denominación social del consejero",
+"Descripción de la relación"
+],
+[
+"Sin datos",
+""
+]
+]
+},
+{
+"pagina": 95,
+"columnas": 4,
+"filas": [
+[
+"OTROS CONSEJEROS EXTERNOS",
+""
+],
+[
+"<largo>",
+""
+],
+[
+"Nombre o denominación social del consejero",
+"Motivos"
+],
+[
+"Sin datos",
+""
+]
+]
+},
+{
+"pagina": 95,
+"columnas": 2,
+"filas": [
+[
+"Número total de otros consejeros externos",
+"N.A."
+],
+[
+"% sobre el total del consejo",
+"N.A."
+]
+]
+}
+]
+}
