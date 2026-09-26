@@ -374,7 +374,10 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
   <section class="poder">
     <header class="poder-cabeza">
       <div class="que-es">
-        <p class="antetitulo">Red de poder</p>
+        <p class="antetitulo">
+          <button type="button" class="volver-radiografia" @click="emit('centrar', '')">← Radiografía del poder</button>
+          · Red de poder
+        </p>
         <h1 class="titulo">Quién está unido a quién, y quién lo dice</h1>
         <p class="entradilla">
           Cada línea es un hecho de una fuente oficial: un nombramiento en el BOE, un escaño, una
@@ -577,6 +580,8 @@ const totalConexiones = computed(() => conexiones.value.reduce((n, g) => n + g.i
 </template>
 
 <style scoped>
+.volver-radiografia { all: unset; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.volver-radiografia:hover, .volver-radiografia:focus-visible { color: var(--tinta); }
 .poder {
   height: 100%;
   overflow-y: auto;

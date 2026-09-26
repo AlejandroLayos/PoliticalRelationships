@@ -798,6 +798,12 @@ def participaciones_cnmv(store: Store) -> dict[str, dict[str, Any]]:
                 # El sector es el que le da la CNMV en su ficha; «medio» sale
                 # de ese sector, no de una lista nuestra.
                 **({"sector": sector} if sector else {}),
+                # El nombre corto que le da la CNMV en su ficha: PRISA, BBVA…
+                **(
+                    {"abreviada": (f["props_cotizada"] or {})["alias"]}
+                    if (f["props_cotizada"] or {}).get("alias")
+                    else {}
+                ),
                 **({"medio": True} if es_medio_de_comunicacion(sector) else {}),
                 "url": props.get("url", "") if f["esquema"] == "Ownership" else "",
                 "accionistas": [],

@@ -10,6 +10,7 @@ import PanelNucleos from './components/PanelNucleos.vue'
 import Portada from './components/Portada.vue'
 import Cargos from './components/Cargos.vue'
 import RedPoder from './components/RedPoder.vue'
+import Radiografia from './components/Radiografia.vue'
 import {
   buscarTodo,
   cargarCargos,
@@ -761,7 +762,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
 </script>
 
 <template>
-  <div class="app" :class="{ desplaza: vista === 'portada' || vista === 'cargos' }">
+  <div class="app" :class="{ desplaza: vista === 'portada' || vista === 'cargos' || (vista === 'poder' && !nodoPoder) }">
     <!--
       El aviso es permanente y no se puede cerrar mientras se estén enseñando
       datos que no vienen de una fuente real. Publicar un mapa de dinero
@@ -997,7 +998,7 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
           href="?v=poder"
           :aria-current="vista === 'poder' ? 'page' : undefined"
           @click.prevent="verPoder()"
-        ><span class="ancho">Red de poder</span><span class="estrecho">Red</span></a>
+        ><span class="ancho">Radiografía del poder</span><span class="estrecho">Poder</span></a>
       </nav>
     </header>
 
@@ -1384,8 +1385,17 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         @entidad="abrirPorClave"
         @red="verPoder"
       />
+      <!-- Sin nodo pedido, la radiografía; con él, la red centrada en él. -->
+      <Radiografia
+        v-if="vista === 'poder' && !nodoPoder"
+        class="portada-encima"
+        :cargos="cargos"
+        :grafo="grafoEntero"
+        :cargando="cargandoCargos"
+        @centrar="(id) => verPoder(id)"
+      />
       <RedPoder
-        v-if="vista === 'poder'"
+        v-if="vista === 'poder' && nodoPoder"
         class="portada-encima"
         :cargos="cargos"
         :grafo="grafoEntero"

@@ -1,3 +1,5 @@
+import { nombreLegible } from './poder.js'
+
 /**
  * La radiografía del poder: dónde se concentra y cómo se enlazan sus áreas.
  *
@@ -24,6 +26,21 @@
  * Una persona sólo aparece en el papel en que la publica su fuente (spec §12):
  * consejero o accionista, según la CNMV; cargo público, según el BOE o la OCI.
  */
+
+const FORMAS = new Set(['sa', 'sl', 'sau', 'slu', 'sme', 'socimi', 'sfl', 'inc', 'plc', 'llc', 'llp', 'lp', 'ag', 'icav', 'sgiic', 'srl', 'se', 'nv', 'bv', 'fi', 'frob', 'sepi', 'bbva', 'caf', 'acs', 'gic', 'fmr', 'tci', 'disa', 'enaire', 'mfe'])
+
+/**
+ * Un nombre de la CNMV o del BOE, legible: «CRITERIA CAIXA, S.A.U.» →
+ * «Criteria Caixa, S.A.U.». Las formas jurídicas y las siglas, en mayúscula.
+ */
+export function nombrePropio(texto) {
+  const t = nombreLegible((texto ?? '').trim())
+  return t.replace(/[\p{L}.]+/gu, (palabra) => {
+    const letras = palabra.replace(/\./g, '').toLowerCase()
+    const conPuntos = /\p{L}\.\p{L}/u.test(palabra) && letras.length <= 5
+    return FORMAS.has(letras) || conPuntos ? palabra.toUpperCase() : palabra
+  })
+}
 
 /** Normalización para comparar nombres: sin acentos, sin signos, en minúscula. */
 export function plano(texto) {
@@ -229,15 +246,17 @@ export function flujosEntreAreas(cargos, grafo = null) {
   const flujos = []
   const cotizadas = cargos?.cotizadas ?? {}
   const estado = estadoAccionista(cargos)
-  const add = (de, a, etiqueta, hechos, extra = {}) => {
-    if (hechos.length) flujos.push({ de, a, etiqueta, n: hechos.length, hechos, ...extra })
+  // Cada flujo con su frase y su unidad: «9 nombramientos», no «9 hechos».
+  const add = (de, a, frase, unidad, hechos, extra = {}) => {
+    if (hechos.length) flujos.push({ de, a, frase, unidad, n: hechos.length, hechos, ...extra })
   }
 
   // Gobierno → Estado accionista: los nombramientos de quien lo preside.
   add(
     'gobierno',
     'estado',
-    'nombra a quien preside',
+    'El Gobierno nombra a quien preside el Estado accionista',
+    ['nombramiento', 'nombramientos'],
     [...estado.values()].flatMap((e) => e.cargos.map((c) => ({ texto: `${c.nombre}: ${c.cargo}`, desde: c.desde, fuente: 'boe', url: c.url, persona: c.persona }))),
   )
   // Estado accionista → empresas.
@@ -253,17 +272,18 @@ export function flujosEntreAreas(cargos, grafo = null) {
     }
   }
   const porPct = (a, b) => b.porcentaje - a.porcentaje
-  add('estado', 'empresas', 'es accionista de', deEstado.filter((h) => !cotizadas[h.cotizada]?.medio).sort(porPct))
-  add('estado', 'medios', 'es accionista de', deEstado.filter((h) => cotizadas[h.cotizada]?.medio).sort(porPct))
-  add('accionistas', 'empresas', 'participaciones significativas', deGrandes.sort(porPct))
-  add('accionistas', 'medios', 'son dueños de', aMedios.sort(porPct))
+  add('estado', 'empresas', 'El Estado es accionista de grandes empresas', ['participación', 'participaciones'], deEstado.filter((h) => !cotizadas[h.cotizada]?.medio).sort(porPct))
+  add('estado', 'medios', 'El Estado es accionista de medios', ['participación', 'participaciones'], deEstado.filter((h) => cotizadas[h.cotizada]?.medio).sort(porPct))
+  add('accionistas', 'empresas', 'Los grandes accionistas, en las cotizadas', ['participación significativa', 'participaciones significativas'], deGrandes.sort(porPct))
+  add('accionistas', 'medios', 'Quién es dueño de los medios', ['participación significativa', 'participaciones significativas'], aMedios.sort(porPct))
 
   // Empresas ↔ empresas: consejeros compartidos.
   const { compartidos } = nucleosEconomicos(cargos)
   add(
     'empresas',
     'empresas',
-    'comparten consejeros',
+    'Las grandes empresas comparten consejeros',
+    ['consejero en dos consejos o más', 'consejeros en dos consejos o más'],
     compartidos.filter((x) => x.persona).map((x) => ({ texto: `${x.nombre}: ${x.en.map((e) => e.nombre).join(' · ')}`, persona: x.clave, fuente: 'cnmv' })),
   )
 
@@ -274,14 +294,28 @@ export function flujosEntreAreas(cargos, grafo = null) {
       puertas.push({ texto: `${a.nombre} (${a.cargoAnterior ?? 'alto cargo'}) → ${a.actividad}`, persona: a.persona, entidad: clave, cotizada: !!cotizadas[clave], desde: a.fecha ?? null, fuente: 'oci' })
     }
   }
-  add('gobierno', 'empresas', 'ex altos cargos autorizados a trabajar en', puertas.sort((a, b) => b.cotizada - a.cotizada))
+  // Sólo las autorizaciones para una cotizada: la flecha va a «grandes
+  // empresas», y la mayoría son para otras sociedades o entidades.
+  add(
+    'gobierno',
+    'empresas',
+    'Ex altos cargos autorizados a trabajar en una cotizada',
+    ['autorización de la OCI', 'autorizaciones de la OCI'],
+    puertas.filter((h) => h.cotizada),
+  )
 
   // Parlamento → empresas: lo que declararon los diputados.
   const declarados = []
   for (const [clave, lista] of Object.entries(cargos?.declarantes ?? {})) {
     for (const d of lista) declarados.push({ texto: `${d.nombre} (${d.formacion ?? ''}) → ${d.empleador ?? ''}`, persona: d.persona, entidad: clave, fuente: 'congreso' })
   }
-  add('parlamento', 'empresas', 'diputados que declararon actividad en', declarados)
+  add(
+    'parlamento',
+    'empresas',
+    'Diputados que declararon actividad en una cotizada',
+    ['declaración', 'declaraciones'],
+    declarados.filter((h) => cotizadas[h.entidad]),
+  )
 
   // Justicia: quién propone a las altas instancias.
   const propuestas = { Gobierno: [], 'Congreso de los Diputados': [], Senado: [], 'Consejo General del Poder Judicial': [] }
@@ -291,9 +325,9 @@ export function flujosEntreAreas(cargos, grafo = null) {
       propuestas[x.propuesta].push({ texto: `${p.nombre}: ${x.cargo}`, persona: p.clave, desde: x.desde ?? null, fuente: 'boe', url: x.urlDesde ?? '' })
     }
   }
-  add('parlamento', 'justicia', 'propone al CGPJ y al Constitucional', [...propuestas['Congreso de los Diputados'], ...propuestas.Senado])
-  add('justicia', 'justicia', 'el CGPJ propone la cúpula judicial', propuestas['Consejo General del Poder Judicial'])
-  add('gobierno', 'justicia', 'propone', propuestas.Gobierno)
+  add('parlamento', 'justicia', 'Congreso y Senado proponen vocales del CGPJ y magistrados del Constitucional', ['nombramiento', 'nombramientos'], [...propuestas['Congreso de los Diputados'], ...propuestas.Senado])
+  add('justicia', 'justicia', 'El CGPJ propone la cúpula judicial', ['nombramiento', 'nombramientos'], propuestas['Consejo General del Poder Judicial'])
+  add('gobierno', 'justicia', 'El Gobierno propone cargos de la cúpula judicial y fiscal', ['nombramiento', 'nombramientos'], propuestas.Gobierno)
 
   // Dinero público, del grafo: a las grandes empresas y a los partidos.
   if (grafo?.nodes?.length) {
@@ -312,8 +346,8 @@ export function flujosEntreAreas(cargos, grafo = null) {
     }
     const porImporte = (a, b) => b.importe - a.importe
     const suma = (l) => l.reduce((s, h) => s + h.importe, 0)
-    add('administracion', 'empresas', 'contratos y subvenciones a', aEmpresas.sort(porImporte), { importe: suma(aEmpresas) })
-    add('administracion', 'partidos', 'subvenciones a', aPartidos.sort(porImporte), { importe: suma(aPartidos) })
+    add('administracion', 'empresas', 'Dinero público a las cotizadas', ['contrato o subvención', 'contratos y subvenciones'], aEmpresas.sort(porImporte), { importe: suma(aEmpresas) })
+    add('administracion', 'partidos', 'Dinero público a los partidos', ['subvención', 'subvenciones'], aPartidos.sort(porImporte), { importe: suma(aPartidos) })
   }
   return flujos
 }
@@ -363,6 +397,71 @@ export function cifras(cargos) {
   }
 }
 
+/** El nombre corto de una cotizada: el que le da la CNMV, si está. */
+export function nombreCorto(c) {
+  return c?.abreviada || (c?.nombre ?? '').replace(/,.*$/, '')
+}
+
+/** Una sigla para un nombre largo: «Sociedad Estatal de Participaciones Industriales» → SEPI. */
+export function sigla(nombre) {
+  const t = (nombre ?? '').trim()
+  if (t.length <= 14) return t
+  const letras = t
+    .split(/\s+/)
+    .filter((p) => p.length > 2 && /^\p{Lu}/u.test(p))
+    .map((p) => p[0])
+    .join('')
+  return letras.length >= 3 ? letras.toUpperCase() : t
+}
+
+/**
+ * Lo que va dentro de cada caja del diagrama: quiénes son, con nombres. Sale
+ * de los mismos datos; un área sin nada que nombrar se queda sin rótulo.
+ */
+export function rotulos(cargos, grafo, r) {
+  const salida = {}
+  const cot = cargos?.cotizadas ?? {}
+  // El primer apellido: con dos apellidos, el penúltimo; con uno, el último.
+  const apellido = (n) => {
+    const t = (n ?? '').split(/\s+/)
+    return t.length >= 3 ? t[t.length - 2] : t[t.length - 1]
+  }
+  const presidentes = [...new Map((cargos?.presidencias ?? []).map((p) => [p.persona, p.nombre])).values()]
+  if (presidentes.length) salida.gobierno = `Gobiernos de ${presidentes.map(apellido).join(' y ')}`
+  if (r.cifras.justicia) salida.justicia = 'Supremo · TC · CGPJ · AN…'
+  const estado = [...(r.estado?.keys() ?? [])].map((k) => {
+    for (const c of Object.values(cot)) for (const a of c.accionistas ?? []) if (a.clave === k) return sigla(nombrePropio(a.nombre))
+    return ''
+  })
+  if (estado.length) salida.estado = estado.filter(Boolean).join(' · ')
+  // Una palabra por titular: «Banco Santander» → Santander, «Amancio Ortega
+  // Gaona» → Ortega.
+  const corto = (t) => {
+    if (t.persona) return apellido(nombrePropio(t.nombre))
+    const palabras = nombrePropio(t.nombre).replace(/,.*$/, '').split(/\s+/)
+    return palabras.find((w) => !/^(banco|grupo|corporaci[oó]n|sociedad|fundaci[oó]n|compañ[ií]a|the|de|la|el)$/i.test(w)) ?? palabras[0]
+  }
+  const grandes = r.nucleos.filter((n) => !n.estado).slice(0, 3).map((n) => corto(n.titulares[0]))
+  if (grandes.length) salida.accionistas = grandes.join(' · ') + '…'
+  salida.empresas = `${Object.keys(cot).length} cotizadas`
+  const medios = Object.values(cot).filter((c) => c.medio).map((c) => nombrePropio(nombreCorto(c)))
+  if (medios.length) salida.medios = medios.join(' · ')
+  const partidos = r.flujos.find((f) => f.de === 'administracion' && f.a === 'partidos')
+  if (partidos) {
+    const porPartido = new Map()
+    for (const h of partidos.hechos) porPartido.set(h.entidad, (porPartido.get(h.entidad) ?? 0) + h.importe)
+    const siglas = Object.entries(cargos?.formaciones ?? {})
+    const top = [...porPartido.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([clave]) => siglas.find(([, f]) => f?.entidad?.clave === clave)?.[0]).filter(Boolean)
+    if (top.length) salida.partidos = top.join(' · ') + '…'
+  }
+  const dinero = r.flujos.filter((f) => f.de === 'administracion')
+  if (dinero.length) salida.administracion = 'Ministerios y organismos'
+  const diputados = (cargos?.personas ?? []).filter((p) => (p.periodos ?? []).some((x) => x.fuente === 'congreso')).length
+  if (diputados) salida.parlamento = `Congreso · ${diputados.toLocaleString('es-ES')} diputados`
+  return salida
+}
+
 /** Todo junto. */
 export function radiografia(cargos, grafo = null) {
   const economicos = nucleosEconomicos(cargos)
@@ -377,4 +476,10 @@ export function radiografia(cargos, grafo = null) {
     flujos: flujosEntreAreas(cargos, grafo),
     puentes: puentes(cargos),
   }
+}
+
+/** Todo junto, con los rótulos del diagrama. */
+export function radiografiaCompleta(cargos, grafo = null) {
+  const r = radiografia(cargos, grafo)
+  return { ...r, rotulos: rotulos(cargos, grafo, r) }
 }

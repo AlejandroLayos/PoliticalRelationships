@@ -4,6 +4,10 @@ import {
   esMercantilEstatal,
   estadoAccionista,
   flujosEntreAreas,
+  nombrePropio,
+  nombreCorto,
+  radiografiaCompleta,
+  sigla,
   nucleosEconomicos,
   puentes,
   radiografia,
@@ -218,5 +222,50 @@ describe('puentes y cifras', () => {
     const r = radiografia(cargos())
     expect(r.nucleos.length).toBeGreaterThan(1)
     expect(r.referencias.length).toBeGreaterThan(0)
+  })
+})
+
+describe('los nombres', () => {
+  it.each([
+    ['CRITERIA CAIXA, S.A.U.', 'Criteria Caixa, S.A.U.'],
+    ['AENA, S.M.E., S.A.', 'Aena, S.M.E., S.A.'],
+    ['MERLIN PROPERTIES, SOCIMI, S.A.', 'Merlin Properties, SOCIMI, S.A.'],
+    ['AMANCIO ORTEGA GAONA', 'Amancio Ortega Gaona'],
+    ['SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES', 'Sociedad Estatal de Participaciones Industriales'],
+    ['BLACKROCK INC.', 'Blackrock INC.'],
+    ['Ya Escrito Bien', 'Ya Escrito Bien'],
+  ])('%s → %s', (de, a) => {
+    expect(nombrePropio(de)).toBe(a)
+  })
+})
+
+describe('rótulos y nombres cortos', () => {
+  it('siglas de los nombres largos', () => {
+    expect(sigla('Sociedad Estatal de Participaciones Industriales')).toBe('SEPI')
+    expect(sigla('FROB')).toBe('FROB')
+  })
+  it('el nombre corto de la CNMV, o el nombre sin la forma jurídica', () => {
+    expect(nombreCorto({ nombre: 'PROMOTORA DE INFORMACIONES, S.A.', abreviada: 'PRISA' })).toBe('PRISA')
+    expect(nombreCorto({ nombre: 'TELCO, S.A.' })).toBe('TELCO')
+  })
+  it('cada caja con sus nombres', () => {
+    const r = radiografiaCompleta(cargos())
+    expect(r.rotulos.estado.split(' · ').sort()).toEqual(['ENAIRE', 'FROB', 'SEPI'])
+    expect(r.rotulos.medios).toBe('Tele')
+    expect(r.rotulos.gobierno).toBe('Gobiernos de Ejemplo')
+    // Con dos apellidos, el primero: «Mariano Rajoy Brey» → Rajoy.
+    const c = cargos()
+    c.presidencias.push({ persona: 'boe:persona:rajoy', nombre: 'Mariano Rajoy Brey' })
+    expect(radiografiaCompleta(c).rotulos.gobierno).toBe('Gobiernos de Ejemplo y Rajoy')
+    // Una palabra por titular del núcleo.
+    expect(r.rotulos.accionistas).toBe('Criteria…')
+  })
+  it('a «grandes empresas» sólo llega lo que va a una cotizada', () => {
+    const c = cargos()
+    c.empresas['nif:Q1'] = [{ persona: 'oci:persona:y', nombre: 'Otra', actividad: 'UNIVERSIDAD', fecha: '2020-01-01' }]
+    c.declarantes['nif:Q1'] = [{ persona: 'congreso:persona:z', nombre: 'Diputada', empleador: 'UNIVERSIDAD' }]
+    const fl = flujosEntreAreas(c, null)
+    expect(fl.find((f) => f.de === 'gobierno' && f.a === 'empresas').n).toBe(1)
+    expect(fl.find((f) => f.de === 'parlamento' && f.a === 'empresas')).toBeUndefined()
   })
 })

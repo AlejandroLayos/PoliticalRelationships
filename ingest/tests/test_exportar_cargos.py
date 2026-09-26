@@ -1598,6 +1598,7 @@ def test_los_accionistas_de_la_cnmv_salen_en_su_papel_y_no_en_el_grafo(store, tm
     assert "Sin Marca" not in accionistas
     # Prisa es un medio porque así la clasifica la CNMV; Telefónica, no.
     assert prisa["sector"] == "MEDIOS DE COMUNICACIÓN" and prisa["medio"] is True
+    assert prisa["abreviada"] == "PRISA"
     telefonica = cargos["cotizadas"]["nif:A28015865"]
     assert telefonica["sector"] == "TRANSPORTES Y COMUNICACIONES/COMUNICACIONES"
     assert "medio" not in telefonica
