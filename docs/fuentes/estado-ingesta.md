@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `36242682351` · 2026-09-26T13:45:33Z
+- Ejecución: `36247811565` · 2026-09-26T15:15:02Z
 
 Todas las fuentes respondieron.
 
@@ -55,6 +55,6 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 - personas con algo de cada fuente: {'boe': 2324, 'congreso': 435, 'oci': 166}
 - autorizaciones (OCI): 643
 - actividades declaradas (Congreso): 1196
-- sociedades del mapa con un ex alto cargo autorizado: 19
+- sociedades del mapa con un ex alto cargo autorizado: 20
 - entidades del mapa con un diputado que declaró trabajar en ellas: 11
 - órganos del mapa con quién los dirigió: 47
