@@ -162,6 +162,14 @@ comparten el nodo que los une y nada más, y la nota del panel lo dice con esas
 palabras. El Gobierno bajo el que se nombró a alguien es un nodo —«Gobierno de
 …»—, no el partido: la militancia sale sólo del escaño.
 
+Un camino entre dos nodos se dibuja como lo que es, una cadena: de
+izquierda a derecha, con los rótulos debajo y sin fuerzas, porque el orden es
+el dato. En el panel, paso a paso, cada salto con su hecho y su fuente, y
+encima la nota: un camino es una cadena de hechos, no una relación entre sus
+extremos. Los ejes —un Gobierno, un ministerio con cientos de nombramientos—
+cuestan más que un vínculo concreto, así que el camino sólo pasa por ellos si
+no hay otro.
+
 ## 6. Decir lo que no es
 
 Cada lista, cada bloque, lleva su **nota** (`.nota`): lo que ese dato no
