@@ -3,37 +3,27 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `36226425244` · 2026-09-26T08:11:10Z
+- Ejecución: `36232949897` · 2026-09-26T10:32:48Z
 
-## Fuentes que no aportaron
-
-```
-### bdns (código 1)
-{"fuente": "bdns", "params": "{'fecha_desde': datetime.date(2025, 1, 1), 'fecha_hasta': datetime.date(2025, 12, 31), 'max_paginas': 30}", "event": "ingesta iniciada", "level": "info", "timestamp": "2026-09-26T07:21:59.561004Z"}
-{"url": "https://www.infosubvenciones.es/bdnstrans/api/concesiones/busqueda?pageSize=1000&fechaDesde=01%2F01%2F2025&fechaHasta=31%2F12%2F2025&page=0", "event": "bdns: la respuesta no trae lista de concesiones", "level": "warning", "timestamp": "2026-09-26T07:23:00.007543Z"}
-{"fuente": "bdns", "documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-09-26T07:23:00.008109Z"}
-{"documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-09-26T07:23:00.008210Z"}
-{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-09-26T07:23:00.008247Z"}
-
-```
+Todas las fuentes respondieron.
 
 ## Aporte al volcado
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 524 |
-| Boletín Oficial del Estado | 1841 |
+| Base de Datos Nacional de Subvenciones | 549 |
+| Boletín Oficial del Estado | 2130 |
 | Congreso de los Diputados | 1477 |
 | Oficina de Conflictos de Intereses | 341 |
-| Plataforma de Contratación del Sector Público | 2853 |
+| Plataforma de Contratación del Sector Público | 2830 |
 | Senado | 28 |
 | Tribunal de Cuentas | 630 |
 
 ## Territorio de los organismos
 
-- del Estado: 494
-- con comunidad: 3808
-- **sin clasificar: 202**
+- del Estado: 495
+- con comunidad: 3856
+- **sin clasificar: 204**
 
 Jerarquías más repetidas entre los sin clasificar (para afinar
 `ingest/sinapsis_ingest/territorio.py`):
@@ -58,12 +48,12 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 
 ## Cargos públicos (BOE, OCI, Congreso)
 
-- días del BOE en caché: 4900
-- personas: 2390 · actos del BOE: 4901
-- actos del BOE leídos del 2013-05-18 al 2026-09-16
-- personas con algo de cada fuente: {'boe': 1841, 'congreso': 430, 'oci': 166}
+- días del BOE en caché: 5414
+- personas: 2679 · actos del BOE: 5728
+- actos del BOE leídos del 2011-12-17 al 2026-09-16
+- personas con algo de cada fuente: {'boe': 2130, 'congreso': 435, 'oci': 166}
 - autorizaciones (OCI): 643
 - actividades declaradas (Congreso): 1196
 - sociedades del mapa con un ex alto cargo autorizado: 13
 - entidades del mapa con un diputado que declaró trabajar en ellas: 11
-- órganos del mapa con quién los dirigió: 48
+- órganos del mapa con quién los dirigió: 47
