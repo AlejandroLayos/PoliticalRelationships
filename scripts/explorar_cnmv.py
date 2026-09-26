@@ -513,6 +513,137 @@ def directivos(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
     return [*salida, ""]
 
 
+FECHA_EN = re.compile(r"\d{1,2}/\d{1,2}/\d{2,4}")
+
+
+def _enmascarar(celda: str | None) -> str:
+    """Una celda con cualquier fecha sustituida: ninguna fecha sale del runner."""
+    return FECHA_EN.sub("<fecha>", " ".join((celda or "").split()))
+
+
+def iagc_del_ultimo_ejercicio(html: str) -> tuple[str, str, str]:
+    """(ejercicio, registro, url) del IAGC más reciente, de su propia tabla.
+
+    La página de gobierno corporativo tiene una tabla por tipo de informe; la
+    del IAGC es `wGridIAGC_gridDatos`. Se elige por ejercicio, no por el orden.
+    """
+    i = html.find("wGridIAGC_gridDatos")
+    if i < 0:
+        return "", "", ""
+    tabla = html[i : html.find("</table>", i)]
+    mejor = ("", "", "")
+    for fila in re.findall(r"<tr.*?</tr>", tabla, flags=re.S | re.I):
+        ej = re.search(r'data-th="Ejercicio">\s*(\d{4})', fila)
+        reg = re.search(r'data-th="N[^"]*registro oficial">\s*(\d+)', fila)
+        url = re.search(
+            r'href="(https://www\.cnmv\.es/webservices/verdocumento/ver\?e=[^"]+)"',
+            fila,
+        )
+        if ej and url:
+            candidato = (
+                ej.group(1),
+                reg.group(1) if reg else "",
+                html_lib.unescape(url.group(1)),
+            )
+            if candidato[:2] > mejor[:2]:
+                mejor = candidato
+    return mejor
+
+
+def tablas_de_consejo(pdf: bytes) -> tuple[int, list[dict]]:
+    """Cada tabla del PDF con alguna fila de consejo, entera y sin fechas.
+
+    De cada una: página, columnas, el texto que tiene justo encima (para
+    distinguir el cuadro del consejo del de bajas o del de comisiones), si
+    cerca se habla de nacimiento, y todas sus filas con las fechas
+    enmascaradas. Las celdas vacías se dejan en su sitio: es la posición lo
+    que se quiere ver.
+    """
+    import pdfplumber
+
+    salida: list[dict] = []
+    with pdfplumber.open(io.BytesIO(pdf)) as doc:
+        for n, pagina in enumerate(doc.pages):
+            for t in pagina.find_tables():
+                filas = t.extract()
+                if not any(
+                    any(CATEGORIAS.match(" ".join((c or "").split())) for c in f)
+                    for f in filas
+                ):
+                    continue
+                arriba = pagina.crop(
+                    (0, max(0, t.bbox[1] - 90), pagina.width, t.bbox[1])
+                )
+                encima = " ".join((arriba.extract_text() or "").split())
+                salida.append(
+                    {
+                        "pagina": n + 1,
+                        "columnas": max(len(f) for f in filas),
+                        "encima": FECHA_EN.sub("<fecha>", encima[-300:]),
+                        "nacimiento_en_la_pagina": bool(
+                            re.search(r"(?i)nacimiento", pagina.extract_text() or "")
+                        ),
+                        "filas": [[_enmascarar(c) for c in f] for f in filas],
+                    }
+                )
+        return len(doc.pages), salida
+
+
+def consejos_enteros(c: httpx.Client, empresas: dict[str, str]) -> list[str]:
+    salida = ["### El IAGC del último ejercicio, tabla a tabla", ""]
+    for empresa, nif in empresas.items():
+        codigo, cuerpo, tipo_o_error, _ = pedir(
+            c, urljoin(BASE, f"ee/informaciongobcorp.aspx?nif={nif}")
+        )
+        html = cuerpo.decode("utf-8", errors="replace")
+        ejercicio, registro, url = iagc_del_ultimo_ejercicio(html)
+        if not url:
+            salida.append(
+                f"- {empresa}: sin IAGC en su tabla (HTTP {codigo}, {tipo_o_error})"
+            )
+            continue
+        inicio = time.monotonic()
+        codigo, pdf, _, _ = pedir(c, url)
+        bajada = time.monotonic() - inicio
+        if codigo != 200 or pdf[:4] != b"%PDF":
+            salida.append(
+                f"- {empresa}: el IAGC {ejercicio} no es un PDF (HTTP {codigo})"
+            )
+            continue
+        inicio = time.monotonic()
+        paginas, tablas = tablas_de_consejo(pdf)
+        lectura = time.monotonic() - inicio
+        salida.append(
+            f"- {empresa}: IAGC {ejercicio} (registro {registro}), {len(pdf):,} bytes,"
+            f" {paginas} páginas; bajada {bajada:.0f} s, lectura {lectura:.0f} s;"
+            f" {len(tablas)} tablas con filas de consejo"
+        )
+        for t in tablas:
+            salida.append(
+                f"  - página {t['pagina']}, {t['columnas']} columnas, {len(t['filas'])} filas;"
+                f" nacimiento en la página: {t['nacimiento_en_la_pagina']};"
+                f" encima: «{t['encima'][-160:]}»"
+            )
+            salida.append(f"    - primera fila: {t['filas'][0]}")
+        (
+            Path("ingest/tests/golden/cnmv") / f"{empresa}-consejo-tablas.json"
+        ).write_text(
+            json.dumps(
+                {
+                    "ejercicio": ejercicio,
+                    "registro": registro,
+                    "paginas": paginas,
+                    "tablas": tablas,
+                },
+                ensure_ascii=False,
+                indent=0,
+            ),
+            encoding="utf-8",
+        )
+        time.sleep(1.0)
+    return [*salida, ""]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", default="docs/fuentes/cnmv-reconocimiento.md")
@@ -523,10 +654,10 @@ def main() -> int:
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Séptima vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        f"Octava vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
         "Las anteriores siguen debajo.",
         "",
-        "## Séptima vuelta: consejos y directivos, con la sesión hecha",
+        "## Octava vuelta: el consejo del IAGC, tabla a tabla",
         "",
     ]
     with httpx.Client(timeout=60.0, follow_redirects=True) as c:
@@ -544,8 +675,9 @@ def main() -> int:
             "prisa": "A28297059",
             "santander": "A39000013",
         }
-        informe += consejos(c, {**muestra, "bbva": "A48265169", "repsol": "A78374725"})
-        informe += directivos(c, muestra)
+        informe += consejos_enteros(
+            c, {**muestra, "bbva": "A48265169", "repsol": "A78374725"}
+        )
     if anterior:
         cuerpo_anterior = anterior.split("\n", 1)[1] if "\n" in anterior else anterior
         informe += ["", "---", "", cuerpo_anterior]
