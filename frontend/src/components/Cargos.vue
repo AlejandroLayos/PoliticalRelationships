@@ -90,12 +90,20 @@ const porFormacion = computed(() =>
   papel.value === 'congreso' ? formaciones(dePapel(props.datos?.personas ?? [], 'congreso')) : [],
 )
 const porGobierno = computed(() => gobiernosDe(props.datos))
-const PAPELES = [
+const TODOS_LOS_PAPELES = [
   { id: 'todos', texto: 'Todos' },
   { id: 'boe', texto: 'Altos cargos' },
+  { id: 'justicia', texto: 'Justicia' },
   { id: 'congreso', texto: 'Diputados' },
   { id: 'autorizados', texto: 'Autorizados a ir al sector privado' },
 ]
+// «Justicia» sólo si la edición trae altas instancias: un botón que no da
+// nadie parece un fallo.
+const PAPELES = computed(() =>
+  TODOS_LOS_PAPELES.filter(
+    (x) => x.id !== 'justicia' || dePapel(props.datos?.personas ?? [], 'justicia').length,
+  ),
+)
 const ultimos = computed(() => movimientos(props.datos, 12))
 const porOrganismo = computed(() => organismos(props.datos, 6))
 const gobiernos = computed(() => presidencias(props.datos))

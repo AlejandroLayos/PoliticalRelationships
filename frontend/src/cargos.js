@@ -312,6 +312,16 @@ export function dePapel(personas, papel) {
   // Quien tiene autorizaciones de la Oficina de Conflictos de Intereses, esté
   // o no unido a su ficha del BOE.
   if (papel === 'autorizados') return personas.filter((persona) => persona.autorizaciones?.length)
+  // Las altas instancias judiciales y fiscales también salen del BOE, pero
+  // no son altos cargos: cada una va en su lista.
+  if (papel === 'justicia') {
+    return personas.filter((persona) => (persona.periodos ?? []).some((p) => p.ambito === 'justicia'))
+  }
+  if (papel === 'boe') {
+    return personas.filter((persona) =>
+      (persona.periodos ?? []).some((p) => (p.fuente ?? 'boe') === 'boe' && p.ambito !== 'justicia'),
+    )
+  }
   return personas.filter((persona) =>
     (persona.periodos ?? []).some((p) => (p.fuente ?? 'boe') === papel),
   )

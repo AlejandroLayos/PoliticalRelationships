@@ -464,3 +464,14 @@ describe('altas instancias judiciales', () => {
     expect(propuestaEnPalabras('')).toBe('')
   })
 })
+
+describe('dePapel con altas instancias', () => {
+  const juez = { periodos: [{ cargo: 'Magistrado del Tribunal Supremo', ambito: 'justicia' }] }
+  const ministra = { periodos: [{ cargo: 'Ministra de Justicia' }] }
+  const ambos = { periodos: [...juez.periodos, ...ministra.periodos] }
+
+  it('los magistrados no salen como altos cargos, y sí en su lista', () => {
+    expect(dePapel([juez, ministra, ambos], 'boe')).toEqual([ministra, ambos])
+    expect(dePapel([juez, ministra, ambos], 'justicia')).toEqual([juez, ambos])
+  })
+})
