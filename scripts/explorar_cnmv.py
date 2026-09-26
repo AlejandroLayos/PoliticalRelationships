@@ -517,8 +517,25 @@ FECHA_EN = re.compile(r"\d{1,2}/\d{1,2}/\d{2,4}")
 
 
 def _enmascarar(celda: str | None) -> str:
-    """Una celda con cualquier fecha sustituida: ninguna fecha sale del runner."""
-    return FECHA_EN.sub("<fecha>", " ".join((celda or "").split()))
+    """Una celda con cualquier fecha sustituida: ninguna fecha sale del runner.
+
+    Tampoco un año suelto: el BBVA publica «Año de nacimiento» en su propio
+    cuadro, y un año no tiene forma de fecha. La octava vuelta lo dejó pasar
+    (26/9/2026).
+    """
+    texto = FECHA_EN.sub("<fecha>", " ".join((celda or "").split()))
+    return re.sub(r"^(19|20)\d\d$", "<año>", texto)
+
+
+def _sin_nacimiento(filas: list[list[str]]) -> list[list[str]]:
+    """Vacía la columna cuya cabecera habla de nacimiento, sea cual sea su forma."""
+    if not filas:
+        return filas
+    malas = {j for j, h in enumerate(filas[0]) if re.search(r"(?i)nacimiento", h)}
+    return [filas[0]] + [
+        ["<retirado>" if j in malas and c else c for j, c in enumerate(f)]
+        for f in filas[1:]
+    ]
 
 
 def iagc_del_ultimo_ejercicio(html: str) -> tuple[str, str, str]:
@@ -583,7 +600,9 @@ def tablas_de_consejo(pdf: bytes) -> tuple[int, list[dict]]:
                         "nacimiento_en_la_pagina": bool(
                             re.search(r"(?i)nacimiento", pagina.extract_text() or "")
                         ),
-                        "filas": [[_enmascarar(c) for c in f] for f in filas],
+                        "filas": _sin_nacimiento(
+                            [[_enmascarar(c) for c in f] for f in filas]
+                        ),
                     }
                 )
         return len(doc.pages), salida

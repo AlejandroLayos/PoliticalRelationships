@@ -170,6 +170,13 @@ cd ingest && pytest
   de las cotizadas la página por NIF no enlaza a nada: hay que pasar por su
   buscador, un formulario ASP.NET. El enlace que se publica es la página
   estable por NIF. Ver `docs/data-sources.md` §2.septies.
+- **Enmascarar fechas no basta: un año de nacimiento no tiene forma de
+  fecha.** La octava vuelta de la CNMV enmascaraba `dd/mm/aaaa` y se le
+  coló la columna «Año de nacimiento» del cuadro propio del BBVA (26/9/2026).
+  Ahora se vacía toda columna cuya cabecera diga «nacimiento», y
+  `test_cnmv.py` comprueba que ninguna muestra del consejo lleva fechas ni
+  años sueltos. El commit del reconocimiento que lo trajo sigue en el
+  historial: limpiarlo es reescribir historia, y eso se pregunta.
 - **`followthemoney` compila PyICU desde fuente** y necesita `pkg-config` y
   `libicu-dev`. Está en el Dockerfile y en la CI.
 - **`/healthz` no consulta dependencias** a propósito. Es liveness. La

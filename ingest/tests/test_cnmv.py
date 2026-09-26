@@ -436,3 +436,30 @@ def test_el_iagc_mas_reciente_sale_de_su_propia_tabla(empresa, registro):
 def test_sin_la_tabla_del_iagc_no_hay_informes():
     assert informes_de_gobierno(_html("prisa-datosgenerales.html")) == []
     assert informes_de_gobierno("") == []
+
+
+# --- Las muestras no llevan fechas de nadie ---------------------------------------
+
+
+def test_ninguna_muestra_del_consejo_lleva_fechas_ni_nacimientos():
+    """Las muestras del IAGC salen del runner sin fecha alguna.
+
+    La octava vuelta del reconocimiento dejó pasar los años de nacimiento del
+    cuadro propio del BBVA, porque un año no tiene forma de fecha. Esto lo
+    comprueba sobre todo lo guardado, venga de la vuelta que venga.
+    """
+    import json
+
+    for f in GOLDEN.glob("*consejo*.json"):
+        texto = f.read_text(encoding="utf-8")
+        assert not re.search(r"\b\d{1,2}/\d{1,2}/\d{4}\b", texto), f.name
+        datos = json.loads(texto)
+        for t in datos.get("tablas", []) if isinstance(datos, dict) else []:
+            cabecera = t["filas"][0]
+            for j, h in enumerate(cabecera):
+                if re.search(r"(?i)nacimiento", h):
+                    assert all(
+                        fila[j] in ("", "<retirado>") for fila in t["filas"][1:] if j < len(fila)
+                    ), f"{f.name}, página {t['pagina']}"
+            for fila in t["filas"][1:]:
+                assert not any(re.fullmatch(r"(19|20)\d\d", c) for c in fila), f.name
