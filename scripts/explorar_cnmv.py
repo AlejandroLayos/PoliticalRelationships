@@ -5,31 +5,33 @@
 
 Para qué (spec §12, ampliación del 26/9/2026): los consejeros, altos
 directivos y accionistas significativos de las sociedades cotizadas salen con
-nombre, tal como los publica la CNMV y sólo en ese papel. Antes de leerlos hay
-que ver dónde y cómo los publica.
+nombre, tal como los publica la CNMV y sólo en ese papel.
 
-## Segunda vuelta
+## Lo que ya se sabe (vueltas 1 y 2, `docs/fuentes/cnmv-reconocimiento.md`)
 
-La primera (commit caaeac4) encontró la ficha de cada emisor
-(`Consultas/DatosEntidad?nif=`) y, en ella, las páginas que la CNMV ofrece
-por entidad. Las que interesan:
+- La ficha de un emisor es `Consultas/DatosEntidad.aspx?nif=`, y enlaza a sus
+  páginas: datos generales, participaciones significativas, gobierno
+  corporativo, notificaciones de directivos.
+- Con Telefónica, Prisa y Santander responden con datos. Con Iberdrola, ACS,
+  Atresmedia, Indra y Redeia, las mismas páginas dicen «No se han encontrado
+  datos», aunque la de participaciones sí pone su nombre en el título.
+- Las participaciones no están en `ps_ac_ini`: esa página enlaza a
+  `Notificaciones-Participaciones.aspx?qS={guid}` y `SociedadesParticipa…`,
+  con un identificador propio por emisor.
+- El informe anual de gobierno corporativo (IAGC) es un PDF por ejercicio
+  (`webservices/verdocumento/ver?e=…`). Su apartado C.1.2 es la tabla del
+  consejo: nombre, categoría, cargo, fechas de nombramiento… y **fecha de
+  nacimiento**, que no hace falta para nada.
 
-- `ee/datosgenerales.aspx?nif=` — los datos de la entidad;
-- `derechosvoto/ps_ac_ini.aspx?nif=` — participaciones significativas;
-- `ee/informaciongobcorp.aspx?nif=` — el informe anual de gobierno
-  corporativo, que trae la composición del consejo;
-- `directivos-resultado.aspx?nif=` — notificaciones de directivos.
+## Tercera vuelta
 
-La primera vuelta no llegó a entrar en ellas: seguía los doce primeros enlaces
-de la ficha y éstas iban detrás. Ahora se piden directamente.
-
-Las notificaciones de directivos traen también «personas estrechamente
-vinculadas», que pueden ser familiares (spec §12: familias, no). De esa página
-se anota la forma —tablas, cabeceras, recuentos— y **no se guarda**.
-
-El listado que la primera vuelta tomó por el de cotizadas era el de agencias y
-sociedades de valores. Aquí se prueban los demás identificadores del mismo
-listado y se anota el título de cada uno.
+1. Participaciones: seguir los enlaces `qS` y describir sus tablas.
+2. IAGC: bajar el más reciente de dos emisores, buscar en el PDF la tabla
+   C.1.2 y anotar sus cabeceras. **El PDF no se guarda.** Si las cabeceras se
+   reconocen, se guarda como muestra SÓLO nombre, categoría, cargo y fechas
+   de nombramiento, en JSON; la columna de nacimiento no sale del runner.
+3. Los emisores sin datos: reintentarlos con una sesión nueva (entrando
+   antes por la portada) y con `&lang=es`, para ver si es cosa de la sesión.
 
 Uso (desde una máquina con salida a internet; el runner de Actions vale):
 
@@ -40,6 +42,8 @@ from __future__ import annotations
 
 import argparse
 import html as html_lib
+import io
+import json
 import re
 import sys
 import time
@@ -56,34 +60,30 @@ CABECERAS = {
     "User-Agent": "Sinapsis/0.1 (reconocimiento; proyecto abierto de transparencia)",
     "Accept-Language": "es-ES,es;q=0.9",
 }
-TOPE = 60.0
+TOPE = 90.0
 BASE = "https://www.cnmv.es/portal/Consultas/"
+PORTADA = "https://www.cnmv.es/portal/home.aspx"
 
-# Cotizadas conocidas, por NIF: teleco, eléctrica, constructora, dos grupos de
-# medios, la tecnológica de defensa que ya sale en la red de poder, un banco y
-# una sociedad con participación pública.
-MUESTRA = {
-    "telefonica": "A28015865",
+CON_DATOS = {"telefonica": "A28015865", "prisa": "A28297059", "santander": "A39000013"}
+SIN_DATOS = {
     "iberdrola": "A48010615",
     "acs": "A28004885",
     "atresmedia": "A78839271",
-    "prisa": "A28297059",
     "indra": "A28599033",
-    "santander": "A39000013",
     "redeia": "A78003662",
 }
 
-# Páginas por entidad (relativas a BASE), y si la muestra se guarda.
-PAGINAS = {
-    "datosentidad": ("DatosEntidad.aspx?nif={nif}", True),
-    "datosgenerales": ("ee/datosgenerales.aspx?nif={nif}", True),
-    "participaciones": ("derechosvoto/ps_ac_ini.aspx?nif={nif}", True),
-    "gobcorp": ("ee/informaciongobcorp.aspx?nif={nif}", True),
-    # Personas vinculadas: sólo la forma, nunca la página.
-    "directivos": ("directivos-resultado.aspx?nif={nif}", False),
+# Las columnas de la tabla C.1.2 que se pueden guardar. Todo lo demás —y en
+# particular la fecha de nacimiento— se queda fuera.
+COLUMNAS_PERMITIDAS = {
+    "nombre": re.compile(r"(?i)nombre|denominaci"),
+    "representante": re.compile(r"(?i)representante"),
+    "categoria": re.compile(r"(?i)categor"),
+    "cargo": re.compile(r"(?i)cargo"),
+    "primer_nombramiento": re.compile(r"(?i)primer\s*nombramiento"),
+    "ultimo_nombramiento": re.compile(r"(?i)[uú]ltimo\s*nombramiento"),
 }
-
-LISTADO = BASE + "ListadoEntidad.aspx?id={id}&tipoent=0"
+PROHIBIDA = re.compile(r"(?i)nacimiento")
 
 
 def pedir(cliente: httpx.Client, url: str) -> tuple[int, bytes, str, str]:
@@ -96,7 +96,12 @@ def pedir(cliente: httpx.Client, url: str) -> tuple[int, bytes, str, str]:
                 trozos.append(t)
                 if time.monotonic() - inicio > TOPE:
                     return 0, b"", "cortado", url
-            return r.status_code, b"".join(trozos), r.headers.get("content-type", ""), str(r.url)
+            return (
+                r.status_code,
+                b"".join(trozos),
+                r.headers.get("content-type", ""),
+                str(r.url),
+            )
     except httpx.HTTPError as exc:
         return 0, b"", f"error: {exc}", url
 
@@ -110,46 +115,165 @@ def titulo(html: str) -> str:
     return texto(m.group(1)) if m else ""
 
 
-def tablas(html: str, filas_max: int = 4, con_valores: bool = True) -> list[str]:
+def contenido(html: str) -> str:
+    """El texto de la zona de contenido de una página del portal."""
+    limpio = re.sub(r'<input type="hidden"[^>]*>', "", html)
+    limpio = re.sub(r"<script.*?</script>|<style.*?</style>", " ", limpio, flags=re.S)
+    i = limpio.find("ContentPrincipal")
+    trozo = limpio[i:] if i >= 0 else limpio
+    j = trozo.find("footer")
+    return texto(trozo[: j if j > 0 else 30000])
+
+
+def tablas(html: str, filas_max: int = 4) -> list[str]:
     lineas = []
-    for i, t in enumerate(re.findall(r"<table.*?</table>", html, flags=re.S | re.I)[:14]):
+    for i, t in enumerate(
+        re.findall(r"<table.*?</table>", html, flags=re.S | re.I)[:10]
+    ):
         filas = re.findall(r"<tr.*?</tr>", t, flags=re.S | re.I)
         ident = re.search(r'<table[^>]*id="([^"]+)"', t)
-        muestra = []
-        for fila in filas[: filas_max if con_valores else 1]:
-            celdas = [
+        muestra = [
+            [
                 texto(c)[:50]
-                for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", fila, flags=re.S | re.I)
-            ]
-            muestra.append(celdas[:12])
+                for c in re.findall(r"<t[hd][^>]*>(.*?)</t[hd]>", f, flags=re.S | re.I)
+            ][:12]
+            for f in filas[:filas_max]
+        ]
         lineas.append(
-            f"  - tabla {i + 1}{' #' + ident.group(1) if ident else ''}: {len(filas)} filas; "
-            f"{'primeras' if con_valores else 'cabecera'}: {muestra}"
+            f"  - tabla {i + 1}{' #' + ident.group(1) if ident else ''}: {len(filas)} filas;"
+            f" primeras: {muestra}"
         )
     return lineas
 
 
-def enlaces(html: str, base: str) -> list[tuple[str, str]]:
-    salida = []
-    for href, cuerpo in re.findall(
-        r'<a[^>]+href="([^"#][^"]*)"[^>]*>(.*?)</a>', html, flags=re.S | re.I
-    ):
-        salida.append((urljoin(base, html_lib.unescape(href)), texto(cuerpo)))
-    return salida
+def participaciones(c: httpx.Client, empresa: str, nif: str, golden: Path) -> list[str]:
+    salida = [f"### Participaciones de {empresa}", ""]
+    codigo, cuerpo, _, final = pedir(
+        c, urljoin(BASE, f"derechosvoto/ps_ac_ini.aspx?nif={nif}")
+    )
+    html = cuerpo.decode("utf-8", errors="replace")
+    enlaces = [
+        urljoin(final, html_lib.unescape(h))
+        for h in re.findall(r'href="([^"]*qS=[^"]+)"', html)
+    ]
+    salida.append(f"- `ps_ac_ini` → HTTP {codigo}; enlaces con qS: {enlaces}")
+    for url in enlaces[:2]:
+        time.sleep(0.8)
+        codigo, cuerpo, tipo, _ = pedir(c, url)
+        html = cuerpo.decode("utf-8", errors="replace")
+        nombre = re.sub(r"\W+", "-", url.rsplit("/", 1)[-1].split("?")[0].lower())
+        salida += [
+            "",
+            f"`{url}` → HTTP {codigo} · `{tipo}` · {len(html):,} caracteres · «{titulo(html)[:90]}»",
+        ]
+        salida.append(f"- contenido: {contenido(html)[:600]!r}")
+        salida += tablas(html)
+        if codigo == 200 and "<table" in html.lower():
+            (golden / f"{empresa}-{nombre}.html").write_text(html, encoding="utf-8")
+            salida.append(f"- guardado como `{empresa}-{nombre}.html`")
+    return [*salida, ""]
 
 
-def encabezados(html: str) -> list[str]:
-    """Los rótulos de sección de la página: h1-h4, legend y caption."""
-    vistos = []
-    for e in re.findall(
-        r"<(?:h[1-4]|legend|caption)[^>]*>(.*?)</(?:h[1-4]|legend|caption)>",
-        html,
-        flags=re.S | re.I,
-    ):
-        t = texto(e)
-        if t and t not in vistos and "cookie" not in t.lower():
-            vistos.append(t[:90])
-    return vistos[:25]
+def iagc(c: httpx.Client, empresa: str, nif: str, golden: Path) -> list[str]:
+    salida = [f"### IAGC de {empresa}", ""]
+    codigo, cuerpo, _, _ = pedir(
+        c, urljoin(BASE, f"ee/informaciongobcorp.aspx?nif={nif}")
+    )
+    html = cuerpo.decode("utf-8", errors="replace")
+    docs = [
+        html_lib.unescape(h)
+        for h in re.findall(
+            r'href="(https://www\.cnmv\.es/webservices/verdocumento/ver\?e=[^"]+)"',
+            html,
+        )
+    ]
+    salida.append(f"- página → HTTP {codigo}; documentos: {len(docs)}")
+    if not docs:
+        return [*salida, ""]
+    codigo, pdf, tipo, _ = pedir(c, docs[0])
+    salida.append(
+        f"- el más reciente → HTTP {codigo} · `{tipo}` · {len(pdf):,} bytes"
+        f" · PDF: {pdf[:4] == b'%PDF'}"
+    )
+    if codigo != 200 or pdf[:4] != b"%PDF":
+        return [*salida, ""]
+    try:
+        import pdfplumber
+    except ImportError:
+        return [*salida, "- sin pdfplumber: no se analiza", ""]
+
+    filas_guardables: list[dict[str, str]] = []
+    with pdfplumber.open(io.BytesIO(pdf)) as doc:
+        salida.append(f"- páginas: {len(doc.pages)}")
+        paginas = [
+            i
+            for i, p in enumerate(doc.pages)
+            if re.search(r"C\.1\.2", p.extract_text() or "")
+        ]
+        salida.append(f"- páginas que citan C.1.2: {[i + 1 for i in paginas[:10]]}")
+        for i in paginas[:4]:
+            pagina = doc.pages[i]
+            for n, tabla in enumerate(pagina.extract_tables()):
+                if not tabla:
+                    continue
+                cabecera = [" ".join((x or "").split()) for x in tabla[0]]
+                salida.append(
+                    f"  - página {i + 1}, tabla {n + 1}: {len(tabla)} filas; cabecera: {cabecera}"
+                )
+                if not any(COLUMNAS_PERMITIDAS["nombre"].search(h) for h in cabecera):
+                    continue
+                # Qué columna es cada cosa, por su cabecera; la de nacimiento,
+                # ninguna.
+                indices: dict[str, int] = {}
+                for clave, patron in COLUMNAS_PERMITIDAS.items():
+                    for j, h in enumerate(cabecera):
+                        if (
+                            patron.search(h)
+                            and not PROHIBIDA.search(h)
+                            and j not in indices.values()
+                        ):
+                            indices[clave] = j
+                            break
+                salida.append(f"    - columnas reconocidas: {indices}")
+                if "nombre" in indices and "cargo" in indices:
+                    for fila in tabla[1:]:
+                        registro = {
+                            k: " ".join((fila[j] or "").split())
+                            for k, j in indices.items()
+                            if j < len(fila)
+                        }
+                        if registro.get("nombre"):
+                            filas_guardables.append(registro)
+    salida.append(f"- filas del consejo reconocidas: {len(filas_guardables)}")
+    if filas_guardables:
+        destino = golden / f"{empresa}-iagc-consejo.json"
+        destino.write_text(
+            json.dumps(filas_guardables, ensure_ascii=False, indent=1), encoding="utf-8"
+        )
+        salida.append(
+            f"- guardado como `{destino.name}` (sin fecha de nacimiento; el PDF no se guarda)"
+        )
+    return [*salida, ""]
+
+
+def sin_datos(empresa: str, nif: str) -> list[str]:
+    """Otra sesión, entrando por la portada, y con `&lang=es`."""
+    salida = [f"### {empresa} ({nif}), con sesión nueva", ""]
+    with httpx.Client(timeout=45.0, follow_redirects=True) as c:
+        codigo, _, _, _ = pedir(c, PORTADA)
+        salida.append(f"- portada → HTTP {codigo}; cookies: {sorted(c.cookies.keys())}")
+        for ruta in (
+            f"DatosEntidad.aspx?nif={nif}",
+            f"DatosEntidad.aspx?nif={nif}&lang=es",
+            f"ee/datosgenerales.aspx?nif={nif}",
+        ):
+            time.sleep(0.8)
+            codigo, cuerpo, _, _ = pedir(c, urljoin(BASE, ruta))
+            html = cuerpo.decode("utf-8", errors="replace")
+            salida.append(
+                f"- `{ruta}` → HTTP {codigo} · «{titulo(html)[:80]}» · {contenido(html)[:160]!r}"
+            )
+    return [*salida, ""]
 
 
 def main() -> int:
@@ -160,103 +284,37 @@ def main() -> int:
     golden = Path(args.golden)
     golden.mkdir(parents=True, exist_ok=True)
 
+    salida = Path(args.salida)
+    anterior = salida.read_text(encoding="utf-8") if salida.exists() else ""
     informe = [
         "# Reconocimiento: CNMV (consejos y participaciones de cotizadas)",
         "",
-        f"Generado el {datetime.now(UTC).isoformat()} por `scripts/explorar_cnmv.py` (segunda vuelta).",
+        f"Tercera vuelta: {datetime.now(UTC).isoformat()} (`scripts/explorar_cnmv.py`).",
+        "La segunda vuelta sigue debajo.",
+        "",
+        "## Tercera vuelta",
         "",
     ]
-    # Dos informes de gobierno corporativo bastan para ver su forma; son PDF
-    # grandes y el repositorio no es un archivo.
-    iagc_guardados = 0
-    with httpx.Client(timeout=45.0, follow_redirects=True) as c:
-        informe += ["## Listados de entidades (`ListadoEntidad.aspx?id=N&tipoent=0`)", ""]
-        for n in range(0, 16):
-            url = LISTADO.format(id=n)
-            codigo, cuerpo, tipo, final = pedir(c, url)
-            html = cuerpo.decode("utf-8", errors="replace")
-            nifs = sorted(set(re.findall(r"nif=([A-Z]\d{7}[0-9A-Z])", html)))
-            informe.append(
-                f"- id={n} → HTTP {codigo} · «{titulo(html)[:90]}» · {len(nifs)} NIF enlazados"
-                + (f" (primeros: {nifs[:5]})" if nifs else "")
-            )
-            if (
-                codigo == 200
-                and nifs
-                and re.search(r"(?i)emisor|cotiz|acciones|admitid", titulo(html))
-            ):
-                (golden / f"listado-{n}.html").write_text(html, encoding="utf-8")
-                informe.append(f"  - guardado como `listado-{n}.html`")
-            time.sleep(0.6)
-        informe.append("")
+    with httpx.Client(timeout=60.0, follow_redirects=True) as c:
+        for empresa, nif in CON_DATOS.items():
+            informe += participaciones(c, empresa, nif, golden)
+            time.sleep(1.0)
+        for empresa in ("telefonica", "prisa"):
+            informe += iagc(c, empresa, CON_DATOS[empresa], golden)
+            time.sleep(1.0)
+    for empresa, nif in SIN_DATOS.items():
+        informe += sin_datos(empresa, nif)
 
-        for empresa, nif in MUESTRA.items():
-            informe += [f"## {empresa} ({nif})", ""]
-            for nombre, (ruta, guardar) in PAGINAS.items():
-                url = urljoin(BASE, ruta.format(nif=nif))
-                codigo, cuerpo, tipo, final = pedir(c, url)
-                html = cuerpo.decode("utf-8", errors="replace")
-                informe += [
-                    f"### {nombre}",
-                    "",
-                    f"`{url}` → HTTP {codigo} · `{tipo}` · {len(html):,} caracteres · «{titulo(html)[:90]}»",
-                    "",
-                ]
-                if codigo != 200 or not html:
-                    time.sleep(1.0)
-                    continue
-                informe.append(f"- rótulos: {encabezados(html)}")
-                informe += tablas(html, con_valores=guardar)
-                if guardar:
-                    (golden / f"{empresa}-{nombre}.html").write_text(html, encoding="utf-8")
-                    informe.append(f"- guardado como `{empresa}-{nombre}.html`")
-                else:
-                    informe.append("- no se guarda: trae personas vinculadas")
-
-                # Del informe de gobierno corporativo, el documento más reciente:
-                # su formato decide cómo se lee la composición del consejo.
-                if nombre == "gobcorp":
-                    docs = [
-                        (u, t)
-                        for u, t in enlaces(html, final)
-                        if re.search(
-                            r"(?i)verdoc|documento|\.pdf|\.xbrl|\.zip|\.xhtml|showfile|descarga", u
-                        )
-                    ]
-                    informe += [f"    - documento {t[:40]!r} → `{u}`" for u, t in docs[:8]]
-                    if docs:
-                        u, _ = docs[0]
-                        codigo2, cuerpo2, tipo2, _ = pedir(c, u)
-                        informe.append(
-                            f"- el primero → HTTP {codigo2} · `{tipo2}` · {len(cuerpo2):,} bytes"
-                        )
-                        if (
-                            codigo2 == 200
-                            and cuerpo2
-                            and len(cuerpo2) < 3_000_000
-                            and iagc_guardados < 2
-                        ):
-                            ext = (
-                                "pdf"
-                                if cuerpo2[:4] == b"%PDF"
-                                else "zip"
-                                if cuerpo2[:2] == b"PK"
-                                else "html"
-                                if b"<html" in cuerpo2[:2000].lower()
-                                else "bin"
-                            )
-                            if ext == "html":
-                                informe += tablas(cuerpo2.decode("utf-8", errors="replace"))
-                            destino = golden / f"{empresa}-iagc.{ext}"
-                            destino.write_bytes(cuerpo2)
-                            iagc_guardados += 1
-                            informe.append(f"  - guardado como `{destino.name}` ({ext})")
-                informe.append("")
-                time.sleep(0.8)
-
-    Path(args.salida).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.salida).write_text("\n".join(informe) + "\n", encoding="utf-8")
-    print("\n".join(informe))
+    if anterior:
+        informe += [
+            "",
+            "---",
+            "",
+            anterior.replace("# Reconocimiento: CNMV", "## Segunda vuelta: CNMV", 1),
+        ]
+    salida.parent.mkdir(parents=True, exist_ok=True)
+    salida.write_text("\n".join(informe) + "\n", encoding="utf-8")
+    print("\n".join(informe[:200]))
     return 0
 
 
