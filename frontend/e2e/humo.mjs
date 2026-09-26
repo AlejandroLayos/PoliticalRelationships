@@ -291,9 +291,38 @@ await paso('del cargo a la empresa lleva a la sociedad y de vuelta a la persona'
   }
   await bloque.locator('.cruce-empresa').first().click()
   await pagina.waitForSelector('text=Ex altos cargos autorizados a trabajar aquí', { timeout: 15000 })
-  await pagina.locator('.al-frente a').first().click()
+  // El bloque de los ex altos cargos, no el de accionistas de la CNMV, que
+  // comparte estilo y también tiene enlaces.
+  await pagina.locator('.al-frente:not(.accionistas-cnmv) a').first().click()
   await pagina.waitForSelector('.cargos .ficha', { timeout: 15000 })
   if (!(await pagina.locator('.autorizaciones').count())) throw new Error('la ficha no enseña la autorización')
+})
+
+// La radiografía: la entrada de la red de poder. Dibuja el mapa de los
+// núcleos y el diagrama de áreas; pulsar un núcleo lleva a la red centrada en
+// él, y de ahí se vuelve. Sólo si la edición trae cargos.
+await paso('la radiografía dibuja los núcleos y lleva a la red', async () => {
+  await pagina.goto(URL, { waitUntil: 'networkidle' })
+  await pagina.waitForTimeout(1500)
+  const enlace = pagina.locator('nav.secciones a[href="?v=poder"]')
+  if (!(await enlace.count())) {
+    console.log('    (la edición no trae cargos todavía: no hay radiografía que probar)')
+    return
+  }
+  await enlace.click()
+  await pagina.waitForSelector('.radiografia .titular', { timeout: 15000 })
+  const nucleos = await pagina.locator('.lienzo-mapa .nodo.nucleo').count()
+  const areas = await pagina.locator('.diagrama .area').count()
+  if (nucleos < 3 || areas < 4) throw new Error(`núcleos ${nucleos}, áreas ${areas}`)
+  // Un flujo del diagrama enseña sus hechos.
+  await pagina.locator('.flujos button').first().click()
+  await pagina.waitForSelector('.hechos li', { timeout: 5000 })
+  // Un núcleo que no sea el Estado lleva a la red, centrada en él.
+  await pagina.locator('.lienzo-mapa .nodo.nucleo:not(.k-adm)').first().click()
+  await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
+  if (!pagina.url().includes('n=')) throw new Error(`dirección: ${pagina.url()}`)
+  await pagina.locator('.volver-radiografia').click()
+  await pagina.waitForSelector('.radiografia .titular', { timeout: 15000 })
 })
 
 // La red de poder: dibuja un centro, pulsar una conexión del panel lo cambia
@@ -306,7 +335,10 @@ await paso('la red de poder cambia de centro y deja un enlace que lo reproduce',
     console.log('    (la edición no trae cargos todavía: no hay red que probar)')
     return
   }
+  // La red, ya no la radiografía: entrando por un núcleo del mapa.
   await enlace.click()
+  await pagina.waitForSelector('.lienzo-mapa .nodo.nucleo', { timeout: 15000 })
+  await pagina.locator('.lienzo-mapa .nodo.nucleo:not(.k-adm)').first().click()
   await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
   await pagina.waitForSelector('.poder .lienzo canvas', { timeout: 15000 })
   const antes = await pagina.locator('.poder .panel .nombre').innerText()

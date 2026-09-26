@@ -5,6 +5,7 @@ import {
   estadoAccionista,
   flujosEntreAreas,
   nombrePropio,
+  mapaDeNucleos,
   nombreCorto,
   radiografiaCompleta,
   sigla,
@@ -267,5 +268,20 @@ describe('rótulos y nombres cortos', () => {
     const fl = flujosEntreAreas(c, null)
     expect(fl.find((f) => f.de === 'gobierno' && f.a === 'empresas').n).toBe(1)
     expect(fl.find((f) => f.de === 'parlamento' && f.a === 'empresas')).toBeUndefined()
+  })
+})
+
+describe('el mapa de los núcleos', () => {
+  it('núcleos, cotizadas y puentes, colocados igual cada vez', () => {
+    const r = radiografia(cargos())
+    const a = mapaDeNucleos(r, cargos())
+    const b = mapaDeNucleos(r, cargos())
+    expect(a.nodos.map((n) => [n.id, n.x.toFixed(3)])).toEqual(b.nodos.map((n) => [n.id, n.x.toFixed(3)]))
+    const tipos = new Set(a.nodos.map((n) => n.tipo))
+    expect([...tipos].sort()).toEqual(['cotizada', 'nucleo', 'persona'])
+    // Telco está en dos núcleos: dos aristas de participación.
+    expect(a.aristas.filter((e) => e.tipo === 'participacion' && e.target === 'nif:A1')).toHaveLength(2)
+    // La persona que está en dos consejos, unida a los dos.
+    expect(a.aristas.filter((e) => e.tipo === 'consejo')).toHaveLength(2)
   })
 })

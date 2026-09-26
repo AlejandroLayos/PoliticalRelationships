@@ -302,7 +302,7 @@ const sinDatos = computed(
         Quién tiene más del 3 % de sus derechos de voto, según la CNMV. Las
         personas, en su papel de accionista y sin enlace a ninguna ficha.
       -->
-      <section v-if="cotizada?.accionistas?.length" class="bloque al-frente">
+      <section v-if="cotizada?.accionistas?.length" class="bloque al-frente accionistas-cnmv">
         <h3>Accionistas significativos, según la CNMV</h3>
         <ul class="lista">
           <li v-for="a in cotizada.accionistas.slice(0, 10)" :key="a.clave">
@@ -538,7 +538,7 @@ const sinDatos = computed(
         Quién tiene más del 3 % de sus derechos de voto, según la CNMV. Las
         personas, en su papel de accionista y sin enlace a ninguna ficha.
       -->
-      <section v-if="cotizada?.accionistas?.length" class="bloque al-frente">
+      <section v-if="cotizada?.accionistas?.length" class="bloque al-frente accionistas-cnmv">
         <h3>Accionistas significativos, según la CNMV</h3>
         <ul class="lista">
           <li v-for="a in cotizada.accionistas.slice(0, 10)" :key="a.clave">

@@ -5,7 +5,7 @@
   los medios y sus dueños, y los puentes. Todo nombre se pulsa y lleva a la
   red, centrada en él.
 */
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { AREAS, nombreCorto, nombrePropio, radiografiaCompleta } from '../radiografia.js'
 import { nombreDeFuente } from '../poder.js'
 
@@ -45,6 +45,73 @@ const entradilla = computed(() => {
     `Debajo, quién nombra a quién, adónde va el dinero público y qué personas unen unos núcleos con otros.`
   )
 })
+
+/* --- El mapa de los núcleos ---------------------------------------------- */
+
+const MAPA_ANCHO = 1000
+const MAPA_ALTO = 660
+const mapa = computed(() => {
+  const m = r.value?.mapa
+  if (!m?.nodos.length) return null
+  // El módulo ya coloca en el lienzo del mapa.
+  const pos = new Map(m.nodos.map((n) => [n.id, [n.x, n.y]]))
+  const radio = (n) => (n.tipo === 'nucleo' ? 12 + 7 * Math.sqrt(n.peso) : n.tipo === 'cotizada' ? 6 : 4)
+  return {
+    nodos: m.nodos.map((n) => ({ ...n, px: pos.get(n.id)[0], py: pos.get(n.id)[1], r: radio(n) })),
+    aristas: m.aristas.map((e) => ({ ...e, a: pos.get(e.source), b: pos.get(e.target) })),
+  }
+})
+// En el móvil el mapa es más ancho que la pantalla: se abre centrado, en el
+// Estado, no en su borde izquierdo.
+const lienzo = ref(null)
+watch(
+  () => Boolean(mapa.value),
+  async (hay) => {
+    if (!hay) return
+    await nextTick()
+    const el = lienzo.value
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+  },
+  { immediate: true },
+)
+const resaltado = ref('')
+const vecinos = computed(() => {
+  if (!resaltado.value || !mapa.value) return null
+  const s = new Set([resaltado.value])
+  for (const e of mapa.value.aristas) {
+    if (e.source === resaltado.value) s.add(e.target)
+    if (e.target === resaltado.value) s.add(e.source)
+  }
+  return s
+})
+/** Dónde va el rótulo de un nodo: por el lado que le toca, sin pisar el círculo. */
+function rotulo(n) {
+  const sep = (n.r ?? 5) + 5
+  if (n.tipo === 'persona') return { y: 14, 'text-anchor': 'middle' }
+  switch (n.lado) {
+    case 'der':
+      return { x: sep, y: 4, 'text-anchor': 'start' }
+    case 'izq':
+      return { x: -sep, y: 4, 'text-anchor': 'end' }
+    case 'abajo':
+      return { y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'middle' }
+    case 'abajo-izq':
+      return { x: 4, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
+    case 'abajo-der':
+      return { x: -4, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
+    case 'arriba-izq':
+      return { x: 4, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
+    case 'arriba-der':
+      return { x: -4, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
+    default:
+      return { y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'middle' }
+  }
+}
+const claseNucleo = (n) => (n.estado ? 'k-adm' : n.persona ? 'k-par' : 'k-emp')
+function pulsarNodo(n) {
+  if (n.tipo === 'nucleo' && n.estado) return (resaltado.value = resaltado.value === n.id ? '' : n.id)
+  ir(n.clave)
+}
 
 /* --- El diagrama de áreas ------------------------------------------------ */
 
@@ -173,6 +240,56 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         </ul>
       </header>
 
+      <!-- 0. El mapa de los núcleos -->
+      <section v-if="mapa" class="bloque" aria-labelledby="t-mapa">
+        <h2 id="t-mapa" class="seccion">El mapa de los núcleos</h2>
+        <p class="nota">
+          Cada círculo grande es un núcleo: el Estado, un grupo accionista o una fortuna personal. Cada punto, una
+          cotizada, atada a los núcleos que tienen en ella al menos un 5 %; la que está entre dos, se la disputan. Las
+          líneas de puntos son personas que se sientan en dos consejos. Pasa por encima para aislar un núcleo; pulsa para
+          verlo en la red.
+        </p>
+        <div ref="lienzo" class="lienzo-mapa">
+          <svg :viewBox="`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`" role="img" aria-labelledby="t-mapa" @mouseleave="resaltado = ''">
+            <g class="aristas">
+              <line
+                v-for="(e, i) in mapa.aristas"
+                :key="i"
+                :x1="e.a[0]" :y1="e.a[1]" :x2="e.b[0]" :y2="e.b[1]"
+                :class="[e.tipo, { apagado: vecinos && !(vecinos.has(e.source) && vecinos.has(e.target)) }]"
+                :stroke-width="e.tipo === 'participacion' ? 0.8 + e.porcentaje / 12 : 1.2"
+              />
+            </g>
+            <g
+              v-for="n in mapa.nodos"
+              :key="n.id"
+              class="nodo"
+              :class="[n.tipo, n.tipo === 'nucleo' ? claseNucleo(n) : '', { apagado: vecinos && !vecinos.has(n.id), medio: n.medio }]"
+              :transform="`translate(${n.px}, ${n.py})`"
+              tabindex="0"
+              role="button"
+              :aria-label="n.nombre"
+              @mouseenter="resaltado = n.id"
+              @focus="resaltado = n.id"
+              @click="pulsarNodo(n)"
+              @keydown.enter="pulsarNodo(n)"
+            >
+              <circle :r="n.r" />
+              <text v-bind="rotulo(n)">{{ recortar(n.corto, n.tipo === 'nucleo' ? (n.lado === 'izq' || n.lado === 'der' ? 22 : 26) : 20) }}</text>
+              <title>{{ n.nombre }}</title>
+            </g>
+          </svg>
+        </div>
+        <p class="desliza">Desliza de lado para ver el mapa entero.</p>
+        <ul class="leyenda-mapa">
+          <li><span class="punto k-adm" />El Estado</li>
+          <li><span class="punto k-emp" />Un grupo accionista</li>
+          <li><span class="punto k-par" />Una fortuna personal</li>
+          <li><span class="punto cot" />Una cotizada</li>
+          <li><span class="punto per" />Consejero en dos consejos</li>
+        </ul>
+      </section>
+
       <!-- 1. Las áreas y lo que las une -->
       <section class="bloque" aria-labelledby="t-areas">
         <h2 id="t-areas" class="seccion">Cómo se enlazan los poderes</h2>
@@ -204,6 +321,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             </g>
           </svg>
         </div>
+        <p class="desliza">Desliza de lado para ver el diagrama entero.</p>
         <ol class="flujos">
           <li v-for="f in flujos" :key="f.clave">
             <button type="button" :class="[`k-${f.clase}`, { activo: f.clave === seleccionado }]" :aria-expanded="f.clave === seleccionado" @click="elegir(f.clave)">
@@ -409,6 +527,34 @@ a.fuente { color: var(--tinta-2); }
 .enlace { all: unset; cursor: pointer; text-decoration: underline; text-decoration-color: var(--filete-medio); text-underline-offset: 2px; }
 .enlace:hover, .enlace:focus-visible { text-decoration-color: var(--tinta); background: var(--papel-2); }
 
+/* El mapa de los núcleos */
+.lienzo-mapa { background: var(--hoja); border: 1px solid var(--filete-suave); border-radius: var(--radio); }
+.lienzo-mapa svg { width: 100%; height: auto; display: block; font-family: var(--sans); }
+.aristas line { stroke: var(--filete-medio); opacity: 0.8; transition: opacity 0.15s; }
+.aristas line.consejo { stroke: var(--tinta-2); stroke-dasharray: 3 3; }
+.aristas line.apagado { opacity: 0.08; }
+.nodo { cursor: pointer; transition: opacity 0.15s; }
+.nodo.apagado { opacity: 0.15; }
+.nodo circle { stroke: var(--hoja); stroke-width: 2; }
+.nodo.nucleo.k-adm circle { fill: var(--adm); }
+.nodo.nucleo.k-emp circle { fill: var(--emp); }
+.nodo.nucleo.k-par circle { fill: var(--par); }
+.nodo.cotizada circle { fill: var(--tinta); }
+.nodo.cotizada.medio circle { fill: var(--hoja); stroke: var(--tinta); stroke-width: 2.5; }
+.nodo.persona circle { fill: var(--hoja); stroke: var(--tinta-2); stroke-width: 1.5; }
+.nodo text { font-size: 12px; fill: var(--tinta-2); paint-order: stroke; stroke: var(--hoja); stroke-width: 3px; stroke-linejoin: round; }
+.nodo.nucleo text { font-size: 14px; font-weight: 700; fill: var(--tinta); }
+.nodo.persona text { font-size: 10.5px; font-style: italic; fill: var(--tinta-3); }
+.nodo:focus-visible circle { stroke: var(--tinta); stroke-width: 3; }
+.desliza { display: none; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); margin: var(--e1) 0 0; }
+.leyenda-mapa { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5); padding: 0; margin: var(--e2) 0 0; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); }
+.leyenda-mapa .punto { display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 50%; margin-right: var(--e1); vertical-align: -1px; }
+.leyenda-mapa .punto.k-adm { background: var(--adm); }
+.leyenda-mapa .punto.k-emp { background: var(--emp); }
+.leyenda-mapa .punto.k-par { background: var(--par); }
+.leyenda-mapa .punto.cot { background: var(--tinta); width: 0.5rem; height: 0.5rem; }
+.leyenda-mapa .punto.per { border: 1.5px solid var(--tinta-2); width: 0.45rem; height: 0.45rem; }
+
 /* Núcleos */
 .nucleos { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: var(--e4); }
 .nucleo, .medio { border: 1px solid var(--filete-suave); border-top: 3px solid var(--emp); border-radius: var(--radio); padding: var(--e3) var(--e4); background: var(--hoja); }
@@ -444,6 +590,14 @@ a.fuente { color: var(--tinta-2); }
 .explorar { all: unset; cursor: pointer; font-family: var(--sans); font-weight: 600; padding: var(--e2) var(--e4); border: 1px solid var(--tinta); border-radius: var(--radio); margin-bottom: var(--e3); display: inline-block; }
 .explorar:hover, .explorar:focus-visible { background: var(--tinta); color: var(--papel); }
 
+@media (max-width: 48rem) {
+  /* En el móvil, el mapa y el diagrama conservan un ancho legible y se
+     desplazan de lado: encogidos, sus rótulos no se leen. */
+  .lienzo-mapa, .diagrama { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lienzo-mapa svg { min-width: 760px; }
+  .diagrama svg { min-width: 640px; }
+  .desliza { display: block; }
+}
 @media (max-width: 40rem) {
   .radiografia { padding: var(--e4) var(--e4) var(--e7); }
   .nucleos, .medios, .puentes { grid-template-columns: 1fr; }
