@@ -379,10 +379,10 @@ class BOEConnector:
                     # Quién lo propuso, en los nombramientos de una alta
                     # instancia: lo dice el cuerpo del propio Real Decreto.
                     **(
-                        {"propuesta": propuesta_de(parrafos)}
+                        {"propuesta": propuesta_de([titulo, *parrafos])}
                         if a.tipo == "nombramiento"
                         and es_alta_instancia(a.cargo)
-                        and propuesta_de(parrafos)
+                        and propuesta_de([titulo, *parrafos])
                         else {}
                     ),
                 },

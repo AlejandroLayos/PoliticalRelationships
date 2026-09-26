@@ -119,6 +119,15 @@ _NOMBRA_A_QUIEN = re.compile(
 # Saavedra Ruiz», sin la «a».
 _NOMBRA_SIN_A = re.compile(rf"^nombra (?P<cargo>.+?) {_TRATAMIENTO} (?P<nombre>.+)$")
 
+# «Vocal del Consejo General del Poder Judicial a propuesta del Senado».
+_PROPUESTA_EN_EL_TITULO = re.compile(r"^(?P<cargo>.+?) a propuesta del? .+$")
+# «se dispone el cese por renuncia al cargo de Vocal del Consejo General del
+# Poder Judicial de doña María Concepción Sáez Rodríguez».
+_CESE_AL_CARGO = re.compile(
+    rf"^dispone el cese(?: por (?P<motivo>[a-záéíóúñ ]{{3,40}}?))? al cargo de (?P<cargo>.+?)"
+    rf" de {_TRATAMIENTO} (?P<nombre>.+)$"
+)
+
 _MOTIVOS = (
     r"a petición propia",
     r"por pase a otro destino",
@@ -194,6 +203,12 @@ def leer_titulo(titulo: str) -> Acto | None:
     n = _NOMBRA.match(resto)
     if n:
         nombre, cargo = n.group("nombre").strip(), n.group("cargo").strip()
+        # «Vocal del Consejo General del Poder Judicial a propuesta del Senado»:
+        # el proponente va en medio y no es parte del cargo. Sólo se quita en
+        # una alta instancia; quién propuso lo lee el conector del texto.
+        entre = _PROPUESTA_EN_EL_TITULO.match(cargo)
+        if entre and es_alta_instancia(entre.group("cargo")):
+            cargo = entre.group("cargo")
         if _es_nombre(nombre) and cargo:
             return Acto(tipo="nombramiento", cargo=cargo, nombre=nombre, **comun)
         # «se nombra en propiedad a don X, Magistrado…» también encaja aquí,
@@ -210,6 +225,13 @@ def leer_titulo(titulo: str) -> Acto | None:
         nombre, cargo = j.group("nombre").strip(), j.group("cargo").strip()
         if _es_nombre(nombre) and cargo and es_alta_instancia(cargo):
             return Acto(tipo="nombramiento", cargo=cargo, nombre=nombre, **comun)
+
+    c = _CESE_AL_CARGO.match(resto)
+    if c:
+        nombre, cargo = c.group("nombre").strip(), c.group("cargo").strip()
+        if _es_nombre(nombre) and es_alta_instancia(cargo):
+            motivo = f"por {c.group('motivo')}" if c.group("motivo") else ""
+            return Acto(tipo="cese", cargo=cargo, nombre=nombre, motivo=motivo, **comun)
 
     c = _CESE.match(resto)
     if c:
@@ -271,7 +293,8 @@ def puesto(cargo: str) -> str:
         clave = " ".join(palabras[:n]).lower()
         if clave in _MASCULINO:
             return " ".join([_MASCULINO[clave], *palabras[n:]])
-    return cargo
+    # En la Fiscalía el género va en la cuarta palabra: «Fiscal de Sala Jefa».
+    return re.sub(r"^Fiscal de Sala Jefa\b", "Fiscal de Sala Jefe", cargo)
 
 
 # Lo que SÍ es alto cargo, por cómo empieza el puesto (ya en masculino y sin
@@ -350,9 +373,9 @@ _ALTAS_INSTANCIAS = tuple(
         r"^presidente de la audiencia nacional$",
         r"^presidente de la sala de (lo penal|lo contencioso-administrativo|lo social|apelacion)"
         r" de la audiencia nacional$",
-        r"^presidente del tribunal superior de justicia de [a-z ,-]+$",
+        r"^presidente del tribunal superior de justicia del? [a-z ,'().-]+$",
         r"^fiscal general del estado$",
-        r"^teniente fiscal del tribunal supremo$",
+        r"^teniente fiscal (de la fiscalia )?del tribunal supremo$",
         r"^fiscal de sala\b",
     )
 )
@@ -378,7 +401,7 @@ _INSTITUCIONES = (
     (re.compile(r"\bconsejo general del poder judicial\b"), "Consejo General del Poder Judicial"),
     (re.compile(r"\baudiencia nacional\b"), "Audiencia Nacional"),
 )
-_TSJ = re.compile(r"(Tribunal Superior de Justicia de .+)$", re.IGNORECASE)
+_TSJ = re.compile(r"(Tribunal Superior de Justicia del? .+)$", re.IGNORECASE)
 
 
 def institucion_judicial(cargo: str) -> str:

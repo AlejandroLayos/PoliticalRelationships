@@ -269,8 +269,90 @@ def test_lo_que_no_es_de_la_lista_no_produce_nada():
 
 
 def test_todas_las_muestras_se_leen_o_se_dejan_a_proposito():
-    a_proposito = {"BOE-A-2025-5527", "BOE-A-2026-15203"}
+    """Lo que no es un Real Decreto —acuerdos del CGPJ, decretos de la Fiscal
+    General, resoluciones— no se lee. De los Reales Decretos, sólo quedan
+    fuera los que no son de la lista o no traen el nombre en el título."""
+    a_proposito = {
+        "BOE-A-2025-5527",  # Jefe del Gabinete Técnico del Supremo
+        "BOE-A-2026-15203",  # el magistrado del CNI: el nombre va en el cuerpo
+        "BOE-A-2026-15036",  # presidencia de una Sala de TSJ, no del TSJ
+    }
     for xml in sorted(XML.glob("*.xml")):
-        if xml.stem in a_proposito:
-            continue
-        assert _registros(xml.stem), xml.name
+        registros = _registros(xml.stem)
+        real_decreto = b"<titulo>Real Decreto" in xml.read_bytes()
+        if not real_decreto or xml.stem in a_proposito:
+            assert registros == [], xml.name
+        else:
+            assert registros, xml.name
+
+
+def test_campo_a_propuesta_del_gobierno():
+    [r] = _registros("BOE-A-2022-24441")
+    assert r.data["nombre"] == "Juan Carlos Campo Moreno"
+    assert r.data["propuesta"] == "Gobierno"
+
+
+def test_cese_por_renuncia_de_una_vocal_del_cgpj():
+    [r] = _registros("BOE-A-2023-9418")
+    d = r.data
+    assert (d["tipo"], d["cargo"], d["nombre"], d["motivo"]) == (
+        "cese",
+        "Vocal del Consejo General del Poder Judicial",
+        "María Concepción Sáez Rodríguez",
+        "por renuncia",
+    )
+
+
+def test_teniente_fiscal_de_la_fiscalia_del_supremo():
+    [r] = _registros("BOE-A-2022-813")
+    assert r.data["cargo"] == "Teniente Fiscal de la Fiscalía del Tribunal Supremo"
+    norm = BOEConnector().normalize(r)
+    assert norm.aristas[0].properties["departamento"] == "Fiscalía General del Estado"
+
+
+def test_un_tsj_con_su_nombre():
+    [r] = _registros("BOE-A-2026-15580")
+    norm = BOEConnector().normalize(r)
+    assert norm.aristas[0].properties["departamento"] == "Tribunal Superior de Justicia de Canarias"
+
+
+@pytest.mark.parametrize(
+    ("titulo", "cargo", "institucion"),
+    [
+        (
+            # El proponente en medio del título: no es parte del cargo.
+            "Real Decreto 416/2018, de 8 de junio, por el que se nombra Vocal del Consejo General "
+            "del Poder Judicial a propuesta del Senado a don José Antonio Ballestero Pascual.",
+            "Vocal del Consejo General del Poder Judicial",
+            "Consejo General del Poder Judicial",
+        ),
+        (
+            "Real Decreto 477/2026, de 10 de junio, por el que se nombra Presidente del Tribunal "
+            "Superior de Justicia del País Vasco a don Ignacio José Subijana Zunzunegui.",
+            "Presidente del Tribunal Superior de Justicia del País Vasco",
+            "Tribunal Superior de Justicia del País Vasco",
+        ),
+        (
+            "Real Decreto 420/2026, de 27 de mayo, por el que se promueve a la categoría de Fiscal "
+            "de Sala a doña María José Osuna Cerezo.",
+            "Fiscal de Sala",
+            "Fiscalía General del Estado",
+        ),
+    ],
+)
+def test_formas_del_segundo_reconocimiento(titulo, cargo, institucion):
+    a = leer_titulo(titulo)
+    assert a is not None
+    assert a.cargo == cargo
+    assert institucion_judicial(a.cargo) == institucion
+    # Y el título dice quién propuso, cuando lo dice.
+    if "a propuesta del Senado" in titulo:
+        assert propuesta_de([titulo]) == "Senado"
+
+
+def test_fiscal_de_sala_jefa_es_el_mismo_puesto_que_jefe():
+    from sinapsis_ingest.cargos import puesto
+
+    assert puesto("Fiscal de Sala Jefa de la Fiscalía del Tribunal Supremo (Sección Civil)") == (
+        "Fiscal de Sala Jefe de la Fiscalía del Tribunal Supremo (Sección Civil)"
+    )
