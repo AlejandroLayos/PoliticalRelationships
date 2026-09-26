@@ -148,3 +148,35 @@ def test_un_pdf_real_sin_el_cuadro_no_da_tablas():
     """Las dos librerías sobre un PDF de verdad (uno del Tribunal de Cuentas)."""
     pdf = (Path(__file__).parent / "golden" / "tcu_sancionadores_2019.pdf").read_bytes()
     assert cnmv_consejos.tablas_del_cuadro(pdf) == ([], "")
+
+
+class _ServidorConGuion(_Servidor):
+    """Sin guion, «sin datos»; con guion, la página de verdad (o la de todos)."""
+
+    def __init__(self, con_guion: str) -> None:
+        super().__init__()
+        self.con_guion = con_guion
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        if f"informaciongobcorp.aspx?nif={TELEFONICA}" in url:
+            self.peticiones.append(url)
+            return httpx.Response(200, text="<p>No se han encontrado datos disponibles</p>")
+        if f"informaciongobcorp.aspx?nif={TELEFONICA[0]}-{TELEFONICA[1:]}" in url:
+            self.peticiones.append(url)
+            return httpx.Response(200, text=(GOLDEN / self.con_guion).read_text(encoding="utf-8"))
+        return super().__call__(request)
+
+
+def test_sin_datos_por_nif_se_pide_con_guion():
+    servidor = _ServidorConGuion("telefonica-gobcorp.html")
+    [doc] = list(_conector(servidor).fetch())
+    assert doc.metadata["registro"] == "2026028797"
+    assert doc.metadata["url_publica"].endswith("nif=A-28015865")
+
+
+def test_la_lista_de_todos_los_emisores_no_da_informe():
+    # Con guion llega la lista de todos (empieza por Abanca): no es la suya.
+    servidor = _ServidorConGuion("iberdrola-gobcorp-qs.html")
+    assert list(_conector(servidor).fetch()) == []
+    assert not any("verdocumento" in u for u in servidor.peticiones)

@@ -170,6 +170,16 @@ cd ingest && pytest
   de las cotizadas la página por NIF no enlaza a nada: hay que pasar por su
   buscador, un formulario ASP.NET. El enlace que se publica es la página
   estable por NIF. Ver `docs/data-sources.md` §2.septies.
+- **La CNMV guarda el NIF de algunas cotizadas con guion, y ante lo que no
+  entiende lista a todos.** Con Iberdrola, Inditex, Atresmedia, Vocento y
+  una docena más, la ficha y el gobierno corporativo dicen «sin datos» con
+  `nif=A48010615` y responden con `nif=A-48010615`. Y con un parámetro que
+  no reconoce (el `qS`, por ejemplo), la página de informes no dice «sin
+  datos»: lista los de TODOS los emisores, empezando por Abanca. La novena
+  vuelta lo anotó como «con la tabla del IAGC» para cuatro cotizadas
+  distintas, con la misma tabla. Por eso `informes_de_gobierno` filtra por
+  el NIF del emisor de cada fila y la ficha se comprueba contra el NIF
+  pedido: sin eso, el consejo de Abanca habría salido como el de Iberdrola.
 - **Enmascarar fechas no basta: un año de nacimiento no tiene forma de
   fecha.** La octava vuelta de la CNMV enmascaraba `dd/mm/aaaa` y se le
   coló la columna «Año de nacimiento» del cuadro propio del BBVA (26/9/2026).

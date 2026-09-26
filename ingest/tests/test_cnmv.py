@@ -588,3 +588,54 @@ def test_la_accion_concertada_no_es_un_titular():
     )
     # No se normaliza: como nodo uniría las cotizadas de grupos distintos.
     assert CNMVConnector().normalize(registro) is None
+
+
+def test_una_lista_de_todos_los_emisores_no_se_toma_por_la_de_uno():
+    """Con un parámetro que no reconoce, la CNMV lista los informes de todos.
+
+    La novena vuelta lo trajo pidiendo por el identificador de sesión: cuatro
+    cotizadas distintas, la misma lista, que empieza por Abanca y Abengoa.
+    """
+    for empresa, nif in (("iberdrola", "A48010615"), ("atresmedia", "A78839271")):
+        html = _html(f"{empresa}-gobcorp-qs.html")
+        assert informes_de_gobierno(html)  # la tabla está…
+        assert informes_de_gobierno(html, nif) == []  # …pero no es suya.
+    # La de Telefónica sí es de Telefónica, con guion o sin él.
+    propia = _html("telefonica-gobcorp.html")
+    assert informes_de_gobierno(propia, "A28015865") == informes_de_gobierno(propia)
+    assert informes_de_gobierno(propia, "A-28015865") == informes_de_gobierno(propia)
+
+
+def test_variantes_de_nif():
+    from sinapsis_ingest.cnmv import variantes_de_nif
+
+    assert variantes_de_nif("A48010615") == ["A48010615", "A-48010615"]
+    assert variantes_de_nif("a-48010615") == ["A48010615", "A-48010615"]
+
+
+@pytest.mark.parametrize(
+    ("cargo", "vale"),
+    [
+        ("PRESIDENTE-CONSEJERO DELEGADO", True),
+        ("PRESIDENTE EJECUTIVO", True),
+        ("VICEPRESIDENTE 1º / CONSEJERO DELEGADO", True),
+        ("CONSEJERO SECRETARIO", True),
+        ("Comisión Delegada / Comisión de Nombramientos", False),
+        ("PRESIDENTE-Comisión Delegada", False),
+        ("-", False),
+    ],
+)
+def test_cargos_compuestos(cargo, vale):
+    cabecera = [
+        "Nombre o denominación social del consejero",
+        "Representante",
+        "Categoría del consejero",
+        "Cargo en el consejo",
+        "Fecha primer nombramiento",
+        "Fecha último nombramiento",
+        "Procedimiento de elección",
+    ]
+    miembros, _ = miembros_del_consejo(
+        [[cabecera, ["DON X Y Z", "", "Ejecutivo", cargo, "", "", ""]]]
+    )
+    assert bool(miembros) is vale

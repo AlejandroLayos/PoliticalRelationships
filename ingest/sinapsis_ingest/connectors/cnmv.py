@@ -64,6 +64,8 @@ from sinapsis_ingest.cnmv import (
     leer_datos_generales,
     leer_participadas,
     nombre_de_persona,
+    sin_datos,
+    variantes_de_nif,
 )
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.connectors.boe import clave
@@ -169,8 +171,12 @@ class CNMVConnector:
             conocidas = {nombre: nif for nif, nombre, _, _ in emisores}
             # 2. La ficha de cada una: su sector.
             for nif, nombre, _, _ in emisores:
-                url = DATOS_GENERALES.format(nif)
-                r = self._get(cliente, url)
+                r, url = None, ""
+                for variante in variantes_de_nif(nif):
+                    url = DATOS_GENERALES.format(variante)
+                    r = self._get(cliente, url)
+                    if r is not None and not sin_datos(r.text):
+                        break
                 if r is None:
                     continue
                 yield RawDocument(

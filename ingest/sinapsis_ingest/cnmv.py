@@ -220,7 +220,8 @@ def leer_datos_generales(html: str) -> DatosGenerales | None:
     if not filas:
         return None
     fila = filas[0]
-    nif = _columna(fila, r"^nif$").upper()
+    # La CNMV guarda el de algunas con guion («A-48010615»): se compara sin él.
+    nif = re.sub(r"[^A-Z0-9]", "", _columna(fila, r"^nif$").upper())
     if not nif:
         return None
     return DatosGenerales(
@@ -244,20 +245,31 @@ class InformeDeGobierno:
     """El PDF, `webservices/verdocumento/ver?e=…`."""
 
 
-def informes_de_gobierno(html: str) -> list[InformeDeGobierno]:
+def informes_de_gobierno(html: str, nif: str | None = None) -> list[InformeDeGobierno]:
     """Los IAGC de `ee/informaciongobcorp.aspx?nif=…`, del más reciente al más viejo.
 
     La página tiene una tabla por tipo de informe (el de remuneraciones, el
     IARC, también lista consejeros); se leen sólo las filas de la del IAGC,
     `wGridIAGC_gridDatos`. Dentro de un ejercicio, el registro más alto va
     primero: una versión modificada sustituye a la anterior.
+
+    Con `nif`, sólo las filas cuyo emisor enlaza a ese NIF. No es un
+    remilgo: con un parámetro que no reconoce, la página no dice «sin
+    datos», sino que lista los informes de TODOS los emisores, por orden
+    alfabético (novena vuelta, 26/9/2026). Sin este filtro, el consejo de
+    Abanca habría salido como el de Iberdrola.
     """
     i = (html or "").find("wGridIAGC_gridDatos")
     if i < 0:
         return []
     fin = html.find("</table>", i)
     salida = []
+    buscado = re.sub(r"[^A-Z0-9]", "", nif.upper()) if nif else None
     for fila in re.findall(r"<tr.*?</tr>", html[i:fin], flags=re.S | re.I):
+        if buscado is not None:
+            emisor = re.search(r'datosgenerales\.aspx\?nif=([^"&]+)', fila, flags=re.I)
+            if not emisor or re.sub(r"[^A-Z0-9]", "", emisor.group(1).upper()) != buscado:
+                continue
         ejercicio = re.search(r'data-th="Ejercicio"[^>]*>\s*(\d{4})\s*<', fila)
         registro = re.search(r'data-th="N[^"]*registro oficial"[^>]*>\s*(\d+)\s*<', fila)
         url = re.search(
@@ -304,6 +316,18 @@ _CARGO = re.compile(
     r"^(presidente|vicepresidente(?: \d+º)?|consejero delegado|consejero coordinador independiente"
     r"|consejero|secretario consejero|consejero secretario|vicesecretario consejero)$"
 )
+
+
+def _es_cargo(cargo: str) -> bool:
+    """Un cargo de la lista, o varios unidos: «PRESIDENTE-CONSEJERO DELEGADO».
+
+    Cada parte tiene que estar en la lista cerrada; unas comisiones no pasan.
+    """
+    partes = [p for p in re.split(r"\s*[-/]\s*|\s+y\s+", cargo) if p]
+    return bool(partes) and all(
+        _CARGO.match(p) or re.fullmatch(r"(presidente|vicepresidente(?: \d+º)?) ejecutivo", p)
+        for p in partes
+    )
 
 
 @dataclass(frozen=True)
@@ -356,7 +380,7 @@ def miembros_del_consejo(
             # columna de al lado.
             if re.fullmatch(r"vicepresident( \d+º)?", cargo_plano) and primera.startswith("E"):
                 cargo_plano = cargo_plano.replace("vicepresident", "vicepresidente")
-            if not nombre or not categoria_ok or not _CARGO.match(cargo_plano):
+            if not nombre or not categoria_ok or not _es_cargo(cargo_plano):
                 descartadas += 1
                 continue
             m = re.match(r"^(DON|DOÑA|D\.|DÑA\.)\s+(.+)$", nombre, flags=re.IGNORECASE)
@@ -376,6 +400,24 @@ def consejeros_fijados(texto: str) -> int | None:
     """«Número de consejeros fijado por la junta 15», del texto del apartado C.1.1."""
     m = re.search(r"(?i)n[uú]mero de consejeros fijado por la junta\s+(\d+)", texto or "")
     return int(m.group(1)) if m else None
+
+
+def variantes_de_nif(nif: str) -> list[str]:
+    """Cómo pedirle a la CNMV las páginas de un NIF: tal cual, y con guion.
+
+    Con 16 de las cotizadas de la lista —Iberdrola, Inditex, Atresmedia,
+    Vocento…— las páginas de ficha y de gobierno corporativo dicen «No se han
+    encontrado datos» con el NIF tal cual y responden con «A-48010615»
+    (novena vuelta del reconocimiento, 26/9/2026). La de participaciones, en
+    cambio, lo reconoce sin guion.
+    """
+    limpio = re.sub(r"[^A-Z0-9]", "", (nif or "").upper())
+    return [limpio, f"{limpio[0]}-{limpio[1:]}"] if len(limpio) > 1 else [limpio]
+
+
+def sin_datos(html: str) -> bool:
+    """La página de la CNMV que dice que no tiene nada de ese NIF."""
+    return "No se han encontrado datos" in (html or "")
 
 
 def es_medio_de_comunicacion(sector: str) -> bool:

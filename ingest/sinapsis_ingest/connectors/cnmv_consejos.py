@@ -64,6 +64,7 @@ from sinapsis_ingest.cnmv import (
     emisor_del_titulo,
     informes_de_gobierno,
     miembros_del_consejo,
+    variantes_de_nif,
 )
 from sinapsis_ingest.connectors.base import ParsedRecord, RawDocument
 from sinapsis_ingest.connectors.boe import clave
@@ -145,8 +146,15 @@ class CNMVConsejosConnector:
                 if not emisor:
                     log.warning("cnmv: la CNMV no reconoce el NIF", nif=nif)
                     continue
-                r = self._get(cliente, GOBIERNO_CORPORATIVO.format(nif))
-                informes = informes_de_gobierno(r.text) if r is not None else []
+                # Tal cual y, si no hay nada, con guion: ver `variantes_de_nif`.
+                informes, url_publica = [], ""
+                for variante in variantes_de_nif(nif):
+                    url_publica = GOBIERNO_CORPORATIVO.format(variante)
+                    r = self._get(cliente, url_publica)
+                    # Sólo los de ESTE emisor: la página puede listar todos.
+                    informes = informes_de_gobierno(r.text, nif) if r is not None else []
+                    if informes:
+                        break
                 if not informes:
                     log.warning("cnmv: sin informe de gobierno corporativo", nif=nif)
                     continue
@@ -165,7 +173,7 @@ class CNMVConsejosConnector:
                         "emisor": emisor,
                         "ejercicio": ultimo.ejercicio,
                         "registro": ultimo.registro,
-                        "url_publica": GOBIERNO_CORPORATIVO.format(nif),
+                        "url_publica": url_publica,
                     },
                 )
         finally:
