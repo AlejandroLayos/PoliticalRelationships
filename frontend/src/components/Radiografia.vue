@@ -66,6 +66,23 @@ const entradilla = computed(() =>
 /* --- Las islas del poder económico -------------------------------------- */
 
 const islas = computed(() => r.value?.islas ?? [])
+/**
+ * Todas las cotizadas, de la A a la Z, cada una con el color del núcleo que
+ * más tiene en ella (o sin color, si no está en ninguno): para encontrar
+ * también las que no salen en el mapa, como Repsol.
+ */
+const todasLasCotizadas = computed(() => {
+  const mayor = new Map()
+  for (const isla of islas.value) {
+    for (const b of isla.burbujas) {
+      const x = mayor.get(b.clave)
+      if (!x || b.porcentaje > x.porcentaje) mayor.set(b.clave, { tipo: isla.tipo, porcentaje: b.porcentaje })
+    }
+  }
+  return Object.values(props.cargos?.cotizadas ?? {})
+    .map((c) => ({ clave: c.clave, nombre: nombrePropio(nombreCorto(c)), tipo: mayor.get(c.clave)?.tipo ?? '' }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+})
 const TIPO_DE_ISLA = { estado: 'Estado accionista', grupo: 'Grupo accionista', fortuna: 'Fortuna personal' }
 // La cotizada señalada: se ilumina en todas las islas en que está. Con la
 // ficha abierta, la suya.
@@ -354,6 +371,12 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <button v-if="islas.length > 6 && !abiertos.has('islas')" type="button" class="mas-boton mas-islas" @click="abrir('islas')">
           Ver los otros {{ islas.length - 6 }} núcleos
         </button>
+        <h3 class="antetitulo todas-t">Las {{ todasLasCotizadas.length }} cotizadas, una a una</h3>
+        <ul class="todas-cot">
+          <li v-for="c in todasLasCotizadas" :key="c.clave">
+            <button type="button" :class="c.tipo ? `k-${c.tipo}` : 'sin-nucleo'" @click="abrirFicha(c.clave)">{{ c.nombre }}</button>
+          </li>
+        </ul>
       </section>
 
       <section class="bloque resumen">
@@ -742,6 +765,11 @@ button.nombre-isla:hover, button.nombre-isla:focus-visible { border-bottom-color
 .k-estado { --c: var(--adm); }
 .k-grupo { --c: var(--emp); }
 .k-fortuna { --c: var(--par); }
+.todas-t { margin: var(--e6) 0 var(--e2); }
+.todas-cot { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--e2); }
+.todas-cot button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.65rem; border: 1px solid var(--filete-suave); border-radius: 999px; background: var(--hoja); font-family: var(--sans); font-size: var(--t-s); color: var(--tinta); -webkit-tap-highlight-color: transparent; }
+.todas-cot button::before { content: ''; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--c, transparent); border: 1px solid var(--c, var(--filete-medio)); }
+.todas-cot button:hover, .todas-cot button:focus-visible { border-color: var(--tinta); background: var(--papel-2); }
 .burbuja { cursor: pointer; transition: opacity 0.15s; outline: none; }
 .burbuja .cuerpo { fill: var(--c); }
 .burbuja .anillo { fill: none; stroke: var(--tinta); stroke-width: 1.4; stroke-dasharray: 3 2.4; }
