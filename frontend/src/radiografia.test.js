@@ -11,6 +11,9 @@ import {
   cupulaJudicial,
   nombramientosClave,
   islasDeNucleos,
+  fichaDeEmpresa,
+  fichaDeNucleo,
+  sectorLegible,
   radioDeBurbuja,
   nombreCorto,
   radiografiaCompleta,
@@ -459,5 +462,66 @@ describe('buscar desde la radiografía', () => {
     expect(buscar(indice, 'ana sepi')[0]).toMatchObject({ clave: 'boe:persona:sepi' })
     expect(buscar(indice, 'puente')[0].que).toBe('Consejo de Telco')
     expect(buscar(indice, 'x')).toEqual([])
+  })
+})
+
+describe('las fichas de la radiografía', () => {
+  const conPresidencia = () => {
+    const c = cargos()
+    c.cotizadas['nif:A1'].sector = 'TRANSPORTES Y COMUNICACIONES/COMUNICACIONES'
+    c.cotizadas['nif:A1'].consejo = [
+      { clave: 'cnmv:persona:pres', nombre: 'PRESI DENTA', persona: true, cargo: 'Presidente', categoria: 'Ejecutivo' },
+      { clave: 'cnmv:persona:vice', nombre: 'VICE PRESI', persona: true, cargo: 'Vicepresidente', categoria: 'Dominical', representa: 'SOCIEDAD ESTATAL DE PARTICIPACIONES INDUSTRIALES (SEPI)', representaClave: 'cnmv:sociedad:sepi' },
+      { clave: 'cnmv:persona:dom', nombre: 'DOMI NICAL', persona: true, cargo: 'Consejero', categoria: 'Dominical', representa: 'DON ALGUIEN DE FUERA' },
+      { clave: 'cnmv:persona:puente', nombre: 'PERSONA PUENTE', persona: true, cargo: 'Consejero' },
+    ]
+    return c
+  }
+  it('la de una cotizada: de quién es, con su núcleo, y el Estado con quien lo preside', () => {
+    const c = conPresidencia()
+    const f = fichaDeEmpresa('nif:A1', c, radiografia(c))
+    expect(f.sector).toBe('Comunicaciones')
+    expect(f.duenos.map((d) => d.porcentaje)).toEqual([10, 9.99, 9.99, 4.5])
+    const sepi = f.duenos[0]
+    expect(sepi.nucleo.tipo).toBe('estado')
+    expect(sepi.preside.nombre).toBe('Ana Sepi')
+    expect(f.duenos.find((d) => d.clave === 'cnmv:sociedad:blackrock').nucleo).toBeNull()
+  })
+  it('quién la preside (no el vicepresidente) y quién se sienta en nombre de quién', () => {
+    const c = conPresidencia()
+    const f = fichaDeEmpresa('nif:A1', c, radiografia(c))
+    expect(f.preside.nombre).toBe('Presi Denta')
+    expect(f.dominicales.map((d) => [d.nombre, d.representa])).toEqual([
+      ['Vice Presi', 'SEPI'],
+      // Sin accionista con quien casar: tal como lo escribe el informe, sin tratamiento.
+      ['Domi Nical', 'Alguien de Fuera'],
+    ])
+  })
+  it('quién de su consejo está en otros, y las puertas giratorias', () => {
+    const c = conPresidencia()
+    const f = fichaDeEmpresa('nif:A1', c, radiografia(c))
+    expect(f.enOtros.map((x) => [x.clave, x.otras.map((o) => o.clave)])).toEqual([['cnmv:persona:puente', ['nif:A2']]])
+    expect(f.puertas).toEqual([{ persona: 'oci:persona:x', nombre: 'Ex Alto Cargo', cargoAnterior: 'SECRETARIA DE ESTADO', fecha: '2020-01-01' }])
+    expect(f.dinero).toBeNull()
+  })
+  it('una clave que no es cotizada no tiene ficha', () => {
+    expect(fichaDeEmpresa('nif:NO', cargos(), radiografia(cargos()))).toBeNull()
+  })
+  it('la de un núcleo: lo que tiene, de más a menos, y por qué vehículo el Estado', () => {
+    const c = cargos()
+    const r = radiografia(c)
+    const estado = r.nucleos.find((n) => n.estado)
+    const f = fichaDeNucleo(estado.id, c, r)
+    expect(f.tipo).toBe('estado')
+    const pc = f.cotizadas.map((x) => x.porcentaje)
+    expect(pc).toEqual([...pc].sort((a, b) => b - a))
+    expect(f.cotizadas.find((x) => x.clave === 'nif:A1').via).toBe('SEPI')
+    expect(f.titulares.find((t) => t.clave === 'cnmv:sociedad:sepi').preside.nombre).toBe('Ana Sepi')
+    expect(f.puertas.map((p) => p.cotizada)).toEqual(['Telco'])
+    expect(fichaDeNucleo('nucleo:nada', c, r)).toBeNull()
+  })
+  it('el sector de la CNMV, legible', () => {
+    expect(sectorLegible('SERVICIOS FINANCIEROS/BANCOS')).toBe('Bancos')
+    expect(sectorLegible('')).toBe('')
   })
 })

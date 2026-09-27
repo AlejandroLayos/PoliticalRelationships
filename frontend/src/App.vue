@@ -126,10 +126,13 @@ async function abrirPorClave(clave) {
 const nodoPoder = ref('')
 /** El otro extremo de un camino en la red de poder, o ''. */
 const hastaPoder = ref('')
-function verPoder(nodo = '', hasta = '') {
+/** La ficha abierta en la radiografía (una cotizada o un núcleo), o ''. */
+const fichaPoder = ref('')
+function verPoder(nodo = '', hasta = '', ficha = '') {
   vista.value = 'poder'
   nodoPoder.value = nodo
   hastaPoder.value = nodo ? hasta : ''
+  fichaPoder.value = nodo ? '' : ficha
   traerCargos()
 }
 
@@ -642,6 +645,7 @@ const estadoDeVista = computed(() => {
       clave: '',
       ...(nodoPoder.value ? { nodo: nodoPoder.value } : {}),
       ...(nodoPoder.value && hastaPoder.value ? { hasta: hastaPoder.value } : {}),
+      ...(!nodoPoder.value && fichaPoder.value ? { ficha: fichaPoder.value } : {}),
     }
   }
   return {
@@ -668,7 +672,7 @@ watch(estadoDeVista, (ahora) => {
 
 // `nodo: centroRed` y no `nodo` a secas: dentro hay otro `nodo` —la entidad
 // de la clave— que lo tapaba, y el enlace a la red perdía su centro.
-async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona, nodo: centroRed, hasta }) {
+async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, persona, nodo: centroRed, hasta, ficha }) {
   restaurando = true
   try {
     if (v === 'portada' || v === 'mapa') territorio.value = t ?? ''
@@ -694,7 +698,7 @@ async function irAEstado({ vista: v, clave, territorio: t, destacada, grupo, per
         verCargos(persona ?? '')
         return
       case 'poder':
-        verPoder(centroRed ?? '', hasta ?? '')
+        verPoder(centroRed ?? '', hasta ?? '', ficha ?? '')
         return
       case 'portada':
         volverAlMapa()
@@ -1392,7 +1396,9 @@ onBeforeUnmount(() => window.removeEventListener('popstate', alVolverAtras))
         :cargos="cargos"
         :grafo="grafoEntero"
         :cargando="cargandoCargos"
+        :ficha="fichaPoder"
         @centrar="(id) => verPoder(id)"
+        @ficha="(f) => (fichaPoder = f)"
       />
       <RedPoder
         v-if="vista === 'poder' && nodoPoder"

@@ -792,6 +792,112 @@ export function rotulos(cargos, grafo, r) {
   return salida
 }
 
+/** El nombre de un núcleo; si el titular es a su vez cotizada, su abreviada de la CNMV: «BBVA». */
+export function nombreDeNucleo(n, cargos) {
+  if (n.estado) return 'El Estado'
+  const c = cargos?.cotizadas?.[n.titulares[0].clave]
+  return c ? nombrePropio(nombreCorto(c)) : rotuloDeNucleo(n.titulares[0].nombre)
+}
+const tipoDeNucleo = (n) => (n.estado ? 'estado' : n.titulares.every((t) => t.persona) ? 'fortuna' : 'grupo')
+
+/** El sector de la CNMV, legible: «TRANSPORTES Y COMUNICACIONES/COMUNICACIONES» → «Comunicaciones». */
+export function sectorLegible(s) {
+  const t = (s ?? '').split('/').pop().trim().toLowerCase()
+  return t ? t[0].toUpperCase() + t.slice(1) : ''
+}
+
+/**
+ * Todo lo que se sabe de una cotizada, en una ficha: de quién es (y a qué
+ * núcleo pertenece cada dueño), quién la preside, quién se sienta en nombre
+ * de quién, quién de su consejo está en otros, qué ex altos cargos entraron
+ * con autorización de la OCI y cuánto dinero público le llega por el mapa del
+ * dinero. Sólo lo publicado; lo que falta, no sale.
+ */
+export function fichaDeEmpresa(clave, cargos, r) {
+  const cot = cargos?.cotizadas ?? {}
+  const c = cot[clave]
+  if (!c) return null
+  const nucleoDe = new Map()
+  for (const n of r.nucleos) for (const t of n.titulares) nucleoDe.set(t.clave, n)
+  const gestoras = new Set((r.omnipresentes ?? []).map((o) => o.clave))
+  const estado = r.estado ?? estadoAccionista(cargos)
+  const duenos = [...(c.accionistas ?? [])]
+    .map((a) => {
+      const n = nucleoDe.get(a.clave)
+      const e = estado.get(a.clave)
+      const preside = e?.cargos?.[0]
+      return {
+        clave: a.clave,
+        nombre: nombrePropio(a.nombre),
+        porcentaje: Number(a.porcentaje),
+        nucleo: n ? { id: n.id, nombre: nombreDeNucleo(n, cargos), tipo: tipoDeNucleo(n) } : null,
+        gestora: gestoras.has(a.clave),
+        // Si es del Estado: quién lo preside y qué Gobierno lo nombró.
+        ...(preside && !preside.hasta ? { preside: { persona: preside.persona, nombre: preside.nombre, desde: preside.desde, gobierno: preside.gobierno?.nombre ?? '' } } : {}),
+      }
+    })
+    .sort((a, b) => b.porcentaje - a.porcentaje)
+  const nombreDueno = (m) => {
+    const d = duenos.find((x) => x.clave === m.representaClave)
+    // Del Estado, por su sigla: «por SEPI».
+    if (d?.nucleo?.tipo === 'estado') return sigla(d.nombre)
+    return d ? d.nombre : nombrePropio(m.representa.replace(/^(DON|DOÑA|D\.|Dª)\s+/i, ''))
+  }
+  const consejo = c.consejo ?? []
+  const pres = consejo.find((m) => /^president/i.test(m.cargo ?? ''))
+  const otras = (x) => x.en.filter((e) => e.clave !== clave).map((e) => ({ clave: e.clave, nombre: nombrePropio(nombreCorto(cot[e.clave]) || e.nombre) }))
+  const dinero = (r.flujos ?? []).find((f) => f.de === 'administracion' && f.a === 'empresas')?.hechos.filter((h) => h.entidad === clave) ?? []
+  return {
+    clave,
+    nombre: nombrePropio(nombreCorto(c)),
+    nombreCompleto: nombrePropio(c.nombre),
+    sector: sectorLegible(c.sector),
+    medio: !!c.medio,
+    url: c.url ?? '',
+    urlGobierno: consejo[0]?.url ?? '',
+    ejercicio: consejo[0]?.ejercicio ?? null,
+    duenos,
+    preside: pres ? { clave: pres.clave, nombre: nombrePropio(pres.nombre), cargo: pres.cargo, categoria: pres.categoria ?? '', representa: pres.representa ? nombreDueno(pres) : '' } : null,
+    dominicales: consejo
+      .filter((m) => m.representa)
+      .map((m) => ({ clave: m.clave, nombre: nombrePropio(m.nombre), cargo: m.cargo ?? '', representa: nombreDueno(m), representaClave: m.representaClave ?? '' })),
+    enOtros: (r.compartidos ?? []).filter((x) => x.persona && x.en.some((e) => e.clave === clave)).map((x) => ({ clave: x.clave, nombre: nombrePropio(x.nombre), otras: otras(x) })),
+    puertas: (cargos?.empresas?.[clave] ?? []).map((a) => ({ persona: a.persona, nombre: a.nombre, cargoAnterior: a.cargoAnterior ?? '', fecha: a.fecha ?? null })),
+    dinero: dinero.length ? { n: dinero.length, importe: dinero.reduce((s, h) => s + h.importe, 0) } : null,
+    nConsejo: consejo.length,
+  }
+}
+
+/**
+ * La ficha de un núcleo: qué tiene, a quién sienta en los consejos y por
+ * dónde entran en sus cotizadas ex altos cargos.
+ */
+export function fichaDeNucleo(id, cargos, r) {
+  const n = r.nucleos.find((x) => x.id === id)
+  if (!n) return null
+  const cot = cargos?.cotizadas ?? {}
+  const suyas = new Map()
+  for (const p of n.participaciones) {
+    const pc = Number(p.porcentaje)
+    const x = suyas.get(p.cotizada)
+    if (!x || pc > x.porcentaje) suyas.set(p.cotizada, { clave: p.cotizada, nombre: nombrePropio(nombreCorto(cot[p.cotizada])), porcentaje: pc, via: n.estado ? sigla(nombrePropio(p.nombre)) : nombrePropio(p.nombre) })
+  }
+  const cotizadas = [...suyas.values()].sort((a, b) => b.porcentaje - a.porcentaje)
+  const estado = r.estado ?? estadoAccionista(cargos)
+  return {
+    id,
+    nombre: nombreDeNucleo(n, cargos),
+    tipo: tipoDeNucleo(n),
+    titulares: n.titulares.map((t) => {
+      const preside = estado.get(t.clave)?.cargos?.[0]
+      return { clave: t.clave, nombre: nombrePropio(t.nombre), ...(preside && !preside.hasta ? { preside: { persona: preside.persona, nombre: preside.nombre, desde: preside.desde, gobierno: preside.gobierno?.nombre ?? '' } } : {}) }
+    }),
+    cotizadas,
+    sienta: (n.sienta ?? []).map((x) => ({ clave: x.persona, nombre: nombrePropio(x.nombre), cotizada: nombrePropio(nombreCorto(cot[x.cotizada])), cargo: x.cargo ?? '' })),
+    puertas: cotizadas.flatMap((c) => (cargos?.empresas?.[c.clave] ?? []).map((a) => ({ persona: a.persona, nombre: a.nombre, cargoAnterior: a.cargoAnterior ?? '', fecha: a.fecha ?? null, cotizada: c.nombre }))),
+  }
+}
+
 /** El radio de una burbuja: su área, lo que tiene el núcleo; con un mínimo legible. */
 export const radioDeBurbuja = (porcentaje) => Math.max(RADIO_MINIMO, 8.5 * Math.sqrt(Math.max(0, porcentaje)))
 const RADIO_MINIMO = 27
@@ -820,9 +926,7 @@ export function islasDeNucleos(r, cargos, { holgura = 3, margen = 10 } = {}) {
       quien.set(p.cotizada, x)
     }
   }
-  // Si el titular es a su vez cotizada, su nombre corto de la CNMV: «BBVA».
-  const nombreDe = (n) =>
-    n.estado ? 'El Estado' : cot[n.titulares[0].clave] ? nombrePropio(nombreCorto(cot[n.titulares[0].clave])) : rotuloDeNucleo(n.titulares[0].nombre)
+  const nombreDe = (n) => nombreDeNucleo(n, cargos)
   const porId = new Map(r.nucleos.map((n) => [n.id, n]))
   const islas = r.nucleos.map((n) => {
     const burbujas = [...(quien.entries())]
@@ -856,7 +960,7 @@ export function islasDeNucleos(r, cargos, { holgura = 3, margen = 10 } = {}) {
       id: n.id,
       nombre: nombreDe(n),
       nombreCompleto: n.estado ? 'El Estado' : n.titulares.map((t) => t.nombre).join(' · '),
-      tipo: n.estado ? 'estado' : n.titulares.every((t) => t.persona) ? 'fortuna' : 'grupo',
+      tipo: tipoDeNucleo(n),
       clave: n.estado ? '' : n.titulares[0].clave,
       radio: caja.r + margen,
       peso: burbujas.reduce((s, b) => s + b.porcentaje, 0),

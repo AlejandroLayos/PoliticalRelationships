@@ -216,6 +216,16 @@ describe('el camino de la red de poder', () => {
     expect(parametrosDeVista({ vista: 'poder', hasta: 'nif:A1' }).toString()).toBe('v=poder')
   })
 
+  it('la radiografía lleva la ficha abierta y vuelve igual', () => {
+    const estado = { vista: 'poder', clave: '', ficha: 'nif:A1' }
+    expect(direccionDeVista(estado)).toBe('/?v=poder&f=nif%3AA1')
+    expect(vistaDeParametros('?v=poder&f=nif:A1')).toEqual(estado)
+    // Con centro es la red, no la radiografía: la ficha no cuenta.
+    expect(vistaDeParametros('?v=poder&n=a&f=nif:A1')).toEqual({ vista: 'poder', clave: '', nodo: 'a' })
+    // Abrir o cerrar una ficha es otra entrada de historial: atrás la cierra.
+    expect(mismoEstado({ vista: 'poder', ficha: 'nif:A1' }, { vista: 'poder' })).toBe(false)
+  })
+
   it('quitar el camino es otra entrada de historial', () => {
     expect(mismoEstado({ vista: 'poder', nodo: 'a', hasta: 'b' }, { vista: 'poder', nodo: 'a' })).toBe(false)
   })

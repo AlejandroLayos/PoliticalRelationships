@@ -301,7 +301,7 @@ await paso('del cargo a la empresa lleva a la sociedad y de vuelta a la persona'
 // La radiografía: la entrada de la red de poder. Dibuja el mapa de los
 // núcleos y el diagrama de áreas; pulsar un núcleo lleva a la red centrada en
 // él, y de ahí se vuelve. Sólo si la edición trae cargos.
-await paso('la radiografía dibuja los núcleos y lleva a la red', async () => {
+await paso('la radiografía dibuja los núcleos, abre sus fichas y lleva a la red', async () => {
   await pagina.goto(URL, { waitUntil: 'networkidle' })
   await pagina.waitForTimeout(1500)
   const enlace = pagina.locator('nav.secciones a[href="?v=poder"]')
@@ -317,12 +317,18 @@ await paso('la radiografía dibuja los núcleos y lleva a la red', async () => {
   // Un flujo del diagrama enseña sus hechos.
   await pagina.locator('.flujos button').first().click()
   await pagina.waitForSelector('.hechos li', { timeout: 5000 })
-  // Un núcleo que no sea el Estado lleva a la red, centrada en él.
-  // Una cotizada de una isla, pasando por encima, se señala en todas; y el
-  // nombre de un núcleo lleva a la red, centrada en él.
-  await pagina.locator('.islas .burbuja').first().hover()
-  await pagina.waitForSelector('.senal', { timeout: 5000 })
-  await pagina.locator('.islas button.nombre-isla').first().click()
+  // Pulsar una cotizada abre su ficha aquí mismo, con la dirección que la
+  // reproduce; Escape la cierra.
+  await pagina.locator('.islas .burbuja').first().click()
+  await pagina.waitForSelector('.ficha-r h2', { timeout: 5000 })
+  if (!pagina.url().includes('f=')) throw new Error(`dirección de la ficha: ${pagina.url()}`)
+  await pagina.keyboard.press('Escape')
+  await pagina.waitForSelector('.ficha-r', { state: 'detached', timeout: 5000 })
+  // El nombre de un núcleo abre la suya, y desde ella se va a la red,
+  // centrada en él.
+  await pagina.locator('.islas .isla:not(.k-estado) button.nombre-isla').first().click()
+  await pagina.waitForSelector('.ficha-r .red', { timeout: 5000 })
+  await pagina.locator('.ficha-r .red').click()
   await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
   if (!pagina.url().includes('n=')) throw new Error(`dirección: ${pagina.url()}`)
   await pagina.locator('.volver-radiografia').click()
@@ -342,7 +348,8 @@ await paso('la red de poder cambia de centro y deja un enlace que lo reproduce',
   // La red, ya no la radiografía: entrando por un núcleo del mapa.
   await enlace.click()
   await pagina.waitForSelector('.islas .isla', { timeout: 15000 })
-  await pagina.locator('.islas button.nombre-isla').first().click()
+  await pagina.locator('.islas .isla:not(.k-estado) button.nombre-isla').first().click()
+  await pagina.locator('.ficha-r .red').click()
   await pagina.waitForSelector('.poder .panel .nombre', { timeout: 15000 })
   await pagina.waitForSelector('.poder .lienzo canvas', { timeout: 15000 })
   const antes = await pagina.locator('.poder .panel .nombre').innerText()

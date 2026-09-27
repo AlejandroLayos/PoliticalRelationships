@@ -7,15 +7,18 @@
   pulsa y lleva a la red, centrada en él.
 */
 import { computed, ref } from 'vue'
-import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla, buscar, indiceDeBusqueda } from '../radiografia.js'
+import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla, buscar, indiceDeBusqueda, fichaDeEmpresa, fichaDeNucleo } from '../radiografia.js'
+import FichaRadiografia from './FichaRadiografia.vue'
 import { nombreDeFuente } from '../poder.js'
 
 const props = defineProps({
   cargos: { type: Object, default: null },
   grafo: { type: Object, default: null },
   cargando: { type: Boolean, default: false },
+  // La ficha abierta: la clave de una cotizada o el id de un núcleo.
+  ficha: { type: String, default: '' },
 })
-const emit = defineEmits(['centrar'])
+const emit = defineEmits(['centrar', 'ficha'])
 
 const r = computed(() => (props.cargos ? radiografiaCompleta(props.cargos, props.grafo) : null))
 const indice = computed(() => (props.cargos ? indiceDeBusqueda(props.cargos) : []))
@@ -31,6 +34,22 @@ const millones = (x) =>
     : `${(x / 1e6).toLocaleString('es-ES', { maximumFractionDigits: 1 })} M€`
 const nombre = (texto) => nombrePropio(texto)
 const ir = (clave) => clave && emit('centrar', clave)
+/* --- La ficha ------------------------------------------------------------ */
+// Una cotizada o un núcleo se abren aquí mismo, sin salir del mapa; la red,
+// desde la ficha. Abrir y cerrar pasa por la dirección: atrás la cierra.
+const abrirFicha = (id) => emit('ficha', id ?? '')
+const fichaActual = computed(() => {
+  const id = props.ficha
+  if (!id || !r.value) return null
+  if (id.startsWith('nucleo:')) {
+    const datos = fichaDeNucleo(id, props.cargos, r.value)
+    return datos && { tipo: 'nucleo', datos }
+  }
+  const datos = fichaDeEmpresa(id, props.cargos, r.value)
+  return datos && { tipo: 'empresa', datos }
+})
+/** Del buscador: una cotizada, a su ficha; lo demás, a la red. */
+const elegirResultado = (clave) => (props.cargos?.cotizadas?.[clave] ? abrirFicha(clave) : ir(clave))
 /** Lleva a una sección de la página, sin tocar la dirección. */
 function irA(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -48,20 +67,14 @@ const entradilla = computed(() =>
 
 const islas = computed(() => r.value?.islas ?? [])
 const TIPO_DE_ISLA = { estado: 'Estado accionista', grupo: 'Grupo accionista', fortuna: 'Fortuna personal' }
-// La cotizada señalada: se ilumina en todas las islas en que está.
-const senalada = ref('')
-const infoSenalada = computed(() => {
-  if (!senalada.value) return null
-  const en = islas.value.flatMap((i) => i.burbujas.filter((b) => b.clave === senalada.value).map((b) => ({ isla: i, b })))
-  if (!en.length) return null
-  return {
-    nombre: en[0].b.corto,
-    puertas: en[0].b.puertas,
-    en: en.map(({ isla, b }) => ({ id: isla.id, nombre: isla.nombre, porcentaje: b.porcentaje })).sort((a, b) => b.porcentaje - a.porcentaje),
-  }
+// La cotizada señalada: se ilumina en todas las islas en que está. Con la
+// ficha abierta, la suya.
+const senaladaAlPasar = ref('')
+const senalada = computed({
+  get: () => senaladaAlPasar.value || (fichaActual.value?.tipo === 'empresa' ? props.ficha : ''),
+  set: (v) => (senaladaAlPasar.value = v),
 })
-// Con ratón, pasar por encima señala y pulsar lleva a la red. Con el dedo,
-// el primer toque señala y el segundo lleva.
+// Con ratón, pasar por encima señala; pulsar (o tocar) abre su ficha.
 function pasar(e, b) {
   if (e.pointerType === 'mouse') senalada.value = b.clave
 }
@@ -69,10 +82,6 @@ function pasar(e, b) {
 // entonces el primer toque ya llevaba a la red.
 function enfocar(e, b) {
   if (e.target.matches?.(':focus-visible')) senalada.value = b.clave
-}
-function tocar(b) {
-  if (senalada.value === b.clave) return ir(b.clave)
-  senalada.value = b.clave
 }
 /**
  * El rótulo de una burbuja, tan grande como quepa: en una línea o, si así
@@ -260,11 +269,11 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             type="search"
             autocomplete="off"
             placeholder="Una persona, una empresa, un accionista…"
-            @keydown.enter="resultados.length && ir(resultados[0].clave)"
+            @keydown.enter="resultados.length && elegirResultado(resultados[0].clave)"
           />
           <ul v-if="consulta.trim().length >= 2" class="resultados-radio">
             <li v-for="x in resultados" :key="x.clave">
-              <button type="button" @click="ir(x.clave)">
+              <button type="button" @click="elegirResultado(x.clave)">
                 <span class="nombre-r">{{ x.nombre }}</span>
                 <span class="que-r">{{ x.que }}</span>
               </button>
@@ -274,6 +283,15 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         </div>
       </header>
 
+      <FichaRadiografia
+        v-if="fichaActual"
+        :ficha="fichaActual"
+        @cerrar="abrirFicha('')"
+        @ir="ir"
+        @empresa="abrirFicha"
+        @nucleo="abrirFicha"
+      />
+
       <!-- 0. Las islas del poder económico -->
       <section v-if="islas.length" class="bloque" aria-labelledby="t-mapa">
         <h2 id="t-mapa" class="seccion">Quién manda en las grandes empresas</h2>
@@ -281,7 +299,8 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
           Cada isla es un núcleo de poder: el Estado, un grupo accionista o una fortuna personal. Dentro, las cotizadas en
           las que tiene al menos un 5 % de los votos, según la CNMV; cuanto mayor la burbuja, más tiene. La que lleva un
           anillo de trazos está en más de una isla: se la disputan. El punto rojo cuenta los ex altos cargos que la Oficina
-          de Conflictos de Intereses autorizó a trabajar en ella. Pasa por una o tócala para ver quién más está.
+          de Conflictos de Intereses autorizó a trabajar en ella. Pulsa una cotizada o el nombre de un núcleo para ver su
+          ficha: de quién es, quién la preside, quién se sienta en nombre de quién.
         </p>
         <ul class="leyenda-islas">
           <li><span class="muestra k-estado" />El Estado</li>
@@ -294,8 +313,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
           <figure v-for="isla in islas" :key="isla.id" class="isla" :class="`k-${isla.tipo}`">
             <figcaption>
               <span class="tipo-isla">{{ TIPO_DE_ISLA[isla.tipo] }}</span>
-              <button v-if="isla.clave" type="button" class="nombre-isla" :title="nombre(isla.nombreCompleto)" @click="ir(isla.clave)">{{ isla.nombre }}</button>
-              <span v-else class="nombre-isla">{{ isla.nombre }}</span>
+              <button type="button" class="nombre-isla" :title="nombre(isla.nombreCompleto)" @click="abrirFicha(isla.id)">{{ isla.nombre }}</button>
               <span v-if="isla.tipo === 'estado' && r.rotulos?.estado" class="sub-isla">{{ r.rotulos.estado }}</span>
             </figcaption>
             <svg
@@ -316,8 +334,8 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
                 :aria-label="`${nombre(b.nombre)}: ${porcentaje(b.porcentaje)}${b.tambien.length ? `; también ${b.tambien.map((t) => t.nombre).join(', ')}` : ''}`"
                 @pointerenter="pasar($event, b)"
                 @focus="enfocar($event, b)"
-                @click="tocar(b)"
-                @keydown.enter="ir(b.clave)"
+                @click="abrirFicha(b.clave)"
+                @keydown.enter="abrirFicha(b.clave)"
               >
                 <circle v-if="b.tambien.length" class="anillo" :r="b.r + 2.2" />
                 <circle class="cuerpo" :r="b.r" />
@@ -336,13 +354,6 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <button v-if="islas.length > 6 && !abiertos.has('islas')" type="button" class="mas-boton mas-islas" @click="abrir('islas')">
           Ver los otros {{ islas.length - 6 }} núcleos
         </button>
-        <div v-if="infoSenalada" class="senal" aria-live="polite">
-          <b>{{ infoSenalada.nombre }}</b>
-          <span v-for="x in infoSenalada.en" :key="x.id" class="en-isla">{{ x.nombre }} {{ porcentaje(x.porcentaje) }}</span>
-          <span v-if="infoSenalada.puertas" class="puertas-senal">{{ infoSenalada.puertas }} {{ infoSenalada.puertas === 1 ? 'ex alto cargo autorizado' : 'ex altos cargos autorizados' }}</span>
-          <button type="button" class="ir-red" @click="ir(senalada)">Ver en la red →</button>
-          <button type="button" class="cerrar" aria-label="Cerrar" @click="senalada = ''">×</button>
-        </div>
       </section>
 
       <section class="bloque resumen">
@@ -515,7 +526,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
             </p>
             <ul class="barras">
               <li v-for="p in n.participaciones" :key="`${p.titular}|${p.cotizada}`">
-                <button type="button" class="enlace cot" @click="ir(p.cotizada)">{{ corto(p.cotizada) }}</button>
+                <button type="button" class="enlace cot" @click="abrirFicha(p.cotizada)">{{ corto(p.cotizada) }}</button>
                 <span class="barra" :title="`${nombre(p.nombre)}: ${porcentaje(p.porcentaje)}`"><span :style="{ width: `${Math.min(100, p.porcentaje)}%` }" /></span>
                 <span class="pct">{{ porcentaje(p.porcentaje) }}</span>
                 <span v-if="n.estado" class="quien">{{ nombre(p.nombre) }}</span>
@@ -565,7 +576,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <p class="nota">Los grupos de comunicación cotizados —así los clasifica la CNMV— y sus accionistas significativos.</p>
         <div class="medios">
           <section v-for="m in medios" :key="m.clave" class="medio">
-            <h3><button type="button" class="enlace" @click="ir(m.clave)">{{ nombre(m.nombre) }}</button></h3>
+            <h3><button type="button" class="enlace" @click="abrirFicha(m.clave)">{{ nombre(m.nombre) }}</button></h3>
             <p v-if="presidenteDe(m)" class="preside">
               Lo preside
               <button type="button" class="enlace" @click="ir(presidenteDe(m).clave)">{{ nombre(presidenteDe(m).nombre) }}</button>
@@ -589,7 +600,7 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         <table class="referencias">
           <tbody>
             <tr v-for="c in r.referencias" :key="c.clave">
-              <th scope="row"><button type="button" class="enlace" @click="ir(c.clave)">{{ nombre(c.nombre) }}</button></th>
+              <th scope="row"><button type="button" class="enlace" @click="abrirFicha(c.clave)">{{ nombre(c.nombre) }}</button></th>
               <td>
                 <button v-if="c.principal" type="button" class="enlace" @click="ir(c.principal.titular)">{{ nombre(c.principal.nombre) }}</button>
                 <span v-else class="apagado">sin accionista significativo fuera de las gestoras</span>
@@ -740,12 +751,6 @@ button.nombre-isla:hover, button.nombre-isla:focus-visible { border-bottom-color
 .burbuja.senalada .cuerpo, .burbuja:focus-visible .cuerpo { stroke: var(--tinta); stroke-width: 2.5; }
 .burbuja .puerta circle { fill: var(--adm); stroke: var(--hoja); stroke-width: 1.5; }
 .burbuja .puerta text { fill: var(--hoja); font-size: 10px; font-weight: 700; }
-.senal { position: fixed; z-index: 20; left: 50%; bottom: var(--e4); transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--e1) var(--e3); max-width: min(40rem, calc(100vw - 2rem)); box-sizing: border-box; padding: var(--e2) var(--e4); background: var(--hoja); border: 1px solid var(--filete-medio); border-radius: var(--radio); box-shadow: 0 8px 24px rgb(0 0 0 / 0.16); font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); }
-.senal b { font-family: var(--serif); font-size: var(--t-m); color: var(--tinta); }
-.en-isla + .en-isla::before { content: '· '; color: var(--tinta-3); }
-.puertas-senal { color: var(--adm); font-weight: 600; }
-.senal .ir-red { all: unset; cursor: pointer; font-weight: 600; color: var(--tinta); border-bottom: 1px solid var(--tinta); }
-.senal .cerrar { all: unset; cursor: pointer; margin-left: auto; padding: 0 var(--e1); font-size: 1.2rem; line-height: 1; color: var(--tinta-3); }
 
 /* Lo que nombra cada Gobierno */
 .gobiernos { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: var(--e5); }
