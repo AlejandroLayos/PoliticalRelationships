@@ -1,3 +1,4 @@
+import { packEnclose, packSiblings } from 'd3-hierarchy'
 import { nombreLegible } from './poder.js'
 
 /**
@@ -791,230 +792,78 @@ export function rotulos(cargos, grafo, r) {
   return salida
 }
 
+/** El radio de una burbuja: su área, lo que tiene el núcleo; con un mínimo legible. */
+export const radioDeBurbuja = (porcentaje) => Math.max(RADIO_MINIMO, 8.5 * Math.sqrt(Math.max(0, porcentaje)))
+const RADIO_MINIMO = 27
+
 /**
- * El mapa de los núcleos, en una colocación que se puede explicar en una
- * frase: los núcleos en un anillo, ordenados para que los que comparten
- * cotizadas queden juntos; la cotizada de un solo núcleo, escrita bajo su
- * nombre (`propias`); la que está en varios, un punto dentro del anillo, entre
- * ellos y más cerca de quien más tiene. «Entre dos» es literal: se la disputan. Los consejeros compartidos,
- * entre las dos cotizadas que unen. Sin simulación: el mismo dato da siempre
- * el mismo dibujo.
+ * Las islas del poder económico: un núcleo, una isla; dentro, cada cotizada en
+ * la que tiene al menos un 5 %, como una burbuja cuya área es lo que tiene.
+ * La cotizada que se disputan dos núcleos está en las dos islas, con lo que
+ * tiene cada uno, y sabe quién más está (`tambien`). Sin líneas que crucen:
+ * de un vistazo, quién pesa y dónde.
  *
- * @returns {{nodos: Array, aristas: Array, caja: [number, number, number, number]}}
+ * Las burbujas se empaquetan con `packSiblings` y la isla es el círculo que
+ * las encierra; las islas se ordenan de más a menos peso (el área de sus
+ * burbujas). Mismo dato, mismo dibujo.
+ *
+ * @returns {Array<{id, nombre, tipo, clave, sub, radio, peso, burbujas}>}
  */
-function ladoDelRotulo(a) {
-  const c = Math.cos(a)
-  if (c > 0.55) return 'der'
-  if (c < -0.55) return 'izq'
-  const v = Math.sin(a) > 0 ? 'abajo' : 'arriba'
-  return c < -0.12 ? `${v}-izq` : c > 0.12 ? `${v}-der` : v
-}
-
-export function mapaDeNucleos(r, cargos, { ancho = 1000, alto = 660 } = {}) {
+export function islasDeNucleos(r, cargos, { holgura = 3, margen = 10 } = {}) {
   const cot = cargos?.cotizadas ?? {}
-  const nucleos = r.nucleos
-  if (!nucleos.length) return { nodos: [], aristas: [], caja: [0, 0, ancho, alto] }
-  const cx = ancho / 2
-  const cy = alto / 2
-  const rx = ancho * 0.31
-  const ry = alto * 0.34
-
-  // El orden del anillo: cada núcleo se inserta donde menos lejos queda de
-  // los núcleos con los que comparte cotizadas (lejanía en el anillo, por
-  // cotizadas compartidas). Primero los que más comparten; el Estado, arriba.
-  const cotsDe = new Map(nucleos.map((n) => [n.id, new Set(n.cotizadas.map((c) => c.clave))]))
-  const comunes = (a, b) => [...cotsDe.get(a)].filter((c) => cotsDe.get(b).has(c)).length
-  const total = (a) => nucleos.reduce((s, n) => s + (n.id === a ? 0 : comunes(a, n.id)), 0)
-  const coste = (o) => {
-    let c = 0
-    for (let i = 0; i < o.length; i++) {
-      for (let j = i + 1; j < o.length; j++) {
-        const k = comunes(o[i], o[j])
-        if (k) c += k * Math.min(j - i, o.length - (j - i))
-      }
-    }
-    return c
-  }
-  const orden = [nucleos[0].id]
-  const resto = nucleos.slice(1).map((n) => n.id).sort((a, b) => total(b) - total(a))
-  for (const id of resto) {
-    let mejor = null
-    for (let i = 1; i <= orden.length; i++) {
-      const prueba = [...orden.slice(0, i), id, ...orden.slice(i)]
-      const c = coste(prueba)
-      if (!mejor || c < mejor.c) mejor = { c, o: prueba }
-    }
-    orden.splice(0, orden.length, ...mejor.o)
-  }
-  const pos = new Map()
-  const angulo = new Map()
-  orden.forEach((id, i) => {
-    const a = -Math.PI / 2 + (2 * Math.PI * i) / orden.length
-    angulo.set(id, a)
-    pos.set(id, [cx + rx * Math.cos(a), cy + ry * Math.sin(a)])
-  })
-
-  const nodos = []
-  const porId = new Map(nucleos.map((n) => [n.id, n]))
-  for (const id of orden) {
-    const n = porId.get(id)
-    nodos.push({
-      id,
-      tipo: 'nucleo',
-      estado: n.estado,
-      clave: n.estado ? '' : n.titulares[0].clave,
-      nombre: n.estado ? 'El Estado' : n.titulares.map((t) => t.nombre).join(' · '),
-      corto: n.estado ? 'El Estado' : rotuloDeNucleo(n.titulares[0].nombre),
-      persona: !n.estado && n.titulares.every((t) => t.persona),
-      peso: n.cotizadas.length,
-      x: pos.get(id)[0],
-      y: pos.get(id)[1],
-      // El rótulo, hacia fuera del anillo: dentro están las disputadas.
-      // Arriba y abajo, el rótulo se abre hacia su lado, para no chocar con
-      // el del vecino.
-      lado: ladoDelRotulo(angulo.get(id)),
-      propias: [],
-    })
-  }
-
-  // Cada cotizada, con sus núcleos y lo que cada uno tiene.
-  const de = new Map()
-  for (const n of nucleos) {
+  // Quién está en cada cotizada, con cuánto: para decir «también».
+  const quien = new Map()
+  for (const n of r.nucleos) {
     for (const p of n.participaciones) {
-      const x = de.get(p.cotizada) ?? new Map()
-      x.set(n.id, Math.max(x.get(n.id) ?? 0, p.porcentaje))
-      de.set(p.cotizada, x)
+      const x = quien.get(p.cotizada) ?? new Map()
+      x.set(n.id, Math.max(x.get(n.id) ?? 0, Number(p.porcentaje)))
+      quien.set(p.cotizada, x)
     }
   }
-  const solas = new Map()
-  const cotizadas = []
-  for (const [clave, nus] of de) {
-    const base = {
-      id: clave,
-      tipo: 'cotizada',
-      clave,
-      nombre: cot[clave]?.nombre ?? clave,
-      corto: nombrePropio(nombreCorto(cot[clave])),
-      medio: !!cot[clave]?.medio,
-      compartida: nus.size > 1,
-      // Ex altos cargos que la OCI autorizó a trabajar en ella: por donde el
-      // Gobierno toca al núcleo.
-      puertas: (cargos?.empresas?.[clave] ?? []).length,
-    }
-    if (nus.size === 1) {
-      const [id] = nus.keys()
-      solas.set(id, [...(solas.get(id) ?? []), base])
-    } else {
-      // Entre sus núcleos, pesando por participación, y hacia dentro.
-      let sx = 0
-      let sy = 0
-      let sw = 0
-      for (const [id, pc] of nus) {
-        const w = 0.5 + pc
-        sx += pos.get(id)[0] * w
-        sy += pos.get(id)[1] * w
-        sw += w
-      }
-      const mx = sx / sw
-      const my = sy / sw
-      cotizadas.push({ ...base, x: cx + (mx - cx) * 0.62, y: cy + (my - cy) * 0.62, lado: 'arriba' })
-    }
-  }
-  // Las de un solo núcleo no son un punto: van escritas bajo su nombre. No
-  // dicen nada de la estructura —nadie se las disputa— y, como puntos, cada
-  // una con su rótulo, eran casi todo el ruido del mapa.
-  const nodoDe = new Map(nodos.map((n) => [n.id, n]))
-  const pesoEn = (clave, id) => de.get(clave)?.get(id) ?? 0
-  for (const [id, lista] of solas) {
-    nodoDe.get(id).propias = lista
-      .map((c) => ({ clave: c.clave, corto: c.corto, medio: c.medio, puertas: c.puertas, porcentaje: pesoEn(c.clave, id) }))
-      .sort((p, q) => q.porcentaje - p.porcentaje || p.corto.localeCompare(q.corto, 'es'))
-  }
-  // Las de dentro, separadas por la caja de su rótulo (unos 6,5 px por letra,
-  // encima del punto), no sólo por el punto: dos rótulos no se pisan.
-  const dentro = cotizadas.filter((c) => c.compartida)
-  const caja = (c) => {
-    // Con ex altos cargos, una línea más encima.
-    const w = Math.max(Math.min(20, c.corto.length), c.puertas ? 17 : 0) * 6.5 + 8
-    return [c.x - w / 2, c.y - 22 - (c.puertas ? 15 : 0), c.x + w / 2, c.y + 6]
-  }
-  for (let vuelta = 0; vuelta < 120; vuelta++) {
-    let movido = false
-    for (let i = 0; i < dentro.length; i++) {
-      for (let j = i + 1; j < dentro.length; j++) {
-        const a = dentro[i]
-        const b = dentro[j]
-        const [ax0, ay0, ax1, ay1] = caja(a)
-        const [bx0, by0, bx1, by1] = caja(b)
-        const sx = Math.min(ax1, bx1) - Math.max(ax0, bx0)
-        const sy = Math.min(ay1, by1) - Math.max(ay0, by0)
-        if (sx <= 0 || sy <= 0) continue
-        movido = true
-        // Se separan por el eje en que menos se solapan.
-        if (sy < sx) {
-          const d = (sy / 2 + 1) * (a.y <= b.y ? -1 : 1)
-          a.y += d
-          b.y -= d
-        } else {
-          const d = (sx / 2 + 1) * (a.x <= b.x ? -1 : 1)
-          a.x += d
-          b.x -= d
+  // Si el titular es a su vez cotizada, su nombre corto de la CNMV: «BBVA».
+  const nombreDe = (n) =>
+    n.estado ? 'El Estado' : cot[n.titulares[0].clave] ? nombrePropio(nombreCorto(cot[n.titulares[0].clave])) : rotuloDeNucleo(n.titulares[0].nombre)
+  const porId = new Map(r.nucleos.map((n) => [n.id, n]))
+  const islas = r.nucleos.map((n) => {
+    const burbujas = [...(quien.entries())]
+      .filter(([, x]) => x.has(n.id))
+      .map(([clave, x]) => {
+        const porcentaje = x.get(n.id)
+        return {
+          clave,
+          corto: nombrePropio(nombreCorto(cot[clave])),
+          nombre: cot[clave]?.nombre ?? clave,
+          porcentaje,
+          medio: !!cot[clave]?.medio,
+          puertas: (cargos?.empresas?.[clave] ?? []).length,
+          tambien: [...x.entries()]
+            .filter(([id]) => id !== n.id)
+            .sort((a, b) => b[1] - a[1])
+            .map(([id, pc]) => ({ id, nombre: nombreDe(porId.get(id)), porcentaje: pc })),
+          r: radioDeBurbuja(porcentaje),
         }
-      }
+      })
+      .sort((a, b) => b.porcentaje - a.porcentaje || a.corto.localeCompare(b.corto, 'es'))
+    // Se empaqueta con holgura, para que se vea el papel entre burbujas.
+    const huecos = burbujas.map((b) => ({ r: b.r + holgura }))
+    packSiblings(huecos)
+    const caja = packEnclose(huecos)
+    burbujas.forEach((b, k) => {
+      b.x = huecos[k].x - caja.x
+      b.y = huecos[k].y - caja.y
+    })
+    return {
+      id: n.id,
+      nombre: nombreDe(n),
+      nombreCompleto: n.estado ? 'El Estado' : n.titulares.map((t) => t.nombre).join(' · '),
+      tipo: n.estado ? 'estado' : n.titulares.every((t) => t.persona) ? 'fortuna' : 'grupo',
+      clave: n.estado ? '' : n.titulares[0].clave,
+      radio: caja.r + margen,
+      peso: burbujas.reduce((s, b) => s + b.porcentaje, 0),
+      burbujas,
     }
-    // Y lejos de los círculos de los núcleos, con su rótulo encima.
-    for (const c of dentro) {
-      for (const n of nodos) {
-        const dx = c.x - n.x
-        const dy = c.y - 12 - n.y
-        const d = Math.hypot(dx, dy)
-        const min = 12 + 7 * Math.sqrt(n.peso) + 24
-        if (d >= min) continue
-        movido = true
-        const k = d ? (min - d) / d : 1
-        c.x += dx * k
-        c.y += d ? dy * k : min
-      }
-    }
-    if (!movido) break
-  }
-  nodos.push(...cotizadas)
-
-  const aristas = []
-  for (const [clave, nus] of de) {
-    if (nus.size < 2) continue
-    for (const [id, pc] of nus) aristas.push({ source: id, target: clave, tipo: 'participacion', porcentaje: pc })
-  }
-  // Los consejeros compartidos, entre las cotizadas que unen; si una es de un
-  // solo núcleo, hasta ese núcleo, que es donde está escrita.
-  const enMapa = new Map(nodos.map((n) => [n.id, n]))
-  const dueno = new Map()
-  for (const [id, lista] of solas) for (const c of lista) dueno.set(c.clave, id)
-  for (const x of r.compartidos ?? []) {
-    if (!x.persona) continue
-    const ids = [...new Set(x.en.map((e) => (enMapa.has(e.clave) ? e.clave : dueno.get(e.clave))).filter(Boolean))]
-    if (ids.length < 2) continue
-    const mx = ids.reduce((s, id) => s + enMapa.get(id).x, 0) / ids.length
-    const my = ids.reduce((s, id) => s + enMapa.get(id).y, 0) / ids.length
-    // Fuera de los círculos de los núcleos, que su rótulo no los tape.
-    let px = mx
-    let py = my + 10
-    for (const n of nodos) {
-      if (n.tipo !== 'nucleo') continue
-      const dx = px - n.x
-      const dy = py - n.y
-      const d = Math.hypot(dx, dy)
-      const min = 20 + 7 * Math.sqrt(n.peso) + 18
-      if (d < min) {
-        const k = d ? min / d : 1
-        px = n.x + (d ? dx * k : 0)
-        py = n.y + (d ? dy * k : min)
-      }
-    }
-    nodos.push({ id: x.clave, tipo: 'persona', clave: x.clave, nombre: x.nombre, corto: nombrePropio(x.nombre), x: px, y: py })
-    for (const id of ids) aristas.push({ source: x.clave, target: id, tipo: 'consejo' })
-  }
-  return { nodos, aristas, caja: [0, 0, ancho, alto] }
+  })
+  return islas.sort((a, b) => b.peso - a.peso || a.nombre.localeCompare(b.nombre, 'es'))
 }
 
 /** Todo junto. */
@@ -1038,5 +887,5 @@ export function radiografia(cargos, grafo = null) {
 /** Todo junto, con los rótulos del diagrama. */
 export function radiografiaCompleta(cargos, grafo = null) {
   const r = radiografia(cargos, grafo)
-  return { ...r, rotulos: rotulos(cargos, grafo, r), mapa: mapaDeNucleos(r, cargos), esencial: loEsencial(r, cargos) }
+  return { ...r, rotulos: rotulos(cargos, grafo, r), islas: islasDeNucleos(r, cargos), esencial: loEsencial(r, cargos) }
 }

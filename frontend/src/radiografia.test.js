@@ -10,7 +10,8 @@ import {
   loEsencial,
   cupulaJudicial,
   nombramientosClave,
-  mapaDeNucleos,
+  islasDeNucleos,
+  radioDeBurbuja,
   nombreCorto,
   radiografiaCompleta,
   sigla,
@@ -311,39 +312,49 @@ describe('rótulos y nombres cortos', () => {
   })
 })
 
-describe('el mapa de los núcleos', () => {
-  it('núcleos, cotizadas y puentes, colocados igual cada vez', () => {
+describe('las islas del poder económico', () => {
+  it('una isla por núcleo, colocada igual cada vez, de más a menos peso', () => {
     const r = radiografia(cargos())
-    const a = mapaDeNucleos(r, cargos())
-    const b = mapaDeNucleos(r, cargos())
-    expect(a.nodos.map((n) => [n.id, n.x.toFixed(3)])).toEqual(b.nodos.map((n) => [n.id, n.x.toFixed(3)]))
-    const tipos = new Set(a.nodos.map((n) => n.tipo))
-    expect([...tipos].sort()).toEqual(['cotizada', 'nucleo', 'persona'])
-    // Telco está en dos núcleos: dos aristas de participación.
-    expect(a.aristas.filter((e) => e.tipo === 'participacion' && e.target === 'nif:A1')).toHaveLength(2)
-    // La persona que está en dos consejos, unida a los dos.
-    expect(a.aristas.filter((e) => e.tipo === 'consejo')).toHaveLength(2)
+    const a = islasDeNucleos(r, cargos())
+    const b = islasDeNucleos(r, cargos())
+    expect(a.map((i) => [i.id, i.radio.toFixed(3)])).toEqual(b.map((i) => [i.id, i.radio.toFixed(3)]))
+    expect(a).toHaveLength(r.nucleos.length)
+    const pesos = a.map((i) => i.peso)
+    expect(pesos).toEqual([...pesos].sort((x, y) => y - x))
   })
-  it('la cotizada de un solo núcleo va escrita bajo él, no como punto', () => {
+  it('cada burbuja es lo que tiene ese núcleo, y la disputada sabe quién más está', () => {
     const r = radiografia(cargos())
-    const m = mapaDeNucleos(r, cargos())
-    const puntos = m.nodos.filter((n) => n.tipo === 'cotizada')
-    expect(puntos.every((c) => c.compartida)).toBe(true)
-    const propias = m.nodos.filter((n) => n.tipo === 'nucleo').flatMap((n) => n.propias.map((c) => c.clave))
-    expect(propias.length).toBeGreaterThan(0)
-    // Ninguna es a la vez punto y propia, y ninguna propia lleva arista de participación.
-    expect(propias.filter((c) => puntos.some((p) => p.id === c))).toEqual([])
-    expect(m.aristas.filter((e) => e.tipo === 'participacion' && propias.includes(e.target))).toEqual([])
-    // Las puertas giratorias de la OCI, contadas en su cotizada.
+    const islas = islasDeNucleos(r, cargos())
+    // Telco (nif:A1) está en dos núcleos: sale en las dos islas.
+    const telco = islas.flatMap((i) => i.burbujas.filter((b) => b.clave === 'nif:A1').map((b) => ({ isla: i, b })))
+    expect(telco).toHaveLength(2)
+    for (const { isla, b } of telco) {
+      const n = r.nucleos.find((x) => x.id === isla.id)
+      const suyo = Math.max(...n.participaciones.filter((p) => p.cotizada === 'nif:A1').map((p) => Number(p.porcentaje)))
+      expect(b.porcentaje).toBe(suyo)
+      expect(b.r).toBe(radioDeBurbuja(suyo))
+      expect(b.tambien.map((t) => t.id)).toEqual(telco.filter((o) => o.isla.id !== isla.id).map((o) => o.isla.id))
+    }
+  })
+  it('las burbujas no se pisan y caben en su isla', () => {
+    const r = radiografia(cargos())
+    for (const isla of islasDeNucleos(r, cargos())) {
+      for (const [k, a] of isla.burbujas.entries()) {
+        expect(Math.hypot(a.x, a.y) + a.r).toBeLessThanOrEqual(isla.radio + 1e-6)
+        for (const b of isla.burbujas.slice(k + 1)) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThanOrEqual(a.r + b.r - 1e-6)
+      }
+    }
+  })
+  it('un porcentaje pequeño tiene una burbuja legible; uno grande, más área', () => {
+    expect(radioDeBurbuja(1)).toBe(radioDeBurbuja(5))
+    expect(radioDeBurbuja(59) ** 2 / radioDeBurbuja(25) ** 2).toBeCloseTo(59 / 25, 5)
+  })
+  it('las puertas giratorias, contadas en su burbuja', () => {
     const c = cargos()
     c.empresas['nif:A1'] = [{ persona: 'oci:persona:x', nombre: 'Ex', actividad: 'TELCO', fecha: '2020-01-01' }]
-    const conPuertas = mapaDeNucleos(radiografia(c), c)
-    expect(conPuertas.nodos.find((n) => n.id === 'nif:A1').puertas).toBe(1)
-    // Cada propia, con lo que tiene su núcleo, de mayor a menor.
-    for (const n of m.nodos.filter((x) => x.tipo === 'nucleo')) {
-      const pc = n.propias.map((c) => c.porcentaje)
-      expect(pc).toEqual([...pc].sort((x, y) => y - x))
-    }
+    const islas = islasDeNucleos(radiografia(c), c)
+    const bs = islas.flatMap((i) => i.burbujas).filter((b) => b.clave === 'nif:A1')
+    expect(bs.every((b) => b.puertas === 1)).toBe(true)
   })
 })
 

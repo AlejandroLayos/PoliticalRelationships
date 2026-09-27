@@ -1,12 +1,13 @@
 <script setup>
 /*
   La radiografía del poder: la entrada de la red de poder cuando no se ha
-  pedido ningún nodo. Primero las áreas y lo que las une; después los núcleos,
-  los medios y sus dueños, y los puentes. Todo nombre se pulsa y lleva a la
-  red, centrada en él.
+  pedido ningún nodo. Primero las islas del poder económico —un núcleo, una
+  isla, con sus cotizadas dentro—; después las áreas y lo que las une, los
+  núcleos en detalle, los medios y sus dueños, y los puentes. Todo nombre se
+  pulsa y lleva a la red, centrada en él.
 */
-import { computed, nextTick, ref, watch } from 'vue'
-import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla, enLineas, buscar, indiceDeBusqueda } from '../radiografia.js'
+import { computed, ref } from 'vue'
+import { AREAS, PROPONENTES, TIPOS_DE_INSTITUCION, nombreCorto, nombrePropio, radiografiaCompleta, sigla, buscar, indiceDeBusqueda } from '../radiografia.js'
 import { nombreDeFuente } from '../poder.js'
 
 const props = defineProps({
@@ -43,103 +44,68 @@ const entradilla = computed(() =>
     : '',
 )
 
-/* --- El mapa de los núcleos ---------------------------------------------- */
+/* --- Las islas del poder económico -------------------------------------- */
 
-const MAPA_ANCHO = 1000
-const MAPA_ALTO = 660
-const mapa = computed(() => {
-  const m = r.value?.mapa
-  if (!m?.nodos.length) return null
-  // El módulo ya coloca en el lienzo del mapa.
-  const pos = new Map(m.nodos.map((n) => [n.id, [n.x, n.y]]))
-  const radio = (n) => (n.tipo === 'nucleo' ? 12 + 7 * Math.sqrt(n.peso) : n.tipo === 'cotizada' ? 6 : 4)
+const islas = computed(() => r.value?.islas ?? [])
+const TIPO_DE_ISLA = { estado: 'Estado accionista', grupo: 'Grupo accionista', fortuna: 'Fortuna personal' }
+// La cotizada señalada: se ilumina en todas las islas en que está.
+const senalada = ref('')
+const infoSenalada = computed(() => {
+  if (!senalada.value) return null
+  const en = islas.value.flatMap((i) => i.burbujas.filter((b) => b.clave === senalada.value).map((b) => ({ isla: i, b })))
+  if (!en.length) return null
   return {
-    nodos: m.nodos.map((n) => ({ ...n, px: pos.get(n.id)[0], py: pos.get(n.id)[1], r: radio(n) })),
-    aristas: m.aristas.map((e) => ({ ...e, a: pos.get(e.source), b: pos.get(e.target) })),
+    nombre: en[0].b.corto,
+    puertas: en[0].b.puertas,
+    en: en.map(({ isla, b }) => ({ id: isla.id, nombre: isla.nombre, porcentaje: b.porcentaje })).sort((a, b) => b.porcentaje - a.porcentaje),
   }
 })
-// En el móvil el mapa es más ancho que la pantalla: se abre centrado, en el
-// Estado, no en su borde izquierdo.
-const lienzo = ref(null)
-watch(
-  () => Boolean(mapa.value),
-  async (hay) => {
-    if (!hay) return
-    await nextTick()
-    const el = lienzo.value
-    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
-  },
-  { immediate: true },
-)
-const resaltado = ref('')
-const vecinos = computed(() => {
-  if (!resaltado.value || !mapa.value) return null
-  const s = new Set([resaltado.value])
-  for (const e of mapa.value.aristas) {
-    if (e.source === resaltado.value) s.add(e.target)
-    if (e.target === resaltado.value) s.add(e.source)
-  }
-  return s
-})
+// Con ratón, pasar por encima señala y pulsar lleva a la red. Con el dedo,
+// el primer toque señala y el segundo lleva.
+function pasar(e, b) {
+  if (e.pointerType === 'mouse') senalada.value = b.clave
+}
+// El foco sólo señala si llega con el teclado: un toque también enfoca, y
+// entonces el primer toque ya llevaba a la red.
+function enfocar(e, b) {
+  if (e.target.matches?.(':focus-visible')) senalada.value = b.clave
+}
+function tocar(b) {
+  if (senalada.value === b.clave) return ir(b.clave)
+  senalada.value = b.clave
+}
 /**
- * El rótulo de un nodo, en líneas. Un núcleo: su nombre en dos como mucho, sin
- * cortar, y debajo las cotizadas que sólo están en él, con su porcentaje.
+ * El rótulo de una burbuja, tan grande como quepa: en una línea o, si así
+ * cabe más grande, en dos. Debajo, el porcentaje, si hay sitio.
  */
-const MAX_PROPIAS = 4
-const exAltos = (n) => `${n} ${n === 1 ? 'ex alto cargo' : 'ex altos cargos'}`
-function lineasDe(n) {
-  if (n.tipo !== 'nucleo') return [{ texto: recortar(n.corto, 20) }]
-  // El Estado: a través de quién.
-  if (n.estado) return [{ texto: n.corto }, ...(r.value?.rotulos?.estado ? [{ texto: r.value.rotulos.estado, clase: 'sub' }] : [])]
-  const lado = n.lado === 'izq' || n.lado === 'der'
-  const nombre = enLineas(n.corto, lado ? 16 : 20).map((texto) => ({ texto }))
-  const propias = n.propias ?? []
-  const vistas = propias.slice(0, propias.length > MAX_PROPIAS ? MAX_PROPIAS - 1 : MAX_PROPIAS).map((c) => ({
-    texto: `${recortar(c.corto, lado ? 20 : 24)} ${porcentaje(c.porcentaje)}`,
-    puertas: c.puertas ? ` · ${exAltos(c.puertas)}` : '',
-    titulo: c.corto,
-    clase: c.medio ? 'propia medio' : 'propia',
-    clave: c.clave,
-  }))
-  if (propias.length > vistas.length) vistas.push({ texto: `y ${propias.length - vistas.length} más`, clase: 'propia mas' })
-  return [...nombre, ...vistas]
-}
-/** Dónde va el rótulo de un nodo: por el lado que le toca, sin pisar el círculo. */
-function rotulo(n) {
-  const r = colocarRotulo(n)
-  // Con dos líneas: al lado, centrado en el círculo; encima, sube una línea.
-  const extra = lineasDe(n).length - 1
-  if (!extra) return r
-  if (n.lado === 'izq' || n.lado === 'der') return { ...r, y: r.y - 7 * Math.min(extra, 2) }
-  if (!String(n.lado ?? '').startsWith('abajo')) return { ...r, y: r.y - 14 * extra }
-  return r
-}
-function colocarRotulo(n) {
-  const sep = (n.r ?? 5) + 5
-  if (n.tipo === 'persona') return { y: 14, 'text-anchor': 'middle' }
-  switch (n.lado) {
-    case 'der':
-      return { x: sep, y: 4, 'text-anchor': 'start' }
-    case 'izq':
-      return { x: -sep, y: 4, 'text-anchor': 'end' }
-    case 'abajo':
-      return { y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'middle' }
-    case 'abajo-izq':
-      return { x: (n.r ?? 5) * 0.8, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
-    case 'abajo-der':
-      return { x: -(n.r ?? 5) * 0.8, y: sep + 10 + 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
-    case 'arriba-izq':
-      return { x: (n.r ?? 5) * 0.8, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'end' }
-    case 'arriba-der':
-      return { x: -(n.r ?? 5) * 0.8, y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'start' }
-    default:
-      return { y: -sep - 13 * (n.escalon ?? 0), 'text-anchor': 'middle' }
+function rotuloBurbuja(b) {
+  const ancho = 2 * b.r * 0.86
+  const cuerpo = (l) => Math.min(15, ancho / (0.56 * l))
+  const palabras = b.corto.split(/\s+/)
+  let lineas = [b.corto]
+  let tam = cuerpo(b.corto.length)
+  if (palabras.length > 1) {
+    let mejor = null
+    for (let k = 1; k < palabras.length; k++) {
+      const dos = [palabras.slice(0, k).join(' '), palabras.slice(k).join(' ')]
+      const t = Math.min(cuerpo(Math.max(...dos.map((x) => x.length))), b.r / 2.1)
+      if (!mejor || t > mejor.t) mejor = { t, dos }
+    }
+    if (mejor.t > tam * 1.15) {
+      lineas = mejor.dos
+      tam = mejor.t
+    }
   }
-}
-const claseNucleo = (n) => (n.estado ? 'k-adm' : n.persona ? 'k-par' : 'k-emp')
-function pulsarNodo(n) {
-  if (n.tipo === 'nucleo' && n.estado) return (resaltado.value = resaltado.value === n.id ? '' : n.id)
-  ir(n.clave)
+  if (tam < 8) {
+    tam = 8
+    const cabe = Math.max(3, Math.floor(ancho / (0.56 * tam)))
+    lineas = lineas.length > 1 ? lineas.map((l) => recortar(l, cabe)) : [recortar(b.corto, cabe)]
+  }
+  const conPct = b.r >= 24
+  const pct = Math.min(tam * 0.85, 12)
+  // Centrado el bloque entero: líneas del nombre y, debajo, el porcentaje.
+  const alto = lineas.length * tam * 1.05 + (conPct ? pct * 1.15 : 0)
+  return { lineas, tam, conPct, pct, y0: -alto / 2 + tam * 0.8 }
 }
 
 /* --- El diagrama de áreas ------------------------------------------------ */
@@ -308,67 +274,75 @@ const recortar = (t, n) => (t.length > n ? `${t.slice(0, n - 1)}…` : t)
         </div>
       </header>
 
-      <!-- 0. El mapa de los núcleos -->
-      <section v-if="mapa" class="bloque" aria-labelledby="t-mapa">
-        <h2 id="t-mapa" class="seccion">El mapa de los núcleos</h2>
+      <!-- 0. Las islas del poder económico -->
+      <section v-if="islas.length" class="bloque" aria-labelledby="t-mapa">
+        <h2 id="t-mapa" class="seccion">Quién manda en las grandes empresas</h2>
         <p class="nota">
-          Cada círculo es un núcleo: el Estado, un grupo accionista o una fortuna personal. Bajo su nombre, las cotizadas
-          en las que sólo él tiene al menos un 5 %. Los puntos del centro son las cotizadas que se reparten dos núcleos o
-          más, atadas a cada uno. Las líneas de puntos, personas que se sientan en dos consejos (su nombre sale al pasar por encima). En rojo, por donde
-          entra el Gobierno: ex altos cargos a los que la Oficina de Conflictos de Intereses autorizó a trabajar en esa
-          cotizada. Pasa por encima para aislar un núcleo; pulsa para verlo en la red.
+          Cada isla es un núcleo de poder: el Estado, un grupo accionista o una fortuna personal. Dentro, las cotizadas en
+          las que tiene al menos un 5 % de los votos, según la CNMV; cuanto mayor la burbuja, más tiene. La que lleva un
+          anillo de trazos está en más de una isla: se la disputan. El punto rojo cuenta los ex altos cargos que la Oficina
+          de Conflictos de Intereses autorizó a trabajar en ella. Pasa por una o tócala para ver quién más está.
         </p>
-        <div ref="lienzo" class="lienzo-mapa">
-          <svg :viewBox="`0 0 ${MAPA_ANCHO} ${MAPA_ALTO}`" role="img" aria-labelledby="t-mapa" @mouseleave="resaltado = ''">
-            <g class="aristas">
-              <line
-                v-for="(e, i) in mapa.aristas"
-                :key="i"
-                :x1="e.a[0]" :y1="e.a[1]" :x2="e.b[0]" :y2="e.b[1]"
-                :class="[e.tipo, { apagado: vecinos && !(vecinos.has(e.source) && vecinos.has(e.target)) }]"
-                :stroke-width="e.tipo === 'participacion' ? 0.8 + e.porcentaje / 12 : 1.2"
-              />
-            </g>
-            <g
-              v-for="n in mapa.nodos"
-              :key="n.id"
-              class="nodo"
-              :class="[n.tipo, n.tipo === 'nucleo' ? claseNucleo(n) : '', { apagado: vecinos && !vecinos.has(n.id), medio: n.medio }]"
-              :transform="`translate(${n.px}, ${n.py})`"
-              tabindex="0"
-              role="button"
-              :aria-label="n.nombre"
-              @mouseenter="resaltado = n.id"
-              @focus="resaltado = n.id"
-              @click="pulsarNodo(n)"
-              @keydown.enter="pulsarNodo(n)"
-            >
-              <circle v-if="n.puertas && n.tipo === 'cotizada'" class="anillo-puerta" :r="n.r + 4" />
-              <circle :r="n.r" />
-              <text v-if="n.tipo !== 'persona' || (vecinos && vecinos.has(n.id))" v-bind="rotulo(n)">
-                <tspan
-                  v-for="(l, i) in lineasDe(n)"
-                  :key="i"
-                  :x="rotulo(n).x ?? 0"
-                  :dy="i ? (l.clase ? 15 : 14) : 0"
-                  :class="l.clase"
-                  @click.stop="l.clave && ir(l.clave)"
-                >{{ l.texto }}<tspan v-if="l.puertas" class="puerta">{{ l.puertas }}</tspan><title v-if="l.titulo">{{ l.titulo }}</title></tspan>
-                <tspan v-if="n.tipo === 'cotizada' && n.puertas" class="puerta" :x="rotulo(n).x ?? 0" dy="-14">{{ exAltos(n.puertas) }}</tspan>
-              </text>
-              <title>{{ n.nombre }}</title>
-            </g>
-          </svg>
-        </div>
-        <p class="desliza">Desliza de lado para ver el mapa entero.</p>
-        <ul class="leyenda-mapa">
-          <li><span class="punto k-adm" />El Estado</li>
-          <li><span class="punto k-emp" />Un grupo accionista</li>
-          <li><span class="punto k-par" />Una fortuna personal</li>
-          <li><span class="punto cot" />Una cotizada en dos núcleos o más</li>
-          <li><span class="punto per" />Consejero en dos consejos</li>
-          <li><span class="punto puerta" />Con ex altos cargos autorizados por la OCI a trabajar en ella</li>
+        <ul class="leyenda-islas">
+          <li><span class="muestra k-estado" />El Estado</li>
+          <li><span class="muestra k-grupo" />Un grupo accionista</li>
+          <li><span class="muestra k-fortuna" />Una fortuna personal</li>
+          <li><span class="muestra disputada" />En más de una isla</li>
+          <li><span class="muestra puerta">1</span>Ex altos cargos autorizados a trabajar en ella</li>
         </ul>
+        <div class="islas" :class="{ todas: abiertos.has('islas') }" @mouseleave="senalada = ''">
+          <figure v-for="isla in islas" :key="isla.id" class="isla" :class="`k-${isla.tipo}`">
+            <figcaption>
+              <span class="tipo-isla">{{ TIPO_DE_ISLA[isla.tipo] }}</span>
+              <button v-if="isla.clave" type="button" class="nombre-isla" :title="nombre(isla.nombreCompleto)" @click="ir(isla.clave)">{{ isla.nombre }}</button>
+              <span v-else class="nombre-isla">{{ isla.nombre }}</span>
+              <span v-if="isla.tipo === 'estado' && r.rotulos?.estado" class="sub-isla">{{ r.rotulos.estado }}</span>
+            </figcaption>
+            <svg
+              :viewBox="`${-isla.radio} ${-isla.radio} ${2 * isla.radio} ${2 * isla.radio}`"
+              :style="{ width: `${2 * isla.radio}px` }"
+              role="group"
+              :aria-label="`Las cotizadas de ${isla.nombre}`"
+            >
+              <circle class="mar" :r="isla.radio" />
+              <g
+                v-for="b in isla.burbujas"
+                :key="b.clave"
+                class="burbuja"
+                :class="{ disputada: b.tambien.length, senalada: senalada === b.clave, apagada: senalada && senalada !== b.clave }"
+                :transform="`translate(${b.x} ${b.y})`"
+                tabindex="0"
+                role="button"
+                :aria-label="`${nombre(b.nombre)}: ${porcentaje(b.porcentaje)}${b.tambien.length ? `; también ${b.tambien.map((t) => t.nombre).join(', ')}` : ''}`"
+                @pointerenter="pasar($event, b)"
+                @focus="enfocar($event, b)"
+                @click="tocar(b)"
+                @keydown.enter="ir(b.clave)"
+              >
+                <circle v-if="b.tambien.length" class="anillo" :r="b.r + 2.2" />
+                <circle class="cuerpo" :r="b.r" />
+                <text :y="rotuloBurbuja(b).y0" :font-size="rotuloBurbuja(b).tam">
+                  <tspan v-for="(l, k) in rotuloBurbuja(b).lineas" :key="k" x="0" :dy="k ? rotuloBurbuja(b).tam * 1.05 : 0">{{ l }}</tspan>
+                  <tspan v-if="rotuloBurbuja(b).conPct" class="pct-b" x="0" :dy="rotuloBurbuja(b).pct * 1.2" :font-size="rotuloBurbuja(b).pct">{{ porcentaje(b.porcentaje) }}</tspan>
+                </text>
+                <g v-if="b.puertas" class="puerta" :transform="`translate(${b.r * 0.72} ${-b.r * 0.72})`">
+                  <circle r="8.5" />
+                  <text dy="3.6">{{ b.puertas }}</text>
+                </g>
+              </g>
+            </svg>
+          </figure>
+        </div>
+        <button v-if="islas.length > 6 && !abiertos.has('islas')" type="button" class="mas-boton mas-islas" @click="abrir('islas')">
+          Ver los otros {{ islas.length - 6 }} núcleos
+        </button>
+        <div v-if="infoSenalada" class="senal" aria-live="polite">
+          <b>{{ infoSenalada.nombre }}</b>
+          <span v-for="x in infoSenalada.en" :key="x.id" class="en-isla">{{ x.nombre }} {{ porcentaje(x.porcentaje) }}</span>
+          <span v-if="infoSenalada.puertas" class="puertas-senal">{{ infoSenalada.puertas }} {{ infoSenalada.puertas === 1 ? 'ex alto cargo autorizado' : 'ex altos cargos autorizados' }}</span>
+          <button type="button" class="ir-red" @click="ir(senalada)">Ver en la red →</button>
+          <button type="button" class="cerrar" aria-label="Cerrar" @click="senalada = ''">×</button>
+        </div>
       </section>
 
       <section class="bloque resumen">
@@ -734,39 +708,44 @@ a.fuente { color: var(--tinta-2); }
 .enlace:hover, .enlace:focus-visible { text-decoration-color: var(--tinta); background: var(--papel-2); }
 
 /* El mapa de los núcleos */
-.lienzo-mapa { background: var(--hoja); border: 1px solid var(--filete-suave); border-radius: var(--radio); }
-.lienzo-mapa svg { width: 100%; height: auto; display: block; font-family: var(--sans); }
-.aristas line { stroke: var(--filete-medio); opacity: 0.8; transition: opacity 0.15s; }
-.aristas line.consejo { stroke: var(--tinta-2); stroke-dasharray: 3 3; }
-.aristas line.apagado { opacity: 0.08; }
-.nodo { cursor: pointer; transition: opacity 0.15s; }
-.nodo.apagado { opacity: 0.15; }
-.nodo circle { stroke: var(--hoja); stroke-width: 2; }
-.nodo.nucleo.k-adm circle { fill: var(--adm); }
-.nodo.nucleo.k-emp circle { fill: var(--emp); }
-.nodo.nucleo.k-par circle { fill: var(--par); }
-.nodo.cotizada circle { fill: var(--tinta); }
-.nodo.cotizada.medio circle { fill: var(--hoja); stroke: var(--tinta); stroke-width: 2.5; }
-.nodo.persona circle { fill: var(--hoja); stroke: var(--tinta-2); stroke-width: 1.5; }
-.nodo text { font-size: 12px; fill: var(--tinta-2); paint-order: stroke; stroke: var(--hoja); stroke-width: 3px; stroke-linejoin: round; }
-.nodo.nucleo text { font-size: 14px; font-weight: 700; fill: var(--tinta); }
-.nodo.nucleo text .sub { font-size: 11.5px; font-weight: 400; fill: var(--tinta-3); }
-.nodo.nucleo text .propia { font-size: 11.5px; font-weight: 400; fill: var(--tinta-2); cursor: pointer; }
-.nodo.nucleo text .propia:hover { fill: var(--tinta); text-decoration: underline; }
-.nodo.nucleo text .propia.mas { font-style: italic; fill: var(--tinta-3); cursor: default; text-decoration: none; }
-.nodo text .puerta, .nodo.nucleo text .propia .puerta { fill: var(--adm); font-weight: 600; }
-.nodo.cotizada circle.anillo-puerta { fill: none; stroke: var(--adm); stroke-width: 2; }
-.nodo.persona text { pointer-events: none; font-size: 10.5px; font-style: italic; fill: var(--tinta-3); }
-.nodo:focus-visible circle { stroke: var(--tinta); stroke-width: 3; }
+.mas-boton.mas-islas { display: none; }
 .desliza { display: none; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); margin: var(--e1) 0 0; }
-.leyenda-mapa { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e2) var(--e5); padding: 0; margin: var(--e2) 0 0; font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); }
-.leyenda-mapa .punto { display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 50%; margin-right: var(--e1); vertical-align: -1px; }
-.leyenda-mapa .punto.k-adm { background: var(--adm); }
-.leyenda-mapa .punto.k-emp { background: var(--emp); }
-.leyenda-mapa .punto.k-par { background: var(--par); }
-.leyenda-mapa .punto.cot { background: var(--tinta); width: 0.5rem; height: 0.5rem; }
-.leyenda-mapa .punto.puerta { background: var(--tinta); width: 0.45rem; height: 0.45rem; box-shadow: 0 0 0 2px var(--hoja), 0 0 0 4px var(--adm); margin-left: 4px; margin-right: calc(var(--e1) + 4px); }
-.leyenda-mapa .punto.per { border: 1.5px solid var(--tinta-2); width: 0.45rem; height: 0.45rem; }
+.leyenda-islas { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e1) var(--e4); padding: 0; margin: 0 0 var(--e4); font-family: var(--sans); font-size: var(--t-xs); color: var(--tinta-3); }
+.leyenda-islas li { display: flex; align-items: center; gap: var(--e1); }
+.muestra { display: inline-block; width: 0.85rem; height: 0.85rem; border-radius: 50%; }
+.muestra.k-estado { background: var(--adm); }
+.muestra.k-grupo { background: var(--emp); }
+.muestra.k-fortuna { background: var(--par); }
+.muestra.disputada { background: var(--tinta-3); box-shadow: 0 0 0 1.5px var(--papel), 0 0 0 3px var(--tinta); outline: none; }
+.muestra.puerta { width: 1rem; height: 1rem; background: var(--adm); color: var(--hoja); font-size: 0.6rem; font-weight: 700; text-align: center; line-height: 1rem; }
+.islas { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: var(--e5) var(--e5); }
+.isla { margin: 0; display: flex; flex-direction: column; align-items: center; max-width: 100%; }
+.isla figcaption { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 18rem; margin-bottom: var(--e1); font-family: var(--sans); }
+.tipo-isla { font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); }
+.nombre-isla { all: unset; font-family: var(--serif); font-size: var(--t-h3); font-weight: 600; line-height: 1.15; color: var(--tinta); }
+button.nombre-isla { cursor: pointer; border-bottom: 1px solid transparent; }
+button.nombre-isla:hover, button.nombre-isla:focus-visible { border-bottom-color: var(--tinta); }
+.sub-isla { font-size: var(--t-xs); color: var(--tinta-3); }
+.isla svg { max-width: 100%; height: auto; display: block; overflow: visible; font-family: var(--sans); }
+.mar { fill: var(--hoja); stroke: var(--c); stroke-opacity: 0.45; stroke-width: 1.2; }
+.k-estado { --c: var(--adm); }
+.k-grupo { --c: var(--emp); }
+.k-fortuna { --c: var(--par); }
+.burbuja { cursor: pointer; transition: opacity 0.15s; outline: none; }
+.burbuja .cuerpo { fill: var(--c); }
+.burbuja .anillo { fill: none; stroke: var(--tinta); stroke-width: 1.4; stroke-dasharray: 3 2.4; }
+.burbuja text { fill: var(--hoja); text-anchor: middle; font-weight: 600; pointer-events: none; }
+.burbuja .pct-b { font-weight: 400; font-family: var(--mono); opacity: 0.9; }
+.burbuja.apagada { opacity: 0.22; }
+.burbuja.senalada .cuerpo, .burbuja:focus-visible .cuerpo { stroke: var(--tinta); stroke-width: 2.5; }
+.burbuja .puerta circle { fill: var(--adm); stroke: var(--hoja); stroke-width: 1.5; }
+.burbuja .puerta text { fill: var(--hoja); font-size: 10px; font-weight: 700; }
+.senal { position: fixed; z-index: 20; left: 50%; bottom: var(--e4); transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--e1) var(--e3); max-width: min(40rem, calc(100vw - 2rem)); box-sizing: border-box; padding: var(--e2) var(--e4); background: var(--hoja); border: 1px solid var(--filete-medio); border-radius: var(--radio); box-shadow: 0 8px 24px rgb(0 0 0 / 0.16); font-family: var(--sans); font-size: var(--t-s); color: var(--tinta-2); }
+.senal b { font-family: var(--serif); font-size: var(--t-m); color: var(--tinta); }
+.en-isla + .en-isla::before { content: '· '; color: var(--tinta-3); }
+.puertas-senal { color: var(--adm); font-weight: 600; }
+.senal .ir-red { all: unset; cursor: pointer; font-weight: 600; color: var(--tinta); border-bottom: 1px solid var(--tinta); }
+.senal .cerrar { all: unset; cursor: pointer; margin-left: auto; padding: 0 var(--e1); font-size: 1.2rem; line-height: 1; color: var(--tinta-3); }
 
 /* Lo que nombra cada Gobierno */
 .gobiernos { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: var(--e5); }
@@ -837,8 +816,10 @@ a.fuente { color: var(--tinta-2); }
 @media (max-width: 48rem) {
   /* En el móvil, el mapa y el diagrama conservan un ancho legible y se
      desplazan de lado: encogidos, sus rótulos no se leen. */
-  .lienzo-mapa, .diagrama { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .lienzo-mapa svg { min-width: 760px; }
+  .diagrama { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* En el móvil, las seis islas que más pesan; el resto, a un toque. */
+  .islas:not(.todas) .isla:nth-child(n + 7) { display: none; }
+  .mas-boton.mas-islas { display: block; margin: var(--e3) auto 0; font-size: var(--t-s); }
   .diagrama svg { min-width: 640px; }
   .desliza { display: block; }
 }
