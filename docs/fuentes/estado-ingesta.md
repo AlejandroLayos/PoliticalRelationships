@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `38046065172` · 2026-10-10T11:49:25Z
+- Ejecución: `38133907798` · 2026-10-11T12:08:56Z
 
 Todas las fuentes respondieron.
 
@@ -11,20 +11,20 @@ Todas las fuentes respondieron.
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 682 |
+| Base de Datos Nacional de Subvenciones | 635 |
 | Boletín Oficial del Estado | 2329 |
-| Comisión Nacional del Mercado de Valores | 199 |
+| Comisión Nacional del Mercado de Valores | 198 |
 | Congreso de los Diputados | 1477 |
 | Oficina de Conflictos de Intereses | 341 |
-| Plataforma de Contratación del Sector Público | 2701 |
+| Plataforma de Contratación del Sector Público | 2745 |
 | Senado | 28 |
 | Tribunal de Cuentas | 630 |
 
 ## Territorio de los organismos
 
-- del Estado: 507
-- con comunidad: 3605
-- **sin clasificar: 182**
+- del Estado: 509
+- con comunidad: 3584
+- **sin clasificar: 183**
 
 Jerarquías más repetidas entre los sin clasificar (para afinar
 `ingest/sinapsis_ingest/territorio.py`):
@@ -36,6 +36,7 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 3 x Departamento de Universidad, Innovación y Transformación Digital
 3 x Sector Público > OTRAS ENTIDADES DEL SECTOR PÚBLICO > MUTUAS DE ACCIDENTES DE TRABAJO COLABORADORAS DE LA SEGURIDAD SOCIAL > ASEPEYO
 3 x IZFE - Sociedad Foral de Servicios Informáticos > IZFE - Sociedad Foral de Servicios Informáticos
+3 x Sector Público > COMUNIDADES Y CIUDADES AUTÓNOMAS > Castilla - La Mancha
 2 x ETS - Euskal Trenbide Sarea > Euskal Trenbide Sarea
 2 x Sector Público > OTRAS ENTIDADES DEL SECTOR PÚBLICO > SOCIEDADES, FUNDACIONES Y CONSORCIOS COMUNIDADES AUTÓNOMAS
 2 x Bilbao Ekintza, E.P.E.L. > Bilbao Ekintza, E.P.E.L.
@@ -44,12 +45,11 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 2 x Instituto Foral de Bienestar Social > Instituto Foral de Bienestar Social
 2 x Mancomunidad de Servicios de Uribe Kosta > Mancomunidad de Servicios de Uribe Kosta
 2 x Sociedad Fomento de San Sebastián > Sociedad Fomento de San Sebastián, S.A.
-2 x Sector Público > ENTIDADES LOCALES > Castilla y León > León > Ayuntamientos > Valencia de Don Juan
 ```
 
 ## Cargos públicos (BOE, OCI, Congreso)
 
-- días del BOE en caché: 5428
+- días del BOE en caché: 5429
 - personas: 2878 · actos del BOE: 6047
 - actos del BOE leídos del 2011-12-17 al 2026-10-08
 - personas con algo de cada fuente: {'boe': 2329, 'congreso': 435, 'oci': 166}
@@ -57,4 +57,4 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 - actividades declaradas (Congreso): 1196
 - sociedades del mapa con un ex alto cargo autorizado: 16
 - entidades del mapa con un diputado que declaró trabajar en ellas: 15
-- órganos del mapa con quién los dirigió: 51
+- órganos del mapa con quién los dirigió: 53
