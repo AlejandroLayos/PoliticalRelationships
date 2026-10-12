@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `38133907798` · 2026-10-11T12:08:56Z
+- Ejecución: `38248662234` · 2026-10-12T13:39:00Z
 
 Todas las fuentes respondieron.
 
@@ -11,19 +11,19 @@ Todas las fuentes respondieron.
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 635 |
+| Base de Datos Nacional de Subvenciones | 592 |
 | Boletín Oficial del Estado | 2329 |
 | Comisión Nacional del Mercado de Valores | 198 |
 | Congreso de los Diputados | 1477 |
 | Oficina de Conflictos de Intereses | 341 |
-| Plataforma de Contratación del Sector Público | 2745 |
+| Plataforma de Contratación del Sector Público | 2789 |
 | Senado | 28 |
 | Tribunal de Cuentas | 630 |
 
 ## Territorio de los organismos
 
-- del Estado: 509
-- con comunidad: 3584
+- del Estado: 498
+- con comunidad: 3559
 - **sin clasificar: 183**
 
 Jerarquías más repetidas entre los sin clasificar (para afinar
@@ -49,12 +49,12 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 
 ## Cargos públicos (BOE, OCI, Congreso)
 
-- días del BOE en caché: 5429
+- días del BOE en caché: 5430
 - personas: 2878 · actos del BOE: 6047
 - actos del BOE leídos del 2011-12-17 al 2026-10-08
 - personas con algo de cada fuente: {'boe': 2329, 'congreso': 435, 'oci': 166}
 - autorizaciones (OCI): 643
 - actividades declaradas (Congreso): 1196
-- sociedades del mapa con un ex alto cargo autorizado: 16
-- entidades del mapa con un diputado que declaró trabajar en ellas: 15
-- órganos del mapa con quién los dirigió: 53
+- sociedades del mapa con un ex alto cargo autorizado: 15
+- entidades del mapa con un diputado que declaró trabajar en ellas: 14
+- órganos del mapa con quién los dirigió: 51
