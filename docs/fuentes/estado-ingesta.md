@@ -3,7 +3,7 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `38712412909` · 2026-10-15T10:55:47Z
+- Ejecución: `38879133679` · 2026-10-16T10:52:20Z
 
 Todas las fuentes respondieron.
 
@@ -11,50 +11,50 @@ Todas las fuentes respondieron.
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 694 |
+| Base de Datos Nacional de Subvenciones | 661 |
 | Boletín Oficial del Estado | 2330 |
 | Comisión Nacional del Mercado de Valores | 200 |
 | Congreso de los Diputados | 1477 |
 | Oficina de Conflictos de Intereses | 341 |
-| Plataforma de Contratación del Sector Público | 2685 |
+| Plataforma de Contratación del Sector Público | 2719 |
 | Senado | 28 |
 | Tribunal de Cuentas | 630 |
 
 ## Territorio de los organismos
 
-- del Estado: 335
-- con comunidad: 2428
-- **sin clasificar: 172**
+- del Estado: 379
+- con comunidad: 2590
+- **sin clasificar: 178**
 
 Jerarquías más repetidas entre los sin clasificar (para afinar
 `ingest/sinapsis_ingest/territorio.py`):
 
 ```
 4 x Servicios de La Comarca de Pamplona S.A.
-3 x DEPARTAMENTO DE COHESION TERRITORIAL
 3 x NEIKER, Instituto Vasco de Investigación y Desarrollo Agrario, S.A. > NEIKER, Instituto Vasco de Investigación y Desarrollo Agrario, S.A.
 3 x Departamento de Universidad, Innovación y Transformación Digital
 3 x Sector Público > OTRAS ENTIDADES DEL SECTOR PÚBLICO > MUTUAS DE ACCIDENTES DE TRABAJO COLABORADORAS DE LA SEGURIDAD SOCIAL > ASEPEYO
 3 x IZFE - Sociedad Foral de Servicios Informáticos > IZFE - Sociedad Foral de Servicios Informáticos
 2 x ETS - Euskal Trenbide Sarea > Euskal Trenbide Sarea
+2 x DEPARTAMENTO DE COHESION TERRITORIAL
 2 x LANTIK > LANTIK
 2 x Bilbao Kirolak-Instituto Municipal de Deportes S.A. > Bilbao Kirolak
 2 x Ayuntamiento de la Anteiglesia de Erandio > Ayuntamiento de la Anteiglesia de Erandio
+2 x Sociedad Fomento de San Sebastián > Sociedad Fomento de San Sebastián, S.A.
 2 x Fundación Juan Crisóstomo de Arriaga-Orquesta Sinfónica de Bilbao > Fundación Juan Crisóstomo de Arriaga-Orquesta Sinfónica de Bilbao
 2 x Aguas del Añarbe-Añarbeko Urak, S.A. > AGASA
-2 x Sociedad Fomento de San Sebastián > Sociedad Fomento de San Sebastián, S.A.
 2 x Bilbao Ekintza, E.P.E.L. > Bilbao Ekintza, E.P.E.L.
 2 x Instituto Foral de Bienestar Social > Instituto Foral de Bienestar Social
 ```
 
 ## Cargos públicos (BOE, OCI, Congreso)
 
-- días del BOE en caché: 5433
+- días del BOE en caché: 5434
 - personas: 2879 · actos del BOE: 6049
 - actos del BOE leídos del 2011-12-17 al 2026-10-15
 - personas con algo de cada fuente: {'boe': 2330, 'congreso': 435, 'oci': 166}
 - autorizaciones (OCI): 643
 - actividades declaradas (Congreso): 1196
-- sociedades del mapa con un ex alto cargo autorizado: 13
-- entidades del mapa con un diputado que declaró trabajar en ellas: 7
-- órganos del mapa con quién los dirigió: 36
+- sociedades del mapa con un ex alto cargo autorizado: 15
+- entidades del mapa con un diputado que declaró trabajar en ellas: 6
+- órganos del mapa con quién los dirigió: 41
