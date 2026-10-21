@@ -3,17 +3,26 @@
 Generado automáticamente por el workflow «Instantánea de datos».
 Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
-- Ejecución: `39401804490` · 2026-10-20T11:12:27Z
+- Ejecución: `39577956943` · 2026-10-21T11:18:56Z
 
 ## Fuentes que no aportaron
 
 ```
-### bdns (código 1)
-{"fuente": "bdns", "params": "{'fecha_desde': datetime.date(2025, 1, 1), 'fecha_hasta': datetime.date(2025, 12, 31), 'max_paginas': 30}", "event": "ingesta iniciada", "level": "info", "timestamp": "2026-10-20T09:46:04.756208Z"}
-{"url": "https://www.infosubvenciones.es/bdnstrans/api/concesiones/busqueda?pageSize=1000&fechaDesde=01%2F01%2F2025&fechaHasta=31%2F12%2F2025&page=0", "event": "bdns: la respuesta no trae lista de concesiones", "level": "warning", "timestamp": "2026-10-20T09:47:05.365396Z"}
-{"fuente": "bdns", "documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-10-20T09:47:05.366033Z"}
-{"documentos_nuevos": 1, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-10-20T09:47:05.366140Z"}
-{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-10-20T09:47:05.366180Z"}
+### cnmv (código 1)
+{"url": "https://www.cnmv.es/portal/Consultas/derechosvoto/ps_ac_ini.aspx?nif=A20001020", "detalle": "Server disconnected without sending a response.", "event": "cnmv: p\u00e1gina no disponible", "level": "warning", "timestamp": "2026-10-21T10:11:04.804421Z"}
+{"url": "https://www.cnmv.es/portal/Consultas/derechosvoto/ps_ac_ini.aspx?nif=A28092583", "detalle": "The read operation timed out", "event": "cnmv: p\u00e1gina no disponible", "level": "warning", "timestamp": "2026-10-21T10:12:05.331881Z"}
+{"url": "https://www.cnmv.es/portal/Consultas/derechosvoto/ps_ac_ini.aspx?nif=A28212264", "detalle": "Server disconnected without sending a response.", "event": "cnmv: p\u00e1gina no disponible", "level": "warning", "timestamp": "2026-10-21T10:13:05.731411Z"}
+{"fuente": "cnmv", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-10-21T10:13:05.732079Z"}
+{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-10-21T10:13:05.732224Z"}
+{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-10-21T10:13:05.732264Z"}
+
+### cnmv-consejos (código 1)
+{"url": "https://www.cnmv.es/portal/Consultas/derechosvoto/ps_ac_ini.aspx?nif=A84236934", "detalle": "Server disconnected without sending a response.", "event": "cnmv: p\u00e1gina no disponible", "level": "warning", "timestamp": "2026-10-21T11:12:17.277223Z"}
+{"nif": "A84236934", "event": "cnmv: la CNMV no reconoce el NIF", "level": "warning", "timestamp": "2026-10-21T11:12:17.277396Z"}
+{"desde": "A08000143", "event": "cnmv: tope de tiempo; quedan cotizadas sin leer", "level": "warning", "timestamp": "2026-10-21T11:12:17.277423Z"}
+{"fuente": "cnmv", "documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta terminada", "level": "info", "timestamp": "2026-10-21T11:12:17.277954Z"}
+{"documentos_nuevos": 0, "documentos_repetidos": 0, "entidades": 0, "aristas": 0, "registros_descartados": 0, "errores": 0, "event": "ingesta completada", "level": "info", "timestamp": "2026-10-21T11:12:17.278090Z"}
+{"errores": 0, "event": "la ingesta no produjo nada", "level": "error", "timestamp": "2026-10-21T11:12:17.278125Z"}
 
 ```
 
@@ -21,20 +30,20 @@ Dice qué fuentes respondieron y qué aportaron al mapa publicado.
 
 | fuente | entidades en el mapa |
 | --- | ---: |
-| Base de Datos Nacional de Subvenciones | 524 |
-| Boletín Oficial del Estado | 2330 |
-| Comisión Nacional del Mercado de Valores | 199 |
+| Base de Datos Nacional de Subvenciones | 693 |
+| Boletín Oficial del Estado | 2336 |
+| Comisión Nacional del Mercado de Valores | **0 — no aportó** |
 | Congreso de los Diputados | 1477 |
 | Oficina de Conflictos de Intereses | 341 |
-| Plataforma de Contratación del Sector Público | 2853 |
+| Plataforma de Contratación del Sector Público | 2685 |
 | Senado | 28 |
 | Tribunal de Cuentas | 630 |
 
 ## Territorio de los organismos
 
-- del Estado: 374
-- con comunidad: 2564
-- **sin clasificar: 166**
+- del Estado: 299
+- con comunidad: 2239
+- **sin clasificar: 158**
 
 Jerarquías más repetidas entre los sin clasificar (para afinar
 `ingest/sinapsis_ingest/territorio.py`):
@@ -59,12 +68,12 @@ Jerarquías más repetidas entre los sin clasificar (para afinar
 
 ## Cargos públicos (BOE, OCI, Congreso)
 
-- días del BOE en caché: 5438
-- personas: 2879 · actos del BOE: 6049
-- actos del BOE leídos del 2011-12-17 al 2026-10-15
-- personas con algo de cada fuente: {'boe': 2330, 'congreso': 435, 'oci': 166}
+- días del BOE en caché: 5439
+- personas: 2885 · actos del BOE: 6062
+- actos del BOE leídos del 2011-12-17 al 2026-10-21
+- personas con algo de cada fuente: {'boe': 2336, 'congreso': 435, 'oci': 166}
 - autorizaciones (OCI): 643
 - actividades declaradas (Congreso): 1196
-- sociedades del mapa con un ex alto cargo autorizado: 13
-- entidades del mapa con un diputado que declaró trabajar en ellas: 8
-- órganos del mapa con quién los dirigió: 36
+- sociedades del mapa con un ex alto cargo autorizado: 8
+- entidades del mapa con un diputado que declaró trabajar en ellas: 10
+- órganos del mapa con quién los dirigió: 29
